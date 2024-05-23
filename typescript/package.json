@@ -1,0 +1,46 @@
+{
+    "name": "@balancer/balancer-maths",
+    "description": "Balancer V3 Maths",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/balancer/balancer-maths"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "version": "0.0.1",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "types": "dist/index.d.ts",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "format": "biome format --write .",
+        "lint": "dpdm -T ./src && biome check .",
+        "test": "vitest dev",
+        "test:ci": "vitest run",
+        "changeset": "changeset",
+        "changeset:release": "pnpm build && changeset publish",
+        "example": "npx tsx ./examples/executeExample.ts"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^1.5.2",
+        "@changesets/cli": "^2.27.1",
+        "@types/node": "^18.19.7",
+        "dotenv": "^16.3.1",
+        "dpdm": "^3.14.0",
+        "ts-node": "^10.9.2",
+        "tsup": "^8.0.1",
+        "typescript": "^5.3.3",
+        "vite": "^5.0.11",
+        "vitest": "^1.2.0"
+    },
+    "packageManager": "^pnpm@8.6.0",
+    "engines": {
+        "node": ">=18.x"
+    }
+}

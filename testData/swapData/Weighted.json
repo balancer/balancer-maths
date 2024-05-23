@@ -1,0 +1,37 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amount": "1000000000000000",
+            "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+            "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75",
+            "output": "711636223643048848"
+        },
+        {
+            "swapKind": 1,
+            "amount": "2000000000000000",
+            "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+            "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75",
+            "output": "2767704613670"
+        }
+    ],
+    "pool": {
+        "chainId": 11155111,
+        "blockNumber": 5955145,
+        "poolType": "Weighted",
+        "address": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+        "tokens": [
+            "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+            "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
+        ],
+        "weights": [
+            "500000000000000000",
+            "500000000000000000"
+        ],
+        "swapFee": "0",
+        "balances": [
+            "64604926441576011",
+            "46686842105263157924"
+        ]
+    }
+}
