@@ -1,9 +1,13 @@
 export type WeightedMutable = {
-	swapFee: string;
-	balances: string[];
+	swapFee: bigint;
+	balances: bigint[];
+	tokenRates: bigint[];
 };
 
 export type WeightedImmutable = {
-	weights: string[];
+	weights: bigint[];
 	tokens: string[];
+	scalingFactors: bigint[];
 };
+
+export type WeightedState = WeightedImmutable & WeightedMutable;

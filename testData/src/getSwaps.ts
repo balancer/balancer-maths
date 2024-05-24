@@ -28,8 +28,10 @@ async function querySwap(
 					}, // tokenOut
 				],
 				vaultVersion: 3 as const,
-				inputAmountRaw: swap.swapKind === SwapKind.GivenIn ? swap.amount : 0n,
-				outputAmountRaw: swap.swapKind === SwapKind.GivenOut ? swap.amount : 0n,
+				inputAmountRaw:
+					swap.swapKind === SwapKind.GivenIn ? BigInt(swap.amountRaw) : 0n,
+				outputAmountRaw:
+					swap.swapKind === SwapKind.GivenOut ? BigInt(swap.amountRaw) : 0n,
 			},
 		],
 	};
@@ -57,8 +59,8 @@ export async function getSwaps(testInput: TestInput): Promise<SwapResult[]> {
 		const result = await querySwap(testInput, swap);
 		results.push({
 			...swap,
-			amount: swap.amount.toString(),
-			output: result.toString(),
+			amountRaw: swap.amountRaw.toString(),
+			outputRaw: result.toString(),
 		});
 	}
 	console.log("Done");

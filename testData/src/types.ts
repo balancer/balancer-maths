@@ -3,17 +3,17 @@ import type { SwapKind } from "@balancer/sdk";
 
 export type SwapInput = {
 	swapKind: SwapKind;
-	amount: bigint;
+	amountRaw: bigint;
 	tokenIn: Address;
 	tokenOut: Address;
 };
 
-export type SwapResult = Omit<SwapInput, "amount"> & {
-	amount: string;
-	output: string;
+export type SwapResult = Omit<SwapInput, "amountRaw"> & {
+	amountRaw: string;
+	outputRaw: string;
 };
 
-export type Pool = {
+export type PoolBase = {
 	chainId: number;
 	blockNumber: number;
 	poolType: string;
@@ -21,7 +21,7 @@ export type Pool = {
 };
 
 export type TestData = {
-	pool: Pool;
+	pool: PoolBase;
 	swaps: SwapResult[];
 };
 

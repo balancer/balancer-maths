@@ -1,4 +1,3 @@
-import { SwapKind } from "@balancer/sdk";
 import type { TestInput, TestData } from "./types";
 import { getSwaps } from "./getSwaps";
 import { getPool } from "./getPool";

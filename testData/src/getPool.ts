@@ -1,7 +1,7 @@
 import { WeightedPool } from "./weightedPool";
-import type { TestInput, Pool } from "./types";
+import type { TestInput, PoolBase } from "./types";
 
-export async function getPool(testInput: TestInput): Promise<Pool> {
+export async function getPool(testInput: TestInput): Promise<PoolBase> {
 	// Find onchain data fetching via pool type
 	const poolData = {
 		Weighted: new WeightedPool(testInput.rpcUrl, testInput.chainId),

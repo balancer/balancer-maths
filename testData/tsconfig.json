@@ -19,5 +19,8 @@
 			"bun-types" // add Bun global
 		]
 	},
-	"files": ["../typescript/src/weighted/data.ts"]
+	"files": [
+		"../typescript/src/weighted/data.ts",
+		"../typescript/src/utils/math.ts"
+	]
 }

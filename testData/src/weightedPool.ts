@@ -10,6 +10,15 @@ import type {
 	WeightedImmutable,
 	WeightedMutable,
 } from "../../typescript/src/weighted/data";
+import { MathSol } from "../../typescript/src/utils/math";
+
+type TransformBigintToString<T> = {
+	[K in keyof T]: T[K] extends bigint
+		? string
+		: T[K] extends bigint[]
+			? string[]
+			: T[K];
+};
 
 export class WeightedPool {
 	client: PublicClient;
@@ -26,18 +35,16 @@ export class WeightedPool {
 		this.vault = VAULT_V3[this.chainId];
 	}
 
-	mulDown(a: bigint, b: bigint): bigint {
-		const product = a * b;
-		return product / BigInt(1e18);
-	}
-
-	async fetchImmutableData(address: Address): Promise<WeightedImmutable> {
+	async fetchImmutableData(
+		address: Address,
+	): Promise<TransformBigintToString<WeightedImmutable>> {
 		const poolTokensCall = {
-			address,
+			address: this.vault,
 			abi: parseAbi([
-				"function getPoolTokens() external view returns (address[] memory)",
+				"function getPoolTokenInfo(address pool) external view returns (address[] memory, uint256[] memory, uint256[] memory, uint256[] memory, address[] memory)",
 			]),
-			functionName: "getPoolTokens",
+			functionName: "getPoolTokenInfo",
+			args: [address],
 		} as const;
 		const tokenWeightsCall = {
 			address,
@@ -52,12 +59,15 @@ export class WeightedPool {
 			allowFailure: false,
 		});
 		return {
-			tokens: multicallResult[0].map((t) => t.toString()),
+			tokens: multicallResult[0][0].map((t) => t.toString()),
+			scalingFactors: multicallResult[0][3].map((sf) => sf.toString()),
 			weights: multicallResult[1].map((w) => w.toString()),
 		};
 	}
 
-	async fetchMutableData(address: Address): Promise<WeightedMutable> {
+	async fetchMutableData(
+		address: Address,
+	): Promise<TransformBigintToString<WeightedMutable>> {
 		const poolTokensCall = {
 			address: this.vault,
 			abi: parseAbi([
@@ -83,11 +93,12 @@ export class WeightedPool {
 		const rawBalances = multicallResult[1][2];
 		const scalingFactors = multicallResult[1][3];
 		const liveBalances = rawBalances.map((rb, i) =>
-			this.mulDown(rb, scalingFactors[i]).toString(),
+			MathSol.mulDownFixed(rb, scalingFactors[i]),
 		);
 		return {
 			swapFee: multicallResult[0].toString(),
-			balances: liveBalances,
+			balances: liveBalances.map((b) => b.toString()),
+			tokenRates: scalingFactors.map((sf) => sf.toString()), // TODO - Should be replaced with actual tokenRates when a view is available
 		};
 	}
 }
