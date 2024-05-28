@@ -1,0 +1,46 @@
+{
+    "swaps": [
+        {
+            "testName": "Weighted",
+            "chainId": "11155111",
+            "blockNumber": "5955145",
+            "poolAddress": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+            "poolType": "Weighted",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000",
+                    "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                    "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "2000000000000000",
+                    "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                    "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                }
+            ]
+        },
+        {
+            "testName": "Weighted",
+            "chainId": "11155111",
+            "blockNumber": "5955146",
+            "poolAddress": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+            "poolType": "Weighted",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "700000000000000",
+                    "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                    "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "300000000000000",
+                    "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                    "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                }
+            ]
+        }
+    ]
+}

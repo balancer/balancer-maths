@@ -13,6 +13,7 @@
     "viem": "^2.12.0"
   },
   "scripts": {
-    "generate": "bun index.ts"
+    "generate": "bun index.ts false",
+    "generate:overwrite": "bun index.ts true"
   }
 }
