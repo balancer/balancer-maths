@@ -7,7 +7,7 @@ export async function generateSwapTestData(input: TestInput) {
 	const testData = await fetchTestData(input);
 	const path = `./swapData/${input.testName}.json`;
 	console.log("Saving test data to: ", path);
-	await Bun.write(path, JSON.stringify(testData));
+	await Bun.write(path, JSON.stringify(testData, null, 4));
 	console.log("Complete");
 }
 
