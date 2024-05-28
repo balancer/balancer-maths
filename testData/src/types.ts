@@ -25,8 +25,11 @@ export type TestData = {
 	swaps: SwapResult[];
 };
 
-export type TestInput = {
+export type TestInput = SwapConfig & {
 	rpcUrl: string;
+};
+
+export type SwapConfig = {
 	testName: string;
 	chainId: number;
 	blockNumber: number;
@@ -34,3 +37,7 @@ export type TestInput = {
 	poolType: string;
 	swaps: SwapInput[];
 };
+
+export type Config = {
+	swaps: SwapConfig[];
+}
