@@ -6,7 +6,7 @@ type PoolBase = {
 	chainId: number;
 	blockNumber: number;
 	poolType: string;
-	address: string;
+	poolAddress: string;
 };
 
 type WeightedPool = PoolBase & WeightedImmutable & WeightedMutable;

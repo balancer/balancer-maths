@@ -15,11 +15,42 @@
             "outputRaw": "2767704613670"
         }
     ],
+    "adds": [
+        {
+            "kind": "Proportional",
+            "inputAmountsRaw": [
+                "1000000000000000",
+                "1000000000000000"
+            ],
+            "tokens": [
+                "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+            ],
+            "decimals": [
+                18,
+                18
+            ],
+            "outputRaw": "13408217393517349"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "1000000000000000"
+            ],
+            "tokens": [
+                "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"
+            ],
+            "decimals": [
+                18
+            ],
+            "outputRaw": "74420156518446"
+        }
+    ],
     "pool": {
         "chainId": "11155111",
         "blockNumber": "5955145",
         "poolType": "Weighted",
-        "address": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+        "poolAddress": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
         "tokens": [
             "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
             "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"

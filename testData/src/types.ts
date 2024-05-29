@@ -1,43 +1,32 @@
 import type { Address } from "viem";
-import type { SwapKind } from "@balancer/sdk";
-
-export type SwapInput = {
-	swapKind: SwapKind;
-	amountRaw: bigint;
-	tokenIn: Address;
-	tokenOut: Address;
-};
-
-export type SwapResult = Omit<SwapInput, "amountRaw"> & {
-	amountRaw: string;
-	outputRaw: string;
-};
+import type { AddLiquidityResult, AddTestInput } from "./getAdds";
+import type { SwapResult, SwapInput } from "./getSwaps";
 
 export type PoolBase = {
 	chainId: number;
 	blockNumber: number;
 	poolType: string;
-	address: Address;
+	poolAddress: Address;
 };
 
-export type TestData = {
-	pool: PoolBase;
-	swaps: SwapResult[];
+// Read from main test config file
+export type Config = {
+	poolTests: PoolTestConfig[];
 };
 
-export type TestInput = SwapConfig & {
+// Each pool/chain/block has its own set of swap/add/remove tests
+export type PoolTestConfig = PoolBase & {
+	testName: string;
+	swaps: SwapInput[];
+	adds: AddTestInput[];
+};
+
+export type TestInput = PoolTestConfig & {
 	rpcUrl: string;
 };
 
-export type SwapConfig = {
-	testName: string;
-	chainId: number;
-	blockNumber: number;
-	poolAddress: Address;
-	poolType: string;
-	swaps: SwapInput[];
+export type TestOutput = {
+	pool: PoolBase;
+	swaps: SwapResult[] | undefined;
+	adds: AddLiquidityResult[] | undefined;
 };
-
-export type Config = {
-	swaps: SwapConfig[];
-}

@@ -1,5 +1,5 @@
 {
-    "swaps": [
+    "poolTests": [
         {
             "testName": "Weighted",
             "chainId": "11155111",
@@ -18,6 +18,35 @@
                     "amountRaw": "2000000000000000",
                     "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
                     "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                }
+            ],
+            "adds": [
+                {
+                    "kind": "Proportional",
+                    "inputAmountsRaw": [
+                        "1000000000000000",
+                        "1000000000000000"
+                    ],
+                    "tokens": [
+                        "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                        "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                    ],
+                    "decimals": [
+                        18,
+                        18
+                    ]
+                },
+                {
+                    "kind": "SingleToken",
+                    "inputAmountsRaw": [
+                        "1000000000000000"
+                    ],
+                    "tokens": [
+                        "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"
+                    ],
+                    "decimals": [
+                        18
+                    ]
                 }
             ]
         },
