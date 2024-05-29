@@ -7,7 +7,7 @@ export async function generatePoolTestData(
 	input: TestInput,
 	overwrite = false,
 ) {
-	const path = `./swapData/${input.chainId}-${input.blockNumber}-${input.testName}.json`;
+	const path = `./testData/${input.chainId}-${input.blockNumber}-${input.testName}.json`;
 	if (!overwrite) {
 		const file = Bun.file(path);
 		if (await file.exists()) {

@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { readTestData } from "./utils/readTestData";
 import { Vault } from "../src/vault/vault";
 
-const testData = readTestData("../../../testData/swapData");
+const testData = readTestData("../../../testData/testData");
 
 describe("swap tests", () => {
 	test.each(testData.swaps)(
