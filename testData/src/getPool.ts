@@ -1,28 +1,30 @@
+import type { Address } from "viem";
 import { WeightedPool } from "./weightedPool";
-import type { TestInput, PoolBase } from "./types";
+import type { PoolBase } from "./types";
 
-export async function getPool(testInput: TestInput): Promise<PoolBase> {
+export async function getPool(
+	rpcUrl: string,
+	chainId: number,
+	blockNumber: number,
+	poolType: string,
+	poolAddress: Address,
+): Promise<PoolBase> {
 	// Find onchain data fetching via pool type
 	const poolData = {
-		Weighted: new WeightedPool(testInput.rpcUrl, testInput.chainId),
+		Weighted: new WeightedPool(rpcUrl, chainId),
 	};
-	if (!poolData[testInput.poolType])
-		throw new Error("getPool: Unsupported pool type");
+	if (!poolData[poolType]) throw new Error("getPool: Unsupported pool type");
 
 	console.log("Fetching pool data...");
-	const immutable = await poolData[testInput.poolType].fetchImmutableData(
-		testInput.poolAddress,
-	);
-	const mutable = await poolData[testInput.poolType].fetchMutableData(
-		testInput.poolAddress,
-	);
+	const immutable = await poolData[poolType].fetchImmutableData(poolAddress);
+	const mutable = await poolData[poolType].fetchMutableData(poolAddress);
 	console.log("Done");
 
 	return {
-		chainId: testInput.chainId,
-		blockNumber: testInput.blockNumber,
-		poolType: testInput.poolType,
-		address: testInput.poolAddress,
+		chainId,
+		blockNumber,
+		poolType,
+		poolAddress,
 		...immutable,
 		...mutable,
 	};

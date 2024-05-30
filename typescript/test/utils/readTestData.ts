@@ -6,7 +6,7 @@ type PoolBase = {
 	chainId: number;
 	blockNumber: number;
 	poolType: string;
-	address: string;
+	poolAddress: string;
 };
 
 type WeightedPool = PoolBase & WeightedImmutable & WeightedMutable;
@@ -22,8 +22,18 @@ type Swap = {
 	test: string;
 };
 
+type Add = {
+	kind: number;
+	inputAmountsRaw: bigint[];
+	tokens: string[];
+	decimals: number[];
+	bptOutRaw: bigint;
+	test: string;
+};
+
 type TestData = {
 	swaps: Swap[];
+	adds: Add[];
 	pools: PoolsMap;
 };
 
@@ -31,8 +41,10 @@ type TestData = {
 export function readTestData(directoryPath: string): TestData {
 	const pools: PoolsMap = new Map<string, WeightedPool>();
 	const swaps: Swap[] = [];
+	const adds: Add[] = [];
 	const testData: TestData = {
 		swaps,
+		adds,
 		pools,
 	};
 
@@ -55,15 +67,16 @@ export function readTestData(directoryPath: string): TestData {
 			// Parse the JSON content
 			try {
 				const jsonData = JSON.parse(fileContent);
-				swaps.push(
-					...jsonData.swaps.map((swap) => ({
-						...swap,
-						swapKind: Number(swap.swapKind),
-						amountRaw: BigInt(swap.amountRaw),
-						outputRaw: BigInt(swap.outputRaw),
-						test: file,
-					})),
-				);
+				if (jsonData.swaps)
+					swaps.push(
+						...jsonData.swaps.map((swap) => ({
+							...swap,
+							swapKind: Number(swap.swapKind),
+							amountRaw: BigInt(swap.amountRaw),
+							outputRaw: BigInt(swap.outputRaw),
+							test: file,
+						})),
+					);
 				pools.set(file, {
 					...jsonData.pool,
 					scalingFactors: jsonData.pool.scalingFactors.map((sf) => BigInt(sf)),
@@ -71,7 +84,18 @@ export function readTestData(directoryPath: string): TestData {
 					swapFee: BigInt(jsonData.pool.swapFee),
 					balances: jsonData.pool.balances.map((b) => BigInt(b)),
 					tokenRates: jsonData.pool.tokenRates.map((r) => BigInt(r)),
+					totalSupply: BigInt(jsonData.pool.totalSupply)
 				});
+				if (jsonData.adds)
+					adds.push(
+						...jsonData.adds.map((add) => ({
+							...add,
+							kind: add.kind === "Proportional" ? 0 : 1,
+							inputAmountsRaw: add.inputAmountsRaw.map((a) => BigInt(a)),
+							bptOutRaw: BigInt(add.bptOutRaw),
+							test: file,
+						})),
+					);
 			} catch (error) {
 				console.error(`Error parsing JSON file ${file}:`, error);
 			}

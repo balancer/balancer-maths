@@ -24,7 +24,7 @@ Edit `index.ts` to include your test data input.
 
 Run `bun run generate`.
 
-Test data will be retrieved and saved in ./swapData.
+Test data will be retrieved and saved in ./testData.
 
 ```bash
 bun run index.ts

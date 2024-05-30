@@ -1,3 +1,4 @@
+import type { Address } from "viem";
 import {
 	SwapKind,
 	Swap,
@@ -5,18 +6,31 @@ import {
 	type ExactInQueryOutput,
 	type ExactOutQueryOutput,
 } from "@balancer/sdk";
-import type { TestInput, SwapInput, SwapResult } from "./types";
+
+export type SwapInput = {
+	swapKind: SwapKind;
+	amountRaw: bigint;
+	tokenIn: Address;
+	tokenOut: Address;
+};
+
+export type SwapResult = Omit<SwapInput, "amountRaw"> & {
+	amountRaw: string;
+	outputRaw: string;
+};
 
 async function querySwap(
-	testInput: TestInput,
+	chainId: number,
+	poolAddress: Address,
+	rpcUrl: string,
 	swap: SwapInput,
 ): Promise<bigint> {
 	const swapInput: SdkSwapInput = {
-		chainId: testInput.chainId,
+		chainId: chainId,
 		swapKind: swap.swapKind,
 		paths: [
 			{
-				pools: [testInput.poolAddress],
+				pools: [poolAddress],
 				tokens: [
 					{
 						address: swap.tokenIn,
@@ -38,25 +52,27 @@ async function querySwap(
 	const sdkSwap = new Swap(swapInput);
 	let result = 0n;
 	if (swap.swapKind === SwapKind.GivenIn) {
-		const queryResult = (await sdkSwap.query(
-			testInput.rpcUrl,
-		)) as ExactInQueryOutput;
+		const queryResult = (await sdkSwap.query(rpcUrl)) as ExactInQueryOutput;
 		result = queryResult.expectedAmountOut.amount;
 	} else {
-		const queryResult = (await sdkSwap.query(
-			testInput.rpcUrl,
-		)) as ExactOutQueryOutput;
+		const queryResult = (await sdkSwap.query(rpcUrl)) as ExactOutQueryOutput;
 		result = queryResult.expectedAmountIn.amount;
 	}
 	return result;
 }
 
-export async function getSwaps(testInput: TestInput): Promise<SwapResult[]> {
+export async function getSwaps(
+	swapTestInputs: SwapInput[],
+	rpcUrl: string,
+	chainId: number,
+	poolAddress: Address,
+): Promise<SwapResult[] | undefined> {
+	if (!swapTestInputs) return undefined;
 	const results: SwapResult[] = [];
 	console.log("Querying swaps...");
-	for (const swap of testInput.swaps) {
+	for (const swap of swapTestInputs) {
 		// get swap. TODO - put this in a multicall?
-		const result = await querySwap(testInput, swap);
+		const result = await querySwap(chainId, poolAddress, rpcUrl, swap);
 		results.push({
 			...swap,
 			amountRaw: swap.amountRaw.toString(),

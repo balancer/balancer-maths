@@ -2,6 +2,7 @@ export type WeightedMutable = {
 	swapFee: bigint;
 	balances: bigint[];
 	tokenRates: bigint[];
+	totalSupply: bigint;
 };
 
 export type WeightedImmutable = {
@@ -10,4 +11,4 @@ export type WeightedImmutable = {
 	scalingFactors: bigint[];
 };
 
-export type WeightedState = WeightedImmutable & WeightedMutable;
+export type WeightedState = { poolType: string } & WeightedImmutable & WeightedMutable;
