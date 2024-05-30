@@ -33,6 +33,32 @@
             "bptOutRaw": "1000000000000000"
         }
     ],
+    "removes": [
+        {
+            "kind": "Proportional",
+            "amountsOutRaw": [
+                "37199368603622748",
+                "26882176701855436259"
+            ],
+            "bptInRaw": "1000000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "0",
+                "38285657658977424324"
+            ],
+            "bptInRaw": "1000000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "0",
+                "1000000000000000000"
+            ],
+            "bptInRaw": "18700363566869549"
+        }
+    ],
     "pool": {
         "chainId": "11155111",
         "blockNumber": "5955145",

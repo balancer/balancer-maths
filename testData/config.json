@@ -41,12 +41,27 @@
                     "bptOutRaw": [
                         "1000000000000000"
                     ],
-                    "tokenIn": 
-                        "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"
-                    ,
-                    "decimals": 
-                        18
-                    
+                    "tokenIn": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+                    "decimals": 18
+                }
+            ],
+            "removes": [
+                {
+                    "kind": "Proportional",
+                    "bpt": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+                    "bptInRaw": "1000000000000000000"
+                },
+                {
+                    "kind": "SingleTokenExactIn",
+                    "bpt": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+                    "bptInRaw": "1000000000000000000",
+                    "token": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
+                },
+                {
+                    "kind": "SingleTokenExactOut",
+                    "token": "0xb19382073c7a0addbb56ac6af1808fa49e377b75",
+                    "amountOutRaw": "1000000000000000000",
+                    "decimals": 18
                 }
             ]
         },
