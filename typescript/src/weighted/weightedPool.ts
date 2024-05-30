@@ -1,4 +1,4 @@
-import { type PoolBase, SwapKind, type PoolState } from "../vault/vault";
+import { type PoolBase, SwapKind, type SwapParams } from "../vault/vault";
 import {
 	_computeOutGivenExactIn,
 	_computeInGivenExactOut,
@@ -15,29 +15,29 @@ export class Weighted implements PoolBase {
 		this.normalizedWeights = poolState.weights;
 	}
 
-	onSwap(
-		swapKind: SwapKind,
-		balanceIn: bigint,
-		weightIn: bigint,
-		balanceOut: bigint,
-		weightOut: bigint,
-		amount: bigint,
-	): bigint {
+	onSwap(swapParams: SwapParams): bigint {
+		const {
+			swapKind,
+			balancesScaled18,
+			indexIn,
+			indexOut,
+			amountGivenScaled18,
+		} = swapParams;
 		if (swapKind === SwapKind.GivenIn) {
 			return _computeOutGivenExactIn(
-				balanceIn,
-				weightIn,
-				balanceOut,
-				weightOut,
-				amount,
+				balancesScaled18[indexIn],
+				this.normalizedWeights[indexIn],
+				balancesScaled18[indexOut],
+				this.normalizedWeights[indexOut],
+				amountGivenScaled18,
 			);
 		}
 		return _computeInGivenExactOut(
-			balanceIn,
-			weightIn,
-			balanceOut,
-			weightOut,
-			amount,
+			balancesScaled18[indexIn],
+			this.normalizedWeights[indexIn],
+			balancesScaled18[indexOut],
+			this.normalizedWeights[indexOut],
+			amountGivenScaled18,
 		);
 	}
 	computeInvariant(balancesLiveScaled18: bigint[]): bigint {

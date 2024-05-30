@@ -1,7 +1,7 @@
 // pnpm test -- swaps.test.ts
 import { describe, expect, test } from "vitest";
+import { Vault } from "../src";
 import { readTestData } from "./utils/readTestData";
-import { Vault } from "../src/vault/vault";
 
 const testData = readTestData("../../../testData/testData");
 

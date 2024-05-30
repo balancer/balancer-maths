@@ -1,7 +1,6 @@
 // pnpm test -- swaps.test.ts
 import { describe, expect, test } from "vitest";
-import { Vault } from "../src/vault/vault";
-import type { PoolBase } from "../src/vault/vault";
+import { Vault, type PoolBase } from "../src";
 
 describe("custom pool tests", () => {
 	test("should pick up new pool", () => {

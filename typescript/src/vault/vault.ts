@@ -7,14 +7,7 @@ import {
 } from "./basePoolMath";
 
 export interface PoolBase {
-	onSwap(
-		swapKind: SwapKind,
-		balanceIn: bigint,
-		weightIn: bigint,
-		balanceOut: bigint,
-		weightOut: bigint,
-		amount: bigint,
-	): bigint;
+	onSwap(swapParams: SwapParams): bigint;
 	computeInvariant(balancesLiveScaled18: bigint[]): bigint;
 	computeBalance(
 		balancesLiveScaled18: bigint[],
@@ -27,7 +20,7 @@ export type poolConfig = {
 	customPoolTypes: Record<string, PoolBase>;
 };
 
-export type PoolState = { poolType: string } & WeightedState;
+export type PoolState = WeightedState;
 
 export enum SwapKind {
 	GivenIn = 0,
@@ -39,6 +32,14 @@ export type SwapInput = {
 	tokenIn: string;
 	tokenOut: string;
 	swapKind: SwapKind;
+};
+
+export type SwapParams = {
+	swapKind: SwapKind;
+	amountGivenScaled18: bigint;
+	balancesScaled18: bigint[];
+	indexIn: number;
+	indexOut: number;
 };
 
 export enum AddKind {
@@ -114,14 +115,15 @@ export class Vault {
 
 		// hook: dynamicSwapFee
 
-		let amountCalculatedScaled18 = pool.onSwap(
-			input.swapKind,
-			poolState.balances[inputIndex],
-			poolState.weights[inputIndex],
-			poolState.balances[outputIndex],
-			poolState.weights[outputIndex],
+		const swapParams: SwapParams = {
+			swapKind: input.swapKind,
 			amountGivenScaled18,
-		);
+			balancesScaled18: poolState.balances,
+			indexIn: inputIndex,
+			indexOut: outputIndex,
+		};
+
+		let amountCalculatedScaled18 = pool.onSwap(swapParams);
 
 		let amountCalculated = 0n;
 		if (input.swapKind === SwapKind.GivenIn) {
