@@ -7,31 +7,39 @@ import {
 } from "@balancer/sdk";
 import type { Address } from "viem";
 
-export type AddTestInput = {
-	kind: AddLiquidityKind;
+type AddTestInputProportional = {
+	kind: AddLiquidityKind.Proportional;
 	inputAmountsRaw: bigint[];
 	tokens: Address[];
 	decimals: number[];
 };
 
-export type AddLiquidityResult = Omit<AddTestInput, "inputAmountsRaw"> & {
+type AddTestInputSingleToken = {
+	kind: AddLiquidityKind.SingleToken;
+	bptOutRaw: bigint;
+	tokenIn: Address;
+	decimals: number;
+};
+
+export type AddTestInput = AddTestInputProportional | AddTestInputSingleToken;
+
+export type AddLiquidityResult = {
+	kind: AddLiquidityKind;
 	inputAmountsRaw: string[];
 	bptOutRaw: string;
 };
 
 function getInput(
-	kind: AddLiquidityKind,
-	inputAmountsRaw: bigint[],
-	tokens: Address[],
-	decimals: number[],
+	addTestInput: AddTestInput,
 	chainId: number,
 	rpcUrl: string,
 ): AddLiquidityInput {
+	const { kind } = addTestInput;
 	if (kind === AddLiquidityKind.Proportional) {
-		const amounts = inputAmountsRaw.map((a, i) => ({
+		const amounts = addTestInput.inputAmountsRaw.map((a, i) => ({
 			rawAmount: a,
-			decimals: decimals[i],
-			address: tokens[i],
+			decimals: addTestInput.decimals[i],
+			address: addTestInput.tokens[i],
 		}));
 		const addLiquidityInput: AddLiquidityInput = {
 			amountsIn: amounts,
@@ -42,14 +50,14 @@ function getInput(
 		return addLiquidityInput;
 		// biome-ignore lint/style/noUselessElse: <explanation>
 	} else if (kind === AddLiquidityKind.SingleToken) {
-		const amounts = inputAmountsRaw.map((a, i) => ({
-			rawAmount: a,
-			decimals: decimals[i],
-			address: tokens[i],
-		}));
+		const bptAmount = {
+			rawAmount: addTestInput.bptOutRaw,
+			decimals: addTestInput.decimals,
+			address: addTestInput.tokenIn,
+		};
 		const addLiquidityInput: AddLiquidityInput = {
-			bptOut: amounts[0],
-			tokenIn: tokens[0],
+			bptOut: bptAmount,
+			tokenIn: addTestInput.tokenIn,
 			chainId,
 			rpcUrl,
 			kind: AddLiquidityKind.SingleToken,
@@ -66,14 +74,7 @@ async function queryAddLiquidity(
 	poolType: string,
 	addTestInput: AddTestInput,
 ): Promise<AddLiquidityQueryOutput> {
-	const addLiquidityInput = getInput(
-		addTestInput.kind,
-		addTestInput.inputAmountsRaw,
-		addTestInput.tokens,
-		addTestInput.decimals,
-		chainId,
-		rpcUrl,
-	);
+	const addLiquidityInput = getInput(addTestInput, chainId, rpcUrl);
 	// Onchain provider is used to fetch pool state
 	const onchainProvider = new OnChainProvider(rpcUrl, chainId);
 	const poolState = await onchainProvider.pools.fetchPoolState(
@@ -105,16 +106,11 @@ export async function getAddLiquiditys(
 			addTestInput,
 		);
 		results.push({
-			...addTestInput,
-			tokens: result.amountsIn.map(a => a.token.address),
+			kind: addTestInput.kind,
 			inputAmountsRaw: result.amountsIn.map((a) => a.amount.toString()),
 			bptOutRaw: result.bptOut.amount.toString(),
 		});
 	}
 	console.log("Done");
 	return results;
-}
-
-function isSameAddress(addressOne: string, addressTwo: string) {
-	return addressOne.toLowerCase() === addressTwo.toLowerCase();
 }

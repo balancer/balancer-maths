@@ -15,7 +15,7 @@ export type Config = {
 };
 
 // Each pool/chain/block has its own set of swap/add/remove tests
-export type PoolTestConfig = PoolBase & {
+type PoolTestConfig = PoolBase & {
 	testName: string;
 	swaps: SwapInput[];
 	adds: AddTestInput[];

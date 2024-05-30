@@ -38,15 +38,15 @@
                 },
                 {
                     "kind": "SingleToken",
-                    "inputAmountsRaw": [
+                    "bptOutRaw": [
                         "1000000000000000"
                     ],
-                    "tokens": [
+                    "tokenIn": 
                         "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"
-                    ],
-                    "decimals": [
+                    ,
+                    "decimals": 
                         18
-                    ]
+                    
                 }
             ]
         },
