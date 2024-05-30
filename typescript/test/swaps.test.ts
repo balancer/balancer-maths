@@ -11,9 +11,9 @@ describe("swap tests", () => {
 		async ({ test, amountRaw, tokenIn, tokenOut, outputRaw, swapKind }) => {
 			const pool = testData.pools.get(test);
 			if (!pool) throw new Error("No pool data");
-			console.log("Amount: ", amountRaw);
-			console.log(`${tokenIn}>${tokenOut}`);
-			console.log("Output: ", outputRaw);
+			// console.log("Amount: ", amountRaw);
+			// console.log(`${tokenIn}>${tokenOut}`);
+			// console.log("Output: ", outputRaw);
 			const vault = new Vault();
 
 			const calculatedAmount = vault.swap(

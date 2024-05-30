@@ -27,7 +27,7 @@ type Add = {
 	inputAmountsRaw: bigint[];
 	tokens: string[];
 	decimals: number[];
-	outputRaw: bigint;
+	bptOutRaw: bigint;
 	test: string;
 };
 
@@ -84,6 +84,7 @@ export function readTestData(directoryPath: string): TestData {
 					swapFee: BigInt(jsonData.pool.swapFee),
 					balances: jsonData.pool.balances.map((b) => BigInt(b)),
 					tokenRates: jsonData.pool.tokenRates.map((r) => BigInt(r)),
+					totalSupply: BigInt(jsonData.pool.totalSupply)
 				});
 				if (jsonData.adds)
 					adds.push(
@@ -91,7 +92,7 @@ export function readTestData(directoryPath: string): TestData {
 							...add,
 							kind: add.kind === "Proportional" ? 0 : 1,
 							inputAmountsRaw: add.inputAmountsRaw.map((a) => BigInt(a)),
-							outputRaw: BigInt(add.outputRaw),
+							bptOutRaw: BigInt(add.bptOutRaw),
 							test: file,
 						})),
 					);

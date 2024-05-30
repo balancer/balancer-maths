@@ -8,24 +8,24 @@ const testData = readTestData("../../../testData/testData");
 describe("addLiqudity tests", () => {
 	test.each(testData.adds)(
 		"$test $kind",
-		async ({ test, inputAmountsRaw, outputRaw, kind }) => {
+		async ({ test, inputAmountsRaw, bptOutRaw, kind }) => {
 			const pool = testData.pools.get(test);
 			if (!pool) throw new Error("No pool data");
-			console.log("Input Amounts: ", inputAmountsRaw);
-			console.log("Output: ", outputRaw);
+			// console.log("Input Amounts: ", inputAmountsRaw);
+			// console.log("BptOut: ", bptOutRaw);
 			const vault = new Vault();
 
-			// const calculatedAmount = vault.swap(
-			// 	{
-			// 		amountRaw,
-			// 		tokenIn,
-			// 		tokenOut,
-			// 		swapKind,
-			// 	},
-			// 	pool,
-			// );
-			// expect(calculatedAmount).toEqual(outputRaw);
-			expect(outputRaw).toEqual(1n);
+			const calculatedAmounts = vault.addLiquidity(
+				{
+					pool: pool.poolAddress,
+					maxAmountsIn: inputAmountsRaw,
+					minBptAmountOut: bptOutRaw,
+					kind,
+				},
+				pool,
+			);
+			expect(calculatedAmounts.bptAmountOut).toEqual(bptOutRaw);
+			expect(calculatedAmounts.amountsIn).toEqual(inputAmountsRaw);
 		},
 	);
 });

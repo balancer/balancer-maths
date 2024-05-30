@@ -1,6 +1,10 @@
 import type { WeightedState } from "@/weighted/data";
-import { WeightedPool } from "../weighted/weightedPool";
+import { Weighted } from "../weighted/weightedPool";
 import { MathSol } from "../utils/math";
+import {
+	computeAddLiquiditySingleTokenExactOut,
+	computeAddLiquidityUnbalanced,
+} from "./basePoolMath";
 
 export interface PoolBase {
 	onSwap(
@@ -10,6 +14,12 @@ export interface PoolBase {
 		balanceOut: bigint,
 		weightOut: bigint,
 		amount: bigint,
+	): bigint;
+	computeInvariant(balancesLiveScaled18: bigint[]): bigint;
+	computeBalance(
+		balancesLiveScaled18: bigint[],
+		tokenInIndex: number,
+		invariantRatio: bigint,
 	): bigint;
 }
 
@@ -31,31 +41,46 @@ export type SwapInput = {
 	swapKind: SwapKind;
 };
 
+export enum AddKind {
+	UNBALANCED = 0,
+	SINGLE_TOKEN_EXACT_OUT = 1,
+}
+
+export type AddLiquidityInput = {
+	pool: string;
+	maxAmountsIn: bigint[];
+	minBptAmountOut: bigint;
+	kind: AddKind;
+};
+
 function isSameAddress(addressOne: string, addressTwo: string) {
 	return addressOne.toLowerCase() === addressTwo.toLowerCase();
 }
 
-export class Vault {
-	private readonly poolTypes: Record<string, PoolBase> = {};
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+type PoolClassConstructor = new (...args: any[]) => PoolBase;
+type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
 
-	constructor(config?: poolConfig) {
-		const { customPoolTypes: customAddLiquidityTypes } = config || {};
-		this.poolTypes = {
-			Weighted: new WeightedPool(),
+export class Vault {
+	private readonly poolClasses: PoolClasses = {} as const;
+
+	constructor(customPoolClasses?: PoolClasses) {
+		this.poolClasses = {
+			Weighted: Weighted,
 			// custom add liquidity types take precedence over base types
-			...customAddLiquidityTypes,
+			...customPoolClasses,
 		};
 	}
 
-	public getPool(poolType: string): PoolBase {
-		if (!this.poolTypes[poolType]) {
-			throw new Error(`Unsupported pool type ${poolType}`);
-		}
-		return this.poolTypes[poolType];
+	public getPool(poolState: PoolState): PoolBase {
+		const poolClass = this.poolClasses[poolState.poolType];
+		if (!poolClass)
+			throw new Error(`Unsupported Pool Type: ${poolState.poolType}`);
+		return new poolClass(poolState);
 	}
 
 	public swap(input: SwapInput, poolState: PoolState): bigint {
-		const pool = this.getPool(poolState.poolType);
+		const pool = this.getPool(poolState);
 
 		const inputIndex = poolState.tokens.findIndex((t) =>
 			isSameAddress(input.tokenIn, t),
@@ -132,6 +157,106 @@ export class Vault {
 		// hook: after swap
 
 		return amountCalculated;
+	}
+
+	public addLiquidity(
+		input: AddLiquidityInput,
+		poolState: PoolState,
+	): { amountsIn: bigint[]; bptAmountOut: bigint } {
+		const pool = this.getPool(poolState);
+
+		// Amounts are entering pool math, so round down.
+		// Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
+		// but it avoids the even worse options of mutating amountsIn inside AddLiquidityParams,
+		// or cluttering the AddLiquidityParams interface by adding amountsInScaled18.
+		const maxAmountsInScaled18 = this._copyToScaled18ApplyRateRoundDownArray(
+			input.maxAmountsIn,
+			poolState.scalingFactors,
+			poolState.tokenRates,
+		);
+
+		// hook: shouldCallBeforeAddLiquidity (TODO - need to handle balance changes, etc see code)
+
+		let amountsInScaled18: bigint[];
+		let bptAmountOut: bigint;
+		let swapFeeAmounts: bigint[];
+		if (input.kind === AddKind.UNBALANCED) {
+			amountsInScaled18 = maxAmountsInScaled18;
+			const computed = computeAddLiquidityUnbalanced(
+				poolState.balances, // should be liveScaled18
+				maxAmountsInScaled18,
+				poolState.totalSupply,
+				poolState.swapFee,
+				(balancesLiveScaled18) => pool.computeInvariant(balancesLiveScaled18),
+			);
+			bptAmountOut = computed.bptAmountOut;
+			swapFeeAmounts = computed.swapFeeAmounts;
+		} else if (input.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
+			const tokenIndex = this._getSingleInputIndex(maxAmountsInScaled18);
+			amountsInScaled18 = maxAmountsInScaled18;
+			bptAmountOut = input.minBptAmountOut;
+			const computed = computeAddLiquiditySingleTokenExactOut(
+				poolState.balances, // should be liveScaled18
+				tokenIndex,
+				bptAmountOut,
+				poolState.totalSupply,
+				poolState.swapFee,
+				(balancesLiveScaled18, tokenIndex, invariantRatio) =>
+					pool.computeBalance(balancesLiveScaled18, tokenIndex, invariantRatio),
+			);
+			amountsInScaled18[tokenIndex] = computed.amountInWithFee;
+			swapFeeAmounts = computed.swapFeeAmounts;
+		} else throw new Error("Unsupported AddLiquidity Kind");
+
+		const amountsInRaw: bigint[] = new Array(poolState.tokens.length);
+		for (let i = 0; i < poolState.tokens.length; i++) {
+			// amountsInRaw are amounts actually entering the Pool, so we round up.
+			amountsInRaw[i] = this._toRawUndoRateRoundUp(
+				amountsInScaled18[i],
+				poolState.scalingFactors[i],
+				poolState.tokenRates[i],
+			);
+		}
+
+		// hook: shouldCallAfterAddLiquidity
+
+		return {
+			amountsIn: amountsInRaw,
+			bptAmountOut: bptAmountOut,
+		};
+	}
+
+	private _getSingleInputIndex(maxAmountsIn: bigint[]): number {
+		const length = maxAmountsIn.length;
+		let inputIndex = length;
+
+		for (let i = 0; i < length; ++i) {
+			if (maxAmountsIn[i] !== 0n) {
+				if (inputIndex !== length) {
+					throw new Error("Multiple non-zero inputs for single token add");
+				}
+				inputIndex = i;
+			}
+		}
+
+		if (inputIndex >= length) {
+			throw new Error("All zero inputs for single token add");
+		}
+
+		return inputIndex;
+	}
+
+	/**
+	 * @dev Same as `toScaled18ApplyRateRoundDown`, but returns a new array, leaving the original intact.
+	 */
+	private _copyToScaled18ApplyRateRoundDownArray(
+		amounts: bigint[],
+		scalingFactors: bigint[],
+		tokenRates: bigint[],
+	): bigint[] {
+		return amounts.map((a, i) =>
+			this._toScaled18ApplyRateRoundDown(a, scalingFactors[i], tokenRates[i]),
+		);
 	}
 
 	private _updateAmountGivenInVars(

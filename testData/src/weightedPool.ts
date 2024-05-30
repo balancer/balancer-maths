@@ -84,9 +84,17 @@ export class WeightedPool {
 			functionName: "getStaticSwapFeePercentage",
 			args: [address],
 		} as const;
+		const totalSupplyCall = {
+			address: this.vault,
+			abi: parseAbi([
+				"function totalSupply(address token) external view returns (uint256)",
+			]),
+			functionName: "totalSupply",
+			args: [address],
+		} as const;
 
 		const multicallResult = await this.client.multicall({
-			contracts: [staticSwapFeeCall, poolTokensCall],
+			contracts: [staticSwapFeeCall, poolTokensCall, totalSupplyCall],
 			allowFailure: false,
 		});
 		// Note - this is a temp fix and does not currently take into account yield fees. In future mono-repo there should be a call to fetch live balances that will not require scaling and will have fees taken into account.
@@ -99,6 +107,7 @@ export class WeightedPool {
 			swapFee: multicallResult[0].toString(),
 			balances: liveBalances.map((b) => b.toString()),
 			tokenRates: scalingFactors.map((sf) => sf.toString()), // TODO - Should be replaced with actual tokenRates when a view is available
+			totalSupply: multicallResult[2].toString()
 		};
 	}
 }

@@ -1,10 +1,20 @@
-import { type PoolBase, SwapKind } from "../vault/vault";
+import { type PoolBase, SwapKind, type PoolState } from "../vault/vault";
 import {
 	_computeOutGivenExactIn,
 	_computeInGivenExactOut,
+	_computeInvariant,
+	_computeBalanceOutGivenInvariant,
 } from "./weightedMath";
 
-export class WeightedPool implements PoolBase {
+export class Weighted implements PoolBase {
+	public normalizedWeights: bigint[];
+
+	constructor(poolState: {
+		weights: bigint[];
+	}) {
+		this.normalizedWeights = poolState.weights;
+	}
+
 	onSwap(
 		swapKind: SwapKind,
 		balanceIn: bigint,
@@ -28,6 +38,20 @@ export class WeightedPool implements PoolBase {
 			balanceOut,
 			weightOut,
 			amount,
+		);
+	}
+	computeInvariant(balancesLiveScaled18: bigint[]): bigint {
+		return _computeInvariant(this.normalizedWeights, balancesLiveScaled18);
+	}
+	computeBalance(
+		balancesLiveScaled18: bigint[],
+		tokenInIndex: number,
+		invariantRatio: bigint,
+	): bigint {
+		return _computeBalanceOutGivenInvariant(
+			balancesLiveScaled18[tokenInIndex],
+			this.normalizedWeights[tokenInIndex],
+			invariantRatio,
 		);
 	}
 }

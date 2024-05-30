@@ -3,6 +3,7 @@ import {
 	type AddLiquidityInput,
 	AddLiquidity,
 	OnChainProvider,
+	type AddLiquidityQueryOutput,
 } from "@balancer/sdk";
 import type { Address } from "viem";
 
@@ -15,7 +16,7 @@ export type AddTestInput = {
 
 export type AddLiquidityResult = Omit<AddTestInput, "inputAmountsRaw"> & {
 	inputAmountsRaw: string[];
-	outputRaw: string;
+	bptOutRaw: string;
 };
 
 function getInput(
@@ -64,7 +65,7 @@ async function queryAddLiquidity(
 	poolAddress: Address,
 	poolType: string,
 	addTestInput: AddTestInput,
-): Promise<bigint> {
+): Promise<AddLiquidityQueryOutput> {
 	const addLiquidityInput = getInput(
 		addTestInput.kind,
 		addTestInput.inputAmountsRaw,
@@ -81,17 +82,7 @@ async function queryAddLiquidity(
 	);
 	// Simulate addLiquidity to get the amount of BPT out
 	const addLiquidity = new AddLiquidity();
-	const queryOutput = await addLiquidity.query(addLiquidityInput, poolState);
-	if (addTestInput.kind === AddLiquidityKind.Proportional) {
-		return queryOutput.bptOut.amount;
-	}
-
-	// Handling single token case which returns amount in rather than BPT amount
-	const inputIndex = poolState.tokens.findIndex((t) =>
-		isSameAddress(t.address, addTestInput.tokens[0]),
-	);
-	if (inputIndex === -1) throw Error("SingleToken Add Query Error");
-	return queryOutput.amountsIn[inputIndex].amount;
+	return await addLiquidity.query(addLiquidityInput, poolState);
 }
 
 export async function getAddLiquiditys(
@@ -115,8 +106,9 @@ export async function getAddLiquiditys(
 		);
 		results.push({
 			...addTestInput,
-			inputAmountsRaw: addTestInput.inputAmountsRaw.map((a) => a.toString()),
-			outputRaw: result.toString(),
+			tokens: result.amountsIn.map(a => a.token.address),
+			inputAmountsRaw: result.amountsIn.map((a) => a.amount.toString()),
+			bptOutRaw: result.bptOut.amount.toString(),
 		});
 	}
 	console.log("Done");
