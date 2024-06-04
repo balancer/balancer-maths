@@ -4,6 +4,9 @@ import { MathSol } from "../utils/math";
 import {
 	computeAddLiquiditySingleTokenExactOut,
 	computeAddLiquidityUnbalanced,
+	computeProportionalAmountsOut,
+	computeRemoveLiquiditySingleTokenExactIn,
+	computeRemoveLiquiditySingleTokenExactOut,
 } from "./basePoolMath";
 
 export interface PoolBase {
@@ -52,6 +55,19 @@ export type AddLiquidityInput = {
 	maxAmountsIn: bigint[];
 	minBptAmountOut: bigint;
 	kind: AddKind;
+};
+
+export enum RemoveKind {
+	PROPORTIONAL = 0,
+	SINGLE_TOKEN_EXACT_IN = 1,
+	SINGLE_TOKEN_EXACT_OUT = 2,
+}
+
+export type RemoveLiquidityInput = {
+	pool: string;
+	minAmountsOut: bigint[];
+	maxBptAmountIn: bigint;
+	kind: RemoveKind;
 };
 
 function isSameAddress(addressOne: string, addressTwo: string) {
@@ -228,6 +244,90 @@ export class Vault {
 		};
 	}
 
+	public removeLiquidity(
+		input: RemoveLiquidityInput,
+		poolState: PoolState,
+	): { amountsOut: bigint[]; bptAmountIn: bigint } {
+		const pool = this.getPool(poolState);
+
+		// Round down when removing liquidity:
+		// If proportional, lower balances = lower proportional amountsOut, favoring the pool.
+		// If unbalanced, lower balances = lower invariant ratio without fees.
+		// bptIn = supply * (1 - ratio), so lower ratio = more bptIn, favoring the pool.
+
+		// Amounts are entering pool math; higher amounts would burn more BPT, so round up to favor the pool.
+		// Do not mutate minAmountsOut, so that we can directly compare the raw limits later, without potentially
+		// losing precision by scaling up and then down.
+		const minAmountsOutScaled18 = this._copyToScaled18ApplyRateRoundUpArray(
+			input.minAmountsOut,
+			poolState.scalingFactors,
+			poolState.tokenRates,
+		);
+
+		// hook: shouldCallBeforeRemoveLiquidity (TODO - need to handle balance changes, etc see code)
+
+		let tokenOutIndex: number;
+		let swapFeeAmountsScaled18: bigint[];
+		let bptAmountIn: bigint;
+		let amountsOutScaled18: bigint[];
+
+		if (input.kind === RemoveKind.PROPORTIONAL) {
+			bptAmountIn = input.maxBptAmountIn;
+			swapFeeAmountsScaled18 = poolState.balances;
+			amountsOutScaled18 = computeProportionalAmountsOut(
+				poolState.balances,
+				poolState.totalSupply,
+				input.maxBptAmountIn,
+			);
+		} else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_IN) {
+			bptAmountIn = input.maxBptAmountIn;
+			// bptAmountIn = params.maxBptAmountIn;
+			amountsOutScaled18 = minAmountsOutScaled18;
+			tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
+			const computed = computeRemoveLiquiditySingleTokenExactIn(
+				poolState.balances,
+				tokenOutIndex,
+				input.maxBptAmountIn,
+				poolState.totalSupply,
+				poolState.swapFee,
+				(balancesLiveScaled18, tokenIndex, invariantRatio) =>
+					pool.computeBalance(balancesLiveScaled18, tokenIndex, invariantRatio),
+			);
+			swapFeeAmountsScaled18 = computed.swapFeeAmounts;
+			amountsOutScaled18[tokenOutIndex] = computed.amountOutWithFee;
+		} else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT) {
+			amountsOutScaled18 = minAmountsOutScaled18;
+			tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
+			const computed = computeRemoveLiquiditySingleTokenExactOut(
+				poolState.balances,
+				tokenOutIndex,
+				amountsOutScaled18[tokenOutIndex],
+				poolState.totalSupply,
+				poolState.swapFee,
+				(balancesLiveScaled18) => pool.computeInvariant(balancesLiveScaled18),
+			);
+			bptAmountIn = computed.bptAmountIn;
+			swapFeeAmountsScaled18 = computed.swapFeeAmounts;
+		} else throw new Error("Unsupported RemoveLiquidity Kind");
+
+        const amountsOutRaw = new Array(poolState.tokens.length);
+
+        for (let i = 0; i < poolState.tokens.length; ++i) {
+            // amountsOut are amounts exiting the Pool, so we round down.
+			amountsOutRaw[i] = this._toRawUndoRateRoundDown(
+				amountsOutScaled18[i],
+				poolState.scalingFactors[i],
+				poolState.tokenRates[i],
+			);
+        }
+
+		// hook: shouldCallAfterRemoveLiquidity
+		return {
+			amountsOut: amountsOutRaw,
+			bptAmountIn,
+		};
+	}
+
 	private _getSingleInputIndex(maxAmountsIn: bigint[]): number {
 		const length = maxAmountsIn.length;
 		let inputIndex = length;
@@ -258,6 +358,19 @@ export class Vault {
 	): bigint[] {
 		return amounts.map((a, i) =>
 			this._toScaled18ApplyRateRoundDown(a, scalingFactors[i], tokenRates[i]),
+		);
+	}
+
+	/**
+	 * @dev Same as `toScaled18ApplyRateRoundDown`, but returns a new array, leaving the original intact.
+	 */
+	private _copyToScaled18ApplyRateRoundUpArray(
+		amounts: bigint[],
+		scalingFactors: bigint[],
+		tokenRates: bigint[],
+	): bigint[] {
+		return amounts.map((a, i) =>
+			this._toScaled18ApplyRateRoundUp(a, scalingFactors[i], tokenRates[i]),
 		);
 	}
 
