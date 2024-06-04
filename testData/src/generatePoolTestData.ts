@@ -2,6 +2,7 @@ import type { TestInput, TestOutput } from "./types";
 import { getSwaps } from "./getSwaps";
 import { getPool } from "./getPool";
 import { getAddLiquiditys } from "./getAdds";
+import { getRemoveLiquiditys } from "./getRemoves";
 
 export async function generatePoolTestData(
 	input: TestInput,
@@ -23,7 +24,7 @@ export async function generatePoolTestData(
 }
 
 async function fetchTestData(input: TestInput): Promise<TestOutput> {
-	const { rpcUrl, chainId, poolAddress, poolType, blockNumber, adds, swaps } =
+	const { rpcUrl, chainId, poolAddress, poolType, blockNumber, adds, swaps, removes } =
 		input;
 	const pool = await getPool(
 		rpcUrl,
@@ -40,9 +41,17 @@ async function fetchTestData(input: TestInput): Promise<TestOutput> {
 		poolAddress,
 		poolType,
 	);
+	const removeResults = await getRemoveLiquiditys(
+		removes,
+		rpcUrl,
+		chainId,
+		poolAddress,
+		poolType
+	)
 	return {
 		swaps: swapResults,
 		adds: addResults,
+		removes: removeResults,
 		pool,
 	};
 }

@@ -25,9 +25,14 @@ type Swap = {
 type Add = {
 	kind: number;
 	inputAmountsRaw: bigint[];
-	tokens: string[];
-	decimals: number[];
 	bptOutRaw: bigint;
+	test: string;
+};
+
+type Remove = {
+	kind: number;
+	amountsOutRaw: bigint[];
+	bptInRaw: bigint;
 	test: string;
 };
 
@@ -35,6 +40,7 @@ type TestData = {
 	swaps: Swap[];
 	adds: Add[];
 	pools: PoolsMap;
+	removes: Remove[];
 };
 
 // Reads all json test files and parses to relevant swap/pool bigint format
@@ -42,10 +48,12 @@ export function readTestData(directoryPath: string): TestData {
 	const pools: PoolsMap = new Map<string, WeightedPool>();
 	const swaps: Swap[] = [];
 	const adds: Add[] = [];
+	const removes: Remove[] = [];
 	const testData: TestData = {
 		swaps,
 		adds,
 		pools,
+		removes
 	};
 
 	// Resolve the directory path relative to the current file's directory
@@ -84,7 +92,7 @@ export function readTestData(directoryPath: string): TestData {
 					swapFee: BigInt(jsonData.pool.swapFee),
 					balances: jsonData.pool.balances.map((b) => BigInt(b)),
 					tokenRates: jsonData.pool.tokenRates.map((r) => BigInt(r)),
-					totalSupply: BigInt(jsonData.pool.totalSupply)
+					totalSupply: BigInt(jsonData.pool.totalSupply),
 				});
 				if (jsonData.adds)
 					adds.push(
@@ -96,6 +104,16 @@ export function readTestData(directoryPath: string): TestData {
 							test: file,
 						})),
 					);
+				if (jsonData.removes)
+					removes.push(
+						...jsonData.removes.map((remove) => ({
+							...remove,
+							kind: mapRemoveKind(remove.kind),
+							amountsOutRaw: remove.amountsOutRaw.map((a) => BigInt(a)),
+							bptInRaw: BigInt(remove.bptInRaw),
+							test: file,
+						})),
+					);
 			} catch (error) {
 				console.error(`Error parsing JSON file ${file}:`, error);
 			}
@@ -103,4 +121,14 @@ export function readTestData(directoryPath: string): TestData {
 	}
 
 	return testData;
+}
+
+function mapRemoveKind(kind: string): number {
+	if(kind === "Proportional") return 0;
+	// biome-ignore lint/style/noUselessElse: <explanation>
+	else if(kind === "SingleTokenExactIn") return 1;
+	// biome-ignore lint/style/noUselessElse: <explanation>
+	else if(kind === "SingleTokenExactOut") return 2;
+	// biome-ignore lint/style/noUselessElse: <explanation>
+	else throw new Error(`Unsupported RemoveKind: ${kind}`);
 }
