@@ -4,7 +4,7 @@
             "testName": "Weighted",
             "chainId": "11155111",
             "blockNumber": "5955145",
-            "poolAddress": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+            "poolAddress": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
             "poolType": "Weighted",
             "swaps": [
                 {
@@ -48,12 +48,12 @@
             "removes": [
                 {
                     "kind": "Proportional",
-                    "bpt": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+                    "bpt": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
                     "bptInRaw": "1000000000000000000"
                 },
                 {
                     "kind": "SingleTokenExactIn",
-                    "bpt": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+                    "bpt": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
                     "bptInRaw": "1000000000000000000",
                     "token": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
                 },
@@ -69,7 +69,7 @@
             "testName": "Weighted",
             "chainId": "11155111",
             "blockNumber": "5955146",
-            "poolAddress": "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+            "poolAddress": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
             "poolType": "Weighted",
             "swaps": [
                 {

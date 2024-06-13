@@ -109,7 +109,7 @@ export class Vault {
 		);
 		if (outputIndex === -1) throw Error("Output token not found on pool");
 
-		let amountGivenScaled18 = this._updateAmountGivenInVars(
+		const amountGivenScaled18 = this._updateAmountGivenInVars(
 			input.amountRaw,
 			input.swapKind,
 			inputIndex,
@@ -117,20 +117,12 @@ export class Vault {
 			poolState.scalingFactors,
 			poolState.tokenRates,
 		);
-		if (poolState.swapFee > 0 && input.swapKind === SwapKind.GivenOut) {
-			// Round up to avoid losses during precision loss.
-			const swapFeeAmountScaled18 =
-				MathSol.divUpFixed(
-					amountGivenScaled18,
-					MathSol.complementFixed(poolState.swapFee),
-				) - amountGivenScaled18;
-			amountGivenScaled18 += swapFeeAmountScaled18;
-		}
 
 		// hook: shouldCallBeforeSwap (TODO - need to handle balance changes, etc see code)
 
 		// hook: dynamicSwapFee
 
+		// _swap()
 		const swapParams: SwapParams = {
 			swapKind: input.swapKind,
 			amountGivenScaled18,
@@ -141,34 +133,34 @@ export class Vault {
 
 		let amountCalculatedScaled18 = pool.onSwap(swapParams);
 
+		// Set swapFeeAmountScaled18 based on the amountCalculated.
+		let swapFeeAmountScaled18 = 0n;
+        if (poolState.swapFee > 0) {
+            // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
+            // amountOut. On ExactOut, add it to the calculated amountIn.
+            // Round up to avoid losses during precision loss.
+            swapFeeAmountScaled18 = MathSol.mulUpFixed(amountCalculatedScaled18, poolState.swapFee);
+        }
+
 		let amountCalculated = 0n;
 		if (input.swapKind === SwapKind.GivenIn) {
-			if (poolState.swapFee > 0) {
-				// Swap fee is a percentage of the amountCalculated for the EXACT_IN swap
-				// Round up to avoid losses during precision loss.
-				const swapFeeAmountScaled18 = MathSol.mulUpFixed(
-					amountCalculatedScaled18,
-					poolState.swapFee,
-				);
-				// Should subtract the fee from the amountCalculated for EXACT_IN swap
-				amountCalculatedScaled18 -= swapFeeAmountScaled18;
-			}
-			// For `ExactIn` the amount calculated is leaving the Vault, so we round down.
-			amountCalculated = this._toRawUndoRateRoundDown(
+			amountCalculatedScaled18 -= swapFeeAmountScaled18;
+
+            // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
+            amountCalculated = this._toRawUndoRateRoundDown(
 				amountCalculatedScaled18,
 				poolState.scalingFactors[outputIndex],
 				poolState.tokenRates[outputIndex],
 			);
-			// (amountIn, amountOut) = (params.amountGivenRaw, amountCalculated);
 		} else {
-			// Round up when entering the Vault on `ExactOut`.
+			amountCalculatedScaled18 += swapFeeAmountScaled18;
+
+			// For `ExactOut` the amount calculated is entering the Vault, so we round up.
 			amountCalculated = this._toRawUndoRateRoundUp(
 				amountCalculatedScaled18,
 				poolState.scalingFactors[inputIndex],
 				poolState.tokenRates[inputIndex],
 			);
-
-			// (amountIn, amountOut) = (amountCalculated, params.amountGivenRaw);
 		}
 
 		// TODO - Depending on hook implementation we may need to alter the logic for handling amounts, etc
@@ -310,16 +302,16 @@ export class Vault {
 			swapFeeAmountsScaled18 = computed.swapFeeAmounts;
 		} else throw new Error("Unsupported RemoveLiquidity Kind");
 
-        const amountsOutRaw = new Array(poolState.tokens.length);
+		const amountsOutRaw = new Array(poolState.tokens.length);
 
-        for (let i = 0; i < poolState.tokens.length; ++i) {
-            // amountsOut are amounts exiting the Pool, so we round down.
+		for (let i = 0; i < poolState.tokens.length; ++i) {
+			// amountsOut are amounts exiting the Pool, so we round down.
 			amountsOutRaw[i] = this._toRawUndoRateRoundDown(
 				amountsOutScaled18[i],
 				poolState.scalingFactors[i],
 				poolState.tokenRates[i],
 			);
-        }
+		}
 
 		// hook: shouldCallAfterRemoveLiquidity
 		return {

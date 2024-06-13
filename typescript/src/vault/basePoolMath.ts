@@ -270,8 +270,8 @@ export function computeRemoveLiquiditySingleTokenExactOut(
 	const swapFeeAmounts = new Array(numTokens);
 	swapFeeAmounts[tokenOutIndex] = fee;
 
-	// mulUp/divDown maximize the amount of tokens burned for the security reasons
-	const bptAmountIn = MathSol.divDownFixed(MathSol.mulUpFixed(totalSupply, currentInvariant - invariantWithFeesApplied), currentInvariant);
+	// mulUp/divUp maximize the amount of tokens burned for the security reasons
+	const bptAmountIn = MathSol.divUpFixed(MathSol.mulUpFixed(totalSupply, currentInvariant - invariantWithFeesApplied), currentInvariant);
 	return {
 		bptAmountIn,
 		swapFeeAmounts

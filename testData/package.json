@@ -9,7 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@balancer/sdk": "^0.15.1",
+    "@balancer/sdk": "^0.16.0",
     "viem": "^2.12.0"
   },
   "scripts": {
