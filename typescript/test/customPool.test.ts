@@ -12,7 +12,7 @@ describe("custom pool tests", () => {
 			poolType: "CustomPool",
 			chainId: "11155111",
 			blockNumber: "5955145",
-			poolAddress: "0x204d4194e4e42364e3d1841d0a9b1ef857879c31",
+			poolAddress: "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
 			tokens: [
 				"0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
 				"0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
