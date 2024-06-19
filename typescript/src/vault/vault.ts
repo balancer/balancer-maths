@@ -1,4 +1,3 @@
-import type { WeightedState } from "@/weighted/data";
 import { Weighted } from "../weighted/weightedPool";
 import { MathSol } from "../utils/math";
 import {
@@ -8,6 +7,8 @@ import {
 	computeRemoveLiquiditySingleTokenExactIn,
 	computeRemoveLiquiditySingleTokenExactOut,
 } from "./basePoolMath";
+import type { WeightedState } from "@/weighted/data";
+import type { StableState } from "@/stable/data";
 
 export interface PoolBase {
 	onSwap(swapParams: SwapParams): bigint;
@@ -23,7 +24,7 @@ export type poolConfig = {
 	customPoolTypes: Record<string, PoolBase>;
 };
 
-export type PoolState = WeightedState;
+export type PoolState = WeightedState | StableState;
 
 export enum SwapKind {
 	GivenIn = 0,

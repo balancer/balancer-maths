@@ -1,3 +1,4 @@
+import type { StableImmutable, StableMutable } from "@/stable/data";
 import type { WeightedImmutable, WeightedMutable } from "@/weighted/data";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -11,7 +12,11 @@ type PoolBase = {
 
 type WeightedPool = PoolBase & WeightedImmutable & WeightedMutable;
 
-type PoolsMap = Map<string, WeightedPool>;
+type StablePool = PoolBase & StableImmutable & StableMutable;
+
+type SupportedPools = WeightedPool | StablePool;
+
+type PoolsMap = Map<string, SupportedPools>;
 
 type Swap = {
 	swapKind: number;
@@ -45,7 +50,7 @@ type TestData = {
 
 // Reads all json test files and parses to relevant swap/pool bigint format
 export function readTestData(directoryPath: string): TestData {
-	const pools: PoolsMap = new Map<string, WeightedPool>();
+	const pools: PoolsMap = new Map<string, SupportedPools>();
 	const swaps: Swap[] = [];
 	const adds: Add[] = [];
 	const removes: Remove[] = [];
@@ -53,7 +58,7 @@ export function readTestData(directoryPath: string): TestData {
 		swaps,
 		adds,
 		pools,
-		removes
+		removes,
 	};
 
 	// Resolve the directory path relative to the current file's directory
@@ -85,15 +90,6 @@ export function readTestData(directoryPath: string): TestData {
 							test: file,
 						})),
 					);
-				pools.set(file, {
-					...jsonData.pool,
-					scalingFactors: jsonData.pool.scalingFactors.map((sf) => BigInt(sf)),
-					weights: jsonData.pool.weights.map((w) => BigInt(w)),
-					swapFee: BigInt(jsonData.pool.swapFee),
-					balances: jsonData.pool.balances.map((b) => BigInt(b)),
-					tokenRates: jsonData.pool.tokenRates.map((r) => BigInt(r)),
-					totalSupply: BigInt(jsonData.pool.totalSupply),
-				});
 				if (jsonData.adds)
 					adds.push(
 						...jsonData.adds.map((add) => ({
@@ -114,6 +110,8 @@ export function readTestData(directoryPath: string): TestData {
 							test: file,
 						})),
 					);
+
+				pools.set(file, mapPool(jsonData.pool));
 			} catch (error) {
 				console.error(`Error parsing JSON file ${file}:`, error);
 			}
@@ -123,12 +121,51 @@ export function readTestData(directoryPath: string): TestData {
 	return testData;
 }
 
+type TransformBigintToString<T> = {
+	[K in keyof T]: T[K] extends bigint
+		? string
+		: T[K] extends bigint[]
+			? string[]
+			: T[K];
+};
+
+function mapPool(
+	pool: TransformBigintToString<SupportedPools>,
+): SupportedPools {
+	if (pool.poolType === "Weighted") {
+		return {
+			...pool,
+			scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+			swapFee: BigInt(pool.swapFee),
+			balances: pool.balances.map((b) => BigInt(b)),
+			tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+			totalSupply: BigInt(pool.totalSupply),
+			weights: (pool as TransformBigintToString<WeightedPool>).weights.map(
+				(w) => BigInt(w),
+			),
+		};
+	}
+	if (pool.poolType === "Stable") {
+		return {
+			...pool,
+			scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+			swapFee: BigInt(pool.swapFee),
+			balances: pool.balances.map((b) => BigInt(b)),
+			tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+			totalSupply: BigInt(pool.totalSupply),
+			amp: BigInt((pool as TransformBigintToString<StablePool>).amp)
+		};
+	}
+	console.log(pool);
+	throw new Error("mapPool: Unsupported Pool Type");
+}
+
 function mapRemoveKind(kind: string): number {
-	if(kind === "Proportional") return 0;
+	if (kind === "Proportional") return 0;
 	// biome-ignore lint/style/noUselessElse: <explanation>
-	else if(kind === "SingleTokenExactIn") return 1;
+	else if (kind === "SingleTokenExactIn") return 1;
 	// biome-ignore lint/style/noUselessElse: <explanation>
-	else if(kind === "SingleTokenExactOut") return 2;
+	else if (kind === "SingleTokenExactOut") return 2;
 	// biome-ignore lint/style/noUselessElse: <explanation>
 	else throw new Error(`Unsupported RemoveKind: ${kind}`);
 }

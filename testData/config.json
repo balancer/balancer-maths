@@ -85,6 +85,71 @@
                     "tokenOut": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
                 }
             ]
+        },
+        {
+            "testName": "Stable",
+            "chainId": "11155111",
+            "blockNumber": "6113328",
+            "poolAddress": "0xc5a6274cabd5a9776f9465088a7c6715dfdefa2a",
+            "poolType": "Stable",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000",
+                    "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "tokenOut": "0xb77eb1a70a96fdaaeb31db1b42f2b8b5846b2613"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "2000000000000000",
+                    "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "tokenOut": "0xb77eb1a70a96fdaaeb31db1b42f2b8b5846b2613"
+                }
+            ],
+            "adds": [
+                {
+                    "kind": "Proportional",
+                    "inputAmountsRaw": [
+                        "1000000000000000",
+                        "1000000000000000"
+                    ],
+                    "tokens": [
+                        "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                        "0xb77eb1a70a96fdaaeb31db1b42f2b8b5846b2613"
+                    ],
+                    "decimals": [
+                        6,
+                        18
+                    ]
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": [
+                        "1000000000000000"
+                    ],
+                    "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "decimals": 6
+                }
+            ],
+            "removes": [
+                {
+                    "kind": "Proportional",
+                    "bpt": "0xc5a6274cabd5a9776f9465088a7c6715dfdefa2a",
+                    "bptInRaw": "1000000000000000000"
+                },
+                {
+                    "kind": "SingleTokenExactIn",
+                    "bpt": "0xc5a6274cabd5a9776f9465088a7c6715dfdefa2a",
+                    "bptInRaw": "1000000000000000000",
+                    "token": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a"
+                },
+                {
+                    "kind": "SingleTokenExactOut",
+                    "token": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "amountOutRaw": "1000000",
+                    "decimals": 6
+                }
+            ]
         }
     ]
 }
