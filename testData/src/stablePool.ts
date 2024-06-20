@@ -8,9 +8,9 @@ import {
 } from "viem";
 import { CHAINS, VAULT_V3 } from "@balancer/sdk";
 import type {
-	WeightedImmutable,
-	WeightedMutable,
-} from "../../typescript/src/weighted/data";
+	StableImmutable,
+	StableMutable,
+} from "../../typescript/src/stable/data";
 import { MathSol } from "../../typescript/src/utils/math";
 import { vaultV3Abi } from "./abi/vaultV3";
 
@@ -22,7 +22,7 @@ type TransformBigintToString<T> = {
 			: T[K];
 };
 
-export class WeightedPool {
+export class StablePool {
 	client: PublicClient;
 	vault: Address;
 
@@ -39,35 +39,26 @@ export class WeightedPool {
 
 	async fetchImmutableData(
 		address: Address,
-	): Promise<TransformBigintToString<WeightedImmutable>> {
+	): Promise<TransformBigintToString<StableImmutable>> {
 		const poolTokensCall = {
 			address: this.vault,
 			abi: vaultV3Abi,
 			functionName: "getPoolTokenInfo",
 			args: [address],
 		} as const;
-		const tokenWeightsCall = {
-			address,
-			abi: parseAbi([
-				"function getNormalizedWeights() external view returns (uint256[] memory)",
-			]),
-			functionName: "getNormalizedWeights",
-		} as const;
-
 		const multicallResult = await this.client.multicall({
-			contracts: [poolTokensCall, tokenWeightsCall],
+			contracts: [poolTokensCall],
 			allowFailure: false,
 		});
 		return {
 			tokens: multicallResult[0][0].map((t) => t.token.toString()),
 			scalingFactors: multicallResult[0][2].map((sf) => sf.toString()),
-			weights: multicallResult[1].map((w) => w.toString()),
 		};
 	}
 
 	async fetchMutableData(
 		address: Address,
-	): Promise<TransformBigintToString<WeightedMutable>> {
+	): Promise<TransformBigintToString<StableMutable>> {
 		const poolTokensCall = {
 			address: this.vault,
 			abi: vaultV3Abi,
@@ -88,9 +79,21 @@ export class WeightedPool {
 			functionName: "totalSupply",
 			args: [address],
 		} as const;
+		const amplificationParameterCall = {
+			address,
+			abi: parseAbi([
+				"function getAmplificationParameter() external view returns (uint256 value, bool isUpdating, uint256 precision)",
+			]),
+			functionName: "getAmplificationParameter",
+		} as const;
 
 		const multicallResult = await this.client.multicall({
-			contracts: [staticSwapFeeCall, poolTokensCall, totalSupplyCall],
+			contracts: [
+				staticSwapFeeCall,
+				poolTokensCall,
+				totalSupplyCall,
+				amplificationParameterCall,
+			],
 			allowFailure: false,
 		});
 		// Note - this is a temp fix and does not currently take into account yield fees. In future mono-repo there should be a call to fetch live balances that will not require scaling and will have fees taken into account.
@@ -104,6 +107,7 @@ export class WeightedPool {
 			balances: liveBalances.map((b) => b.toString()),
 			tokenRates: scalingFactors.map((sf) => "1000000000000000000"), // TODO - Should be replaced with actual tokenRates when a view is available
 			totalSupply: multicallResult[2].toString(),
+			amp: multicallResult[3][0].toString(),
 		};
 	}
 }

@@ -1,5 +1,3 @@
-import type { WeightedState } from "@/weighted/data";
-import { Weighted } from "../weighted/weightedPool";
 import { MathSol } from "../utils/math";
 import {
 	computeAddLiquiditySingleTokenExactOut,
@@ -8,6 +6,8 @@ import {
 	computeRemoveLiquiditySingleTokenExactIn,
 	computeRemoveLiquiditySingleTokenExactOut,
 } from "./basePoolMath";
+import { Weighted, type WeightedState } from "../weighted";
+import { Stable, type StableState } from "../stable";
 
 export interface PoolBase {
 	onSwap(swapParams: SwapParams): bigint;
@@ -23,7 +23,7 @@ export type poolConfig = {
 	customPoolTypes: Record<string, PoolBase>;
 };
 
-export type PoolState = WeightedState;
+export type PoolState = WeightedState | StableState;
 
 export enum SwapKind {
 	GivenIn = 0,
@@ -84,6 +84,7 @@ export class Vault {
 	constructor(customPoolClasses?: PoolClasses) {
 		this.poolClasses = {
 			Weighted: Weighted,
+			Stable: Stable,
 			// custom add liquidity types take precedence over base types
 			...customPoolClasses,
 		};
@@ -273,7 +274,6 @@ export class Vault {
 			);
 		} else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_IN) {
 			bptAmountIn = input.maxBptAmountIn;
-			// bptAmountIn = params.maxBptAmountIn;
 			amountsOutScaled18 = minAmountsOutScaled18;
 			tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
 			const computed = computeRemoveLiquiditySingleTokenExactIn(

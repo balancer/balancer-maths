@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import { WeightedPool } from "./weightedPool";
+import { StablePool } from "./stablePool";
 import type { PoolBase } from "./types";
 
 export async function getPool(
@@ -12,6 +13,7 @@ export async function getPool(
 	// Find onchain data fetching via pool type
 	const poolData = {
 		Weighted: new WeightedPool(rpcUrl, chainId),
+		Stable: new StablePool(rpcUrl, chainId),
 	};
 	if (!poolData[poolType]) throw new Error("getPool: Unsupported pool type");
 
