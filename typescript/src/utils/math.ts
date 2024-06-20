@@ -59,8 +59,9 @@ export class MathSol {
 		return (aInflated - 1n) / b + 1n;
 	}
 
+	// also called divUpRaw in stable maths
 	static divUp(a: bigint, b: bigint): bigint {
-		if (a === 0n) {
+		if (b === 0n) {
 			return 0n;
 		}
 		return 1n + (a - 1n) / b;
