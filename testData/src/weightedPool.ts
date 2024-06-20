@@ -102,8 +102,8 @@ export class WeightedPool {
 		return {
 			swapFee: multicallResult[0].toString(),
 			balances: liveBalances.map((b) => b.toString()),
-			tokenRates: scalingFactors.map((sf) => sf.toString()), // TODO - Should be replaced with actual tokenRates when a view is available
-			totalSupply: multicallResult[2].toString()
+			tokenRates: scalingFactors.map((sf) => "1000000000000000000"), // TODO - Should be replaced with actual tokenRates when a view is available
+			totalSupply: multicallResult[2].toString(),
 		};
 	}
 }

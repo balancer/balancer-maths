@@ -88,7 +88,12 @@ export class StablePool {
 		} as const;
 
 		const multicallResult = await this.client.multicall({
-			contracts: [staticSwapFeeCall, poolTokensCall, totalSupplyCall, amplificationParameterCall],
+			contracts: [
+				staticSwapFeeCall,
+				poolTokensCall,
+				totalSupplyCall,
+				amplificationParameterCall,
+			],
 			allowFailure: false,
 		});
 		// Note - this is a temp fix and does not currently take into account yield fees. In future mono-repo there should be a call to fetch live balances that will not require scaling and will have fees taken into account.
@@ -100,7 +105,7 @@ export class StablePool {
 		return {
 			swapFee: multicallResult[0].toString(),
 			balances: liveBalances.map((b) => b.toString()),
-			tokenRates: scalingFactors.map((sf) => sf.toString()), // TODO - Should be replaced with actual tokenRates when a view is available
+			tokenRates: scalingFactors.map((sf) => "1000000000000000000"), // TODO - Should be replaced with actual tokenRates when a view is available
 			totalSupply: multicallResult[2].toString(),
 			amp: multicallResult[3][0].toString(),
 		};
