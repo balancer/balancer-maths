@@ -6,13 +6,11 @@ import {
 	parseAbi,
 	type Chain,
 } from "viem";
-import { CHAINS, VAULT_V3 } from "@balancer/sdk";
+import { CHAINS, VAULT_V3, vaultExtensionV3Abi } from "@balancer/sdk";
 import type {
 	StableImmutable,
 	StableMutable,
 } from "../../typescript/src/stable/data";
-import { MathSol } from "../../typescript/src/utils/math";
-import { vaultV3Abi } from "./abi/vaultV3";
 
 type TransformBigintToString<T> = {
 	[K in keyof T]: T[K] extends bigint
@@ -42,32 +40,32 @@ export class StablePool {
 	): Promise<TransformBigintToString<StableImmutable>> {
 		const poolTokensCall = {
 			address: this.vault,
-			abi: vaultV3Abi,
+			abi: vaultExtensionV3Abi,
 			functionName: "getPoolTokenInfo",
 			args: [address],
 		} as const;
+		const tokenRatesCall = {
+			address: this.vault,
+			abi: vaultExtensionV3Abi,
+			functionName: "getPoolTokenRates",
+			args: [address],
+		} as const;
 		const multicallResult = await this.client.multicall({
-			contracts: [poolTokensCall],
+			contracts: [poolTokensCall, tokenRatesCall],
 			allowFailure: false,
 		});
 		return {
-			tokens: multicallResult[0][0].map((t) => t.token.toString()),
-			scalingFactors: multicallResult[0][2].map((sf) => sf.toString()),
+			tokens: multicallResult[0][0].map((token) => token),
+			scalingFactors: multicallResult[1][0].map((sf) => sf.toString()),
 		};
 	}
 
 	async fetchMutableData(
 		address: Address,
 	): Promise<TransformBigintToString<StableMutable>> {
-		const poolTokensCall = {
-			address: this.vault,
-			abi: vaultV3Abi,
-			functionName: "getPoolTokenInfo",
-			args: [address],
-		} as const;
 		const staticSwapFeeCall = {
 			address: this.vault,
-			abi: vaultV3Abi,
+			abi: vaultExtensionV3Abi,
 			functionName: "getStaticSwapFeePercentage",
 			args: [address],
 		} as const;
@@ -77,6 +75,18 @@ export class StablePool {
 				"function totalSupply(address token) external view returns (uint256)",
 			]),
 			functionName: "totalSupply",
+			args: [address],
+		} as const;
+		const liveBalancesCall = {
+			address: this.vault,
+			abi: vaultExtensionV3Abi,
+			functionName: "getCurrentLiveBalances",
+			args: [address],
+		} as const;
+		const tokenRatesCall = {
+			address: this.vault,
+			abi: vaultExtensionV3Abi,
+			functionName: "getPoolTokenRates",
 			args: [address],
 		} as const;
 		const amplificationParameterCall = {
@@ -90,24 +100,19 @@ export class StablePool {
 		const multicallResult = await this.client.multicall({
 			contracts: [
 				staticSwapFeeCall,
-				poolTokensCall,
 				totalSupplyCall,
+				liveBalancesCall,
+				tokenRatesCall,
 				amplificationParameterCall,
 			],
 			allowFailure: false,
 		});
-		// Note - this is a temp fix and does not currently take into account yield fees. In future mono-repo there should be a call to fetch live balances that will not require scaling and will have fees taken into account.
-		const rawBalances = multicallResult[1][1];
-		const scalingFactors = multicallResult[1][2];
-		const liveBalances = rawBalances.map((rb, i) =>
-			MathSol.mulDownFixed(rb, scalingFactors[i]),
-		);
 		return {
 			swapFee: multicallResult[0].toString(),
-			balances: liveBalances.map((b) => b.toString()),
-			tokenRates: scalingFactors.map((sf) => "1000000000000000000"), // TODO - Should be replaced with actual tokenRates when a view is available
-			totalSupply: multicallResult[2].toString(),
-			amp: multicallResult[3][0].toString(),
+			totalSupply: multicallResult[1].toString(),
+			balances: multicallResult[2].map((b) => b.toString()),
+			tokenRates: multicallResult[3][1].map((b) => b.toString()),
+			amp: multicallResult[4][0].toString(),
 		};
 	}
 }
