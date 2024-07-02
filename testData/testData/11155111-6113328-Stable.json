@@ -3,16 +3,16 @@
         {
             "swapKind": 0,
             "amountRaw": "1000000000000000",
-            "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
-            "tokenOut": "0xb77eb1a70a96fdaaeb31db1b42f2b8b5846b2613",
-            "outputRaw": "103999745380156169693"
+            "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
+            "tokenOut": "0xde46e43f46ff74a23a65ebb0580cbe3dfe684a17",
+            "outputRaw": "494999999999999873581"
         },
         {
             "swapKind": 1,
             "amountRaw": "2000000000000000",
-            "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
-            "tokenOut": "0xb77eb1a70a96fdaaeb31db1b42f2b8b5846b2613",
-            "outputRaw": "2020"
+            "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
+            "tokenOut": "0xde46e43f46ff74a23a65ebb0580cbe3dfe684a17",
+            "outputRaw": "2106"
         }
     ],
     "adds": [
@@ -22,12 +22,12 @@
                 "1000000000000000",
                 "1000000000000000"
             ],
-            "bptOutRaw": "90741679106519215081049000"
+            "bptOutRaw": "155373339454198795190224130"
         },
         {
             "kind": "SingleToken",
             "inputAmountsRaw": [
-                "1007",
+                "980",
                 "0"
             ],
             "bptOutRaw": "1000000000000000"
@@ -37,15 +37,15 @@
         {
             "kind": "Proportional",
             "amountsOutRaw": [
-                "475500",
-                "525251239293718033"
+                "476994",
+                "476994620324528499"
             ],
             "bptInRaw": "1000000000000000000"
         },
         {
             "kind": "SingleTokenExactIn",
             "amountsOutRaw": [
-                "995444",
+                "969137",
                 "0"
             ],
             "bptInRaw": "1000000000000000000"
@@ -56,32 +56,32 @@
                 "1000000",
                 "0"
             ],
-            "bptInRaw": "1004602105703866304"
+            "bptInRaw": "1031871475203360365"
         }
     ],
     "pool": {
         "chainId": "11155111",
         "blockNumber": "6113328",
         "poolType": "Stable",
-        "poolAddress": "0xc5a6274cabd5a9776f9465088a7c6715dfdefa2a",
+        "poolAddress": "0x90a46864cb1f042060554592038367e9c97e17f3",
         "tokens": [
-            "0x80D6d3946ed8A1Da4E226aa21CCdDc32bd127d1A",
-            "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613"
+            "0x8A88124522dbBF1E56352ba3DE1d9F78C143751e",
+            "0xDE46e43F46ff74A23a65EBb0580cbe3dFE684a17"
         ],
         "scalingFactors": [
             "1000000000000000000000000000000",
             "1000000000000000000"
         ],
         "swapFee": "10000000000000000",
+        "totalSupply": "1048229851439035843046",
         "balances": [
-            "95100005000000000000",
-            "105050247858743606755"
+            "514790820812959778500",
+            "536527062318691819000"
         ],
         "tokenRates": [
-            "1000000000000000000",
-            "1000000000000000000"
+            "1029581641625919557",
+            "1073054124637383638"
         ],
-        "totalSupply": "200000000000000000000",
         "amp": "1000000"
     }
 }
