@@ -1,12 +1,8 @@
 import { BufferState } from '../buffer/data';
 import { isSameAddress } from '../vault/utils';
-import { SwapInput } from '../vault/vault';
+import { SwapInput } from '../vault/types';
 import { calculateBufferAmounts } from './bufferMath';
-
-export enum WrappingDirection {
-    WRAP = 0,
-    UNWRAP = 1,
-}
+import { WrappingDirection } from './types';
 
 const _MINIMUM_WRAP_AMOUNT = 1000000n;
 

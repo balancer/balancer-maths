@@ -1,4 +1,4 @@
-import { type PoolBase, SwapKind, type SwapParams } from '../vault/vault';
+import { type PoolBase, SwapKind, type SwapParams } from '../vault/types';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,

@@ -1,5 +1,5 @@
-import { SwapKind } from '../vault/vault';
-import { WrappingDirection } from './erc4626BufferWrapOrUnwrap';
+import { SwapKind } from '../vault/types';
+import { WrappingDirection } from './types';
 import { RayMathExplicitRounding } from './rayMathExplicitRounding';
 
 enum Rounding {
