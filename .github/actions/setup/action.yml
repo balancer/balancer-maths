@@ -17,7 +17,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ~/.pnpm-store
-        key: ${{ matrix.node-version }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+        key: ${{ matrix.node-version }}-pnpm-${{ hashFiles('./typescript/pnpm-lock.yaml') }}
         restore-keys: ${{ matrix.node-version }}-pnpm-
 
     - name: Cache node_modules
@@ -25,7 +25,7 @@ runs:
       id: cache-node-modules
       with:
         path: node_modules
-        key: ${{ matrix.node-version }}-modules-${{ hashFiles('pnpm-lock.yaml') }}
+        key: ${{ matrix.node-version }}-modules-${{ hashFiles('./typescript/pnpm-lock.yaml') }}
 
     - name: Install Dependencies
       working-directory: ./typescript
