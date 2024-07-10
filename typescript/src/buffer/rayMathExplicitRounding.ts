@@ -6,29 +6,29 @@ const RAY = 1000000000000000000000000000n;
 const WAD_RAY_RATIO = 1000000000n;
 
 export class RayMathExplicitRounding {
-  static rayMulRoundDown(a: bigint, b: bigint): bigint {
-    if (a === 0n || b === 0n) {
-      return 0n;
+    static rayMulRoundDown(a: bigint, b: bigint): bigint {
+        if (a === 0n || b === 0n) {
+            return 0n;
+        }
+        return (a * b) / RAY;
     }
-    return (a * b) / RAY;
-  }
 
-  static rayMulRoundUp(a: bigint, b: bigint): bigint {
-    if (a === 0n || b === 0n) {
-      return 0n;
+    static rayMulRoundUp(a: bigint, b: bigint): bigint {
+        if (a === 0n || b === 0n) {
+            return 0n;
+        }
+        return (a * b + RAY - 1n) / RAY;
     }
-    return (a * b + RAY - 1n) / RAY;
-  }
 
-  static rayDivRoundDown(a: bigint, b: bigint): bigint {
-    return (a * RAY) / b;
-  }
+    static rayDivRoundDown(a: bigint, b: bigint): bigint {
+        return (a * RAY) / b;
+    }
 
-  static rayDivRoundUp(a: bigint, b: bigint): bigint {
-    return (a * RAY + b - 1n) / b;
-  }
+    static rayDivRoundUp(a: bigint, b: bigint): bigint {
+        return (a * RAY + b - 1n) / b;
+    }
 
-  static rayToWadRoundDown(a: bigint): bigint {
-    return a / WAD_RAY_RATIO;
-  }
+    static rayToWadRoundDown(a: bigint): bigint {
+        return a / WAD_RAY_RATIO;
+    }
 }

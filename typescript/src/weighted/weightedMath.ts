@@ -1,4 +1,4 @@
-import { MathSol, WAD } from "../utils/math";
+import { MathSol, WAD } from '../utils/math';
 
 // A minimum normalized weight imposes a maximum weight ratio. We need this due to limitations in the
 // implementation of the power function, as these ratios are often exponents.
@@ -27,35 +27,35 @@ export const _MIN_INVARIANT_RATIO = BigInt(0.7e18);
 // So we can round always to the same direction. It is also used to initiate the BPT amount
 // and, because there is a minimum BPT, we round down the invariant.
 export const _computeInvariant = (
-	normalizedWeights: bigint[],
-	balances: bigint[],
+    normalizedWeights: bigint[],
+    balances: bigint[],
 ): bigint => {
-	/**********************************************************************************************
+    /**********************************************************************************************
     // invariant               _____                                                             //
     // wi = weight index i      | |      wi                                                      //
     // bi = balance index i     | |  bi ^   = i                                                  //
     // i = invariant                                                                             //
     **********************************************************************************************/
 
-	let invariant = WAD;
-	for (let i = 0; i < normalizedWeights.length; ++i) {
-		invariant = MathSol.mulDownFixed(
-			invariant,
-			MathSol.powDownFixed(balances[i], normalizedWeights[i]),
-		);
-	}
-	if (invariant === 0n) {
-		throw new Error("ZeroInvariant");
-	}
-	return invariant;
+    let invariant = WAD;
+    for (let i = 0; i < normalizedWeights.length; ++i) {
+        invariant = MathSol.mulDownFixed(
+            invariant,
+            MathSol.powDownFixed(balances[i], normalizedWeights[i]),
+        );
+    }
+    if (invariant === 0n) {
+        throw new Error('ZeroInvariant');
+    }
+    return invariant;
 };
 
 export const _computeBalanceOutGivenInvariant = (
-	currentBalance: bigint,
-	weight: bigint,
-	invariantRatio: bigint,
+    currentBalance: bigint,
+    weight: bigint,
+    invariantRatio: bigint,
 ): bigint => {
-	/******************************************************************************************
+    /******************************************************************************************
     // calculateBalanceGivenInvariant                                                       //
     // o = balanceOut                                                                        //
     // b = balanceIn                      (1 / w)                                            //
@@ -63,27 +63,27 @@ export const _computeBalanceOutGivenInvariant = (
     // i = invariantRatio                                                                    //
     ******************************************************************************************/
 
-	// Rounds result up overall.
+    // Rounds result up overall.
 
-	// Calculate by how much the token balance has to increase to match the invariantRatio.
-	const balanceRatio = MathSol.powUpFixed(
-		invariantRatio,
-		MathSol.divUpFixed(WAD, weight),
-	);
+    // Calculate by how much the token balance has to increase to match the invariantRatio.
+    const balanceRatio = MathSol.powUpFixed(
+        invariantRatio,
+        MathSol.divUpFixed(WAD, weight),
+    );
 
-	return MathSol.mulUpFixed(currentBalance, balanceRatio);
+    return MathSol.mulUpFixed(currentBalance, balanceRatio);
 };
 
 // Computes how many tokens can be taken out of a pool if `amountIn` are sent, given the
 // current balances and weights.
 export const _computeOutGivenExactIn = (
-	balanceIn: bigint,
-	weightIn: bigint,
-	balanceOut: bigint,
-	weightOut: bigint,
-	amountIn: bigint,
+    balanceIn: bigint,
+    weightIn: bigint,
+    balanceOut: bigint,
+    weightOut: bigint,
+    amountIn: bigint,
 ): bigint => {
-	/**********************************************************************************************
+    /**********************************************************************************************
     // outGivenExactIn                                                                                //
     // aO = amountOut                                                                            //
     // bO = balanceOut                                                                           //
@@ -93,29 +93,29 @@ export const _computeOutGivenExactIn = (
     // wO = weightOut                                                                            //
     **********************************************************************************************/
 
-	if (amountIn > MathSol.mulDownFixed(balanceIn, _MAX_IN_RATIO)) {
-		throw new Error("MaxInRatio exceeded");
-	}
+    if (amountIn > MathSol.mulDownFixed(balanceIn, _MAX_IN_RATIO)) {
+        throw new Error('MaxInRatio exceeded');
+    }
 
-	const denominator = balanceIn + amountIn;
-	const base = MathSol.divUpFixed(balanceIn, denominator);
-	const exponent = MathSol.divDownFixed(weightIn, weightOut);
-	const power = MathSol.powUpFixed(base, exponent);
+    const denominator = balanceIn + amountIn;
+    const base = MathSol.divUpFixed(balanceIn, denominator);
+    const exponent = MathSol.divDownFixed(weightIn, weightOut);
+    const power = MathSol.powUpFixed(base, exponent);
 
-	// Because of rounding up, power can be greater than one. Using complement prevents reverts.
-	return MathSol.mulDownFixed(balanceOut, MathSol.complementFixed(power));
+    // Because of rounding up, power can be greater than one. Using complement prevents reverts.
+    return MathSol.mulDownFixed(balanceOut, MathSol.complementFixed(power));
 };
 
 // Computes how many tokens must be sent to a pool in order to take `amountOut`, given the
 // current balances and weights.
 export const _computeInGivenExactOut = (
-	balanceIn: bigint,
-	weightIn: bigint,
-	balanceOut: bigint,
-	weightOut: bigint,
-	amountOut: bigint,
+    balanceIn: bigint,
+    weightIn: bigint,
+    balanceOut: bigint,
+    weightOut: bigint,
+    amountOut: bigint,
 ): bigint => {
-	/**********************************************************************************************
+    /**********************************************************************************************
     // inGivenExactOut                                                                                //
     // aO = amountOut                                                                            //
     // bO = balanceOut                                                                           //
@@ -125,17 +125,17 @@ export const _computeInGivenExactOut = (
     // wO = weightOut                                                                            //
     **********************************************************************************************/
 
-	if (amountOut > MathSol.mulDownFixed(balanceOut, _MAX_OUT_RATIO)) {
-		throw new Error("MaxOutRatio exceeded");
-	}
+    if (amountOut > MathSol.mulDownFixed(balanceOut, _MAX_OUT_RATIO)) {
+        throw new Error('MaxOutRatio exceeded');
+    }
 
-	const base = MathSol.divUpFixed(balanceOut, balanceOut - amountOut);
-	const exponent = MathSol.divUpFixed(weightOut, weightIn);
-	const power = MathSol.powUpFixed(base, exponent);
+    const base = MathSol.divUpFixed(balanceOut, balanceOut - amountOut);
+    const exponent = MathSol.divUpFixed(weightOut, weightIn);
+    const power = MathSol.powUpFixed(base, exponent);
 
-	// Because the base is larger than one (and the power rounds up), the power should always be larger than one, so
-	// the following subtraction should never revert.
-	const ratio = power - WAD;
+    // Because the base is larger than one (and the power rounds up), the power should always be larger than one, so
+    // the following subtraction should never revert.
+    const ratio = power - WAD;
 
-	return MathSol.mulUpFixed(balanceIn, ratio);
+    return MathSol.mulUpFixed(balanceIn, ratio);
 };

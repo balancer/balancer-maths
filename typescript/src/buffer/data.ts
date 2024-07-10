@@ -1,13 +1,13 @@
-type PoolType = "Buffer";
+type PoolType = 'Buffer';
 
 export type BufferMutable = {
-  rate: bigint;
+    rate: bigint;
 };
 
 export type BufferImmutable = {
-  poolAddress: string;
-  tokens: string[];
+    poolAddress: string;
+    tokens: string[];
 };
 
 export type BufferState = { poolType: PoolType } & BufferImmutable &
-  BufferMutable;
+    BufferMutable;
