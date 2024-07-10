@@ -9,7 +9,6 @@ jobs:
     strategy:
       matrix:
         node-version: [18]
-        pnpm-version: [8]
     steps:
       - uses: actions/checkout@v3
       - name: Setup
@@ -22,12 +21,12 @@ jobs:
     strategy:
       matrix:
         node-version: [18]
-        pnpm-version: [8]
     steps:
       - uses: actions/checkout@v3
       - name: Setup
         uses: ./.github/actions/setup
       - name: Lint & format code
+        working-directory: ./typescript
         run: pnpm format & pnpm lint
   test:
     name: Test
@@ -36,20 +35,13 @@ jobs:
     strategy:
       matrix:
         node-version: [18]
-        pnpm-version: [8]
     steps:
       - uses: actions/checkout@v3
       - name: Setup
         uses: ./.github/actions/setup
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
       - name: Test
+        working-directory: ./typescript
         run: pnpm test:ci
-        env:
-          ETHEREUM_RPC_URL: ${{ secrets.ETHEREUM_RPC_URL }}
-          POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
-          FANTOM_RPC_URL: ${{ secrets.FANTOM_RPC_URL }}
-          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
   build:
     name: Build
     needs: install
@@ -57,10 +49,10 @@ jobs:
     strategy:
       matrix:
         node-version: [18]
-        pnpm-version: [8]
     steps:
       - uses: actions/checkout@v3
       - name: Setup
         uses: ./.github/actions/setup
       - name: Build
+        working-directory: ./typescript
         run: pnpm build
