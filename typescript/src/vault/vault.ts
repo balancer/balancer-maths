@@ -73,8 +73,7 @@ export type RemoveLiquidityInput = {
     kind: RemoveKind;
 };
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-type PoolClassConstructor = new (...args: any[]) => PoolBase;
+type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
 
 export class Vault {
@@ -200,7 +199,6 @@ export class Vault {
 
         let amountsInScaled18: bigint[];
         let bptAmountOut: bigint;
-        let swapFeeAmounts: bigint[];
         if (input.kind === AddKind.UNBALANCED) {
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
@@ -212,7 +210,6 @@ export class Vault {
                     pool.computeInvariant(balancesLiveScaled18),
             );
             bptAmountOut = computed.bptAmountOut;
-            swapFeeAmounts = computed.swapFeeAmounts;
         } else if (input.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
             const tokenIndex = this._getSingleInputIndex(maxAmountsInScaled18);
             amountsInScaled18 = maxAmountsInScaled18;
@@ -231,7 +228,6 @@ export class Vault {
                     ),
             );
             amountsInScaled18[tokenIndex] = computed.amountInWithFee;
-            swapFeeAmounts = computed.swapFeeAmounts;
         } else throw new Error('Unsupported AddLiquidity Kind');
 
         const amountsInRaw: bigint[] = new Array(poolState.tokens.length);
@@ -278,13 +274,11 @@ export class Vault {
         // hook: shouldCallBeforeRemoveLiquidity (TODO - need to handle balance changes, etc see code)
 
         let tokenOutIndex: number;
-        let swapFeeAmountsScaled18: bigint[];
         let bptAmountIn: bigint;
         let amountsOutScaled18: bigint[];
 
         if (input.kind === RemoveKind.PROPORTIONAL) {
             bptAmountIn = input.maxBptAmountIn;
-            swapFeeAmountsScaled18 = poolState.balances;
             amountsOutScaled18 = computeProportionalAmountsOut(
                 poolState.balances,
                 poolState.totalSupply,
@@ -307,7 +301,6 @@ export class Vault {
                         invariantRatio,
                     ),
             );
-            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
             amountsOutScaled18[tokenOutIndex] = computed.amountOutWithFee;
         } else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT) {
             amountsOutScaled18 = minAmountsOutScaled18;
@@ -322,7 +315,6 @@ export class Vault {
                     pool.computeInvariant(balancesLiveScaled18),
             );
             bptAmountIn = computed.bptAmountIn;
-            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else throw new Error('Unsupported RemoveLiquidity Kind');
 
         const amountsOutRaw = new Array(poolState.tokens.length);

@@ -17,7 +17,6 @@ const _require = (b: boolean, message: string) => {
     if (!b) throw new Error(message);
 };
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class MathSol {
     static max(a: bigint, b: bigint): bigint {
         return a >= b ? a : b;
@@ -111,7 +110,6 @@ export class MathSol {
     }
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 class LogExpMath {
     // All fixed point multiplications and divisions are inlined. This means we need to divide by ONE when multiplying
     // two numbers, and multiply by ONE when dividing them.

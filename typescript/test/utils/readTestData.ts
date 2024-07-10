@@ -174,10 +174,7 @@ function mapPool(
 
 function mapRemoveKind(kind: string): number {
     if (kind === 'Proportional') return 0;
-    // biome-ignore lint/style/noUselessElse: <explanation>
     else if (kind === 'SingleTokenExactIn') return 1;
-    // biome-ignore lint/style/noUselessElse: <explanation>
     else if (kind === 'SingleTokenExactOut') return 2;
-    // biome-ignore lint/style/noUselessElse: <explanation>
     else throw new Error(`Unsupported RemoveKind: ${kind}`);
 }

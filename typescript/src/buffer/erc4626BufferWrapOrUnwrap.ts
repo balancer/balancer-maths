@@ -4,8 +4,8 @@ import { SwapInput } from '../vault/vault';
 import { calculateBufferAmounts } from './bufferMath';
 
 export enum WrappingDirection {
-    WRAP,
-    UNWRAP,
+    WRAP = 0,
+    UNWRAP = 1,
 }
 
 const _MINIMUM_WRAP_AMOUNT = 1000000n;

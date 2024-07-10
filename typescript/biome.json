@@ -28,7 +28,8 @@
             },
             "style": {
                 "noNonNullAssertion": "off",
-                "useShorthandArrayType": "error"
+                "useShorthandArrayType": "error",
+                "noUselessElse": "off"
             },
             "suspicious": {
                 "noArrayIndexKey": "off",

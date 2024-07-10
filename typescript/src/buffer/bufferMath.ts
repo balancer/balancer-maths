@@ -3,8 +3,8 @@ import { WrappingDirection } from './erc4626BufferWrapOrUnwrap';
 import { RayMathExplicitRounding } from './rayMathExplicitRounding';
 
 enum Rounding {
-    UP,
-    DOWN,
+    UP = 0,
+    DOWN = 1,
 }
 
 export function calculateBufferAmounts(
@@ -13,9 +13,9 @@ export function calculateBufferAmounts(
     amountRaw: bigint,
     rate: bigint,
 ): bigint {
-    if (direction == WrappingDirection.WRAP) {
+    if (direction === WrappingDirection.WRAP) {
         // Amount in is underlying tokens, amount out is wrapped tokens
-        if (kind == SwapKind.GivenIn) {
+        if (kind === SwapKind.GivenIn) {
             // previewDeposit
             return _convertToShares(amountRaw, rate, Rounding.DOWN);
         } else {
@@ -24,7 +24,7 @@ export function calculateBufferAmounts(
         }
     } else {
         // Amount in is wrapped tokens, amount out is underlying tokens
-        if (kind == SwapKind.GivenOut) {
+        if (kind === SwapKind.GivenOut) {
             // previewRedeem
             return _convertToAssets(amountRaw, rate, Rounding.DOWN);
         } else {
@@ -40,7 +40,7 @@ function _convertToShares(
     rate: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding == Rounding.UP)
+    if (rounding === Rounding.UP)
         return RayMathExplicitRounding.rayDivRoundUp(assets, rate);
     return RayMathExplicitRounding.rayDivRoundDown(assets, rate);
 }
@@ -50,7 +50,7 @@ function _convertToAssets(
     rate: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding == Rounding.UP)
+    if (rounding === Rounding.UP)
         return RayMathExplicitRounding.rayMulRoundUp(shares, rate);
     return RayMathExplicitRounding.rayMulRoundDown(shares, rate);
 }

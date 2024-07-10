@@ -51,14 +51,10 @@ class CustomPool implements PoolBase {
     onSwap(): bigint {
         return this.randoms[0];
     }
-    computeInvariant(balancesLiveScaled18: bigint[]): bigint {
+    computeInvariant(): bigint {
         return 1n;
     }
-    computeBalance(
-        balancesLiveScaled18: bigint[],
-        tokenInIndex: number,
-        invariantRatio: bigint,
-    ): bigint {
+    computeBalance(): bigint {
         return 1n;
     }
 }
