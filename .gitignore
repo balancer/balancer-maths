@@ -82,3 +82,5 @@ artifacts
 
 #IDE
 .idea
+
+.DS_Store
