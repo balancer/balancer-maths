@@ -11,6 +11,7 @@ runs:
       uses: actions/setup-node@v3
       with:
         cache: 'pnpm'
+        cache-dependency-path: './typescript/pnpm-lock.yaml'
         node-version: ${{ matrix.node-version }}
 
     # - name: Cache pnpm
