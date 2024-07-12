@@ -10,13 +10,12 @@ import {
     _computeInGivenExactOut,
     _computeInvariant,
     _computeBalanceOutGivenInvariant,
+    _MAX_IN_RATIO,
+    _MAX_OUT_RATIO,
 } from './weightedMath';
 
 export class Weighted implements PoolBase {
     public normalizedWeights: bigint[];
-    // Swap limits: amounts swapped may not be larger than this percentage of the total balance.
-    public _MAX_IN_RATIO = 300000000000000000n;
-    public _MAX_OUT_RATIO = 300000000000000000n;
 
     constructor(poolState: {
         weights: bigint[];
@@ -28,11 +27,11 @@ export class Weighted implements PoolBase {
         if (swapParams.swapKind === SwapKind.GivenIn)
             return MathSol.divDownFixed(MathSol.mulDownFixed(
                 swapParams.balancesLiveScaled18[swapParams.indexIn],
-                this._MAX_IN_RATIO,
+                _MAX_IN_RATIO,
             ), swapParams.scalingFactors[swapParams.indexIn]);
         return MathSol.divDownFixed(MathSol.mulDownFixed(
             swapParams.balancesLiveScaled18[swapParams.indexOut],
-            this._MAX_OUT_RATIO,
+            _MAX_OUT_RATIO,
         ), swapParams.scalingFactors[swapParams.indexOut]);
     }
 
