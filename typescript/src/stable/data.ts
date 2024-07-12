@@ -2,7 +2,7 @@ type PoolType = 'Stable';
 
 export type StableMutable = {
     swapFee: bigint;
-    balances: bigint[];
+    balancesLiveScaled18: bigint[];
     tokenRates: bigint[];
     totalSupply: bigint;
     amp: bigint;

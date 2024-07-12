@@ -16,7 +16,7 @@ export interface PoolBase {
 export type SwapParams = {
     swapKind: SwapKind;
     amountGivenScaled18: bigint;
-    balancesScaled18: bigint[];
+    balancesLiveScaled18: bigint[];
     indexIn: number;
     indexOut: number;
 };
