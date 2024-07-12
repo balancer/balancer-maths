@@ -17,11 +17,12 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [1000000000000000000n, 1000000000000000000n],
+                    scalingFactors: [1000000000000000000000000000000n, 1000000000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(40000000000000000000n);
+                expect(maxSwapAmount).to.eq(40000000n);
             });
             test('exact out', () => {
                 const swapParams = {
@@ -32,6 +33,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [1000000000000000000n, 1000000000000000000n],
+                    scalingFactors: [1000000000000000000000000000000n, 1000000000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };
@@ -49,6 +51,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [2000000000000000000n, 4000000000000000000n],
+                    scalingFactors: [1000000000000000000n, 1000000000000000000000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };
@@ -64,11 +67,12 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [2000000000000000000n, 4000000000000000000n],
+                    scalingFactors: [1000000000000000000n, 1000000000000000000000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(40000000000000000000n);
+                expect(maxSwapAmount).to.eq(40000000n);
             });
         });
     });

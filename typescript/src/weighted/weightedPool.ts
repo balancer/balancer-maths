@@ -26,14 +26,14 @@ export class Weighted implements PoolBase {
 
     getMaxSwapAmount(swapParams: MaxSwapParams): bigint {
         if (swapParams.swapKind === SwapKind.GivenIn)
-            return MathSol.mulDownFixed(
+            return MathSol.divDownFixed(MathSol.mulDownFixed(
                 swapParams.balancesLiveScaled18[swapParams.indexIn],
                 this._MAX_IN_RATIO,
-            );
-        return MathSol.mulDownFixed(
+            ), swapParams.scalingFactors[swapParams.indexIn]);
+        return MathSol.divDownFixed(MathSol.mulDownFixed(
             swapParams.balancesLiveScaled18[swapParams.indexOut],
             this._MAX_OUT_RATIO,
-        );
+        ), swapParams.scalingFactors[swapParams.indexOut]);
     }
 
     onSwap(swapParams: SwapParams): bigint {

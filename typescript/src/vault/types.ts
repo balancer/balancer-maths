@@ -18,6 +18,7 @@ export type MaxSwapParams = {
     swapKind: SwapKind;
     balancesLiveScaled18: bigint[];
     tokenRates: bigint[];
+    scalingFactors: bigint[];
     indexIn: number;
     indexOut: number;
 };
