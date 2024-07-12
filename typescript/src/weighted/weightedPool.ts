@@ -18,7 +18,7 @@ export class Weighted implements PoolBase {
     onSwap(swapParams: SwapParams): bigint {
         const {
             swapKind,
-            balancesScaled18,
+            balancesLiveScaled18: balancesScaled18,
             indexIn,
             indexOut,
             amountGivenScaled18,

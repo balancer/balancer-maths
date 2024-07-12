@@ -2,7 +2,7 @@ type PoolType = 'Weighted';
 
 export type WeightedMutable = {
     swapFee: bigint;
-    balances: bigint[];
+    balancesLiveScaled18: bigint[];
     tokenRates: bigint[];
     totalSupply: bigint;
 };

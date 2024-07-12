@@ -115,7 +115,7 @@ export class WeightedPool {
 		return {
 			swapFee: multicallResult[0].toString(),
 			totalSupply: multicallResult[1].toString(),
-			balances: multicallResult[2].map((b) => b.toString()),
+			balancesLiveScaled18: multicallResult[2].map((b) => b.toString()),
 			tokenRates: multicallResult[3][1].map((b) => b.toString()),
 		};
 	}

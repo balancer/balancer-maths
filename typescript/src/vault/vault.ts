@@ -80,7 +80,7 @@ export class Vault {
         const swapParams: SwapParams = {
             swapKind: input.swapKind,
             amountGivenScaled18,
-            balancesScaled18: poolState.balances,
+            balancesLiveScaled18: poolState.balancesLiveScaled18,
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
@@ -153,7 +153,7 @@ export class Vault {
         if (input.kind === AddKind.UNBALANCED) {
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
-                poolState.balances, // should be liveScaled18
+                poolState.balancesLiveScaled18,
                 maxAmountsInScaled18,
                 poolState.totalSupply,
                 poolState.swapFee,
@@ -166,7 +166,7 @@ export class Vault {
             amountsInScaled18 = maxAmountsInScaled18;
             bptAmountOut = input.minBptAmountOut;
             const computed = computeAddLiquiditySingleTokenExactOut(
-                poolState.balances, // should be liveScaled18
+                poolState.balancesLiveScaled18,
                 tokenIndex,
                 bptAmountOut,
                 poolState.totalSupply,
@@ -231,7 +231,7 @@ export class Vault {
         if (input.kind === RemoveKind.PROPORTIONAL) {
             bptAmountIn = input.maxBptAmountIn;
             amountsOutScaled18 = computeProportionalAmountsOut(
-                poolState.balances,
+                poolState.balancesLiveScaled18,
                 poolState.totalSupply,
                 input.maxBptAmountIn,
             );
@@ -240,7 +240,7 @@ export class Vault {
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
             const computed = computeRemoveLiquiditySingleTokenExactIn(
-                poolState.balances,
+                poolState.balancesLiveScaled18,
                 tokenOutIndex,
                 input.maxBptAmountIn,
                 poolState.totalSupply,
@@ -257,7 +257,7 @@ export class Vault {
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
             const computed = computeRemoveLiquiditySingleTokenExactOut(
-                poolState.balances,
+                poolState.balancesLiveScaled18,
                 tokenOutIndex,
                 amountsOutScaled18[tokenOutIndex],
                 poolState.totalSupply,

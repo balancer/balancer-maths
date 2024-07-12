@@ -143,7 +143,7 @@ function mapPool(
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
             swapFee: BigInt(pool.swapFee),
-            balances: pool.balances.map((b) => BigInt(b)),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) => BigInt(b)),
             tokenRates: pool.tokenRates.map((r) => BigInt(r)),
             totalSupply: BigInt(pool.totalSupply),
             weights: (
@@ -156,7 +156,7 @@ function mapPool(
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
             swapFee: BigInt(pool.swapFee),
-            balances: pool.balances.map((b) => BigInt(b)),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) => BigInt(b)),
             tokenRates: pool.tokenRates.map((r) => BigInt(r)),
             totalSupply: BigInt(pool.totalSupply),
             amp: BigInt((pool as TransformBigintToString<StablePool>).amp),
