@@ -1,5 +1,10 @@
 import { MathSol } from '../utils/math';
-import { type PoolBase, SwapKind, type SwapParams } from '../vault/types';
+import {
+    MaxSwapParams,
+    type PoolBase,
+    SwapKind,
+    type SwapParams,
+} from '../vault/types';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,
@@ -14,6 +19,22 @@ export class Stable implements PoolBase {
         amp: bigint;
     }) {
         this.amp = poolState.amp;
+    }
+
+    getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
+        const {
+            swapKind,
+            balancesLiveScaled18,
+            indexIn,
+            indexOut,
+            tokenRates,
+        } = maxSwapParams;
+        if (swapKind === SwapKind.GivenIn)
+            return MathSol.mulDownFixed(
+                balancesLiveScaled18[indexOut],
+                MathSol.divDownFixed(tokenRates[indexOut], tokenRates[indexIn]),
+            );
+        return balancesLiveScaled18[indexOut];
     }
 
     onSwap(swapParams: SwapParams): bigint {

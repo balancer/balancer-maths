@@ -1,4 +1,10 @@
-import { type PoolBase, SwapKind, type SwapParams } from '../vault/types';
+import { MathSol } from '../utils/math';
+import {
+    MaxSwapParams,
+    type PoolBase,
+    SwapKind,
+    type SwapParams,
+} from '../vault/types';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,
@@ -8,11 +14,26 @@ import {
 
 export class Weighted implements PoolBase {
     public normalizedWeights: bigint[];
+    // Swap limits: amounts swapped may not be larger than this percentage of the total balance.
+    public _MAX_IN_RATIO = 300000000000000000n;
+    public _MAX_OUT_RATIO = 300000000000000000n;
 
     constructor(poolState: {
         weights: bigint[];
     }) {
         this.normalizedWeights = poolState.weights;
+    }
+
+    getMaxSwapAmount(swapParams: MaxSwapParams): bigint {
+        if (swapParams.swapKind === SwapKind.GivenIn)
+            return MathSol.mulDownFixed(
+                swapParams.balancesLiveScaled18[swapParams.indexIn],
+                this._MAX_IN_RATIO,
+            );
+        return MathSol.mulDownFixed(
+            swapParams.balancesLiveScaled18[swapParams.indexOut],
+            this._MAX_OUT_RATIO,
+        );
     }
 
     onSwap(swapParams: SwapParams): bigint {
