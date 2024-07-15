@@ -6,15 +6,15 @@ import {
     computeRemoveLiquiditySingleTokenExactIn,
     computeRemoveLiquiditySingleTokenExactOut,
 } from './basePoolMath';
-import { Weighted, type WeightedState } from '../weighted';
-import { Stable, type StableState } from '../stable';
-import { erc4626BufferWrapOrUnwrap } from '../buffer/erc4626BufferWrapOrUnwrap';
+import { Weighted } from '../weighted';
+import { Stable } from '../stable';
+import { erc4626BufferWrapOrUnwrap } from '../buffer';
 import { isSameAddress } from './utils';
-import { BufferState } from '../buffer/data';
 import {
     AddKind,
     AddLiquidityInput,
     PoolBase,
+    PoolState,
     RemoveKind,
     RemoveLiquidityInput,
     SwapInput,
@@ -22,7 +22,7 @@ import {
     SwapParams,
 } from './types';
 
-type PoolState = WeightedState | StableState | BufferState;
+
 
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
