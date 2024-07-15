@@ -1,3 +1,9 @@
+import { BufferState } from "../buffer";
+import { StableState } from "../stable";
+import { WeightedState } from "../weighted";
+
+export type PoolState = WeightedState | StableState | BufferState;
+
 export enum SwapKind {
     GivenIn = 0,
     GivenOut = 1,
