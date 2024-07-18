@@ -28,14 +28,23 @@ export class Stable implements PoolBase {
             indexIn,
             indexOut,
             tokenRates,
-            scalingFactors
+            scalingFactors,
         } = maxSwapParams;
         if (swapKind === SwapKind.GivenIn)
-            return MathSol.divDownFixed(MathSol.mulDownFixed(
-                balancesLiveScaled18[indexOut],
-                MathSol.divDownFixed(tokenRates[indexOut], tokenRates[indexIn]),
-            ), scalingFactors[indexIn]);
-        return MathSol.divDownFixed(balancesLiveScaled18[indexOut], scalingFactors[indexOut]);
+            return MathSol.divDownFixed(
+                MathSol.mulDownFixed(
+                    balancesLiveScaled18[indexOut],
+                    MathSol.divDownFixed(
+                        tokenRates[indexOut],
+                        tokenRates[indexIn],
+                    ),
+                ),
+                scalingFactors[indexIn],
+            );
+        return MathSol.divDownFixed(
+            balancesLiveScaled18[indexOut],
+            scalingFactors[indexOut],
+        );
     }
 
     onSwap(swapParams: SwapParams): bigint {

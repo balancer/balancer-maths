@@ -8,7 +8,7 @@ import {
 } from './basePoolMath';
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
-import { erc4626BufferWrapOrUnwrap } from '../buffer';
+import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
 import { isSameAddress } from './utils';
 import {
     AddKind,
@@ -21,8 +21,6 @@ import {
     SwapKind,
     SwapParams,
 } from './types';
-
-
 
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
@@ -46,12 +44,12 @@ export class Vault {
         return new poolClass(poolState);
     }
 
-    public swap(input: SwapInput, poolState: PoolState): bigint {
-        if (poolState.poolType === 'Buffer') {
-            return erc4626BufferWrapOrUnwrap(input, poolState);
+    public swap(input: SwapInput, poolState: PoolState | BufferState): bigint {
+        if ((poolState as BufferState).poolType === 'Buffer') {
+            return erc4626BufferWrapOrUnwrap(input, poolState as BufferState);
         }
 
-        const pool = this.getPool(poolState);
+        const pool = this.getPool(poolState as PoolState);
 
         const inputIndex = poolState.tokens.findIndex((t) =>
             isSameAddress(input.tokenIn, t),
@@ -68,8 +66,8 @@ export class Vault {
             input.swapKind,
             inputIndex,
             outputIndex,
-            poolState.scalingFactors,
-            poolState.tokenRates,
+            (poolState as PoolState).scalingFactors,
+            (poolState as PoolState).tokenRates,
         );
 
         // hook: shouldCallBeforeSwap (TODO - need to handle balance changes, etc see code)
@@ -80,7 +78,7 @@ export class Vault {
         const swapParams: SwapParams = {
             swapKind: input.swapKind,
             amountGivenScaled18,
-            balancesLiveScaled18: poolState.balancesLiveScaled18,
+            balancesLiveScaled18: (poolState as PoolState).balancesLiveScaled18,
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
@@ -89,13 +87,13 @@ export class Vault {
 
         // Set swapFeeAmountScaled18 based on the amountCalculated.
         let swapFeeAmountScaled18 = 0n;
-        if (poolState.swapFee > 0) {
+        if ((poolState as PoolState).swapFee > 0) {
             // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
             // amountOut. On ExactOut, add it to the calculated amountIn.
             // Round up to avoid losses during precision loss.
             swapFeeAmountScaled18 = MathSol.mulUpFixed(
                 amountCalculatedScaled18,
-                poolState.swapFee,
+                (poolState as PoolState).swapFee,
             );
         }
 
@@ -106,8 +104,8 @@ export class Vault {
             // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
             amountCalculated = this._toRawUndoRateRoundDown(
                 amountCalculatedScaled18,
-                poolState.scalingFactors[outputIndex],
-                poolState.tokenRates[outputIndex],
+                (poolState as PoolState).scalingFactors[outputIndex],
+                (poolState as PoolState).tokenRates[outputIndex],
             );
         } else {
             amountCalculatedScaled18 += swapFeeAmountScaled18;
@@ -115,8 +113,8 @@ export class Vault {
             // For `ExactOut` the amount calculated is entering the Vault, so we round up.
             amountCalculated = this._toRawUndoRateRoundUp(
                 amountCalculatedScaled18,
-                poolState.scalingFactors[inputIndex],
-                poolState.tokenRates[inputIndex],
+                (poolState as PoolState).scalingFactors[inputIndex],
+                (poolState as PoolState).tokenRates[inputIndex],
             );
         }
 
