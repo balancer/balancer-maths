@@ -5,7 +5,9 @@ import { MaxSwapParams, Vault, type PoolBase } from '../src';
 describe('custom pool tests', () => {
     test('should pick up new pool', () => {
         const vault = new Vault({
-            CustomPool: CustomPool,
+            customPoolClasses: {
+                CustomPool: CustomPool,
+            },
         });
 
         const pool = {

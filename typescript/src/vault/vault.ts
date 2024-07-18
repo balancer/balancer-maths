@@ -21,19 +21,32 @@ import {
     SwapKind,
     SwapParams,
 } from './types';
+import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
+import { defaultHook } from '../hooks/constants';
 
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
+export type HookClasses = Readonly<Record<string, HookClassConstructor>>;
 
 export class Vault {
     private readonly poolClasses: PoolClasses = {} as const;
+    private readonly hookClasses: HookClasses = {} as const;
 
-    constructor(customPoolClasses?: PoolClasses) {
+    constructor(config?: {
+        customPoolClasses?: PoolClasses;
+        customHookClasses?: HookClasses;
+    }) {
+        const { customPoolClasses, customHookClasses: hookClasses } =
+            config || {};
         this.poolClasses = {
             Weighted: Weighted,
             Stable: Stable,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
+        };
+        this.hookClasses = {
+            // custom hooks take precedence over base types
+            ...hookClasses,
         };
     }
 
@@ -44,12 +57,25 @@ export class Vault {
         return new poolClass(poolState);
     }
 
-    public swap(input: SwapInput, poolState: PoolState | BufferState): bigint {
+    public getHook(hookName?: string, hookState?: HookState): HookBase {
+        if (!hookName) return defaultHook;
+        const hookClass = this.hookClasses[hookName];
+        if (!hookClass) throw new Error(`Unsupported Hook Type: ${hookName}`);
+        if (!hookState) throw new Error(`No state for Hook: ${hookName}`);
+        return new hookClass(hookState);
+    }
+
+    public swap(
+        input: SwapInput,
+        poolState: PoolState | BufferState,
+        hookState?: HookState,
+    ): bigint {
         if ((poolState as BufferState).poolType === 'Buffer') {
             return erc4626BufferWrapOrUnwrap(input, poolState as BufferState);
         }
 
         const pool = this.getPool(poolState as PoolState);
+        const hook = this.getHook((poolState as PoolState).hookType, hookState);
 
         const inputIndex = poolState.tokens.findIndex((t) =>
             isSameAddress(input.tokenIn, t),
@@ -71,8 +97,16 @@ export class Vault {
         );
 
         // hook: shouldCallBeforeSwap (TODO - need to handle balance changes, etc see code)
+        if (hook.shouldCallBeforeSwap) {
+            throw new Error('Hook Unsupported: shouldCallBeforeSwap');
+        }
 
         // hook: dynamicSwapFee
+        if (hook.shouldCallComputeDynamicSwapFee) {
+            throw new Error(
+                'Hook Unsupported: shouldCallComputeDynamicSwapFee',
+            );
+        }
 
         // _swap()
         const swapParams: SwapParams = {
@@ -120,6 +154,9 @@ export class Vault {
 
         // TODO - Depending on hook implementation we may need to alter the logic for handling amounts, etc
         // hook: after swap
+        if (hook.shouldCallAfterSwap) {
+            throw new Error('Hook Unsupported: shouldCallAfterSwap');
+        }
 
         return amountCalculated;
     }
@@ -127,11 +164,13 @@ export class Vault {
     public addLiquidity(
         input: AddLiquidityInput,
         poolState: PoolState,
+        hookState?: HookState,
     ): { amountsIn: bigint[]; bptAmountOut: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support addLiquidity');
 
         const pool = this.getPool(poolState);
+        const hook = this.getHook((poolState as PoolState).hookType, hookState);
 
         // Amounts are entering pool math, so round down.
         // Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
@@ -145,6 +184,9 @@ export class Vault {
             );
 
         // hook: shouldCallBeforeAddLiquidity (TODO - need to handle balance changes, etc see code)
+        if (hook.shouldCallBeforeAddLiquidity) {
+            throw new Error('Hook Unsupported: shouldCallBeforeAddLiquidity');
+        }
 
         let amountsInScaled18: bigint[];
         let bptAmountOut: bigint;
@@ -190,6 +232,9 @@ export class Vault {
         }
 
         // hook: shouldCallAfterAddLiquidity
+        if (hook.shouldCallAfterAddLiquidity) {
+            throw new Error('Hook Unsupported: shouldCallAfterAddLiquidity');
+        }
 
         return {
             amountsIn: amountsInRaw,
@@ -200,11 +245,13 @@ export class Vault {
     public removeLiquidity(
         input: RemoveLiquidityInput,
         poolState: PoolState,
+        hookState?: HookState,
     ): { amountsOut: bigint[]; bptAmountIn: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support removeLiquidity');
 
         const pool = this.getPool(poolState);
+        const hook = this.getHook((poolState as PoolState).hookType, hookState);
 
         // Round down when removing liquidity:
         // If proportional, lower balances = lower proportional amountsOut, favoring the pool.
@@ -221,6 +268,11 @@ export class Vault {
         );
 
         // hook: shouldCallBeforeRemoveLiquidity (TODO - need to handle balance changes, etc see code)
+        if (hook.shouldCallBeforeRemoveLiquidity) {
+            throw new Error(
+                'Hook Unsupported: shouldCallBeforeRemoveLiquidity',
+            );
+        }
 
         let tokenOutIndex: number;
         let bptAmountIn: bigint;
@@ -278,6 +330,10 @@ export class Vault {
         }
 
         // hook: shouldCallAfterRemoveLiquidity
+        if (hook.shouldCallAfterRemoveLiquidity) {
+            throw new Error('Hook Unsupported: shouldCallAfterRemoveLiquidity');
+        }
+
         return {
             amountsOut: amountsOutRaw,
             bptAmountIn,

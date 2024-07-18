@@ -6,6 +6,7 @@ export type PoolState = {
     balancesLiveScaled18: bigint[];
     swapFee: bigint;
     totalSupply: bigint;
+    hookType?: string;
 };
 
 export enum SwapKind {
