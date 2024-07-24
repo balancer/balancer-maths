@@ -8,6 +8,7 @@ export const defaultHook: HookBase = {
     shouldCallAfterAddLiquidity: false,
     shouldCallBeforeRemoveLiquidity: false,
     shouldCallAfterRemoveLiquidity: false,
+    enableHookAdjustedAmounts: false,
     onBeforeAddLiquidity: () => {
         return false;
     },
