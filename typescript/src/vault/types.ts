@@ -1,8 +1,14 @@
-import { BufferState } from '../buffer';
-import { StableState } from '../stable';
-import { WeightedState } from '../weighted';
-
-export type PoolState = WeightedState | StableState | BufferState;
+export type PoolState = {
+    poolType: string;
+    tokens: string[];
+    scalingFactors: bigint[];
+    tokenRates: bigint[];
+    balancesLiveScaled18: bigint[];
+    swapFee: bigint;
+    aggregateSwapFee: bigint;
+    totalSupply: bigint;
+    hookType?: string;
+};
 
 export enum SwapKind {
     GivenIn = 0,
