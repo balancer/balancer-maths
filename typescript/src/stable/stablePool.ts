@@ -15,9 +15,7 @@ import {
 export class Stable implements PoolBase {
     public amp: bigint;
 
-    constructor(poolState: {
-        amp: bigint;
-    }) {
+    constructor(poolState: { amp: bigint }) {
         this.amp = poolState.amp;
     }
 

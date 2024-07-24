@@ -17,9 +17,7 @@ import {
 export class Weighted implements PoolBase {
     public normalizedWeights: bigint[];
 
-    constructor(poolState: {
-        weights: bigint[];
-    }) {
+    constructor(poolState: { weights: bigint[] }) {
         this.normalizedWeights = poolState.weights;
     }
 

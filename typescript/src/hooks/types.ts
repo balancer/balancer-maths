@@ -77,4 +77,5 @@ export interface HookBase {
     ): { success: boolean; dynamicSwapFee: bigint };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type HookClassConstructor = new (..._args: any[]) => HookBase;
