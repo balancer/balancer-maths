@@ -22,8 +22,6 @@ import {
     SwapParams,
 } from './types';
 
-
-
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
 

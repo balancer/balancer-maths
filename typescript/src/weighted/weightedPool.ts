@@ -17,22 +17,26 @@ import {
 export class Weighted implements PoolBase {
     public normalizedWeights: bigint[];
 
-    constructor(poolState: {
-        weights: bigint[];
-    }) {
+    constructor(poolState: { weights: bigint[] }) {
         this.normalizedWeights = poolState.weights;
     }
 
     getMaxSwapAmount(swapParams: MaxSwapParams): bigint {
         if (swapParams.swapKind === SwapKind.GivenIn)
-            return MathSol.divDownFixed(MathSol.mulDownFixed(
-                swapParams.balancesLiveScaled18[swapParams.indexIn],
-                _MAX_IN_RATIO,
-            ), swapParams.scalingFactors[swapParams.indexIn]);
-        return MathSol.divDownFixed(MathSol.mulDownFixed(
-            swapParams.balancesLiveScaled18[swapParams.indexOut],
-            _MAX_OUT_RATIO,
-        ), swapParams.scalingFactors[swapParams.indexOut]);
+            return MathSol.divDownFixed(
+                MathSol.mulDownFixed(
+                    swapParams.balancesLiveScaled18[swapParams.indexIn],
+                    _MAX_IN_RATIO,
+                ),
+                swapParams.scalingFactors[swapParams.indexIn],
+            );
+        return MathSol.divDownFixed(
+            MathSol.mulDownFixed(
+                swapParams.balancesLiveScaled18[swapParams.indexOut],
+                _MAX_OUT_RATIO,
+            ),
+            swapParams.scalingFactors[swapParams.indexOut],
+        );
     }
 
     onSwap(swapParams: SwapParams): bigint {

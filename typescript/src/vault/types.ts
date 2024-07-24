@@ -1,6 +1,6 @@
-import { BufferState } from "../buffer";
-import { StableState } from "../stable";
-import { WeightedState } from "../weighted";
+import { BufferState } from '../buffer';
+import { StableState } from '../stable';
+import { WeightedState } from '../weighted';
 
 export type PoolState = WeightedState | StableState | BufferState;
 
