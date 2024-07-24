@@ -22,8 +22,7 @@ import {
     SwapParams,
 } from './types';
 
-
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
 
