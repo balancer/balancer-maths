@@ -24,7 +24,6 @@ import {
 import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
 import { defaultHook } from '../hooks/constants';
 
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
 type PoolClasses = Readonly<Record<string, PoolClassConstructor>>;
@@ -59,7 +58,10 @@ export class Vault {
         return new poolClass(poolState);
     }
 
-    public getHook(hookName?: string, hookState?: HookState): HookBase {
+    public getHook(
+        hookName?: string,
+        hookState?: HookState | unknown,
+    ): HookBase {
         if (!hookName) return defaultHook;
         const hookClass = this.hookClasses[hookName];
         if (!hookClass) throw new Error(`Unsupported Hook Type: ${hookName}`);
@@ -247,7 +249,7 @@ export class Vault {
     public removeLiquidity(
         input: RemoveLiquidityInput,
         poolState: PoolState,
-        hookState?: HookState,
+        hookState?: HookState | unknown,
     ): { amountsOut: bigint[]; bptAmountIn: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support removeLiquidity');
@@ -279,9 +281,13 @@ export class Vault {
         let tokenOutIndex: number;
         let bptAmountIn: bigint;
         let amountsOutScaled18: bigint[];
+        let swapFeeAmountsScaled18: bigint[];
 
         if (input.kind === RemoveKind.PROPORTIONAL) {
             bptAmountIn = input.maxBptAmountIn;
+            swapFeeAmountsScaled18 = new Array(poolState.tokens.length).fill(
+                0n,
+            );
             amountsOutScaled18 = computeProportionalAmountsOut(
                 poolState.balancesLiveScaled18,
                 poolState.totalSupply,
@@ -305,6 +311,7 @@ export class Vault {
                     ),
             );
             amountsOutScaled18[tokenOutIndex] = computed.amountOutWithFee;
+            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT) {
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
@@ -318,9 +325,11 @@ export class Vault {
                     pool.computeInvariant(balancesLiveScaled18),
             );
             bptAmountIn = computed.bptAmountIn;
+            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else throw new Error('Unsupported RemoveLiquidity Kind');
 
         const amountsOutRaw = new Array(poolState.tokens.length);
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
 
         for (let i = 0; i < poolState.tokens.length; ++i) {
             // amountsOut are amounts exiting the Pool, so we round down.
@@ -329,17 +338,65 @@ export class Vault {
                 poolState.scalingFactors[i],
                 poolState.tokenRates[i],
             );
+
+            // A Pool's token balance always decreases after an exit
+            // Computes protocol and pool creator fee which is eventually taken from pool balance
+            const aggregateSwapFeeAmountScaled18 =
+                this._computeAndChargeAggregateSwapFees(
+                    swapFeeAmountsScaled18[i],
+                    poolState.aggregateSwapFee,
+                );
+
+            updatedBalancesLiveScaled18[i] =
+                poolState.balancesLiveScaled18[i] -
+                (amountsOutScaled18[i] + aggregateSwapFeeAmountScaled18);
         }
 
-        // hook: shouldCallAfterRemoveLiquidity
+        // AmountsOut can be changed by onAfterRemoveLiquidity if the hook charges fees or gives discounts
         if (hook.shouldCallAfterRemoveLiquidity) {
-            throw new Error('Hook Unsupported: shouldCallAfterRemoveLiquidity');
+            const { success, hookAdjustedAmountsOutRaw } =
+                hook.onAfterRemoveLiquidity(
+                    input.kind,
+                    bptAmountIn,
+                    amountsOutScaled18,
+                    amountsOutRaw,
+                    updatedBalancesLiveScaled18,
+                    hookState,
+                );
+
+            if (
+                success === false ||
+                hookAdjustedAmountsOutRaw.length != amountsOutRaw.length
+            ) {
+                throw new Error(
+                    `AfterRemoveLiquidityHookFailed ${poolState.poolType} ${poolState.hookType}`,
+                );
+            }
+
+            // If hook adjusted amounts is not enabled, ignore amounts returned by the hook
+            if (hook.enableHookAdjustedAmounts)
+                hookAdjustedAmountsOutRaw.forEach(
+                    (a, i) => (amountsOutRaw[i] = a),
+                );
         }
 
         return {
             amountsOut: amountsOutRaw,
             bptAmountIn,
         };
+    }
+
+    private _computeAndChargeAggregateSwapFees(
+        swapFeeAmountScaled18: bigint,
+        aggregateSwapFeePercentage: bigint,
+    ): bigint {
+        if (swapFeeAmountScaled18 > 0 && aggregateSwapFeePercentage > 0) {
+            return MathSol.mulUpFixed(
+                swapFeeAmountScaled18,
+                aggregateSwapFeePercentage,
+            );
+        }
+        return 0n;
     }
 
     private _getSingleInputIndex(maxAmountsIn: bigint[]): number {

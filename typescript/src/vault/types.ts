@@ -5,6 +5,7 @@ export type PoolState = {
     tokenRates: bigint[];
     balancesLiveScaled18: bigint[];
     swapFee: bigint;
+    aggregateSwapFee: bigint;
     totalSupply: bigint;
     hookType?: string;
 };

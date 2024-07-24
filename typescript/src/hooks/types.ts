@@ -15,7 +15,6 @@ export type AfterSwapParams = {
     amountCalculatedRaw: bigint;
     router: string;
     pool: string;
-    userData: string;
 };
 
 export interface HookBase {
@@ -26,6 +25,7 @@ export interface HookBase {
     shouldCallAfterAddLiquidity: boolean;
     shouldCallBeforeRemoveLiquidity: boolean;
     shouldCallAfterRemoveLiquidity: boolean;
+    enableHookAdjustedAmounts: boolean;
 
     onBeforeAddLiquidity(
         router: string,
@@ -34,7 +34,6 @@ export interface HookBase {
         maxAmountsInScaled18: bigint[],
         minBptAmountOut: bigint,
         balancesScaled18: bigint[],
-        userData: string,
     ): boolean;
     onAfterAddLiquidity(
         router: string,
@@ -44,7 +43,6 @@ export interface HookBase {
         amountsInRaw: bigint[],
         bptAmountOut: bigint,
         balancesScaled18: bigint[],
-        userData: string,
     ): { success: boolean; hookAdjustedAmountsInRaw: bigint[] };
     onBeforeRemoveLiquidity(
         router: string,
@@ -53,17 +51,14 @@ export interface HookBase {
         maxBptAmountIn: bigint,
         minAmountsOutScaled18: bigint[],
         balancesScaled18: bigint[],
-        userData: string,
     ): boolean;
     onAfterRemoveLiquidity(
-        router: string,
-        pool: string,
         kind: RemoveKind,
         bptAmountIn: bigint,
         amountsOutScaled18: bigint[],
         amountsOutRaw: bigint[],
         balancesScaled18: bigint[],
-        userData: string,
+        hookState: HookState | unknown,
     ): { success: boolean; hookAdjustedAmountsOutRaw: bigint[] };
     onBeforeSwap(params: SwapInput, poolAddress: string): boolean;
     onAfterSwap(params: AfterSwapParams): {
