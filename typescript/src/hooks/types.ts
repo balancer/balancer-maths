@@ -36,13 +36,12 @@ export interface HookBase {
         balancesScaled18: bigint[],
     ): boolean;
     onAfterAddLiquidity(
-        router: string,
-        pool: string,
         kind: AddKind,
         amountsInScaled18: bigint[],
         amountsInRaw: bigint[],
         bptAmountOut: bigint,
         balancesScaled18: bigint[],
+        hookState: HookState | unknown,
     ): { success: boolean; hookAdjustedAmountsInRaw: bigint[] };
     onBeforeRemoveLiquidity(
         router: string,

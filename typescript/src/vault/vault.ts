@@ -168,7 +168,7 @@ export class Vault {
     public addLiquidity(
         input: AddLiquidityInput,
         poolState: PoolState,
-        hookState?: HookState,
+        hookState?: HookState | unknown,
     ): { amountsIn: bigint[]; bptAmountOut: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support addLiquidity');
@@ -194,6 +194,8 @@ export class Vault {
 
         let amountsInScaled18: bigint[];
         let bptAmountOut: bigint;
+        let swapFeeAmountsScaled18: bigint[];
+
         if (input.kind === AddKind.UNBALANCED) {
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
@@ -205,6 +207,7 @@ export class Vault {
                     pool.computeInvariant(balancesLiveScaled18),
             );
             bptAmountOut = computed.bptAmountOut;
+            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else if (input.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
             const tokenIndex = this._getSingleInputIndex(maxAmountsInScaled18);
             amountsInScaled18 = maxAmountsInScaled18;
@@ -223,9 +226,11 @@ export class Vault {
                     ),
             );
             amountsInScaled18[tokenIndex] = computed.amountInWithFee;
+            swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else throw new Error('Unsupported AddLiquidity Kind');
 
         const amountsInRaw: bigint[] = new Array(poolState.tokens.length);
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
         for (let i = 0; i < poolState.tokens.length; i++) {
             // amountsInRaw are amounts actually entering the Pool, so we round up.
             amountsInRaw[i] = this._toRawUndoRateRoundUp(
@@ -233,11 +238,41 @@ export class Vault {
                 poolState.scalingFactors[i],
                 poolState.tokenRates[i],
             );
+
+            // A Pool's token balance always decreases after an exit
+            // Computes protocol and pool creator fee which is eventually taken from pool balance
+            const aggregateSwapFeeAmountScaled18 =
+                this._computeAndChargeAggregateSwapFees(
+                    swapFeeAmountsScaled18[i],
+                    poolState.aggregateSwapFee,
+                );
+
+            updatedBalancesLiveScaled18[i] =
+                poolState.balancesLiveScaled18[i] +
+                amountsInScaled18[i] -
+                aggregateSwapFeeAmountScaled18;
         }
 
-        // hook: shouldCallAfterAddLiquidity
         if (hook.shouldCallAfterAddLiquidity) {
-            throw new Error('Hook Unsupported: shouldCallAfterAddLiquidity');
+            const { success, hookAdjustedAmountsInRaw } =
+                hook.onAfterAddLiquidity(
+                    input.kind,
+                    amountsInScaled18,
+                    amountsInRaw,
+                    bptAmountOut,
+                    updatedBalancesLiveScaled18,
+                    hookState,
+                );
+
+            if (
+                success === false ||
+                hookAdjustedAmountsInRaw.length != amountsInRaw.length
+            ) {
+                throw new Error(
+                    `AfterAddLiquidityHookFailed ${poolState.poolType} ${poolState.hookType}`,
+                );
+            }
+            hookAdjustedAmountsInRaw.forEach((a, i) => (amountsInRaw[i] = a));
         }
 
         return {
