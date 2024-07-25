@@ -23,7 +23,7 @@ export function computeAddLiquidityUnbalanced(
     // Create a new array to hold the updated balances after the addition.
     const newBalances: bigint[] = new Array(numTokens);
     // Create a new array to hold the swap fee amount for each token.
-    const swapFeeAmounts: bigint[] = new Array(numTokens);
+    const swapFeeAmounts: bigint[] = new Array(numTokens).fill(0n);
 
     // Loop through each token, updating the balance with the added amount.
     for (let index = 0; index < currentBalances.length; index++) {
@@ -51,13 +51,13 @@ export function computeAddLiquidityUnbalanced(
                 newBalances[index] -
                 MathSol.mulUpFixed(invariantRatio, currentBalances[index]);
             // Calculate fee amount
-            const swapFeeAmount = MathSol.mulUpFixed(
+            swapFeeAmounts[index] = MathSol.mulUpFixed(
                 taxableAmount,
                 swapFeePercentage,
             );
             // Subtract the fee from the new balance.
             // We are essentially imposing swap fees on non-proportional incoming amounts.
-            newBalances[index] = newBalances[index] - swapFeeAmount;
+            newBalances[index] = newBalances[index] - swapFeeAmounts[index];
         }
     }
 
