@@ -66,8 +66,8 @@ export interface HookBase {
     };
     onComputeDynamicSwapFee(
         params: SwapInput,
-        poolAddress: string,
         staticSwapFeePercentage: bigint,
+        hookState: HookState | unknown,
     ): { success: boolean; dynamicSwapFee: bigint };
 }
 
