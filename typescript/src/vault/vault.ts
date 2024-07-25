@@ -101,9 +101,23 @@ export class Vault {
             poolState.tokenRates,
         );
 
-        // hook: shouldCallBeforeSwap (TODO - need to handle balance changes, etc see code)
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
         if (hook.shouldCallBeforeSwap) {
-            throw new Error('Hook Unsupported: shouldCallBeforeSwap');
+            /* 
+            Note - in SC balances and amounts are updated to reflect any rate change.
+            Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
+            We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
+            */
+            const { success, hookAdjustedBalancesScaled18 } = hook.onBeforeSwap(
+                {
+                    ...input,
+                    hookState,
+                },
+            );
+            if (!success) throw new Error('BeforeSwapHookFailed');
+            hookAdjustedBalancesScaled18.forEach(
+                (a, i) => (updatedBalancesLiveScaled18[i] = a),
+            );
         }
 
         // hook: dynamicSwapFee
@@ -117,7 +131,7 @@ export class Vault {
         const swapParams: SwapParams = {
             swapKind: input.swapKind,
             amountGivenScaled18,
-            balancesLiveScaled18: poolState.balancesLiveScaled18,
+            balancesLiveScaled18: updatedBalancesLiveScaled18,
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
@@ -184,7 +198,6 @@ export class Vault {
                       amountGivenScaled18,
                   ];
 
-        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
         updatedBalancesLiveScaled18[inputIndex] += locals.balanceInIncrement;
         updatedBalancesLiveScaled18[outputIndex] -= locals.balanceOutDecrement;
 
@@ -245,9 +258,26 @@ export class Vault {
                 poolState.tokenRates,
             );
 
-        // hook: shouldCallBeforeAddLiquidity (TODO - need to handle balance changes, etc see code)
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
+
         if (hook.shouldCallBeforeAddLiquidity) {
-            throw new Error('Hook Unsupported: shouldCallBeforeAddLiquidity');
+            /* 
+            Note - in SC balances and amounts are updated to reflect any rate change.
+            Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
+            We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
+            */
+            const { success, hookAdjustedBalancesScaled18 } =
+                hook.onBeforeAddLiquidity(
+                    input.kind,
+                    input.maxAmountsIn,
+                    input.minBptAmountOut,
+                    updatedBalancesLiveScaled18,
+                    hookState,
+                );
+            if (!success) throw new Error('BeforeAddLiquidityHookFailed');
+            hookAdjustedBalancesScaled18.forEach(
+                (a, i) => (updatedBalancesLiveScaled18[i] = a),
+            );
         }
 
         let amountsInScaled18: bigint[];
@@ -257,7 +287,7 @@ export class Vault {
         if (input.kind === AddKind.UNBALANCED) {
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
-                poolState.balancesLiveScaled18,
+                updatedBalancesLiveScaled18,
                 maxAmountsInScaled18,
                 poolState.totalSupply,
                 poolState.swapFee,
@@ -271,7 +301,7 @@ export class Vault {
             amountsInScaled18 = maxAmountsInScaled18;
             bptAmountOut = input.minBptAmountOut;
             const computed = computeAddLiquiditySingleTokenExactOut(
-                poolState.balancesLiveScaled18,
+                updatedBalancesLiveScaled18,
                 tokenIndex,
                 bptAmountOut,
                 poolState.totalSupply,
@@ -288,7 +318,6 @@ export class Vault {
         } else throw new Error('Unsupported AddLiquidity Kind');
 
         const amountsInRaw: bigint[] = new Array(poolState.tokens.length);
-        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
         for (let i = 0; i < poolState.tokens.length; i++) {
             // amountsInRaw are amounts actually entering the Pool, so we round up.
             amountsInRaw[i] = this._toRawUndoRateRoundUp(
@@ -306,7 +335,7 @@ export class Vault {
                 );
 
             updatedBalancesLiveScaled18[i] =
-                poolState.balancesLiveScaled18[i] +
+                updatedBalancesLiveScaled18[i] +
                 amountsInScaled18[i] -
                 aggregateSwapFeeAmountScaled18;
         }
@@ -369,10 +398,24 @@ export class Vault {
             poolState.tokenRates,
         );
 
-        // hook: shouldCallBeforeRemoveLiquidity (TODO - need to handle balance changes, etc see code)
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
         if (hook.shouldCallBeforeRemoveLiquidity) {
-            throw new Error(
-                'Hook Unsupported: shouldCallBeforeRemoveLiquidity',
+            /* 
+            Note - in SC balances and amounts are updated to reflect any rate change.
+            Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
+            We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
+            */
+            const { success, hookAdjustedBalancesScaled18 } =
+                hook.onBeforeRemoveLiquidity(
+                    input.kind,
+                    input.maxBptAmountIn,
+                    input.minAmountsOut,
+                    updatedBalancesLiveScaled18,
+                    hookState,
+                );
+            if (!success) throw new Error('BeforeRemoveLiquidityHookFailed');
+            hookAdjustedBalancesScaled18.forEach(
+                (a, i) => (updatedBalancesLiveScaled18[i] = a),
             );
         }
 
@@ -387,7 +430,7 @@ export class Vault {
                 0n,
             );
             amountsOutScaled18 = computeProportionalAmountsOut(
-                poolState.balancesLiveScaled18,
+                updatedBalancesLiveScaled18,
                 poolState.totalSupply,
                 input.maxBptAmountIn,
             );
@@ -396,7 +439,7 @@ export class Vault {
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
             const computed = computeRemoveLiquiditySingleTokenExactIn(
-                poolState.balancesLiveScaled18,
+                updatedBalancesLiveScaled18,
                 tokenOutIndex,
                 input.maxBptAmountIn,
                 poolState.totalSupply,
@@ -414,7 +457,7 @@ export class Vault {
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
             const computed = computeRemoveLiquiditySingleTokenExactOut(
-                poolState.balancesLiveScaled18,
+                updatedBalancesLiveScaled18,
                 tokenOutIndex,
                 amountsOutScaled18[tokenOutIndex],
                 poolState.totalSupply,
@@ -427,7 +470,6 @@ export class Vault {
         } else throw new Error('Unsupported RemoveLiquidity Kind');
 
         const amountsOutRaw = new Array(poolState.tokens.length);
-        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
 
         for (let i = 0; i < poolState.tokens.length; ++i) {
             // amountsOut are amounts exiting the Pool, so we round down.
@@ -446,7 +488,7 @@ export class Vault {
                 );
 
             updatedBalancesLiveScaled18[i] =
-                poolState.balancesLiveScaled18[i] -
+                updatedBalancesLiveScaled18[i] -
                 (amountsOutScaled18[i] + aggregateSwapFeeAmountScaled18);
         }
 

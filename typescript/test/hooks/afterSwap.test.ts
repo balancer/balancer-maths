@@ -106,13 +106,13 @@ class CustomHook implements HookBase {
     public enableHookAdjustedAmounts = true;
 
     onBeforeAddLiquidity() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterAddLiquidity() {
         return { success: false, hookAdjustedAmountsInRaw: [] };
     }
     onBeforeRemoveLiquidity() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterRemoveLiquidity() {
         return {
@@ -121,7 +121,7 @@ class CustomHook implements HookBase {
         };
     }
     onBeforeSwap() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterSwap(params: AfterSwapParams) {
         const {
