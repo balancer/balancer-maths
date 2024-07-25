@@ -13,8 +13,7 @@ export type AfterSwapParams = {
     tokenOutBalanceScaled18: bigint;
     amountCalculatedScaled18: bigint;
     amountCalculatedRaw: bigint;
-    router: string;
-    pool: string;
+    hookState: HookState | unknown;
 };
 
 export interface HookBase {

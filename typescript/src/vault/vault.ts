@@ -72,14 +72,15 @@ export class Vault {
     public swap(
         input: SwapInput,
         poolState: PoolState | BufferState,
-        hookState?: HookState,
+        hookState?: HookState | unknown,
     ): bigint {
-        if ((poolState as BufferState).poolType === 'Buffer') {
-            return erc4626BufferWrapOrUnwrap(input, poolState as BufferState);
+        // buffer is handled separately than a "normal" pool
+        if (!('totalSupply' in poolState)) {
+            return erc4626BufferWrapOrUnwrap(input, poolState);
         }
 
-        const pool = this.getPool(poolState as PoolState);
-        const hook = this.getHook((poolState as PoolState).hookType, hookState);
+        const pool = this.getPool(poolState);
+        const hook = this.getHook(poolState.hookType, hookState);
 
         const inputIndex = poolState.tokens.findIndex((t) =>
             isSameAddress(input.tokenIn, t),
@@ -96,8 +97,8 @@ export class Vault {
             input.swapKind,
             inputIndex,
             outputIndex,
-            (poolState as PoolState).scalingFactors,
-            (poolState as PoolState).tokenRates,
+            poolState.scalingFactors,
+            poolState.tokenRates,
         );
 
         // hook: shouldCallBeforeSwap (TODO - need to handle balance changes, etc see code)
@@ -116,7 +117,7 @@ export class Vault {
         const swapParams: SwapParams = {
             swapKind: input.swapKind,
             amountGivenScaled18,
-            balancesLiveScaled18: (poolState as PoolState).balancesLiveScaled18,
+            balancesLiveScaled18: poolState.balancesLiveScaled18,
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
@@ -125,44 +126,101 @@ export class Vault {
 
         // Set swapFeeAmountScaled18 based on the amountCalculated.
         let swapFeeAmountScaled18 = 0n;
-        if ((poolState as PoolState).swapFee > 0) {
+        if (poolState.swapFee > 0) {
             // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
             // amountOut. On ExactOut, add it to the calculated amountIn.
             // Round up to avoid losses during precision loss.
             swapFeeAmountScaled18 = MathSol.mulUpFixed(
                 amountCalculatedScaled18,
-                (poolState as PoolState).swapFee,
+                poolState.swapFee,
             );
         }
 
-        let amountCalculated = 0n;
+        let amountCalculatedRaw = 0n;
         if (input.swapKind === SwapKind.GivenIn) {
             amountCalculatedScaled18 -= swapFeeAmountScaled18;
 
             // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
-            amountCalculated = this._toRawUndoRateRoundDown(
+            amountCalculatedRaw = this._toRawUndoRateRoundDown(
                 amountCalculatedScaled18,
-                (poolState as PoolState).scalingFactors[outputIndex],
-                (poolState as PoolState).tokenRates[outputIndex],
+                poolState.scalingFactors[outputIndex],
+                poolState.tokenRates[outputIndex],
             );
         } else {
             amountCalculatedScaled18 += swapFeeAmountScaled18;
 
             // For `ExactOut` the amount calculated is entering the Vault, so we round up.
-            amountCalculated = this._toRawUndoRateRoundUp(
+            amountCalculatedRaw = this._toRawUndoRateRoundUp(
                 amountCalculatedScaled18,
-                (poolState as PoolState).scalingFactors[inputIndex],
-                (poolState as PoolState).tokenRates[inputIndex],
+                poolState.scalingFactors[inputIndex],
+                poolState.tokenRates[inputIndex],
             );
         }
 
-        // TODO - Depending on hook implementation we may need to alter the logic for handling amounts, etc
-        // hook: after swap
+        const aggregateSwapFeeAmountScaled18 =
+            this._computeAndChargeAggregateSwapFees(
+                swapFeeAmountScaled18,
+                poolState.aggregateSwapFee,
+            );
+
+        // For ExactIn, we increase the tokenIn balance by `amountIn`, and decrease the tokenOut balance by the
+        // (`amountOut` + fees).
+        // For ExactOut, we increase the tokenInBalance by (`amountIn` - fees), and decrease the tokenOut balance by
+        // `amountOut`.
+        const locals = {
+            balanceInIncrement: 0n,
+            balanceOutDecrement: 0n,
+        };
+
+        // Perform the conditional assignment using destructuring
+        [locals.balanceInIncrement, locals.balanceOutDecrement] =
+            input.swapKind === SwapKind.GivenIn
+                ? [
+                      amountGivenScaled18,
+                      amountCalculatedScaled18 + aggregateSwapFeeAmountScaled18,
+                  ]
+                : [
+                      amountCalculatedScaled18 - aggregateSwapFeeAmountScaled18,
+                      amountGivenScaled18,
+                  ];
+
+        const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
+        updatedBalancesLiveScaled18[inputIndex] += locals.balanceInIncrement;
+        updatedBalancesLiveScaled18[outputIndex] -= locals.balanceOutDecrement;
+
         if (hook.shouldCallAfterSwap) {
-            throw new Error('Hook Unsupported: shouldCallAfterSwap');
+            const { success, hookAdjustedAmountCalculatedRaw } =
+                hook.onAfterSwap({
+                    kind: input.swapKind,
+                    tokenIn: input.tokenIn,
+                    tokenOut: input.tokenOut,
+                    amountInScaled18:
+                        input.swapKind === SwapKind.GivenIn
+                            ? amountGivenScaled18
+                            : amountCalculatedScaled18,
+                    amountOutScaled18:
+                        input.swapKind === SwapKind.GivenIn
+                            ? amountCalculatedScaled18
+                            : amountGivenScaled18,
+                    tokenInBalanceScaled18:
+                        updatedBalancesLiveScaled18[inputIndex],
+                    tokenOutBalanceScaled18:
+                        updatedBalancesLiveScaled18[outputIndex],
+                    amountCalculatedScaled18: amountCalculatedScaled18,
+                    amountCalculatedRaw: amountCalculatedRaw,
+                    hookState: hookState,
+                });
+            if (success === false) {
+                throw new Error(
+                    `AfterAddSwapHookFailed ${poolState.poolType} ${poolState.hookType}`,
+                );
+            }
+            // If hook adjusted amounts is not enabled, ignore amount returned by the hook
+            if (hook.enableHookAdjustedAmounts)
+                amountCalculatedRaw = hookAdjustedAmountCalculatedRaw;
         }
 
-        return amountCalculated;
+        return amountCalculatedRaw;
     }
 
     public addLiquidity(
@@ -174,7 +232,7 @@ export class Vault {
             throw Error('Buffer pools do not support addLiquidity');
 
         const pool = this.getPool(poolState);
-        const hook = this.getHook((poolState as PoolState).hookType, hookState);
+        const hook = this.getHook(poolState.hookType, hookState);
 
         // Amounts are entering pool math, so round down.
         // Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
@@ -272,7 +330,12 @@ export class Vault {
                     `AfterAddLiquidityHookFailed ${poolState.poolType} ${poolState.hookType}`,
                 );
             }
-            hookAdjustedAmountsInRaw.forEach((a, i) => (amountsInRaw[i] = a));
+
+            // If hook adjusted amounts is not enabled, ignore amounts returned by the hook
+            if (hook.enableHookAdjustedAmounts)
+                hookAdjustedAmountsInRaw.forEach(
+                    (a, i) => (amountsInRaw[i] = a),
+                );
         }
 
         return {
@@ -290,7 +353,7 @@ export class Vault {
             throw Error('Buffer pools do not support removeLiquidity');
 
         const pool = this.getPool(poolState);
-        const hook = this.getHook((poolState as PoolState).hookType, hookState);
+        const hook = this.getHook(poolState.hookType, hookState);
 
         // Round down when removing liquidity:
         // If proportional, lower balances = lower proportional amountsOut, favoring the pool.
