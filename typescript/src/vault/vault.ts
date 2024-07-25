@@ -120,11 +120,14 @@ export class Vault {
             );
         }
 
-        // hook: dynamicSwapFee
+        let swapFee = poolState.swapFee;
         if (hook.shouldCallComputeDynamicSwapFee) {
-            throw new Error(
-                'Hook Unsupported: shouldCallComputeDynamicSwapFee',
+            const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(
+                input,
+                poolState.swapFee,
+                hookState,
             );
+            if (success) swapFee = dynamicSwapFee;
         }
 
         // _swap()
@@ -140,13 +143,13 @@ export class Vault {
 
         // Set swapFeeAmountScaled18 based on the amountCalculated.
         let swapFeeAmountScaled18 = 0n;
-        if (poolState.swapFee > 0) {
+        if (swapFee > 0) {
             // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
             // amountOut. On ExactOut, add it to the calculated amountIn.
             // Round up to avoid losses during precision loss.
             swapFeeAmountScaled18 = MathSol.mulUpFixed(
                 amountCalculatedScaled18,
-                poolState.swapFee,
+                swapFee,
             );
         }
 
