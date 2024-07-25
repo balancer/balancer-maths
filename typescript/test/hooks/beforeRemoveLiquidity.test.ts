@@ -1,4 +1,4 @@
-// pnpm test -- afterRemoveLiquidity.test.ts
+// pnpm test -- beforeRemoveLiquidity.test.ts
 import { describe, expect, test } from 'vitest';
 import { RemoveKind, Vault, type PoolBase } from '../../src';
 import { HookBase, HookState } from '@/hooks/types';
@@ -32,7 +32,7 @@ const pool = {
     weights: [500000000000000000n, 500000000000000000n],
     swapFee: 100000000000000000n,
     aggregateSwapFee: 500000000000000000n,
-    balancesLiveScaled18: [1000000000000000000n, 1000000000000000000n],
+    balancesLiveScaled18: [2000000000000000000n, 2000000000000000000n],
     tokenRates: [1000000000000000000n, 1000000000000000000n],
     totalSupply: 1000000000000000000n,
 };
@@ -47,47 +47,12 @@ describe('hook - afterRemoveLiquidity', () => {
         },
     });
 
-    test('aggregateSwapFee of 0 should not take any protocol fees from updated balances', () => {
-        /*
-            hook state is used to pass expected value to tests
-            Original balance is 1
-            Amount out is 0.9099...
-            Leaves 0.090000000000000001
-            Swap fee amount is: 0.09 which is all left in pool because aggregateFee is 0
-        */
-        const inputHookState = {
-            expectedBalancesLiveScaled18: [
-                1000000000000000000n,
-                90000000000000001n,
-            ],
-        };
-        const test = vault.removeLiquidity(
-            removeLiquidityInput,
-            {
-                ...pool,
-                aggregateSwapFee: 0n,
-            },
-            inputHookState,
-        );
-        expect(test.bptAmountIn).to.eq(removeLiquidityInput.maxBptAmountIn);
-        expect(test.amountsOut).to.deep.eq([0n, 0n]);
-    });
-
     test('aggregateSwapFee of 50% should take half of remaining', () => {
         /*
-            hook state is used to pass expected value to tests
-            Original balance is 1
-            Amount out is 0.9099...
-            Leaves 0.090000000000000001
-            Swap fee amount is: 0.09
-            Aggregate fee amount is 50% of swap fee: 0.045
-            Leaves 0.045000000000000001 in pool
+            hook state is used to pass new balances which give expected result
         */
         const inputHookState = {
-            expectedBalancesLiveScaled18: [
-                1000000000000000000n,
-                45000000000000001n,
-            ],
+            balanceChange: [1000000000000000000n, 1000000000000000000n],
         };
         const test = vault.removeLiquidity(
             removeLiquidityInput,
@@ -95,7 +60,7 @@ describe('hook - afterRemoveLiquidity', () => {
             inputHookState,
         );
         expect(test.bptAmountIn).to.eq(removeLiquidityInput.maxBptAmountIn);
-        expect(test.amountsOut).to.deep.eq([0n, 0n]);
+        expect(test.amountsOut).to.deep.eq([0n, 909999999999999999n]);
     });
 });
 
@@ -123,9 +88,9 @@ class CustomHook implements HookBase {
     public shouldCallAfterSwap = false;
     public shouldCallBeforeAddLiquidity = false;
     public shouldCallAfterAddLiquidity = false;
-    public shouldCallBeforeRemoveLiquidity = false;
-    public shouldCallAfterRemoveLiquidity = true;
-    public enableHookAdjustedAmounts = true;
+    public shouldCallBeforeRemoveLiquidity = true;
+    public shouldCallAfterRemoveLiquidity = false;
+    public enableHookAdjustedAmounts = false;
 
     onBeforeAddLiquidity() {
         return { success: false, hookAdjustedBalancesScaled18: [] };
@@ -133,14 +98,10 @@ class CustomHook implements HookBase {
     onAfterAddLiquidity() {
         return { success: false, hookAdjustedAmountsInRaw: [] };
     }
-    onBeforeRemoveLiquidity() {
-        return { success: false, hookAdjustedBalancesScaled18: [] };
-    }
-    onAfterRemoveLiquidity(
+    onBeforeRemoveLiquidity(
         kind: RemoveKind,
-        bptAmountIn: bigint,
-        amountsOutScaled18: bigint[],
-        amountsOutRaw: bigint[],
+        maxBptAmountIn: bigint,
+        minAmountsOutScaled18: bigint[],
         balancesScaled18: bigint[],
         hookState: HookState | unknown,
     ) {
@@ -148,22 +109,25 @@ class CustomHook implements HookBase {
             !(
                 typeof hookState === 'object' &&
                 hookState !== null &&
-                'expectedBalancesLiveScaled18' in hookState
+                'balanceChange' in hookState
             )
         )
             throw new Error('Unexpected hookState');
         expect(kind).to.eq(removeLiquidityInput.kind);
-        expect(bptAmountIn).to.eq(removeLiquidityInput.maxBptAmountIn);
-        expect(amountsOutScaled18).to.deep.eq([0n, 909999999999999999n]);
-        expect(amountsOutRaw).to.deep.eq([0n, 909999999999999999n]);
-        expect(balancesScaled18).to.deep.eq(
-            hookState.expectedBalancesLiveScaled18,
+        expect(maxBptAmountIn).to.deep.eq(removeLiquidityInput.maxBptAmountIn);
+        expect(minAmountsOutScaled18).to.deep.eq(
+            removeLiquidityInput.minAmountsOut,
         );
+        expect(balancesScaled18).to.deep.eq(pool.balancesLiveScaled18);
         return {
             success: true,
-            hookAdjustedAmountsOutRaw: new Array(
-                amountsOutScaled18.length,
-            ).fill(0n),
+            hookAdjustedBalancesScaled18: hookState.balanceChange as bigint[],
+        };
+    }
+    onAfterRemoveLiquidity() {
+        return {
+            success: true,
+            hookAdjustedAmountsOutRaw: [],
         };
     }
     onBeforeSwap() {

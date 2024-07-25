@@ -1,6 +1,6 @@
 // pnpm test -- hook.test.ts
 import { describe, expect, test } from 'vitest';
-import { MaxSwapParams, Vault, type PoolBase } from '../../src';
+import { Vault, type PoolBase } from '../../src';
 import { HookBase } from '@/hooks/types';
 
 describe('hook tests', () => {
@@ -30,6 +30,7 @@ describe('hook tests', () => {
         tokenRates: [1000000000000000000n, 1000000000000000000n],
         totalSupply: 1736721048412749353n,
         randoms: [77n, 88n],
+        aggregateSwapFee: 0n,
     };
     test('should throw when no hook state passed', () => {
         expect(() => {
@@ -62,13 +63,11 @@ describe('hook tests', () => {
 class CustomPool implements PoolBase {
     public randoms: bigint[];
 
-    constructor(poolState: {
-        randoms: bigint[];
-    }) {
+    constructor(poolState: { randoms: bigint[] }) {
         this.randoms = poolState.randoms;
     }
 
-    getMaxSwapAmount(_maxSwapParams: MaxSwapParams): bigint {
+    getMaxSwapAmount(): bigint {
         return 1n;
     }
 
@@ -91,21 +90,22 @@ class CustomHook implements HookBase {
     public shouldCallAfterAddLiquidity = false;
     public shouldCallBeforeRemoveLiquidity = false;
     public shouldCallAfterRemoveLiquidity = false;
+    public enableHookAdjustedAmounts = false;
 
     onBeforeAddLiquidity() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterAddLiquidity() {
         return { success: false, hookAdjustedAmountsInRaw: [] };
     }
     onBeforeRemoveLiquidity() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterRemoveLiquidity() {
         return { success: false, hookAdjustedAmountsOutRaw: [] };
     }
     onBeforeSwap() {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
     onAfterSwap() {
         return { success: false, hookAdjustedAmountCalculatedRaw: 0n };
