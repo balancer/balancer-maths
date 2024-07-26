@@ -19,6 +19,7 @@
     ],
     "scripts": {
         "build": "tsup",
+        "build:test": "npx tsup ./test",
         "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
         "lint": "dpdm -T ./src && eslint ./src --ext .ts",
         "lint:fix": "eslint ./src --ext .ts --fix",

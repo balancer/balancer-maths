@@ -11,6 +11,8 @@ describe('addLiqudity tests', () => {
         async ({ test, inputAmountsRaw, bptOutRaw, kind }) => {
             const pool = testData.pools.get(test);
             if (!pool) throw new Error('No pool data');
+            if (pool.poolType === 'Buffer')
+                throw Error('Buffer pools do not support addLiquidity');
             // console.log("Input Amounts: ", inputAmountsRaw);
             // console.log("BptOut: ", bptOutRaw);
             const vault = new Vault();
