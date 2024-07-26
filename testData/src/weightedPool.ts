@@ -7,10 +7,19 @@ import {
     type Chain,
 } from 'viem';
 import { CHAINS, VAULT_V3, vaultExtensionV3Abi } from '@balancer/sdk';
-import type {
-    WeightedImmutable,
-    WeightedMutable,
-} from '../../typescript/src/weighted/data';
+
+export type WeightedImmutable = {
+    tokens: bigint[];
+    scalingFactors: bigint[];
+    weights: bigint[];
+};
+
+type WeightedMutable = {
+    swapFee: bigint;
+    totalSupply: bigint;
+    balancesLiveScaled18: bigint[];
+    tokenRates: bigint[];
+};
 
 type TransformBigintToString<T> = {
     [K in keyof T]: T[K] extends bigint

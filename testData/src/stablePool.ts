@@ -7,10 +7,19 @@ import {
     type Chain,
 } from 'viem';
 import { CHAINS, VAULT_V3, vaultExtensionV3Abi } from '@balancer/sdk';
-import type {
-    StableImmutable,
-    StableMutable,
-} from '../../typescript/src/stable/data';
+
+type StableMutable = {
+    amp: bigint;
+    swapFee: bigint;
+    totalSupply: bigint;
+    balancesLiveScaled18: bigint[];
+    tokenRates: bigint[];
+};
+
+type StableImmutable = {
+    tokens: bigint[];
+    scalingFactors: bigint[];
+};
 
 type TransformBigintToString<T> = {
     [K in keyof T]: T[K] extends bigint

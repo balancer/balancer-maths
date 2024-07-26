@@ -1,23 +1,21 @@
 {
-	"compilerOptions": {
-		"lib": ["ESNext"],
-		"module": "esnext",
-		"target": "esnext",
-		"moduleResolution": "bundler",
-		"moduleDetection": "force",
-		"allowImportingTsExtensions": true,
-		"noEmit": true,
-		"composite": true,
-		"strict": true,
-		"downlevelIteration": true,
-		"skipLibCheck": true,
-		"jsx": "react-jsx",
-		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true,
-		"allowJs": true,
-	},
-	"files": [
-		"../typescript/src/weighted/data.ts",
-		"../typescript/src/utils/math.ts"
-	]
+    "rootDir": "./",
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "module": "esnext",
+        "target": "esnext",
+        "moduleResolution": "node",
+        "moduleDetection": "force",
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "composite": true,
+        "strict": true,
+        "downlevelIteration": true,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowJs": true,
+    },
 }
