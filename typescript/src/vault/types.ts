@@ -17,6 +17,14 @@ export enum SwapKind {
 
 export interface PoolBase {
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint;
+    getMaxSingleTokenRemoveAmount(
+        isExactIn: boolean,
+        totalSupply: bigint,
+        tokenOutBalance: bigint,
+        tokenOutScalingFactor: bigint,
+        tokenOutRate: bigint,
+    ): bigint;
+    getMaxSingleTokenAddAmount(): bigint;
     onSwap(swapParams: SwapParams): bigint;
     computeInvariant(balancesLiveScaled18: bigint[]): bigint;
     computeBalance(

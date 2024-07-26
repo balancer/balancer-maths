@@ -1,3 +1,4 @@
+import { MAX_UINT256 } from '../constants';
 import { MathSol } from '../utils/math';
 import {
     MaxSwapParams,
@@ -37,6 +38,27 @@ export class Weighted implements PoolBase {
             ),
             swapParams.scalingFactors[swapParams.indexOut],
         );
+    }
+
+    getMaxSingleTokenAddAmount(): bigint {
+        return MAX_UINT256;
+    }
+
+    getMaxSingleTokenRemoveAmount(
+        isExactIn: boolean,
+        totalSupply: bigint,
+        tokenOutBalance: bigint,
+        tokenOutScalingFactor: bigint,
+        tokenOutRate: bigint,
+    ): bigint {
+        return this.getMaxSwapAmount({
+            swapKind: isExactIn ? SwapKind.GivenIn : SwapKind.GivenOut,
+            balancesLiveScaled18: [totalSupply, tokenOutBalance],
+            tokenRates: [1000000000000000000n, tokenOutRate],
+            scalingFactors: [1000000000000000000n, tokenOutScalingFactor],
+            indexIn: 0,
+            indexOut: 1,
+        });
     }
 
     onSwap(swapParams: SwapParams): bigint {
