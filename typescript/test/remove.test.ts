@@ -11,6 +11,8 @@ describe('removeLiqudity tests', () => {
         async ({ test, bptInRaw, amountsOutRaw, kind }) => {
             const pool = testData.pools.get(test);
             if (!pool) throw new Error('No pool data');
+            if (pool.poolType === 'Buffer')
+                throw Error('Buffer pools do not support removeLiquidity');
             const vault = new Vault();
 
             const calculatedAmounts = vault.removeLiquidity(

@@ -151,6 +151,7 @@ function mapPool(
             weights: (
                 pool as TransformBigintToString<WeightedPool>
             ).weights.map((w) => BigInt(w)),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
         };
     }
     if (pool.poolType === 'Stable') {
@@ -164,6 +165,7 @@ function mapPool(
             tokenRates: pool.tokenRates.map((r) => BigInt(r)),
             totalSupply: BigInt(pool.totalSupply),
             amp: BigInt((pool as TransformBigintToString<StablePool>).amp),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
         };
     }
     if (pool.poolType === 'Buffer') {

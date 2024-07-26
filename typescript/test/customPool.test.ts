@@ -1,6 +1,6 @@
 // pnpm test -- customPool.test.ts
 import { describe, expect, test } from 'vitest';
-import { MaxSwapParams, Vault, type PoolBase } from '../src';
+import { Vault, type PoolBase } from '../src';
 
 describe('custom pool tests', () => {
     test('should pick up new pool', () => {
@@ -26,6 +26,7 @@ describe('custom pool tests', () => {
             tokenRates: [1000000000000000000n, 1000000000000000000n],
             totalSupply: 1736721048412749353n,
             randoms: [77n, 88n],
+            aggregateSwapFee: 0n,
         };
 
         const calculatedAmount = vault.swap(
@@ -44,13 +45,11 @@ describe('custom pool tests', () => {
 class CustomPool implements PoolBase {
     public randoms: bigint[];
 
-    constructor(poolState: {
-        randoms: bigint[];
-    }) {
+    constructor(poolState: { randoms: bigint[] }) {
         this.randoms = poolState.randoms;
     }
 
-    getMaxSwapAmount(_maxSwapParams: MaxSwapParams): bigint {
+    getMaxSwapAmount(): bigint {
         return 1n;
     }
 
