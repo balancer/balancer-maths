@@ -11,7 +11,7 @@ export async function getPool(
     poolAddress: Address,
 ): Promise<PoolBase> {
     // Find onchain data fetching via pool type
-    const poolData = {
+    const poolData: Record<string, WeightedPool | StablePool> = {
         Weighted: new WeightedPool(rpcUrl, chainId),
         Stable: new StablePool(rpcUrl, chainId),
     };

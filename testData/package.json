@@ -24,6 +24,7 @@
     "generate:overwrite": "bun index.ts true",
     "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "lint": "eslint ./src --ext .ts",
-    "lint:fix": "eslint ./src --ext .ts --fix"
+    "lint:fix": "eslint ./src --ext .ts --fix",
+    "build": "tsc"
   }
 }
