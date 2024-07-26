@@ -50,7 +50,7 @@ export class Stable implements PoolBase {
         return MAX_UINT256;
     }
 
-    getMaxSingleTokenExitAmount(
+    getMaxSingleTokenRemoveAmount(
         isExactIn: boolean,
         totalSupply: bigint,
         tokenOutBalance: bigint,
