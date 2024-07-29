@@ -106,7 +106,7 @@ export function computeAddLiquiditySingleTokenExactOut(
     // Calculate the taxable amount, which is the difference
     // between the actual amount in and the non-taxable balance
     const nonTaxableBalance = MathSol.divDownFixed(
-        MathSol.mulUpFixed(newSupply, currentBalances[tokenInIndex]),
+        MathSol.mulDownFixed(newSupply, currentBalances[tokenInIndex]),
         totalSupply,
     );
 
@@ -209,7 +209,7 @@ export function computeRemoveLiquiditySingleTokenExactIn(
     const amountOut = currentBalances[tokenOutIndex] - newBalance;
 
     // Calculate the non-taxable balance proportionate to the BPT burnt.
-    const nonTaxableBalance = MathSol.divDownFixed(
+    const nonTaxableBalance = MathSol.divUpFixed(
         MathSol.mulUpFixed(newSupply, currentBalances[tokenOutIndex]),
         totalSupply,
     );
