@@ -16,7 +16,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@balancer/sdk": "^0.18.0",
+    "@balancer/sdk": "^0.20.5",
     "viem": "^2.16.5"
   },
   "scripts": {
