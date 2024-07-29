@@ -7,6 +7,7 @@ import {
     type Chain,
 } from 'viem';
 import { CHAINS, VAULT_V3, vaultExtensionV3Abi } from '@balancer/sdk';
+import { vaultExplorerAbi } from './abi/vaultExplorer';
 
 type StableMutable = {
     amp: bigint;
@@ -14,6 +15,7 @@ type StableMutable = {
     totalSupply: bigint;
     balancesLiveScaled18: bigint[];
     tokenRates: bigint[];
+    aggregateSwapFee: bigint;
 };
 
 type StableImmutable = {
@@ -72,12 +74,6 @@ export class StablePool {
     async fetchMutableData(
         address: Address,
     ): Promise<TransformBigintToString<StableMutable>> {
-        const staticSwapFeeCall = {
-            address: this.vault,
-            abi: vaultExtensionV3Abi,
-            functionName: 'getStaticSwapFeePercentage',
-            args: [address],
-        } as const;
         const totalSupplyCall = {
             address: this.vault,
             abi: parseAbi([
@@ -105,23 +101,31 @@ export class StablePool {
             ]),
             functionName: 'getAmplificationParameter',
         } as const;
+        const poolConfigCall = {
+            address: this.vault,
+            abi: vaultExplorerAbi,
+            functionName: 'getPoolConfig',
+            args: [address],
+        } as const;
 
         const multicallResult = await this.client.multicall({
             contracts: [
-                staticSwapFeeCall,
                 totalSupplyCall,
                 liveBalancesCall,
                 tokenRatesCall,
                 amplificationParameterCall,
+                poolConfigCall,
             ],
             allowFailure: false,
         });
         return {
-            swapFee: multicallResult[0].toString(),
-            totalSupply: multicallResult[1].toString(),
-            balancesLiveScaled18: multicallResult[2].map((b) => b.toString()),
-            tokenRates: multicallResult[3][1].map((b) => b.toString()),
-            amp: multicallResult[4][0].toString(),
+            swapFee: multicallResult[4].staticSwapFeePercentage.toString(),
+            totalSupply: multicallResult[0].toString(),
+            balancesLiveScaled18: multicallResult[1].map((b) => b.toString()),
+            tokenRates: multicallResult[2][1].map((b) => b.toString()),
+            amp: multicallResult[3][0].toString(),
+            aggregateSwapFee:
+                multicallResult[4].aggregateSwapFeePercentage.toString(),
         };
     }
 }
