@@ -4,7 +4,7 @@
             "testName": "Weighted",
             "chainId": "11155111",
             "blockNumber": "5955145",
-            "poolAddress": "0x7cf221fa36584f59a4f7fd7b946b8571c78e3692",
+            "poolAddress": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
             "poolType": "Weighted",
             "swaps": [
                 {
@@ -48,12 +48,12 @@
             "removes": [
                 {
                     "kind": "Proportional",
-                    "bpt": "0x7cf221fa36584f59a4f7fd7b946b8571c78e3692",
+                    "bpt": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
                     "bptInRaw": "1000000000000000"
                 },
                 {
                     "kind": "SingleTokenExactIn",
-                    "bpt": "0x7cf221fa36584f59a4f7fd7b946b8571c78e3692",
+                    "bpt": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
                     "bptInRaw": "10000000000000",
                     "token": "0xb19382073c7a0addbb56ac6af1808fa49e377b75"
                 },
@@ -69,7 +69,7 @@
             "testName": "Weighted",
             "chainId": "11155111",
             "blockNumber": "5955146",
-            "poolAddress": "0x7cf221fa36584f59a4f7fd7b946b8571c78e3692",
+            "poolAddress": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
             "poolType": "Weighted",
             "swaps": [
                 {
@@ -90,7 +90,7 @@
             "testName": "Stable",
             "chainId": "11155111",
             "blockNumber": "6113328",
-            "poolAddress": "0x90a46864cb1f042060554592038367e9c97e17f3",
+            "poolAddress": "0x302b75a27e5e157f93c679dd7a25fdfcdbc1473c",
             "poolType": "Stable",
             "swaps": [
                 {
@@ -134,12 +134,12 @@
             "removes": [
                 {
                     "kind": "Proportional",
-                    "bpt": "0x90a46864cb1f042060554592038367e9c97e17f3",
+                    "bpt": "0x302b75a27e5e157f93c679dd7a25fdfcdbc1473c",
                     "bptInRaw": "1000000000000000000"
                 },
                 {
                     "kind": "SingleTokenExactIn",
-                    "bpt": "0x90a46864cb1f042060554592038367e9c97e17f3",
+                    "bpt": "0x302b75a27e5e157f93c679dd7a25fdfcdbc1473c",
                     "bptInRaw": "1000000000000000000",
                     "token": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e"
                 },

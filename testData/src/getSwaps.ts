@@ -41,7 +41,7 @@ async function querySwap(
                         decimals: 18,
                     }, // tokenOut
                 ],
-                vaultVersion: 3 as const,
+                protocolVersion: 3,
                 inputAmountRaw:
                     swap.swapKind === SwapKind.GivenIn
                         ? BigInt(swap.amountRaw)

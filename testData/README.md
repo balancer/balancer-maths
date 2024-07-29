@@ -31,3 +31,13 @@ bun run index.ts
 ```
 
 This project was created using `bun init` in bun v1.0.5. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+
+## Updating deployment
+
+Dependency on `@balancer/sdk` for latest vault, etc so start by updating that.
+
+Run: `bun run build` to check for any breaking changes.
+
+Replace relevant pool addresses in `config.json`. Pools should have same tokens/balances so these can be left.
+
+Tests should pass. Any that fail is likely due to small changes (e.g. rounding) in SC maths.
