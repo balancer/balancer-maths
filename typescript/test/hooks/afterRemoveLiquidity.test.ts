@@ -106,6 +106,13 @@ class CustomPool implements PoolBase {
         return 1n;
     }
 
+    getMaxSingleTokenRemoveAmount() {
+        return 1n;
+    }
+    getMaxSingleTokenAddAmount() {
+        return 1n;
+    }
+
     onSwap(): bigint {
         return 1n;
     }
