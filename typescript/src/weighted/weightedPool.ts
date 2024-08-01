@@ -1,6 +1,7 @@
 import { MAX_UINT256 } from '../constants';
 import { MathSol } from '../utils/math';
 import {
+    MaxSingleTokenRemoveParams,
     MaxSwapParams,
     type PoolBase,
     SwapKind,
@@ -22,6 +23,11 @@ export class Weighted implements PoolBase {
         this.normalizedWeights = poolState.weights;
     }
 
+    /**
+     * Returns the max amount that can be swapped (in relation to the amount specified by user).
+     * @param maxSwapParams
+     * @returns Returned amount/scaling is respective to the tokenOut because that’s what we’re taking out of the pool and what limits the swap size.
+     */
     getMaxSwapAmount(swapParams: MaxSwapParams): bigint {
         if (swapParams.swapKind === SwapKind.GivenIn)
             return MathSol.divDownFixed(
@@ -45,12 +51,15 @@ export class Weighted implements PoolBase {
     }
 
     getMaxSingleTokenRemoveAmount(
-        isExactIn: boolean,
-        totalSupply: bigint,
-        tokenOutBalance: bigint,
-        tokenOutScalingFactor: bigint,
-        tokenOutRate: bigint,
+        maxRemoveParams: MaxSingleTokenRemoveParams,
     ): bigint {
+        const {
+            isExactIn,
+            totalSupply,
+            tokenOutBalance,
+            tokenOutScalingFactor,
+            tokenOutRate,
+        } = maxRemoveParams;
         return this.getMaxSwapAmount({
             swapKind: isExactIn ? SwapKind.GivenIn : SwapKind.GivenOut,
             balancesLiveScaled18: [totalSupply, tokenOutBalance],
