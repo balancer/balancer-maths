@@ -13,6 +13,8 @@ import { isSameAddress } from './utils';
 import {
     AddKind,
     AddLiquidityInput,
+    MaxSingleTokenRemoveParams,
+    MaxSwapParams,
     PoolBase,
     PoolState,
     RemoveKind,
@@ -69,6 +71,40 @@ export class Vault {
         if (!hookClass) throw new Error(`Unsupported Hook Type: ${hookName}`);
         if (!hookState) throw new Error(`No state for Hook: ${hookName}`);
         return new hookClass(hookState);
+    }
+
+    /**
+     * Returns the max amount that can be swapped (in relation to the amount specified by user).
+     * @param maxSwapParams
+     * @returns Returned amount/scaling is respective to the tokenOut because that’s what we’re taking out of the pool and what limits the swap size.
+     */
+    getMaxSwapAmount(swapParams: MaxSwapParams, poolState: PoolState): bigint {
+        const pool = this.getPool(poolState);
+        return pool.getMaxSwapAmount(swapParams);
+    }
+
+    /**
+     * Returns the max amount of a single token that can be added to a pool.
+     * @param poolState
+     * @returns
+     */
+    getMaxSingleTokenAddAmount(poolState: PoolState): bigint {
+        const pool = this.getPool(poolState);
+        return pool.getMaxSingleTokenAddAmount();
+    }
+
+    /**
+     * Returns the max amount of a single token that can be removed from a pool.
+     * @param maxRemoveParams
+     * @param poolState
+     * @returns
+     */
+    getMaxSingleTokenRemoveAmount(
+        maxRemoveParams: MaxSingleTokenRemoveParams,
+        poolState: PoolState,
+    ): bigint {
+        const pool = this.getPool(poolState);
+        return pool.getMaxSingleTokenRemoveAmount(maxRemoveParams);
     }
 
     public swap(
