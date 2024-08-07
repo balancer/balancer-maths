@@ -84,3 +84,10 @@ artifacts
 .idea
 
 .DS_Store
+
+python/.venv/
+*.pyc
+__pycache__
+pip*
+.travis.yml
+.coveragerc
