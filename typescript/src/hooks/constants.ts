@@ -10,19 +10,19 @@ export const defaultHook: HookBase = {
     shouldCallAfterRemoveLiquidity: false,
     enableHookAdjustedAmounts: false,
     onBeforeAddLiquidity: () => {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     },
     onAfterAddLiquidity: () => {
         return { success: false, hookAdjustedAmountsInRaw: [] };
     },
     onBeforeRemoveLiquidity: () => {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     },
     onAfterRemoveLiquidity: () => {
         return { success: false, hookAdjustedAmountsOutRaw: [] };
     },
     onBeforeSwap: () => {
-        return false;
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     },
     onAfterSwap: () => {
         return { success: false, hookAdjustedAmountCalculatedRaw: 0n };
