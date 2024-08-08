@@ -1,4 +1,4 @@
-name: Checks
+name: Checks-Typescript
 on:
   workflow_call:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/Setup-Typescript
 
   lint:
     name: Lint
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/Setup-Typescript
       - name: Lint & format code
         working-directory: ./typescript
         run: pnpm format & pnpm lint
@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/Setup-Typescript
       - name: Test
         working-directory: ./typescript
         run: pnpm test:ci
@@ -56,7 +56,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup
-        uses: ./.github/actions/setup
+        uses: ./.github/actions/Setup-Typescript
       - name: Build
         working-directory: ./typescript
         run: pnpm build
