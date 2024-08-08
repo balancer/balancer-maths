@@ -1,0 +1,9 @@
+name: 'Setup'
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Typescript
+      uses: ./.github/actions/Setup-Typescript
+    - name: Set up Python
+      uses: ./.github/actions/Setup-Python
+
