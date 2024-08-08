@@ -2,6 +2,7 @@ name: 'Setup-Python'
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v3
     - name: Checkout repository
     - uses: actions/checkout@v3
 
