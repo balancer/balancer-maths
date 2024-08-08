@@ -1,3 +1,2 @@
-
 def swap(pool_class):
-    return pool_class.on_swap()
+    return pool_class.on_swap(1)
