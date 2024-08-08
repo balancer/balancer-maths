@@ -1,0 +1,35 @@
+name: Typescript Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      uses: pnpm/action-setup@v4.0.0
+
+    - name: Set up Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Dependencies
+      working-directory: ./typescript
+      run: pnpm i
+
+    - name: Lint
+      working-directory: ./typescript
+      run: pnpm format & pnpm lint
+
+    - name: Test
+      working-directory: ./typescript
+      run: pnpm test:ci
+
+    - name: Build
+      working-directory: ./typescript
+      run: pnpm build

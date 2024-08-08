@@ -1,0 +1,30 @@
+name: Python Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black pylint pytest
+    - name: Lint with black
+      working-directory: ./python
+      run: black --check ./src
+    - name: Lint with pylint
+      working-directory: ./python
+      run: pylint --fail-under=8.0 ./src || exit 1
+      # The || exit 1 ensures that if pylint fails, the job fails
