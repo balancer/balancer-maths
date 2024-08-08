@@ -2,6 +2,7 @@ from .swap import swap
 from .pools.weighted import Weighted
 from .hooks.default_hook import DefaultHook
 
+
 class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
         self.pool_classes = {
