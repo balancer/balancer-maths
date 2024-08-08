@@ -1,4 +1,4 @@
-class Default_Hook:
+class DefaultHook:
     shouldCallComputeDynamicSwapFee: False
     shouldCallBeforeSwap: False
     shouldCallAfterSwap: False
@@ -7,22 +7,24 @@ class Default_Hook:
     shouldCallBeforeRemoveLiquidity: False
     shouldCallAfterRemoveLiquidity: False
     enableHookAdjustedAmounts: False
-    def onBeforeAddLiquidity():
+
+    def on_before_add_liquidity(self):
         return False
-    def onAfterAddLiquidity():
-        return { "success": False, "hookAdjustedAmountsInRaw": [] }
-    
-    def onBeforeRemoveLiquidity():
-        return { "success": False, "hookAdjustedAmountsInRaw": [] };
-    
-    def onAfterRemoveLiquidity():
-        return { "success": False, "hookAdjustedAmountsOutRaw": [] }
-    
-    def onBeforeSwap():
-        return { "success": False, "hookAdjustedBalancesScaled18": [] }
-    
-    def onAfterSwap():
-        return { "success": False, "hookAdjustedAmountCalculatedRaw": 0 }
-    
-    def onComputeDynamicSwapFee():
-        return { "success": False, "dynamicSwapFee": 0 }
+
+    def on_after_add_liquidity(self):
+        return {"success": False, "hookAdjustedAmountsInRaw": []}
+
+    def on_before_remove_liquidity(self):
+        return {"success": False, "hookAdjustedAmountsInRaw": []}
+
+    def on_after_remove_liquidity(self):
+        return {"success": False, "hookAdjustedAmountsOutRaw": []}
+
+    def on_before_swap(self):
+        return {"success": False, "hookAdjustedBalancesScaled18": []}
+
+    def on_after_swap(self):
+        return {"success": False, "hookAdjustedAmountCalculatedRaw": 0}
+
+    def on_compute_dynamic_swap_fee(self):
+        return {"success": False, "dynamicSwapFee": 0}

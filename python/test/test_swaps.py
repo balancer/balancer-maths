@@ -13,10 +13,11 @@ from src.vault import Vault
 
 test_data = read_test_data()
 
+
 def test_swaps():
     vault = Vault()
     for swapTest in test_data["swaps"]:
-        if(swapTest["test"] not in test_data["pools"]):
+        if swapTest["test"] not in test_data["pools"]:
             raise Exception("Pool not in test data: ", swapTest["test"])
         pool = test_data["pools"][swapTest["test"]]
         calculatedAmount = vault.swap({"poolType": "Weighted"})

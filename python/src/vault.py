@@ -1,6 +1,6 @@
 from .swap import swap
 from .pools.weighted import Weighted
-from .hooks.default_hook import Default_Hook
+from .hooks.default_hook import DefaultHook
 
 class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
@@ -18,20 +18,20 @@ class Vault:
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
         return swap(pool_class)
-    
+
     def _get_pool(self, pool_state):
-        pool_class = self.pool_classes[pool_state["poolType"]];
-        if (pool_class is None):
-            raise SystemError("Unsupported Pool Type: ", pool_state["poolType"]);
-        
+        pool_class = self.pool_classes[pool_state["poolType"]]
+        if pool_class is None:
+            raise SystemError("Unsupported Pool Type: ", pool_state["poolType"])
+
         return pool_class(pool_state)
-    
+
     def _get_hook(self, hook_name, hook_state):
-        if (hook_name is None): 
-            return Default_Hook()
+        if hook_name is None:
+            return DefaultHook()
         hook_class = self.hook_classes.get(hook_name, None)
-        if (hook_class is None): 
+        if hook_class is None:
             raise SystemError("Unsupported Hook Type:", hook_name)
-        if (hook_state is None): 
+        if hook_state is None:
             raise SystemError("No state for Hook:", hook_name)
         return hook_class(hook_state)
