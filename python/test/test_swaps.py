@@ -1,4 +1,4 @@
-from utils.read_test_data import read_test_data
+from test.utils.read_test_data import read_test_data
 import sys
 import os
 
@@ -16,13 +16,22 @@ test_data = read_test_data()
 
 def test_swaps():
     vault = Vault()
-    for swapTest in test_data["swaps"]:
-        if swapTest["test"] not in test_data["pools"]:
-            raise Exception("Pool not in test data: ", swapTest["test"])
-        pool = test_data["pools"][swapTest["test"]]
+    for swap_test in test_data["swaps"]:
+        if swap_test["test"] not in test_data["pools"]:
+            raise Exception("Pool not in test data: ", swap_test["test"])
+        pool = test_data["pools"][swap_test["test"]]
         # note any amounts must be passed as ints not strings
-        calculatedAmount = vault.swap({ "amount_raw": int(swapTest["amountRaw"]), "token_in": swapTest["tokenIn"], "token_out": swapTest["tokenOut"], "swap_kind": swapTest["swapKind"] },  map_pool(pool))
-        assert calculatedAmount == swapTest["outputRaw"]
+        calculated_amount = vault.swap(
+            {
+                "amount_raw": int(swap_test["amountRaw"]),
+                "token_in": swap_test["tokenIn"],
+                "token_out": swap_test["tokenOut"],
+                "swap_kind": swap_test["swapKind"],
+            },
+            map_pool(pool),
+        )
+        assert calculated_amount == swap_test["outputRaw"]
+
 
 def map_pool(pool_with_strings):
     pool_with_ints = {}

@@ -9,7 +9,7 @@ def read_test_data():
         os.path.join(os.path.dirname(__file__), relative_path)
     )
 
-    testData = {"swaps": [], "pools": {}}
+    test_data = {"swaps": [], "pools": {}}
 
     # Iterate over all files in the directory
     for filename in os.listdir(absolute_path):
@@ -19,7 +19,7 @@ def read_test_data():
             with open(filepath) as json_file:
                 test = json.load(json_file)
                 for swap in test["swaps"]:
-                    testData["swaps"].append(
+                    test_data["swaps"].append(
                         {
                             **swap,
                             "swapKind": swap["swapKind"],
@@ -29,6 +29,6 @@ def read_test_data():
                         }
                     )
 
-                testData["pools"][filename] = test["pool"]
+                test_data["pools"][filename] = test["pool"]
 
-    return testData
+    return test_data
