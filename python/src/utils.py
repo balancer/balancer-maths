@@ -1,3 +1,6 @@
+from src.maths import div_down_fixed, mul_up_fixed, mul_down_fixed, div_up_fixed
+
+
 def find_case_insensitive_index_in_list(strings, target):
     # Convert the target to lowercase
     lowercase_target = target.lower()
@@ -26,3 +29,29 @@ def _to_scaled_18_apply_rate_round_up(
     # Implement the logic for rounding up with scaling and rate
     # Placeholder for the actual method implementation
     return (amount * scaling_factor * rate + (10**18 - 1)) // (10**18)
+
+
+# @dev Reverses the `scalingFactor` and `tokenRate` applied to `amount`, resulting in a smaller or equal value
+# depending on whether it needed scaling/rate adjustment or not. The result is rounded down.
+def _to_raw_undo_rate_round_down(
+    amount: int,
+    scaling_factor: int,
+    token_rate: int,
+) -> int:
+    # Do division last, and round scalingFactor * tokenRate up to divide by a larger number.
+    return div_down_fixed(
+        amount,
+        mul_up_fixed(scaling_factor, token_rate),
+    )
+
+
+def _to_raw_undo_rate_round_up(
+    amount: int,
+    scaling_factor: int,
+    token_rate: int,
+) -> int:
+    # Do division last, and round scalingFactor * tokenRate down to divide by a smaller number.
+    return div_up_fixed(
+        amount,
+        mul_down_fixed(scaling_factor, token_rate),
+    )
