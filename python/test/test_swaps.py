@@ -20,5 +20,26 @@ def test_swaps():
         if swapTest["test"] not in test_data["pools"]:
             raise Exception("Pool not in test data: ", swapTest["test"])
         pool = test_data["pools"][swapTest["test"]]
-        calculatedAmount = vault.swap({"poolType": "Weighted"})
+        # note any amounts must be passed as ints not strings
+        calculatedAmount = vault.swap({ "amount_raw": int(swapTest["amountRaw"]), "token_in": swapTest["tokenIn"], "token_out": swapTest["tokenOut"], "swap_kind": swapTest["swapKind"] },  map_pool(pool))
         assert calculatedAmount == swapTest["outputRaw"]
+
+def map_pool(pool_with_strings):
+    pool_with_ints = {}
+    for key, value in pool_with_strings.items():
+        if isinstance(value, list):
+            # Convert each element in the list to an integer, handling exceptions
+            int_list = []
+            for item in value:
+                try:
+                    int_list.append(int(item))
+                except ValueError:
+                    int_list = value
+                    break
+            pool_with_ints[key] = int_list
+        else:
+            try:
+                pool_with_ints[key] = int(value)
+            except ValueError:
+                pool_with_ints[key] = value
+    return pool_with_ints
