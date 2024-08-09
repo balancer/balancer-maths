@@ -1,4 +1,9 @@
 from enum import Enum
+from src.utils import (
+    find_case_insensitive_index_in_list,
+    _to_scaled_18_apply_rate_round_down,
+    _to_scaled_18_apply_rate_round_up,
+)
 
 
 class SwapKind(Enum):
@@ -32,20 +37,6 @@ def swap(swap_input, pool_state, pool_class, hook_class):
     return pool_class.on_swap(1)
 
 
-def find_case_insensitive_index_in_list(strings, target):
-    # Convert the target to lowercase
-    lowercase_target = target.lower()
-
-    # Iterate over the list with index
-    for index, string in enumerate(strings):
-        # Compare the lowercase version of the string with the lowercase target
-        if string.lower() == lowercase_target:
-            return index
-
-    # If no match is found, return -1
-    return -1
-
-
 def _update_amount_given_in_vars(
     amount_given_raw: int,
     swap_kind: SwapKind,
@@ -71,19 +62,3 @@ def _update_amount_given_in_vars(
         )
 
     return amount_given_scaled_18
-
-
-def _to_scaled_18_apply_rate_round_down(
-    amount: int, scaling_factor: int, rate: int
-) -> int:
-    # Implement the logic for rounding down with scaling and rate
-    # Placeholder for the actual method implementation
-    return amount * scaling_factor * rate // (10**18)
-
-
-def _to_scaled_18_apply_rate_round_up(
-    amount: int, scaling_factor: int, rate: int
-) -> int:
-    # Implement the logic for rounding up with scaling and rate
-    # Placeholder for the actual method implementation
-    return (amount * scaling_factor * rate + (10**18 - 1)) // (10**18)
