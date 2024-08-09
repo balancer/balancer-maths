@@ -11,7 +11,7 @@ class SwapKind(Enum):
     GIVENOUT = 2
 
 
-def swap(swap_input, pool_state, pool_class, hook_class):
+def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
 
     input_index = find_case_insensitive_index_in_list(
         pool_state["tokens"], swap_input["token_in"]
@@ -33,6 +33,17 @@ def swap(swap_input, pool_state, pool_class, hook_class):
         pool_state["scalingFactors"],
         pool_state["tokenRates"],
     )
+
+    updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
+    if hook_class.shouldCallBeforeSwap:
+        # Note - in SC balances and amounts are updated to reflect any rate change.
+        # Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
+        # We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
+        hook_return = hook_class.onBeforeSwap({**swap_input, "hook_state": hook_state})
+        if hook_return["success"] is False:
+            raise SystemError("BeforeSwapHookFailed")
+        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+            updated_balances_live_scaled18[i] = a
 
     return pool_class.on_swap(1)
 
