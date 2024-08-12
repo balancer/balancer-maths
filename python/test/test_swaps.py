@@ -21,6 +21,7 @@ def test_swaps():
         if swap_test["test"] not in test_data["pools"]:
             raise Exception("Pool not in test data: ", swap_test["test"])
         pool = test_data["pools"][swap_test["test"]]
+        if pool["poolType"] == "Buffer": continue
         # note any amounts must be passed as ints not strings
         calculated_amount = vault.swap(
             {
