@@ -17,6 +17,7 @@ test_data = read_test_data()
 def test_swaps():
     vault = Vault()
     for swap_test in test_data["swaps"]:
+        print(swap_test["test"])
         if swap_test["test"] not in test_data["pools"]:
             raise Exception("Pool not in test data: ", swap_test["test"])
         pool = test_data["pools"][swap_test["test"]]
@@ -30,7 +31,7 @@ def test_swaps():
             },
             map_pool(pool),
         )
-        assert calculated_amount == swap_test["outputRaw"]
+        assert calculated_amount == int(swap_test["outputRaw"])
 
 
 def map_pool(pool_with_strings):

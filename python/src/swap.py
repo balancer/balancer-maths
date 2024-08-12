@@ -103,9 +103,11 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         pool_state["aggregateSwapFee"],
     )
 
-    # For ExactIn, we increase the tokenIn balance by `amountIn`, and decrease the tokenOut balance by the
+    # For ExactIn, we increase the tokenIn balance by `amountIn`,
+    # and decrease the tokenOut balance by the
     # (`amountOut` + fees).
-    # For ExactOut, we increase the tokenInBalance by (`amountIn` - fees), and decrease the tokenOut balance by
+    # For ExactOut, we increase the tokenInBalance by (`amountIn` - fees),
+    # and decrease the tokenOut balance by
     # `amountOut`.
     balance_in_increment, balance_out_decrement = (
         (

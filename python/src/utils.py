@@ -18,21 +18,22 @@ def find_case_insensitive_index_in_list(strings, target):
 def _to_scaled_18_apply_rate_round_down(
     amount: int, scaling_factor: int, rate: int
 ) -> int:
-    # Implement the logic for rounding down with scaling and rate
-    # Placeholder for the actual method implementation
-    return amount * scaling_factor * rate // (10**18)
+    return mul_down_fixed(mul_down_fixed(amount, scaling_factor), rate)
 
 
 def _to_scaled_18_apply_rate_round_up(
     amount: int, scaling_factor: int, rate: int
 ) -> int:
-    # Implement the logic for rounding up with scaling and rate
-    # Placeholder for the actual method implementation
-    return (amount * scaling_factor * rate + (10**18 - 1)) // (10**18)
+    return mul_up_fixed(
+        mul_up_fixed(amount, scaling_factor),
+        rate,
+    )
 
 
-# @dev Reverses the `scalingFactor` and `tokenRate` applied to `amount`, resulting in a smaller or equal value
-# depending on whether it needed scaling/rate adjustment or not. The result is rounded down.
+# @dev Reverses the `scalingFactor` and `tokenRate` applied to `amount`,
+# resulting in a smaller or equal value
+# depending on whether it needed scaling/rate adjustment or not.
+# The result is rounded down.
 def _to_raw_undo_rate_round_down(
     amount: int,
     scaling_factor: int,

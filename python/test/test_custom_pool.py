@@ -57,7 +57,6 @@ class CustomPool:
         return 1
 
     def on_swap(self, swap_params) -> int:
-        print(swap_params)
         return self.randoms[0]
 
     def compute_invariant(self) -> int:
