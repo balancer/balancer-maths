@@ -40,7 +40,15 @@ def test_hook_no_state():
         custom_hook_classes={"CustomHook": DefaultHook},
     )
     with pytest.raises(SystemError, match=r"\('No state for Hook:', 'CustomHook'\)"):
-        vault.swap(pool)
+        vault.swap(
+            {
+                "amountRaw": 1,
+                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                "swapKind": 0,
+            },
+            pool,
+        )
 
 
 def test_unsupported_hook_type():
@@ -51,7 +59,15 @@ def test_unsupported_hook_type():
     with pytest.raises(
         SystemError, match=r"\('Unsupported Hook Type:', 'Unsupported'\)"
     ):
-        vault.swap({**pool, "hookType": "Unsupported"})
+        vault.swap(
+            {
+                "amountRaw": 1,
+                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                "swapKind": 0,
+            },
+            {**pool, "hookType": "Unsupported"},
+        )
 
 
 class CustomPool:

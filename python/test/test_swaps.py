@@ -1,4 +1,4 @@
-from utils.read_test_data import read_test_data
+from test.utils.read_test_data import read_test_data
 import sys
 import os
 
@@ -16,9 +16,41 @@ test_data = read_test_data()
 
 def test_swaps():
     vault = Vault()
-    for swapTest in test_data["swaps"]:
-        if swapTest["test"] not in test_data["pools"]:
-            raise Exception("Pool not in test data: ", swapTest["test"])
-        pool = test_data["pools"][swapTest["test"]]
-        calculatedAmount = vault.swap({"poolType": "Weighted"})
-        assert calculatedAmount == swapTest["outputRaw"]
+    for swap_test in test_data["swaps"]:
+        print(swap_test["test"])
+        if swap_test["test"] not in test_data["pools"]:
+            raise Exception("Pool not in test data: ", swap_test["test"])
+        pool = test_data["pools"][swap_test["test"]]
+        if pool["poolType"] == "Buffer": continue
+        # note any amounts must be passed as ints not strings
+        calculated_amount = vault.swap(
+            {
+                "amount_raw": int(swap_test["amountRaw"]),
+                "token_in": swap_test["tokenIn"],
+                "token_out": swap_test["tokenOut"],
+                "swap_kind": swap_test["swapKind"],
+            },
+            map_pool(pool),
+        )
+        assert calculated_amount == int(swap_test["outputRaw"])
+
+
+def map_pool(pool_with_strings):
+    pool_with_ints = {}
+    for key, value in pool_with_strings.items():
+        if isinstance(value, list):
+            # Convert each element in the list to an integer, handling exceptions
+            int_list = []
+            for item in value:
+                try:
+                    int_list.append(int(item))
+                except ValueError:
+                    int_list = value
+                    break
+            pool_with_ints[key] = int_list
+        else:
+            try:
+                pool_with_ints[key] = int(value)
+            except ValueError:
+                pool_with_ints[key] = value
+    return pool_with_ints

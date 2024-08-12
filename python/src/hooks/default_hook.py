@@ -1,12 +1,12 @@
 class DefaultHook:
-    shouldCallComputeDynamicSwapFee: False
-    shouldCallBeforeSwap: False
-    shouldCallAfterSwap: False
-    shouldCallBeforeAddLiquidity: False
-    shouldCallAfterAddLiquidity: False
-    shouldCallBeforeRemoveLiquidity: False
-    shouldCallAfterRemoveLiquidity: False
-    enableHookAdjustedAmounts: False
+    shouldCallComputeDynamicSwapFee = False
+    shouldCallBeforeSwap = False
+    shouldCallAfterSwap = False
+    shouldCallBeforeAddLiquidity = False
+    shouldCallAfterAddLiquidity = False
+    shouldCallBeforeRemoveLiquidity = False
+    shouldCallAfterRemoveLiquidity = False
+    enableHookAdjustedAmounts = False
 
     def on_before_add_liquidity(self):
         return False

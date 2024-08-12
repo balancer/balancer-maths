@@ -1,5 +1,6 @@
 from .swap import swap
 from .pools.weighted import Weighted
+from .pools.stable import Stable
 from .hooks.default_hook import DefaultHook
 
 
@@ -7,6 +8,7 @@ class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
         self.pool_classes = {
             "Weighted": Weighted,
+            "Stable": Stable,
         }
         if custom_pool_classes is not None:
             self.pool_classes.update(custom_pool_classes)
@@ -15,10 +17,10 @@ class Vault:
         if custom_hook_classes is not None:
             self.hook_classes.update(custom_hook_classes)
 
-    def swap(self, pool_state, *, hook_state=None):
+    def swap(self, swap_input, pool_state, *, hook_state=None):
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
-        return swap(pool_class)
+        return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
 
     def _get_pool(self, pool_state):
         pool_class = self.pool_classes[pool_state["poolType"]]
