@@ -12,14 +12,14 @@ def calculate_buffer_amounts(
 ):
     if direction == WrappingDirection.WRAP:
         # Amount in is underlying tokens, amount out is wrapped tokens
-        if kind == SwapKind.GIVENIN:
+        if kind == SwapKind.GIVENIN.value:
             # previewDeposit
             return _convertToShares(amount_raw, rate, Rounding.DOWN)
         # previewMint
         return _convertToAssets(amount_raw, rate, Rounding.UP)
 
     # Amount in is wrapped tokens, amount out is underlying tokens
-    if kind == SwapKind.GIVENIN:
+    if kind == SwapKind.GIVENIN.value:
         # previewRedeem
         return _convertToAssets(amount_raw, rate, Rounding.DOWN)
     # previewWithdraw
@@ -29,7 +29,7 @@ def calculate_buffer_amounts(
 def _convertToShares(assets, rate, rounding):
     if rounding == Rounding.UP:
         return RayMathExplicitRounding.ray_div_round_up(assets, rate)
-    return RayMathExplicitRounding.ray_mul_round_down(assets, rate)
+    return RayMathExplicitRounding.ray_div_round_down(assets, rate)
 
 
 def _convertToAssets(shares, rate, rounding):
