@@ -56,3 +56,7 @@ def _to_raw_undo_rate_round_up(
         amount,
         mul_down_fixed(scaling_factor, token_rate),
     )
+
+
+def is_same_address(address_one: str, address_two: str) -> bool:
+    return address_one.lower() == address_two.lower()
