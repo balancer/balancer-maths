@@ -7,6 +7,7 @@ enum Rounding {
     DOWN = 1,
 }
 
+// See VaultExtension for SC code
 export function calculateBufferAmounts(
     direction: WrappingDirection,
     kind: SwapKind,
@@ -24,7 +25,7 @@ export function calculateBufferAmounts(
         }
     } else {
         // Amount in is wrapped tokens, amount out is underlying tokens
-        if (kind === SwapKind.GivenOut) {
+        if (kind === SwapKind.GivenIn) {
             // previewRedeem
             return _convertToAssets(amountRaw, rate, Rounding.DOWN);
         } else {
