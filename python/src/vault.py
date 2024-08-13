@@ -1,5 +1,6 @@
 from .swap import swap
 from .pools.weighted import Weighted
+from .pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from .pools.stable import Stable
 from .hooks.default_hook import DefaultHook
 
@@ -18,6 +19,9 @@ class Vault:
             self.hook_classes.update(custom_hook_classes)
 
     def swap(self, swap_input, pool_state, *, hook_state=None):
+        # buffer is handled separately than a "normal" pool
+        if pool_state.get("totalSupply") is None:
+            return erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
         return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
