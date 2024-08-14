@@ -1,7 +1,7 @@
 from src.swap import SwapKind
 from src.pools.buffer.enums import Rounding
 from src.pools.buffer.enums import WrappingDirection
-from src.pools.buffer.ray_math_explicit_rounding import RayMathExplicitRounding
+from src.maths import div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed
 
 
 def calculate_buffer_amounts(
@@ -14,25 +14,25 @@ def calculate_buffer_amounts(
         # Amount in is underlying tokens, amount out is wrapped tokens
         if kind == SwapKind.GIVENIN.value:
             # previewDeposit
-            return _convertToShares(amount_raw, rate, Rounding.DOWN)
+            return _convert_to_shares(amount_raw, rate, Rounding.DOWN)
         # previewMint
-        return _convertToAssets(amount_raw, rate, Rounding.UP)
+        return _convert_to_assets(amount_raw, rate, Rounding.UP)
 
     # Amount in is wrapped tokens, amount out is underlying tokens
     if kind == SwapKind.GIVENIN.value:
         # previewRedeem
-        return _convertToAssets(amount_raw, rate, Rounding.DOWN)
+        return _convert_to_assets(amount_raw, rate, Rounding.DOWN)
     # previewWithdraw
-    return _convertToShares(amount_raw, rate, Rounding.UP)
+    return _convert_to_shares(amount_raw, rate, Rounding.UP)
 
 
-def _convertToShares(assets, rate, rounding):
+def _convert_to_shares(assets, rate, rounding):
     if rounding == Rounding.UP:
-        return RayMathExplicitRounding.ray_div_round_up(assets, rate)
-    return RayMathExplicitRounding.ray_div_round_down(assets, rate)
+        return div_up_fixed(assets, rate)
+    return div_down_fixed(assets, rate)
 
 
-def _convertToAssets(shares, rate, rounding):
+def _convert_to_assets(shares, rate, rounding):
     if rounding == Rounding.UP:
-        return RayMathExplicitRounding.ray_mul_round_up(shares, rate)
-    return RayMathExplicitRounding.ray_mul_round_down(shares, rate)
+        return mul_up_fixed(shares, rate)
+    return mul_down_fixed(shares, rate)
