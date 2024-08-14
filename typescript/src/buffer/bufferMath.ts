@@ -1,6 +1,6 @@
+import { MathSol } from '../utils/math';
 import { SwapKind } from '../vault/types';
 import { WrappingDirection } from './types';
-import { RayMathExplicitRounding } from './rayMathExplicitRounding';
 
 enum Rounding {
     UP = 0,
@@ -41,9 +41,8 @@ function _convertToShares(
     rate: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding === Rounding.UP)
-        return RayMathExplicitRounding.rayDivRoundUp(assets, rate);
-    return RayMathExplicitRounding.rayDivRoundDown(assets, rate);
+    if (rounding === Rounding.UP) return MathSol.divUpFixed(assets, rate);
+    return MathSol.divDownFixed(assets, rate);
 }
 
 function _convertToAssets(
@@ -51,7 +50,6 @@ function _convertToAssets(
     rate: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding === Rounding.UP)
-        return RayMathExplicitRounding.rayMulRoundUp(shares, rate);
-    return RayMathExplicitRounding.rayMulRoundDown(shares, rate);
+    if (rounding === Rounding.UP) return MathSol.mulUpFixed(shares, rate);
+    return MathSol.mulDownFixed(shares, rate);
 }
