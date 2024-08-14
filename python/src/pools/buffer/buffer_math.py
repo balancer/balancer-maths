@@ -4,6 +4,10 @@ from src.pools.buffer.enums import WrappingDirection
 from src.maths import div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed
 
 
+# See VaultExtension for SC code.
+# Instead of manually adding support for each ERC4626 implementation (e.g. stata with Ray maths)
+# we always use an 18 decimal scaled rate and do 18 decimal maths to convert. 
+# We may end up loosing 100% accuracy but thats acceptable.
 def calculate_buffer_amounts(
     direction,
     kind,

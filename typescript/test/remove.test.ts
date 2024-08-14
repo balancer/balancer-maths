@@ -18,14 +18,14 @@ describe('removeLiqudity tests', () => {
             const calculatedAmounts = vault.removeLiquidity(
                 {
                     pool: pool.poolAddress,
-                    minAmountsOut: amountsOutRaw,
-                    maxBptAmountIn: bptInRaw,
+                    minAmountsOutRaw: amountsOutRaw,
+                    maxBptAmountInRaw: bptInRaw,
                     kind,
                 },
                 pool,
             );
-            expect(calculatedAmounts.bptAmountIn).toEqual(bptInRaw);
-            expect(calculatedAmounts.amountsOut).toEqual(amountsOutRaw);
+            expect(calculatedAmounts.bptAmountInRaw).toEqual(bptInRaw);
+            expect(calculatedAmounts.amountsOutRaw).toEqual(amountsOutRaw);
         },
     );
 });

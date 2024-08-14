@@ -9,5 +9,8 @@ export type BufferImmutable = {
     tokens: string[];
 };
 
+/**
+ * State of a buffer. Note - rate uses scaled 18.
+ */
 export type BufferState = { poolType: PoolType } & BufferImmutable &
     BufferMutable;

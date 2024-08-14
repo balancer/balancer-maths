@@ -7,7 +7,12 @@ enum Rounding {
     DOWN = 1,
 }
 
-// See VaultExtension for SC code
+/*
+See VaultExtension for SC code.
+Instead of manually adding support for each ERC4626 implementation (e.g. stata with Ray maths)
+we always use an 18 decimal scaled rate and do 18 decimal maths to convert. 
+We may end up loosing 100% accuracy but thats acceptable.
+*/
 export function calculateBufferAmounts(
     direction: WrappingDirection,
     kind: SwapKind,

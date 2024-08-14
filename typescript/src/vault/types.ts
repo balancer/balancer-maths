@@ -1,3 +1,6 @@
+/**
+ * State of a pool. Note - rates, fees, totalSupply use scaled 18.
+ */
 export type PoolState = {
     poolType: string;
     tokens: string[];
@@ -55,6 +58,14 @@ export type SwapParams = {
     indexOut: number;
 };
 
+/**
+ * User defined input for a swap operation.
+ *
+ * @property {bigint} amountRaw - Raw amount for swap (e.g. 1USDC=1000000).
+ * @property {string} tokenIn - Address of token in.
+ * @property {string} tokenOut - Address of token out.
+ * @property {SwapKind} swapKind - GivenIn or GivenOut.
+ */
 export type SwapInput = {
     amountRaw: bigint;
     tokenIn: string;
@@ -69,8 +80,8 @@ export enum AddKind {
 
 export type AddLiquidityInput = {
     pool: string;
-    maxAmountsIn: bigint[];
-    minBptAmountOut: bigint;
+    maxAmountsInRaw: bigint[];
+    minBptAmountOutRaw: bigint;
     kind: AddKind;
 };
 
@@ -82,7 +93,7 @@ export enum RemoveKind {
 
 export type RemoveLiquidityInput = {
     pool: string;
-    minAmountsOut: bigint[];
-    maxBptAmountIn: bigint;
+    minAmountsOutRaw: bigint[];
+    maxBptAmountInRaw: bigint;
     kind: RemoveKind;
 };

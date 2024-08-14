@@ -5,8 +5,8 @@ import { HookBase, HookState } from '@/hooks/types';
 
 const addLiquidityInput = {
     pool: '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
-    maxAmountsIn: [200000000000000000n, 100000000000000000n],
-    minBptAmountOut: 0n,
+    maxAmountsInRaw: [200000000000000000n, 100000000000000000n],
+    minBptAmountOutRaw: 0n,
     kind: AddKind.UNBALANCED,
 };
 
@@ -58,11 +58,11 @@ describe('hook - afterAddLiquidity', () => {
             inputHookState,
         );
         // Hook adds 1n to amountsIn
-        expect(test.amountsIn).to.deep.eq([
+        expect(test.amountsInRaw).to.deep.eq([
             200000000000000001n,
             100000000000000001n,
         ]);
-        expect(test.bptAmountOut).to.deep.eq(146464294351915965n);
+        expect(test.bptAmountOutRaw).to.deep.eq(146464294351915965n);
     });
 
     test('aggregateSwapFee of 50% should take half of remaining', () => {
@@ -81,11 +81,11 @@ describe('hook - afterAddLiquidity', () => {
             pool,
             inputHookState,
         );
-        expect(test.amountsIn).to.deep.eq([
+        expect(test.amountsInRaw).to.deep.eq([
             200000000000000001n,
             100000000000000001n,
         ]);
-        expect(test.bptAmountOut).to.deep.eq(146464294351915965n);
+        expect(test.bptAmountOutRaw).to.deep.eq(146464294351915965n);
     });
 });
 
@@ -120,8 +120,8 @@ class CustomHook implements HookBase {
             throw new Error('Unexpected hookState');
         expect(kind).to.eq(addLiquidityInput.kind);
         expect(bptAmountOut).to.eq(146464294351915965n);
-        expect(amountsInScaled18).to.deep.eq(addLiquidityInput.maxAmountsIn);
-        expect(amountsInRaw).to.deep.eq(addLiquidityInput.maxAmountsIn);
+        expect(amountsInScaled18).to.deep.eq(addLiquidityInput.maxAmountsInRaw);
+        expect(amountsInRaw).to.deep.eq(addLiquidityInput.maxAmountsInRaw);
         expect(balancesScaled18).to.deep.eq(
             hookState.expectedBalancesLiveScaled18,
         );
