@@ -107,32 +107,46 @@ export class Vault {
         return pool.getMaxSingleTokenRemoveAmount(maxRemoveParams);
     }
 
+    /**
+     * Calculates the result of a swap.
+     *
+     * @param swapInput - User defined input for a swap operation, including:
+     *   - `amountRaw`: Raw amount for swap (e.g. 1USDC=1000000).
+     *   - `tokenIn`: Address of token in.
+     *   - `tokenOut`: Address of token out.
+     *   - `swapKind`: GivenIn or GivenOut.
+     * @param poolState - Pool state that will be used for calculations.
+     *   - Note: rates, fees, totalSupply use scaled 18. For detailed information, refer to the `PoolState | BufferState` types.
+     * @param hookState - Optional state for any associated hook. Required if pool has a hook enabled.
+     *   - Note: Each hook will require its own state data. See `HookState` type for officially supported hook info.
+     * @returns The raw result of the swap operation.
+     */
     public swap(
-        input: SwapInput,
+        swapInput: SwapInput,
         poolState: PoolState | BufferState,
         hookState?: HookState | unknown,
     ): bigint {
         // buffer is handled separately than a "normal" pool
         if (!('totalSupply' in poolState)) {
-            return erc4626BufferWrapOrUnwrap(input, poolState);
+            return erc4626BufferWrapOrUnwrap(swapInput, poolState);
         }
 
         const pool = this.getPool(poolState);
         const hook = this.getHook(poolState.hookType, hookState);
 
         const inputIndex = poolState.tokens.findIndex((t) =>
-            isSameAddress(input.tokenIn, t),
+            isSameAddress(swapInput.tokenIn, t),
         );
         if (inputIndex === -1) throw Error('Input token not found on pool');
 
         const outputIndex = poolState.tokens.findIndex((t) =>
-            isSameAddress(input.tokenOut, t),
+            isSameAddress(swapInput.tokenOut, t),
         );
         if (outputIndex === -1) throw Error('Output token not found on pool');
 
         const amountGivenScaled18 = this._updateAmountGivenInVars(
-            input.amountRaw,
-            input.swapKind,
+            swapInput.amountRaw,
+            swapInput.swapKind,
             inputIndex,
             outputIndex,
             poolState.scalingFactors,
@@ -148,7 +162,7 @@ export class Vault {
             */
             const { success, hookAdjustedBalancesScaled18 } = hook.onBeforeSwap(
                 {
-                    ...input,
+                    ...swapInput,
                     hookState,
                 },
             );
@@ -161,7 +175,7 @@ export class Vault {
         let swapFee = poolState.swapFee;
         if (hook.shouldCallComputeDynamicSwapFee) {
             const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(
-                input,
+                swapInput,
                 poolState.swapFee,
                 hookState,
             );
@@ -170,7 +184,7 @@ export class Vault {
 
         // _swap()
         const swapParams: SwapParams = {
-            swapKind: input.swapKind,
+            swapKind: swapInput.swapKind,
             amountGivenScaled18,
             balancesLiveScaled18: updatedBalancesLiveScaled18,
             indexIn: inputIndex,
@@ -192,7 +206,7 @@ export class Vault {
         }
 
         let amountCalculatedRaw = 0n;
-        if (input.swapKind === SwapKind.GivenIn) {
+        if (swapInput.swapKind === SwapKind.GivenIn) {
             amountCalculatedScaled18 -= swapFeeAmountScaled18;
 
             // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
@@ -229,7 +243,7 @@ export class Vault {
 
         // Perform the conditional assignment using destructuring
         [locals.balanceInIncrement, locals.balanceOutDecrement] =
-            input.swapKind === SwapKind.GivenIn
+            swapInput.swapKind === SwapKind.GivenIn
                 ? [
                       amountGivenScaled18,
                       amountCalculatedScaled18 + aggregateSwapFeeAmountScaled18,
@@ -245,15 +259,15 @@ export class Vault {
         if (hook.shouldCallAfterSwap) {
             const { success, hookAdjustedAmountCalculatedRaw } =
                 hook.onAfterSwap({
-                    kind: input.swapKind,
-                    tokenIn: input.tokenIn,
-                    tokenOut: input.tokenOut,
+                    kind: swapInput.swapKind,
+                    tokenIn: swapInput.tokenIn,
+                    tokenOut: swapInput.tokenOut,
                     amountInScaled18:
-                        input.swapKind === SwapKind.GivenIn
+                        swapInput.swapKind === SwapKind.GivenIn
                             ? amountGivenScaled18
                             : amountCalculatedScaled18,
                     amountOutScaled18:
-                        input.swapKind === SwapKind.GivenIn
+                        swapInput.swapKind === SwapKind.GivenIn
                             ? amountCalculatedScaled18
                             : amountGivenScaled18,
                     tokenInBalanceScaled18:
@@ -277,11 +291,24 @@ export class Vault {
         return amountCalculatedRaw;
     }
 
+    /**
+     * Calculates the amount of BPT for a given add liquidity operation.
+     *
+     * @param addLiquidityInput - User defined input for an addLiquidity operation.
+     *   - For detailed information refer to the `AddLiquidityInput` type.
+     * @param poolState - Pool state that will be used for calculations.
+     *   - Note: rates, fees, totalSupply use scaled 18. For detailed information, refer to the `PoolState` type.
+     * @param hookState - Optional state for any associated hook. Required if pool has a hook enabled.
+     *   - Note: Each hook will require its own state data. See `HookState` type for officially supported hook info.
+     * @returns {Object} An object containing the raw input amounts and the calculated raw BPT output amount.
+     * @returns {bigint[]} returns.amountsInRaw - An array of raw input amounts in.
+     * @returns {bigint} returns.bptAmountOutRaw - The calculated raw BPT output amount.
+     */
     public addLiquidity(
-        input: AddLiquidityInput,
+        addLiquidityInput: AddLiquidityInput,
         poolState: PoolState,
         hookState?: HookState | unknown,
-    ): { amountsIn: bigint[]; bptAmountOut: bigint } {
+    ): { amountsInRaw: bigint[]; bptAmountOutRaw: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support addLiquidity');
 
@@ -294,7 +321,7 @@ export class Vault {
         // or cluttering the AddLiquidityParams interface by adding amountsInScaled18.
         const maxAmountsInScaled18 =
             this._copyToScaled18ApplyRateRoundDownArray(
-                input.maxAmountsIn,
+                addLiquidityInput.maxAmountsInRaw,
                 poolState.scalingFactors,
                 poolState.tokenRates,
             );
@@ -309,9 +336,9 @@ export class Vault {
             */
             const { success, hookAdjustedBalancesScaled18 } =
                 hook.onBeforeAddLiquidity(
-                    input.kind,
-                    input.maxAmountsIn,
-                    input.minBptAmountOut,
+                    addLiquidityInput.kind,
+                    addLiquidityInput.maxAmountsInRaw,
+                    addLiquidityInput.minBptAmountOutRaw,
                     updatedBalancesLiveScaled18,
                     hookState,
                 );
@@ -325,7 +352,7 @@ export class Vault {
         let bptAmountOut: bigint;
         let swapFeeAmountsScaled18: bigint[];
 
-        if (input.kind === AddKind.UNBALANCED) {
+        if (addLiquidityInput.kind === AddKind.UNBALANCED) {
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
                 updatedBalancesLiveScaled18,
@@ -337,10 +364,10 @@ export class Vault {
             );
             bptAmountOut = computed.bptAmountOut;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
-        } else if (input.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
+        } else if (addLiquidityInput.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
             const tokenIndex = this._getSingleInputIndex(maxAmountsInScaled18);
             amountsInScaled18 = maxAmountsInScaled18;
-            bptAmountOut = input.minBptAmountOut;
+            bptAmountOut = addLiquidityInput.minBptAmountOutRaw;
             const computed = computeAddLiquiditySingleTokenExactOut(
                 updatedBalancesLiveScaled18,
                 tokenIndex,
@@ -384,7 +411,7 @@ export class Vault {
         if (hook.shouldCallAfterAddLiquidity) {
             const { success, hookAdjustedAmountsInRaw } =
                 hook.onAfterAddLiquidity(
-                    input.kind,
+                    addLiquidityInput.kind,
                     amountsInScaled18,
                     amountsInRaw,
                     bptAmountOut,
@@ -409,16 +436,30 @@ export class Vault {
         }
 
         return {
-            amountsIn: amountsInRaw,
-            bptAmountOut: bptAmountOut,
+            amountsInRaw: amountsInRaw,
+            bptAmountOutRaw: bptAmountOut,
         };
     }
 
+    /**
+     * Calculates the token amounts out for a given remove liquidity operation.
+     *
+     * @param removeLiquidityInput - User defined input for a removeLiquidity operation.
+     *   - For detailed information refer to the `RemoveLiquidityInput` type.
+     *   - Note: `minAmountsOutRaw` must always contain an amount for all tokens, e.g. for single token remove other tokens must have 0n.
+     * @param poolState - Pool state that will be used for calculations.
+     *   - Note: rates, fees, totalSupply use scaled 18. For detailed information, refer to the `PoolState` type.
+     * @param hookState - Optional state for any associated hook. Required if pool has a hook enabled.
+     *   - Note: Each hook will require its own state data. See `HookState` type for officially supported hook info.
+     * @returns {Object} An object containing the calculated raw output amounts and the BPT input amount.
+     * @returns {bigint[]} returns.amountsOutRaw - An array of calculated raw output amounts.
+     * @returns {bigint} returns.bptAmountInRaw - The raw BPT input amount.
+     */
     public removeLiquidity(
-        input: RemoveLiquidityInput,
+        removeLiquidityInput: RemoveLiquidityInput,
         poolState: PoolState,
         hookState?: HookState | unknown,
-    ): { amountsOut: bigint[]; bptAmountIn: bigint } {
+    ): { amountsOutRaw: bigint[]; bptAmountInRaw: bigint } {
         if (poolState.poolType === 'Buffer')
             throw Error('Buffer pools do not support removeLiquidity');
 
@@ -434,7 +475,7 @@ export class Vault {
         // Do not mutate minAmountsOut, so that we can directly compare the raw limits later, without potentially
         // losing precision by scaling up and then down.
         const minAmountsOutScaled18 = this._copyToScaled18ApplyRateRoundUpArray(
-            input.minAmountsOut,
+            removeLiquidityInput.minAmountsOutRaw,
             poolState.scalingFactors,
             poolState.tokenRates,
         );
@@ -448,9 +489,9 @@ export class Vault {
             */
             const { success, hookAdjustedBalancesScaled18 } =
                 hook.onBeforeRemoveLiquidity(
-                    input.kind,
-                    input.maxBptAmountIn,
-                    input.minAmountsOut,
+                    removeLiquidityInput.kind,
+                    removeLiquidityInput.maxBptAmountInRaw,
+                    removeLiquidityInput.minAmountsOutRaw,
                     updatedBalancesLiveScaled18,
                     hookState,
                 );
@@ -465,24 +506,28 @@ export class Vault {
         let amountsOutScaled18: bigint[];
         let swapFeeAmountsScaled18: bigint[];
 
-        if (input.kind === RemoveKind.PROPORTIONAL) {
-            bptAmountIn = input.maxBptAmountIn;
+        if (removeLiquidityInput.kind === RemoveKind.PROPORTIONAL) {
+            bptAmountIn = removeLiquidityInput.maxBptAmountInRaw;
             swapFeeAmountsScaled18 = new Array(poolState.tokens.length).fill(
                 0n,
             );
             amountsOutScaled18 = computeProportionalAmountsOut(
                 updatedBalancesLiveScaled18,
                 poolState.totalSupply,
-                input.maxBptAmountIn,
+                removeLiquidityInput.maxBptAmountInRaw,
             );
-        } else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_IN) {
-            bptAmountIn = input.maxBptAmountIn;
+        } else if (
+            removeLiquidityInput.kind === RemoveKind.SINGLE_TOKEN_EXACT_IN
+        ) {
+            bptAmountIn = removeLiquidityInput.maxBptAmountInRaw;
             amountsOutScaled18 = minAmountsOutScaled18;
-            tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
+            tokenOutIndex = this._getSingleInputIndex(
+                removeLiquidityInput.minAmountsOutRaw,
+            );
             const computed = computeRemoveLiquiditySingleTokenExactIn(
                 updatedBalancesLiveScaled18,
                 tokenOutIndex,
-                input.maxBptAmountIn,
+                removeLiquidityInput.maxBptAmountInRaw,
                 poolState.totalSupply,
                 poolState.swapFee,
                 (balancesLiveScaled18, tokenIndex, invariantRatio) =>
@@ -494,9 +539,13 @@ export class Vault {
             );
             amountsOutScaled18[tokenOutIndex] = computed.amountOutWithFee;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
-        } else if (input.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT) {
+        } else if (
+            removeLiquidityInput.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT
+        ) {
             amountsOutScaled18 = minAmountsOutScaled18;
-            tokenOutIndex = this._getSingleInputIndex(input.minAmountsOut);
+            tokenOutIndex = this._getSingleInputIndex(
+                removeLiquidityInput.minAmountsOutRaw,
+            );
             const computed = computeRemoveLiquiditySingleTokenExactOut(
                 updatedBalancesLiveScaled18,
                 tokenOutIndex,
@@ -537,7 +586,7 @@ export class Vault {
         if (hook.shouldCallAfterRemoveLiquidity) {
             const { success, hookAdjustedAmountsOutRaw } =
                 hook.onAfterRemoveLiquidity(
-                    input.kind,
+                    removeLiquidityInput.kind,
                     bptAmountIn,
                     amountsOutScaled18,
                     amountsOutRaw,
@@ -562,8 +611,8 @@ export class Vault {
         }
 
         return {
-            amountsOut: amountsOutRaw,
-            bptAmountIn,
+            amountsOutRaw: amountsOutRaw,
+            bptAmountInRaw: bptAmountIn,
         };
     }
 

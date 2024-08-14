@@ -23,8 +23,8 @@ const poolState = {
 
 const removeLiquidityInput = {
     pool: '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
-    minAmountsOut: [1n, 1n],
-    maxBptAmountIn: 10000000000000n,
+    minAmountsOutRaw: [1n, 1n],
+    maxBptAmountInRaw: 10000000000000n,
     kind: RemoveKind.PROPORTIONAL,
 };
 
@@ -41,7 +41,7 @@ describe('hook - exitFee', () => {
             poolState,
             inputHookState,
         );
-        expect(outPutAmount.amountsOut).to.deep.eq([
+        expect(outPutAmount.amountsOutRaw).to.deep.eq([
             316227766016n,
             316227766016840n,
         ]);
@@ -57,7 +57,7 @@ describe('hook - exitFee', () => {
             poolState,
             inputHookState,
         );
-        expect(outPutAmount.amountsOut).to.deep.eq([
+        expect(outPutAmount.amountsOutRaw).to.deep.eq([
             300416377716n,
             300416377715998n,
         ]);

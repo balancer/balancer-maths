@@ -5,8 +5,8 @@ import { HookBase, HookState } from '@/hooks/types';
 
 const addLiquidityInput = {
     pool: '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
-    maxAmountsIn: [200000000000000000n, 100000000000000000n],
-    minBptAmountOut: 0n,
+    maxAmountsInRaw: [200000000000000000n, 100000000000000000n],
+    minBptAmountOutRaw: 0n,
     kind: AddKind.UNBALANCED,
 };
 
@@ -53,11 +53,11 @@ describe('hook - beforeAddLiquidity', () => {
             pool,
             inputHookState,
         );
-        expect(test.amountsIn).to.deep.eq([
+        expect(test.amountsInRaw).to.deep.eq([
             200000000000000000n,
             100000000000000000n,
         ]);
-        expect(test.bptAmountOut).to.deep.eq(146464294351915965n);
+        expect(test.bptAmountOutRaw).to.deep.eq(146464294351915965n);
     });
 });
 
@@ -87,8 +87,12 @@ class CustomHook implements HookBase {
         )
             throw new Error('Unexpected hookState');
         expect(kind).to.eq(addLiquidityInput.kind);
-        expect(maxAmountsInScaled18).to.deep.eq(addLiquidityInput.maxAmountsIn);
-        expect(minBptAmountOut).to.deep.eq(addLiquidityInput.minBptAmountOut);
+        expect(maxAmountsInScaled18).to.deep.eq(
+            addLiquidityInput.maxAmountsInRaw,
+        );
+        expect(minBptAmountOut).to.deep.eq(
+            addLiquidityInput.minBptAmountOutRaw,
+        );
         expect(balancesScaled18).to.deep.eq(pool.balancesLiveScaled18);
         return {
             success: true,

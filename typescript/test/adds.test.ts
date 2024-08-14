@@ -20,14 +20,14 @@ describe('addLiqudity tests', () => {
             const calculatedAmounts = vault.addLiquidity(
                 {
                     pool: pool.poolAddress,
-                    maxAmountsIn: inputAmountsRaw,
-                    minBptAmountOut: bptOutRaw,
+                    maxAmountsInRaw: inputAmountsRaw,
+                    minBptAmountOutRaw: bptOutRaw,
                     kind,
                 },
                 pool,
             );
-            expect(calculatedAmounts.bptAmountOut).toEqual(bptOutRaw);
-            expect(calculatedAmounts.amountsIn).toEqual(inputAmountsRaw);
+            expect(calculatedAmounts.bptAmountOutRaw).toEqual(bptOutRaw);
+            expect(calculatedAmounts.amountsInRaw).toEqual(inputAmountsRaw);
         },
     );
 });
