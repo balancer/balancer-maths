@@ -1,25 +1,28 @@
 from src.log_exp_math import LogExpMath
 
 MAX_POW_RELATIVE_ERROR = 10000
+WAD = 1000000000000000000
+TWO_WAD = 2000000000000000000
+FOUR_WAD = 4000000000000000000
 
 
 def mul_up_fixed(a: int, b: int) -> int:
     product = a * b
     if product == 0:
         return 0
-    return (product - 1) // 10**18 + 1
+    return (product - 1) // WAD + 1
 
 
 def mul_down_fixed(a: int, b: int) -> int:
     product = a * b
-    return product // 10**18
+    return product // WAD
 
 
 def div_down_fixed(a: int, b: int) -> int:
     if a == 0:
         return 0
 
-    a_inflated = a * 10**18
+    a_inflated = a * WAD
     return a_inflated // b
 
 
@@ -27,7 +30,7 @@ def div_up_fixed(a: int, b: int) -> int:
     if a == 0:
         return 0
 
-    a_inflated = a * 10**18
+    a_inflated = a * WAD
     return (a_inflated - 1) // b + 1
 
 
@@ -39,11 +42,11 @@ def div_up(a: int, b: int) -> int:
 
 
 def pow_down_fixed(x: int, y: int, version: int = None) -> int:
-    if y == 10**18 and version != 1:
+    if y == WAD and version != 1:
         return x
-    if y == 20**18 and version != 1:
+    if y == TWO_WAD and version != 1:
         return mul_up_fixed(x, x)
-    if y == 40**18 and version != 1:
+    if y == FOUR_WAD and version != 1:
         square = mul_up_fixed(x, x)
         return mul_up_fixed(square, square)
 
@@ -57,11 +60,11 @@ def pow_down_fixed(x: int, y: int, version: int = None) -> int:
 
 
 def pow_up_fixed(x: int, y: int, version: int = None) -> int:
-    if y == 10**18 and version != 1:
+    if y == WAD and version != 1:
         return x
-    if y == 20**18 and version != 1:
+    if y == TWO_WAD and version != 1:
         return mul_up_fixed(x, x)
-    if y == 40**18 and version != 1:
+    if y == FOUR_WAD and version != 1:
         square = mul_up_fixed(x, x)
         return mul_up_fixed(square, square)
 
@@ -72,4 +75,4 @@ def pow_up_fixed(x: int, y: int, version: int = None) -> int:
 
 
 def complement_fixed(x: int) -> int:
-    return 10**18 - x if x < 10**18 else 0
+    return WAD - x if x < WAD else 0
