@@ -33,7 +33,9 @@ class Vault:
 
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
-        return add_liquidity(add_liquidity_input, pool_class, hook_class, hook_state)
+        return add_liquidity(
+            add_liquidity_input, pool_state, pool_class, hook_class, hook_state
+        )
 
     def _get_pool(self, pool_state):
         pool_class = self.pool_classes[pool_state["poolType"]]
