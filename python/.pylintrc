@@ -2,4 +2,4 @@
 init-hook='import sys; sys.path.append("src")'
 
 [MESSAGES CONTROL]
-disable=missing-module-docstring, missing-function-docstring, missing-class-docstring, too-few-public-methods
+disable=missing-module-docstring, missing-function-docstring, missing-class-docstring, too-few-public-methods, line-too-long
