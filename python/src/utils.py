@@ -60,3 +60,32 @@ def _to_raw_undo_rate_round_up(
 
 def is_same_address(address_one: str, address_two: str) -> bool:
     return address_one.lower() == address_two.lower()
+
+
+def _copy_to_scaled18_apply_rate_round_down_array(
+    amounts, scaling_factors, token_rates
+):
+    return [
+        _to_scaled_18_apply_rate_round_down(a, scaling_factors[i], token_rates[i])
+        for i, a in enumerate(amounts)
+    ]
+
+
+def _copy_to_scaled18_apply_rate_round_up_array(amounts, scaling_factors, token_rates):
+    return [
+        _to_scaled_18_apply_rate_round_up(a, scaling_factors[i], token_rates[i])
+        for i, a in enumerate(amounts)
+    ]
+
+
+def _compute_and_charge_aggregate_swap_fees(
+    swap_fee_amount_scaled18: int,
+    aggregate_swap_fee_percentage: int,
+) -> int:
+    if swap_fee_amount_scaled18 > 0 and aggregate_swap_fee_percentage > 0:
+        return mul_up_fixed(
+            swap_fee_amount_scaled18,
+            aggregate_swap_fee_percentage,
+        )
+
+    return 0

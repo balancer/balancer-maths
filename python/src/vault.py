@@ -1,4 +1,5 @@
 from .swap import swap
+from .add_liquidity import add_liquidity
 from .pools.weighted import Weighted
 from .pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from .pools.stable import Stable
@@ -25,6 +26,16 @@ class Vault:
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
         return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
+
+    def add_liquidity(self, add_liquidity_input, pool_state, *, hook_state=None):
+        if pool_state["poolType"] == "Buffer":
+            raise ValueError("Buffer pools do not support addLiquidity")
+
+        pool_class = self._get_pool(pool_state)
+        hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
+        return add_liquidity(
+            add_liquidity_input, pool_state, pool_class, hook_class, hook_state
+        )
 
     def _get_pool(self, pool_state):
         pool_class = self.pool_classes[pool_state["poolType"]]

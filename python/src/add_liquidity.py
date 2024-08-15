@@ -1,0 +1,149 @@
+from enum import Enum
+from src.utils import (
+    _copy_to_scaled18_apply_rate_round_down_array,
+    _to_raw_undo_rate_round_up,
+    _compute_and_charge_aggregate_swap_fees,
+)
+from src.base_pool_math import (
+    compute_add_liquidity_unbalanced,
+    compute_add_liquidity_single_token_exact_out,
+)
+
+
+class Kind(Enum):
+    PROPORTIONAL = 0
+    SINGLE_TOKEN_EXACT_OUT = 1
+
+
+def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_state):
+
+    # Amounts are entering pool math, so round down.
+    # Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
+    # but it avoids the even worse options of mutating amountsIn inside AddLiquidityParams,
+    # or cluttering the AddLiquidityParams interface by adding amountsInScaled18.
+    max_amounts_in_scaled18 = _copy_to_scaled18_apply_rate_round_down_array(
+        add_liquidity_input["max_amounts_in_raw"],
+        pool_state["scalingFactors"],
+        pool_state["tokenRates"],
+    )
+
+    updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
+    if hook_class.shouldCallBeforeAddLiquidity:
+        # Note - in SC balances and amounts are updated to reflect any rate change.
+        # Daniel said we should not worry about this as any large rate changes
+        # will mean something has gone wrong.
+        # We do take into account and balance changes due
+        # to hook using hookAdjustedBalancesScaled18.
+        hook_return = hook_class.onBeforeSwap(
+            add_liquidity_input["kind"],
+            add_liquidity_input["max_amounts_in_raw"],
+            add_liquidity_input["min_bpt_amount_out_raw"],
+            updated_balances_live_scaled18,
+            hook_state,
+        )
+        if hook_return["success"] is False:
+            raise SystemError("BeforeAddLiquidityHookFailed")
+        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+            updated_balances_live_scaled18[i] = a
+
+    if add_liquidity_input["kind"] == Kind.PROPORTIONAL.value:
+        amounts_in_scaled18 = max_amounts_in_scaled18
+        computed = compute_add_liquidity_unbalanced(
+            updated_balances_live_scaled18,
+            max_amounts_in_scaled18,
+            pool_state["totalSupply"],
+            pool_state["swapFee"],
+            lambda balances_live_scaled18: pool_class.compute_invariant(
+                balances_live_scaled18
+            ),
+        )
+        bpt_amount_out = computed["bpt_amount_out"]
+        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+
+    elif add_liquidity_input["kind"] == Kind.SINGLE_TOKEN_EXACT_OUT.value:
+        token_index = _get_single_input_index(max_amounts_in_scaled18)
+        amounts_in_scaled18 = max_amounts_in_scaled18
+        bpt_amount_out = add_liquidity_input["min_bpt_amount_out_raw"]
+        computed = compute_add_liquidity_single_token_exact_out(
+            updated_balances_live_scaled18,
+            token_index,
+            bpt_amount_out,
+            pool_state["totalSupply"],
+            pool_state["swapFee"],
+            lambda balances_live_scaled18, token_index, invariant_ratio: pool_class.compute_balance(
+                balances_live_scaled18, token_index, invariant_ratio
+            ),
+        )
+        amounts_in_scaled18[token_index] = computed["amount_in_with_fee"]
+        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+    else:
+        raise ValueError("Unsupported AddLiquidity Kind")
+
+    # Initialize amountsInRaw as a list with the same length as the tokens in the pool
+    amounts_in_raw = [0] * len(pool_state["tokens"])
+
+    for i in range(len(pool_state["tokens"])):
+        # amountsInRaw are amounts actually entering the Pool, so we round up.
+        amounts_in_raw[i] = _to_raw_undo_rate_round_up(
+            amounts_in_scaled18[i],
+            pool_state["scalingFactors"][i],
+            pool_state["tokenRates"][i],
+        )
+
+        # A Pool's token balance always decreases after an exit
+        # Computes protocol and pool creator fee which is eventually taken from pool balance
+        aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
+            swap_fee_amounts_scaled18[i], pool_state["aggregateSwapFee"]
+        )
+
+        # Update the balances with the incoming amounts and subtract the swap fees
+        updated_balances_live_scaled18[i] += (
+            amounts_in_scaled18[i] - aggregate_swap_fee_amount_scaled18
+        )
+
+    if hook_class.shouldCallAfterAddLiquidity:
+        hook_return = hook_class.on_after_remove_liquidity(
+            {
+                "kind": add_liquidity_input["swap_kind"],
+                "amounts_in_scaled18": amounts_in_scaled18,
+                "amounts_in_raw": amounts_in_raw,
+                "bpt_amount_out": bpt_amount_out,
+                "balances_scaled_18": updated_balances_live_scaled18,
+                "hook_state": hook_state,
+            }
+        )
+
+        if hook_return["success"] is False or len(
+            hook_return["hookAdjustedAmountsInRaw"]
+        ) is not len(amounts_in_raw):
+            raise SystemError(
+                " AfterAddLiquidityHookFailed",
+                pool_state["poolType"],
+                pool_state["hookType"],
+            )
+
+        # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
+        if hook_class.enableHookAdjustedAmounts:
+            for i, a in enumerate(hook_return["hook_adjusted_amounts_in_raw"]):
+                amounts_in_raw[i] = a
+
+    return {
+        "bpt_amount_out_raw": bpt_amount_out,
+        "amounts_in_raw": amounts_in_raw,
+    }
+
+
+def _get_single_input_index(max_amounts_in):
+    length = len(max_amounts_in)
+    input_index = length
+
+    for i in range(length):
+        if max_amounts_in[i] != 0:
+            if input_index != length:
+                raise ValueError("Multiple non-zero inputs for single token add")
+            input_index = i
+
+    if input_index >= length:
+        raise ValueError("All zero inputs for single token add")
+
+    return input_index

@@ -5,6 +5,7 @@ from src.utils import (
     _to_scaled_18_apply_rate_round_up,
     _to_raw_undo_rate_round_down,
     _to_raw_undo_rate_round_up,
+    _compute_and_charge_aggregate_swap_fees,
 )
 from src.maths import mul_up_fixed
 
@@ -187,16 +188,3 @@ def _update_amount_given_in_vars(
         )
 
     return amount_given_scaled_18
-
-
-def _compute_and_charge_aggregate_swap_fees(
-    swap_fee_amount_scaled18: int,
-    aggregate_swap_fee_percentage: int,
-) -> int:
-    if swap_fee_amount_scaled18 > 0 and aggregate_swap_fee_percentage > 0:
-        return mul_up_fixed(
-            swap_fee_amount_scaled18,
-            aggregate_swap_fee_percentage,
-        )
-
-    return 0
