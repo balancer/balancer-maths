@@ -1,7 +1,9 @@
+from src.maths import mul_down_fixed
 from src.pools.stable_math import (
     compute_invariant,
     compute_out_given_exact_in,
     compute_in_given_exact_out,
+    compute_balance,
 )
 from src.swap import SwapKind
 
@@ -29,4 +31,23 @@ class Stable:
             swap_params["index_out"],
             swap_params["amount_given_scaled18"],
             invariant,
+        )
+
+    def compute_invariant(self, balances_live_scaled18):
+        return compute_invariant(self.amp, balances_live_scaled18)
+
+    def compute_balance(
+        self,
+        balances_live_scaled18,
+        token_in_index,
+        invariant_ratio,
+    ):
+        return compute_balance(
+            self.amp,
+            balances_live_scaled18,
+            mul_down_fixed(
+                self.compute_invariant(balances_live_scaled18),
+                invariant_ratio,
+            ),
+            token_in_index,
         )
