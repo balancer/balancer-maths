@@ -103,3 +103,26 @@ def compute_in_given_exact_out(
     ratio = power - WAD
 
     return mul_up_fixed(balance_in, ratio)
+
+
+def compute_balance_out_given_invariant(
+    current_balance: int,
+    weight: int,
+    invariant_ratio: int,
+) -> int:
+    # /******************************************************************************************
+    # // calculateBalanceGivenInvariant                                                       //
+    # // o = balanceOut                                                                        //
+    # // b = balanceIn                      (1 / w)                                            //
+    # // w = weight              o = b * i ^                                                   //
+    # // i = invariantRatio                                                                    //
+    # ******************************************************************************************/
+
+    # Rounds result up overall.
+    # Calculate by how much the token balance has to increase to match the invariantRatio.
+    balance_ratio = pow_up_fixed(
+        invariant_ratio,
+        div_up_fixed(WAD, weight),
+    )
+
+    return mul_up_fixed(current_balance, balance_ratio)
