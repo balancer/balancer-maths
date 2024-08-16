@@ -157,7 +157,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
                 "AfterAddSwapHookFailed", pool_state["poolType"], pool_state["hookType"]
             )
         # If hook adjusted amounts is not enabled, ignore amount returned by the hook
-        if hook_class.enableHookAdjustedAmounts:
+        if hook_class.enable_hook_adjusted_amounts:
             amount_calculated_raw = hook_return["hook_adjusted_amount_calculated_raw"]
 
     return amount_calculated_raw

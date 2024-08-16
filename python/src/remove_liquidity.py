@@ -145,7 +145,7 @@ def remove_liquidity(
             )
 
         # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
-        if hook_class.enableHookAdjustedAmounts:
+        if hook_class.enable_hook_adjusted_amounts:
             for i, a in enumerate(hook_return["hook_adjusted_amounts_out_raw"]):
                 amounts_out_raw[i] = a
 

@@ -63,4 +63,4 @@ class Vault:
             raise SystemError("Unsupported Hook Type:", hook_name)
         if hook_state is None:
             raise SystemError("No state for Hook:", hook_name)
-        return hook_class(hook_state)
+        return hook_class()
