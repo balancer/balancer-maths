@@ -3,6 +3,7 @@ from src.utils import (
     _copy_to_scaled18_apply_rate_round_down_array,
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
+    _get_single_input_index,
 )
 from src.base_pool_math import (
     compute_add_liquidity_unbalanced,
@@ -102,9 +103,9 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         )
 
     if hook_class.shouldCallAfterAddLiquidity:
-        hook_return = hook_class.on_after_remove_liquidity(
+        hook_return = hook_class.on_after_add_liquidity(
             {
-                "kind": add_liquidity_input["swap_kind"],
+                "kind": add_liquidity_input["kind"],
                 "amounts_in_scaled18": amounts_in_scaled18,
                 "amounts_in_raw": amounts_in_raw,
                 "bpt_amount_out": bpt_amount_out,
@@ -131,19 +132,3 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         "bpt_amount_out_raw": bpt_amount_out,
         "amounts_in_raw": amounts_in_raw,
     }
-
-
-def _get_single_input_index(max_amounts_in):
-    length = len(max_amounts_in)
-    input_index = length
-
-    for i in range(length):
-        if max_amounts_in[i] != 0:
-            if input_index != length:
-                raise ValueError("Multiple non-zero inputs for single token add")
-            input_index = i
-
-    if input_index >= length:
-        raise ValueError("All zero inputs for single token add")
-
-    return input_index

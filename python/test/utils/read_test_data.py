@@ -9,7 +9,7 @@ def read_test_data():
         os.path.join(os.path.dirname(__file__), relative_path)
     )
 
-    test_data = {"swaps": [], "pools": {}, "adds": []}
+    test_data = {"swaps": [], "pools": {}, "adds": [], "removes": []}
 
     # Iterate over all files in the directory
     for filename in os.listdir(absolute_path):
@@ -39,6 +39,22 @@ def read_test_data():
                             }
                         )
 
+                if "removes" in test:
+                    for remove in test["removes"]:
+                        test_data["removes"].append(
+                            {
+                                **remove,
+                                "kind" : mapRemoveKind(remove["kind"]),
+                                "test": filename,
+                            }
+                        )
+
                 test_data["pools"][filename] = test["pool"]
 
     return test_data
+
+def mapRemoveKind(kind):
+    if kind == 'Proportional': return 0
+    elif kind == 'SingleTokenExactIn': return 1
+    elif kind == 'SingleTokenExactOut': return 2
+    else: raise ValueError("Unsupported RemoveKind:", kind)

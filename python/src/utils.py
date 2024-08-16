@@ -89,3 +89,19 @@ def _compute_and_charge_aggregate_swap_fees(
         )
 
     return 0
+
+
+def _get_single_input_index(max_amounts_in):
+    length = len(max_amounts_in)
+    input_index = length
+
+    for i in range(length):
+        if max_amounts_in[i] != 0:
+            if input_index != length:
+                raise ValueError("Multiple non-zero inputs for single token add")
+            input_index = i
+
+    if input_index >= length:
+        raise ValueError("All zero inputs for single token add")
+
+    return input_index
