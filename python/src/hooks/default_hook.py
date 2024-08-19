@@ -1,7 +1,7 @@
 class DefaultHook:
-    shouldCallComputeDynamicSwapFee = False
-    shouldCallBeforeSwap = False
-    shouldCallAfterSwap = False
+    should_call_compute_dynamic_swap_fee = False
+    should_call_before_swap = False
+    should_call_after_swap = False
     should_call_before_add_liquidity = False
     should_call_after_add_liquidity = False
     should_call_before_remove_liquidity = False
