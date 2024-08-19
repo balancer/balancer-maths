@@ -1,3 +1,4 @@
+from src.hooks.exit_fee_hook import ExitFeeHook
 from .swap import swap
 from .add_liquidity import add_liquidity
 from .remove_liquidity import remove_liquidity
@@ -6,17 +7,16 @@ from .pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_u
 from .pools.stable import Stable
 from .hooks.default_hook import DefaultHook
 
-
 class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
         self.pool_classes = {
             "Weighted": Weighted,
             "Stable": Stable,
         }
+        self.hook_classes = {"ExitFee": ExitFeeHook}
         if custom_pool_classes is not None:
             self.pool_classes.update(custom_pool_classes)
 
-        self.hook_classes = {}
         if custom_hook_classes is not None:
             self.hook_classes.update(custom_hook_classes)
 

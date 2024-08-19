@@ -47,7 +47,7 @@ describe('hook - afterRemoveLiquidity', () => {
         },
     });
 
-    test('aggregateSwapFee of 50% should take half of remaining', () => {
+    test('should alter pool balances', () => {
         /*
             hook state is used to pass new balances which give expected result
         */
