@@ -1,11 +1,12 @@
+from src.swap import swap
+from src.add_liquidity import add_liquidity
+from src.remove_liquidity import remove_liquidity
+from src.pools.weighted import Weighted
+from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
+from src.pools.stable import Stable
+from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
-from .swap import swap
-from .add_liquidity import add_liquidity
-from .remove_liquidity import remove_liquidity
-from .pools.weighted import Weighted
-from .pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
-from .pools.stable import Stable
-from .hooks.default_hook import DefaultHook
+
 
 class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
