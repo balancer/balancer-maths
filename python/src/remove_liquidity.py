@@ -42,7 +42,7 @@ def remove_liquidity(
         # will mean something has gone wrong.
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.onBeforeRemoveLiquidity(
+        hook_return = hook_class.on_before_remove_liquidity(
             remove_liquidity_input["kind"],
             remove_liquidity_input["max_bpt_amount_in_raw"],
             remove_liquidity_input["min_amounts_out_raw"],
@@ -52,7 +52,7 @@ def remove_liquidity(
         if hook_return["success"] is False:
             raise SystemError("BeforeRemoveLiquidityHookFailed")
 
-        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
     if remove_liquidity_input["kind"] == RemoveKind.PROPORTIONAL.value:
