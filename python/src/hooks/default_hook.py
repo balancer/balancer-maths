@@ -4,8 +4,8 @@ class DefaultHook:
     shouldCallAfterSwap = False
     should_call_before_add_liquidity = False
     should_call_after_add_liquidity = False
-    shouldCallBeforeRemoveLiquidity = False
-    shouldCallAfterRemoveLiquidity = False
+    should_call_before_remove_liquidity = False
+    should_call_after_remove_liquidity = False
     enable_hook_adjusted_amounts = False
 
     def on_before_add_liquidity(self):

@@ -36,7 +36,7 @@ def remove_liquidity(
     )
 
     updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
-    if hook_class.shouldCallBeforeRemoveLiquidity:
+    if hook_class.should_call_before_remove_liquidity:
         # Note - in SC balances and amounts are updated to reflect any rate change.
         # Daniel said we should not worry about this as any large rate changes
         # will mean something has gone wrong.
@@ -119,24 +119,22 @@ def remove_liquidity(
             swap_fee_amounts_scaled18[i], pool_state["aggregateSwapFee"]
         )
 
-        updated_balances_live_scaled18[i] -= (
+        updated_balances_live_scaled18[i] = updated_balances_live_scaled18[i] - (
             amounts_out_scaled18[i] + aggregate_swap_fee_amount_scaled18
         )
 
-    if hook_class.shouldCallAfterRemoveLiquidity:
+    if hook_class.should_call_after_remove_liquidity:
         hook_return = hook_class.on_after_remove_liquidity(
-            {
-                "kind": remove_liquidity_input["kind"],
-                "bpt_amount_in": bpt_amount_in,
-                "amountsOutScaled18": amounts_out_scaled18,
-                "amountsOutRaw": amounts_out_raw,
-                "updatedBalancesLiveScaled18": updated_balances_live_scaled18,
-                "hook_state": hook_state,
-            }
+            remove_liquidity_input["kind"],
+            bpt_amount_in,
+            amounts_out_scaled18,
+            amounts_out_raw,
+            updated_balances_live_scaled18,
+            hook_state,
         )
 
         if hook_return["success"] is False or len(
-            hook_return["hookAdjustedAmountsOutRaw"]
+            hook_return["hook_adjusted_amounts_out_raw"]
         ) is not len(amounts_out_raw):
             raise SystemError(
                 "AfterRemoveLiquidityHookFailed",
