@@ -35,7 +35,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         # will mean something has gone wrong.
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.onBeforeSwap(
+        hook_return = hook_class.on_before_add_liquidity(
             add_liquidity_input["kind"],
             add_liquidity_input["max_amounts_in_raw"],
             add_liquidity_input["min_bpt_amount_out_raw"],
@@ -44,7 +44,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         )
         if hook_return["success"] is False:
             raise SystemError("BeforeAddLiquidityHookFailed")
-        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
     if add_liquidity_input["kind"] == Kind.UNBALANCED.value:
