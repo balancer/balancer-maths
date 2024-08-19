@@ -12,7 +12,7 @@ from src.base_pool_math import (
 
 
 class Kind(Enum):
-    PROPORTIONAL = 0
+    UNBALANCED = 0
     SINGLE_TOKEN_EXACT_OUT = 1
 
 
@@ -29,13 +29,13 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
     )
 
     updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
-    if hook_class.shouldCallBeforeAddLiquidity:
+    if hook_class.should_call_before_add_liquidity:
         # Note - in SC balances and amounts are updated to reflect any rate change.
         # Daniel said we should not worry about this as any large rate changes
         # will mean something has gone wrong.
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.onBeforeSwap(
+        hook_return = hook_class.on_before_add_liquidity(
             add_liquidity_input["kind"],
             add_liquidity_input["max_amounts_in_raw"],
             add_liquidity_input["min_bpt_amount_out_raw"],
@@ -44,10 +44,10 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         )
         if hook_return["success"] is False:
             raise SystemError("BeforeAddLiquidityHookFailed")
-        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
-    if add_liquidity_input["kind"] == Kind.PROPORTIONAL.value:
+    if add_liquidity_input["kind"] == Kind.UNBALANCED.value:
         amounts_in_scaled18 = max_amounts_in_scaled18
         computed = compute_add_liquidity_unbalanced(
             updated_balances_live_scaled18,
@@ -98,24 +98,24 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         )
 
         # Update the balances with the incoming amounts and subtract the swap fees
-        updated_balances_live_scaled18[i] += (
-            amounts_in_scaled18[i] - aggregate_swap_fee_amount_scaled18
+        updated_balances_live_scaled18[i] = (
+            updated_balances_live_scaled18[i]
+            + amounts_in_scaled18[i]
+            - aggregate_swap_fee_amount_scaled18
         )
 
-    if hook_class.shouldCallAfterAddLiquidity:
+    if hook_class.should_call_after_add_liquidity:
         hook_return = hook_class.on_after_add_liquidity(
-            {
-                "kind": add_liquidity_input["kind"],
-                "amounts_in_scaled18": amounts_in_scaled18,
-                "amounts_in_raw": amounts_in_raw,
-                "bpt_amount_out": bpt_amount_out,
-                "balances_scaled_18": updated_balances_live_scaled18,
-                "hook_state": hook_state,
-            }
+            add_liquidity_input["kind"],
+            amounts_in_scaled18,
+            amounts_in_raw,
+            bpt_amount_out,
+            updated_balances_live_scaled18,
+            hook_state,
         )
 
         if hook_return["success"] is False or len(
-            hook_return["hookAdjustedAmountsInRaw"]
+            hook_return["hook_adjusted_amounts_in_raw"]
         ) is not len(amounts_in_raw):
             raise SystemError(
                 " AfterAddLiquidityHookFailed",
@@ -124,7 +124,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             )
 
         # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
-        if hook_class.enableHookAdjustedAmounts:
+        if hook_class.enable_hook_adjusted_amounts:
             for i, a in enumerate(hook_return["hook_adjusted_amounts_in_raw"]):
                 amounts_in_raw[i] = a
 

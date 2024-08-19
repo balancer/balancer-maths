@@ -39,20 +39,22 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     )
 
     updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
-    if hook_class.shouldCallBeforeSwap:
+    if hook_class.should_call_before_swap:
         # Note - in SC balances and amounts are updated to reflect any rate change.
         # Daniel said we should not worry about this as any large rate changes
         # will mean something has gone wrong.
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.onBeforeSwap({**swap_input, "hook_state": hook_state})
+        hook_return = hook_class.on_before_swap(
+            {**swap_input, "hook_state": hook_state}
+        )
         if hook_return["success"] is False:
             raise SystemError("BeforeSwapHookFailed")
-        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
     swap_fee = pool_state["swapFee"]
-    if hook_class.shouldCallComputeDynamicSwapFee:
+    if hook_class.should_call_compute_dynamic_swap_fee:
         hook_return = hook_class.onComputeDynamicSwapFee(
             swap_input,
             pool_state["swapFee"],
@@ -115,7 +117,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
             amount_given_scaled18,
             amount_calculated_scaled18 + aggregate_swap_fee_amount_scaled18,
         )
-        if swap_input["swap_kind"] == SwapKind.GIVENIN
+        if swap_input["swap_kind"] == SwapKind.GIVENIN.value
         else (
             amount_calculated_scaled18 - aggregate_swap_fee_amount_scaled18,
             amount_given_scaled18,
@@ -125,20 +127,20 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     updated_balances_live_scaled18[input_index] += balance_in_increment
     updated_balances_live_scaled18[output_index] -= balance_out_decrement
 
-    if hook_class.shouldCallAfterSwap:
-        hook_return = hook_class.onAfterSwap(
+    if hook_class.should_call_after_swap:
+        hook_return = hook_class.on_after_swap(
             {
                 "kind": swap_input["swap_kind"],
                 "token_in": swap_input["token_in"],
                 "token_out": swap_input["token_out"],
                 "amount_in_scaled18": (
                     amount_given_scaled18
-                    if swap_input["swap_kind"] == SwapKind.GIVENIN
+                    if swap_input["swap_kind"] == SwapKind.GIVENIN.value
                     else amount_calculated_scaled18
                 ),
                 "amount_out_scaled18": (
                     amount_calculated_scaled18
-                    if swap_input["swap_kind"] == SwapKind.GIVENIN
+                    if swap_input["swap_kind"] == SwapKind.GIVENIN.value
                     else amount_given_scaled18
                 ),
                 "token_in_balance_scaled18": updated_balances_live_scaled18[
@@ -157,7 +159,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
                 "AfterAddSwapHookFailed", pool_state["poolType"], pool_state["hookType"]
             )
         # If hook adjusted amounts is not enabled, ignore amount returned by the hook
-        if hook_class.enableHookAdjustedAmounts:
+        if hook_class.enable_hook_adjusted_amounts:
             amount_calculated_raw = hook_return["hook_adjusted_amount_calculated_raw"]
 
     return amount_calculated_raw

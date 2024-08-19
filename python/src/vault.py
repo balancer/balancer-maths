@@ -1,10 +1,11 @@
-from .swap import swap
-from .add_liquidity import add_liquidity
-from .remove_liquidity import remove_liquidity
-from .pools.weighted import Weighted
-from .pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
-from .pools.stable import Stable
-from .hooks.default_hook import DefaultHook
+from src.swap import swap
+from src.add_liquidity import add_liquidity
+from src.remove_liquidity import remove_liquidity
+from src.pools.weighted import Weighted
+from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
+from src.pools.stable import Stable
+from src.hooks.default_hook import DefaultHook
+from src.hooks.exit_fee_hook import ExitFeeHook
 
 
 class Vault:
@@ -13,10 +14,10 @@ class Vault:
             "Weighted": Weighted,
             "Stable": Stable,
         }
+        self.hook_classes = {"ExitFee": ExitFeeHook}
         if custom_pool_classes is not None:
             self.pool_classes.update(custom_pool_classes)
 
-        self.hook_classes = {}
         if custom_hook_classes is not None:
             self.hook_classes.update(custom_hook_classes)
 
@@ -63,4 +64,4 @@ class Vault:
             raise SystemError("Unsupported Hook Type:", hook_name)
         if hook_state is None:
             raise SystemError("No state for Hook:", hook_name)
-        return hook_class(hook_state)
+        return hook_class()
