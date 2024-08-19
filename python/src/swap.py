@@ -45,10 +45,12 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         # will mean something has gone wrong.
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.onBeforeSwap({**swap_input, "hook_state": hook_state})
+        hook_return = hook_class.on_before_swap(
+            {**swap_input, "hook_state": hook_state}
+        )
         if hook_return["success"] is False:
             raise SystemError("BeforeSwapHookFailed")
-        for i, a in enumerate(hook_return["hookAdjustedBalancesScaled18"]):
+        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
     swap_fee = pool_state["swapFee"]
