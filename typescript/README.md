@@ -23,7 +23,7 @@ const vault = new Vault();
 const pool = {
   chainId: '11155111',
   blockNumber: '5955146',
-  poolType: 'Weighted',
+  poolType: 'WEIGHTED',
   poolAddress: '0x204d4194e4e42364e3d1841d0a9b1ef857879c31',
   tokens: [
     '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
@@ -56,7 +56,7 @@ const vault = new Vault();
 const pool = {
   chainId: '11155111',
   blockNumber: '5955145',
-  poolType: 'Weighted',
+  poolType: 'WEIGHTED',
   poolAddress: '0x204d4194e4e42364e3d1841d0a9b1ef857879c31',
   tokens: [
     '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
@@ -89,7 +89,7 @@ This example shows how to calculate the result of a remove liqudity operation wh
 const vault = new Vault();
 
 const poolState = {
-    poolType: 'Weighted',
+    poolType: 'WEIGHTED',
     hookType: 'ExitFee',
     chainId: '11155111',
     blockNumber: '5955145',

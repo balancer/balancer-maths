@@ -11,8 +11,8 @@ from src.hooks.exit_fee_hook import ExitFeeHook
 class Vault:
     def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
         self.pool_classes = {
-            "Weighted": Weighted,
-            "Stable": Stable,
+            "WEIGHTED": Weighted,
+            "STABLE": Stable,
         }
         self.hook_classes = {"ExitFee": ExitFeeHook}
         if custom_pool_classes is not None:

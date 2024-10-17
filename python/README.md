@@ -21,7 +21,7 @@ Currently supported hooks:
 from src.vault import Vault
 
 pool = {
-    "poolType": "Weighted",
+    "poolType": "WEIGHTED",
     "chainId": "11155111",
     "blockNumber": "5955145",
     "poolAddress": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
@@ -60,7 +60,7 @@ calculated_result = vault.swap(
 from src.vault import Vault
 
 pool = {
-    "poolType": "Weighted",
+    "poolType": "WEIGHTED",
     "chainId": "11155111",
     "blockNumber": "5955145",
     "poolAddress": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
@@ -101,7 +101,7 @@ This example shows how to calculate the result of a remove liqudity operation wh
 from src.vault import Vault
 
 pool = {
-    "poolType": "Weighted",
+    "poolType": "WEIGHTED",
     "hookType": "ExitFee",
     "chainId": "11155111",
     "blockNumber": "5955145",

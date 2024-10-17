@@ -43,8 +43,8 @@ export class Vault {
         const { customPoolClasses, customHookClasses: hookClasses } =
             config || {};
         this.poolClasses = {
-            Weighted: Weighted,
-            Stable: Stable,
+            WEIGHTED: Weighted,
+            STABLE: Stable,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
         };

@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { RemoveKind, Vault } from '../../src';
 
 const poolState = {
-    poolType: 'Weighted',
+    poolType: 'WEIGHTED',
     hookType: 'ExitFee',
     chainId: '11155111',
     blockNumber: '5955145',
