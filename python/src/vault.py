@@ -22,6 +22,9 @@ class Vault:
             self.hook_classes.update(custom_hook_classes)
 
     def swap(self, swap_input, pool_state, *, hook_state=None):
+        if(swap_input["amount_raw"] == 0):
+            return 0
+
         # buffer is handled separately than a "normal" pool
         if pool_state.get("totalSupply") is None:
             return erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)

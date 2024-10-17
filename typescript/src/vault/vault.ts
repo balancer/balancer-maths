@@ -126,6 +126,8 @@ export class Vault {
         poolState: PoolState | BufferState,
         hookState?: HookState | unknown,
     ): bigint {
+        if (swapInput.amountRaw === 0n) return 0n;
+
         // buffer is handled separately than a "normal" pool
         if (!('totalSupply' in poolState)) {
             return erc4626BufferWrapOrUnwrap(swapInput, poolState);
