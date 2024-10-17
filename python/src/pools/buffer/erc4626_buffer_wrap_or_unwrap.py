@@ -2,7 +2,7 @@ from src.utils import is_same_address
 from src.pools.buffer.buffer_math import calculate_buffer_amounts
 from src.pools.buffer.enums import WrappingDirection
 
-_MINIMUM_WRAP_AMOUNT = 1000000
+_MINIMUM_WRAP_AMOUNT = 1000
 
 
 def erc4626_buffer_wrap_or_unwrap(swap_input, pool_state):

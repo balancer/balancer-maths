@@ -4,7 +4,7 @@ import { SwapInput } from '../vault/types';
 import { calculateBufferAmounts } from './bufferMath';
 import { WrappingDirection } from './types';
 
-const _MINIMUM_WRAP_AMOUNT = 1000000n;
+const _MINIMUM_WRAP_AMOUNT = 1000n;
 
 export function erc4626BufferWrapOrUnwrap(
     input: SwapInput,
