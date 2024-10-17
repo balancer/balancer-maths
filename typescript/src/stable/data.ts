@@ -1,6 +1,6 @@
 import { PoolState } from '@/vault/types';
 
-type PoolType = 'Stable';
+type PoolType = 'STABLE';
 
 export type StableMutable = {
     amp: bigint;

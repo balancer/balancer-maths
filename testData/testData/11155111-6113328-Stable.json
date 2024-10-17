@@ -62,7 +62,7 @@
     "pool": {
         "chainId": "11155111",
         "blockNumber": "6113328",
-        "poolType": "Stable",
+        "poolType": "STABLE",
         "poolAddress": "0x302b75a27e5e157f93c679dd7a25fdfcdbc1473c",
         "tokens": [
             "0x8A88124522dbBF1E56352ba3DE1d9F78C143751e",

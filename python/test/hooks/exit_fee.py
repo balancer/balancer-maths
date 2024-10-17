@@ -31,7 +31,7 @@ remove_liquidity_input = {
 }
 
 pool = {
-    "poolType": "Weighted",
+    "poolType": "WEIGHTED",
     "hookType": "ExitFee",
     "chainId": "11155111",
     "blockNumber": "5955145",

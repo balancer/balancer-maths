@@ -42,7 +42,7 @@ def test_hook_no_state():
     with pytest.raises(SystemError, match=r"\('No state for Hook:', 'CustomHook'\)"):
         vault.swap(
             {
-                "amountRaw": 1,
+                "amount_raw": 1,
                 "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
                 "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                 "swapKind": 0,
@@ -61,7 +61,7 @@ def test_unsupported_hook_type():
     ):
         vault.swap(
             {
-                "amountRaw": 1,
+                "amount_raw": 1,
                 "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
                 "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                 "swapKind": 0,

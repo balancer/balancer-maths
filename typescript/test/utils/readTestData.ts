@@ -138,7 +138,7 @@ type TransformBigintToString<T> = {
 function mapPool(
     pool: TransformBigintToString<SupportedPools>,
 ): SupportedPools {
-    if (pool.poolType === 'Weighted') {
+    if (pool.poolType === 'WEIGHTED') {
         return {
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
@@ -154,7 +154,7 @@ function mapPool(
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
         };
     }
-    if (pool.poolType === 'Stable') {
+    if (pool.poolType === 'STABLE') {
         return {
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),

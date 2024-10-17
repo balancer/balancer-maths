@@ -5,7 +5,7 @@
             "chainId": "11155111",
             "blockNumber": "5955145",
             "poolAddress": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
-            "poolType": "Weighted",
+            "poolType": "WEIGHTED",
             "swaps": [
                 {
                     "swapKind": 0,
@@ -70,7 +70,7 @@
             "chainId": "11155111",
             "blockNumber": "5955146",
             "poolAddress": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
-            "poolType": "Weighted",
+            "poolType": "WEIGHTED",
             "swaps": [
                 {
                     "swapKind": 0,
@@ -91,7 +91,7 @@
             "chainId": "11155111",
             "blockNumber": "6113328",
             "poolAddress": "0x302b75a27e5e157f93c679dd7a25fdfcdbc1473c",
-            "poolType": "Stable",
+            "poolType": "STABLE",
             "swaps": [
                 {
                     "swapKind": 0,

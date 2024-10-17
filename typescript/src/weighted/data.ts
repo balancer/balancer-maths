@@ -1,6 +1,6 @@
 import { PoolState } from '@/vault/types';
 
-type PoolType = 'Weighted';
+type PoolType = 'WEIGHTED';
 export type WeightedImmutable = {
     weights: bigint[];
 };

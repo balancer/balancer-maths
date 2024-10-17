@@ -18,7 +18,7 @@
     "pool": {
         "chainId": "11155111",
         "blockNumber": "5955146",
-        "poolType": "Weighted",
+        "poolType": "WEIGHTED",
         "poolAddress": "0x03bf996c7bd45b3386cb41875761d45e27eab284",
         "tokens": [
             "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
