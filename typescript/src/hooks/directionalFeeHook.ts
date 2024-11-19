@@ -1,5 +1,6 @@
 import { HookBase } from './types';
 import { MathSol } from '../utils/math';
+import { SwapInput } from '@/vault/types';
 
 
 export type HookStateDirectionalFee = {
