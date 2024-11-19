@@ -26,6 +26,7 @@ import {
 import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
 import { defaultHook } from '../hooks/constants';
 import { ExitFeeHook } from '../hooks/exitFeeHook';
+import { DirectionalFeeHook } from '../hooks/directionalFeeHook';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
@@ -50,6 +51,7 @@ export class Vault {
         };
         this.hookClasses = {
             ExitFee: ExitFeeHook,
+            DirectionalFee: DirectionalFeeHook,
             // custom hooks take precedence over base types
             ...hookClasses,
         };
