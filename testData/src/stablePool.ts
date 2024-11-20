@@ -6,7 +6,7 @@ import {
     parseAbi,
     type Chain,
 } from 'viem';
-import { CHAINS, VAULT_V3, vaultExtensionV3Abi } from '@balancer/sdk';
+import { CHAINS, VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { vaultExplorerAbi } from './abi/vaultExplorer';
 
 type StableMutable = {
@@ -51,13 +51,13 @@ export class StablePool {
     ): Promise<TransformBigintToString<StableImmutable>> {
         const poolTokensCall = {
             address: this.vault,
-            abi: vaultExtensionV3Abi,
+            abi: vaultExtensionAbi_V3,
             functionName: 'getPoolTokenInfo',
             args: [address],
         } as const;
         const tokenRatesCall = {
             address: this.vault,
-            abi: vaultExtensionV3Abi,
+            abi: vaultExtensionAbi_V3,
             functionName: 'getPoolTokenRates',
             args: [address],
         } as const;
@@ -84,13 +84,13 @@ export class StablePool {
         } as const;
         const liveBalancesCall = {
             address: this.vault,
-            abi: vaultExtensionV3Abi,
+            abi: vaultExtensionAbi_V3,
             functionName: 'getCurrentLiveBalances',
             args: [address],
         } as const;
         const tokenRatesCall = {
             address: this.vault,
-            abi: vaultExtensionV3Abi,
+            abi: vaultExtensionAbi_V3,
             functionName: 'getPoolTokenRates',
             args: [address],
         } as const;
