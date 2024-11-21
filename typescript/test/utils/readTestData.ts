@@ -96,7 +96,7 @@ export function readTestData(directoryPath: string): TestData {
                     adds.push(
                         ...jsonData.adds.map((add) => ({
                             ...add,
-                            kind: add.kind === 'Proportional' ? 0 : 1,
+                            kind: add.kind === 'Unbalanced' ? 0 : 1,
                             inputAmountsRaw: add.inputAmountsRaw.map((a) =>
                                 BigInt(a),
                             ),

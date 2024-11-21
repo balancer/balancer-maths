@@ -12,10 +12,11 @@ export async function getPool(
 ): Promise<PoolBase> {
     // Find onchain data fetching via pool type
     const poolData: Record<string, WeightedPool | StablePool> = {
-        Weighted: new WeightedPool(rpcUrl, chainId),
-        Stable: new StablePool(rpcUrl, chainId),
+        WEIGHTED: new WeightedPool(rpcUrl, chainId),
+        STABLE: new StablePool(rpcUrl, chainId),
     };
-    if (!poolData[poolType]) throw new Error('getPool: Unsupported pool type');
+    if (!poolData[poolType])
+        throw new Error(`getPool: Unsupported pool type: ${poolType}`);
 
     console.log('Fetching pool data...');
     const immutable = await poolData[poolType].fetchImmutableData(poolAddress);

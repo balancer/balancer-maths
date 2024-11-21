@@ -42,6 +42,22 @@ export class MathSol {
         return (product - 1n) / WAD + 1n;
     }
 
+    /// @dev Return (a * b) / c, rounding up.
+    static mulDivUpFixed(a: bigint, b: bigint, c: bigint): bigint {
+        // Multiple overflow protection is done by Solidity 0.8x
+        const product = a * b;
+
+        // The traditional divUp formula is:
+        // divUp(x, y) := (x + y - 1) / y
+        // To avoid intermediate overflow in the addition, we distribute the division and get:
+        // divUp(x, y) := (x - 1) / y + 1
+        // Note that this requires x != 0, if x == 0 then the result is zero
+        //
+        // Equivalent to:
+        // result = a == 0 ? 0 : (a * b - 1) / c + 1;
+        return (product - 1n) / c + 1n;
+    }
+
     static divDownFixed(a: bigint, b: bigint): bigint {
         if (a === 0n) {
             return 0n;

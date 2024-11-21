@@ -1,4 +1,4 @@
-// pnpm test -- swaps.test.ts
+// pnpm test -- remove.test.ts
 import { describe, expect, test } from 'vitest';
 import { Vault } from '../src';
 import { readTestData } from './utils/readTestData';

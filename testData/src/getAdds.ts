@@ -7,8 +7,8 @@ import {
 } from '@balancer/sdk';
 import type { Address } from 'viem';
 
-type AddTestInputProportional = {
-    kind: AddLiquidityKind.Proportional;
+type AddTestInputUnbalanced = {
+    kind: AddLiquidityKind.Unbalanced;
     inputAmountsRaw: bigint[];
     tokens: Address[];
     decimals: number[];
@@ -21,7 +21,7 @@ type AddTestInputSingleToken = {
     decimals: number;
 };
 
-export type AddTestInput = AddTestInputProportional | AddTestInputSingleToken;
+export type AddTestInput = AddTestInputUnbalanced | AddTestInputSingleToken;
 
 export type AddLiquidityResult = {
     kind: AddLiquidityKind;
@@ -35,7 +35,7 @@ function getInput(
     rpcUrl: string,
 ): AddLiquidityInput {
     const { kind } = addTestInput;
-    if (kind === AddLiquidityKind.Proportional) {
+    if (kind === AddLiquidityKind.Unbalanced) {
         const amounts = addTestInput.inputAmountsRaw.map((a, i) => ({
             rawAmount: a,
             decimals: addTestInput.decimals[i],

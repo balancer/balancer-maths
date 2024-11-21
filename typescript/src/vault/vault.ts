@@ -1,4 +1,4 @@
-import { MathSol } from '../utils/math';
+import { MathSol, WAD } from '../utils/math';
 import {
     computeAddLiquiditySingleTokenExactOut,
     computeAddLiquidityUnbalanced,
@@ -27,6 +27,9 @@ import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
 import { defaultHook } from '../hooks/constants';
 import { ExitFeeHook } from '../hooks/exitFeeHook';
 import { DirectionalFeeHook } from '../hooks/directionalFeeHook';
+
+const _MINIMUM_TRADE_AMOUNT = 1e6;
+// const _MINIMUM_WRAP_AMOUNT = 1e3;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PoolClassConstructor = new (..._args: any[]) => PoolBase;
@@ -148,7 +151,7 @@ export class Vault {
         );
         if (outputIndex === -1) throw Error('Output token not found on pool');
 
-        const amountGivenScaled18 = this._updateAmountGivenInVars(
+        const amountGivenScaled18 = this._computeAmountGivenScaled18(
             swapInput.amountRaw,
             swapInput.swapKind,
             inputIndex,
@@ -195,32 +198,45 @@ export class Vault {
             indexOut: outputIndex,
         };
 
-        let amountCalculatedScaled18 = pool.onSwap(swapParams);
-
-        // Set swapFeeAmountScaled18 based on the amountCalculated.
-        let swapFeeAmountScaled18 = 0n;
-        if (swapFee > 0) {
-            // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
-            // amountOut. On ExactOut, add it to the calculated amountIn.
+        let totalSwapFeeAmountScaled18 = 0n;
+        if (swapParams.swapKind === SwapKind.GivenIn) {
             // Round up to avoid losses during precision loss.
-            swapFeeAmountScaled18 = MathSol.mulUpFixed(
-                amountCalculatedScaled18,
+            totalSwapFeeAmountScaled18 = MathSol.mulUpFixed(
+                swapParams.amountGivenScaled18,
                 swapFee,
             );
+            swapParams.amountGivenScaled18 -= totalSwapFeeAmountScaled18;
         }
+
+        this._ensureValidSwapAmount(swapParams.amountGivenScaled18);
+
+        let amountCalculatedScaled18 = pool.onSwap(swapParams);
+
+        this._ensureValidSwapAmount(amountCalculatedScaled18);
 
         let amountCalculatedRaw = 0n;
         if (swapInput.swapKind === SwapKind.GivenIn) {
-            amountCalculatedScaled18 -= swapFeeAmountScaled18;
-
             // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
             amountCalculatedRaw = this._toRawUndoRateRoundDown(
                 amountCalculatedScaled18,
                 poolState.scalingFactors[outputIndex],
-                poolState.tokenRates[outputIndex],
+                // If the swap is ExactIn, the amountCalculated is the amount of tokenOut. So, we want to use the rate
+                // rounded up to calculate the amountCalculatedRaw, because scale down (undo rate) is a division, the
+                // larger the rate, the smaller the amountCalculatedRaw. So, any rounding imprecision will stay in the
+                // Vault and not be drained by the user.
+                this._computeRateRoundUp(poolState.tokenRates[outputIndex]),
             );
         } else {
-            amountCalculatedScaled18 += swapFeeAmountScaled18;
+            // To ensure symmetry with EXACT_IN, the swap fee used by ExactOut is
+            // `amountCalculated * fee% / (100% - fee%)`. Add it to the calculated amountIn. Round up to avoid losses
+            // during precision loss.
+            totalSwapFeeAmountScaled18 = MathSol.mulDivUpFixed(
+                amountCalculatedScaled18,
+                swapFee,
+                MathSol.complementFixed(swapFee),
+            );
+
+            amountCalculatedScaled18 += totalSwapFeeAmountScaled18;
 
             // For `ExactOut` the amount calculated is entering the Vault, so we round up.
             amountCalculatedRaw = this._toRawUndoRateRoundUp(
@@ -232,8 +248,11 @@ export class Vault {
 
         const aggregateSwapFeeAmountScaled18 =
             this._computeAndChargeAggregateSwapFees(
-                swapFeeAmountScaled18,
+                totalSwapFeeAmountScaled18,
                 poolState.aggregateSwapFee,
+                poolState.scalingFactors,
+                poolState.tokenRates,
+                inputIndex,
             );
 
         // For ExactIn, we increase the tokenIn balance by `amountIn`, and decrease the tokenOut balance by the
@@ -249,8 +268,8 @@ export class Vault {
         [locals.balanceInIncrement, locals.balanceOutDecrement] =
             swapInput.swapKind === SwapKind.GivenIn
                 ? [
-                      amountGivenScaled18,
-                      amountCalculatedScaled18 + aggregateSwapFeeAmountScaled18,
+                      amountGivenScaled18 - aggregateSwapFeeAmountScaled18,
+                      amountCalculatedScaled18,
                   ]
                 : [
                       amountCalculatedScaled18 - aggregateSwapFeeAmountScaled18,
@@ -363,8 +382,8 @@ export class Vault {
                 maxAmountsInScaled18,
                 poolState.totalSupply,
                 poolState.swapFee,
-                (balancesLiveScaled18) =>
-                    pool.computeInvariant(balancesLiveScaled18),
+                (balancesLiveScaled18, rounding) =>
+                    pool.computeInvariant(balancesLiveScaled18, rounding),
             );
             bptAmountOut = computed.bptAmountOut;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
@@ -404,6 +423,9 @@ export class Vault {
                 this._computeAndChargeAggregateSwapFees(
                     swapFeeAmountsScaled18[i],
                     poolState.aggregateSwapFee,
+                    poolState.scalingFactors,
+                    poolState.tokenRates,
+                    i,
                 );
 
             updatedBalancesLiveScaled18[i] =
@@ -556,8 +578,8 @@ export class Vault {
                 amountsOutScaled18[tokenOutIndex],
                 poolState.totalSupply,
                 poolState.swapFee,
-                (balancesLiveScaled18) =>
-                    pool.computeInvariant(balancesLiveScaled18),
+                (balancesLiveScaled18, rounding) =>
+                    pool.computeInvariant(balancesLiveScaled18, rounding),
             );
             bptAmountIn = computed.bptAmountIn;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
@@ -579,6 +601,9 @@ export class Vault {
                 this._computeAndChargeAggregateSwapFees(
                     swapFeeAmountsScaled18[i],
                     poolState.aggregateSwapFee,
+                    poolState.scalingFactors,
+                    poolState.tokenRates,
+                    i,
                 );
 
             updatedBalancesLiveScaled18[i] =
@@ -623,10 +648,22 @@ export class Vault {
     private _computeAndChargeAggregateSwapFees(
         swapFeeAmountScaled18: bigint,
         aggregateSwapFeePercentage: bigint,
+        decimalScalingFactors: bigint[],
+        tokenRates: bigint[],
+        index: number,
     ): bigint {
         if (swapFeeAmountScaled18 > 0 && aggregateSwapFeePercentage > 0) {
-            return MathSol.mulUpFixed(
+            // The total swap fee does not go into the pool; amountIn does, and the raw fee at this point does not
+            // modify it. Given that all of the fee may belong to the pool creator (i.e. outside pool balances),
+            // we round down to protect the invariant.
+            const totalSwapFeeAmountRaw = this._toRawUndoRateRoundDown(
                 swapFeeAmountScaled18,
+                decimalScalingFactors[index],
+                tokenRates[index],
+            );
+
+            return MathSol.mulDownFixed(
+                totalSwapFeeAmountRaw,
                 aggregateSwapFeePercentage,
             );
         }
@@ -689,7 +726,7 @@ export class Vault {
         );
     }
 
-    private _updateAmountGivenInVars(
+    private _computeAmountGivenScaled18(
         amountGivenRaw: bigint,
         swapKind: SwapKind,
         indexIn: number,
@@ -709,7 +746,7 @@ export class Vault {
                 : this._toScaled18ApplyRateRoundUp(
                       amountGivenRaw,
                       scalingFactors[indexOut],
-                      tokenRates[indexOut],
+                      this._computeRateRoundUp(tokenRates[indexOut]),
                   );
         return amountGivenScaled18;
     }
@@ -723,11 +760,9 @@ export class Vault {
         scalingFactor: bigint,
         tokenRate: bigint,
     ): bigint {
-        // Do division last, and round scalingFactor * tokenRate up to divide by a larger number.
-        return MathSol.divDownFixed(
-            amount,
-            MathSol.mulUpFixed(scalingFactor, tokenRate),
-        );
+        // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
+        // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
+        return MathSol.divDownFixed(amount, scalingFactor * tokenRate);
     }
 
     /**
@@ -739,11 +774,9 @@ export class Vault {
         scalingFactor: bigint,
         tokenRate: bigint,
     ): bigint {
-        // Do division last, and round scalingFactor * tokenRate down to divide by a smaller number.
-        return MathSol.divUpFixed(
-            amount,
-            MathSol.mulDownFixed(scalingFactor, tokenRate),
-        );
+        // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
+        // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
+        return MathSol.divUpFixed(amount, scalingFactor * tokenRate);
     }
 
     /**
@@ -755,10 +788,7 @@ export class Vault {
         scalingFactor: bigint,
         tokenRate: bigint,
     ): bigint {
-        return MathSol.mulDownFixed(
-            MathSol.mulDownFixed(amount, scalingFactor),
-            tokenRate,
-        );
+        return MathSol.mulDownFixed(amount * scalingFactor, tokenRate);
     }
 
     /**
@@ -770,9 +800,30 @@ export class Vault {
         scalingFactor: bigint,
         tokenRate: bigint,
     ): bigint {
-        return MathSol.mulUpFixed(
-            MathSol.mulUpFixed(amount, scalingFactor),
-            tokenRate,
-        );
+        return MathSol.mulUpFixed(amount * scalingFactor, tokenRate);
+    }
+
+    /**
+     * @notice Rounds up a rate informed by a rate provider.
+     * @dev Rates calculated by an external rate provider have rounding errors. Intuitively, a rate provider
+     * rounds the rate down so the pool math is executed with conservative amounts. However, when upscaling or
+     * downscaling the amount out, the rate should be rounded up to make sure the amounts scaled are conservative.
+     */
+    private _computeRateRoundUp(rate: bigint): bigint {
+        // If rate is divisible by FixedPoint.ONE, roundedRate and rate will be equal. It means that rate has 18 zeros,
+        // so there's no rounding issue and the rate should not be rounded up.
+
+        const roundedRate = (rate / WAD) * WAD;
+
+        return roundedRate == rate ? rate : rate + 1n;
+    }
+
+    // Minimum token value in or out (applied to scaled18 values), enforced as a security measure to block potential
+    // exploitation of rounding errors. This is called in the swap context, so zero is not a valid amount.
+    private _ensureValidSwapAmount(tradeAmount: bigint): boolean {
+        if (tradeAmount < _MINIMUM_TRADE_AMOUNT) {
+            throw new Error('TradeAmountTooSmall');
+        }
+        return true;
     }
 }

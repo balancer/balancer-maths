@@ -16,17 +16,17 @@ export const _MAX_INVARIANT_RATIO = BigInt(3e18);
 // Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
 export const _MIN_INVARIANT_RATIO = BigInt(0.7e18);
 
-// About swap fees on joins and exits:
-// Any join or exit that is not perfectly balanced (e.g. all single token joins or exits) is mathematically
-// equivalent to a perfectly balanced join or exit followed by a series of swaps. Since these swaps would charge
-// swap fees, it follows that (some) joins and exits should as well.
-// On these operations, we split the token amounts in 'taxable' and 'non-taxable' portions, where the 'taxable' part
-// is the one to which swap fees are applied.
-
-// Invariant is used to collect protocol swap fees by comparing its value between two times.
-// So we can round always to the same direction. It is also used to initiate the BPT amount
-// and, because there is a minimum BPT, we round down the invariant.
-export const _computeInvariant = (
+/**
+ * @notice Compute the invariant, rounding down.
+ * @dev The invariant functions are called by the Vault during various liquidity operations, and require a specific
+ * rounding direction in order to ensure safety (i.e., that the final result is always rounded in favor of the
+ * protocol. The invariant (i.e., all token balances) must always be greater than 0, or it will revert.
+ *
+ * @param normalizedWeights The pool token weights, sorted in token registration order
+ * @param balances The pool token balances, sorted in token registration order
+ * @return invariant The invariant, rounded down
+ */
+export const _computeInvariantDown = (
     normalizedWeights: bigint[],
     balances: bigint[],
 ): bigint => {
@@ -44,6 +44,41 @@ export const _computeInvariant = (
             MathSol.powDownFixed(balances[i], normalizedWeights[i]),
         );
     }
+    if (invariant === 0n) {
+        throw new Error('ZeroInvariant');
+    }
+    return invariant;
+};
+
+/**
+ * @notice Compute the invariant, rounding up.
+ * @dev The invariant functions are called by the Vault during various liquidity operations, and require a specific
+ * rounding direction in order to ensure safety (i.e., that the final result is always rounded in favor of the
+ * protocol. The invariant (i.e., all token balances) must always be greater than 0, or it will revert.
+ *
+ * @param normalizedWeights The pool token weights, sorted in token registration order
+ * @param balances The pool token balances, sorted in token registration order
+ * @return invariant The invariant, rounded up
+ */
+export const _computeInvariantUp = (
+    normalizedWeights: bigint[],
+    balances: bigint[],
+): bigint => {
+    /**********************************************************************************************
+    // invariant               _____                                                             //
+    // wi = weight index i      | |      wi                                                      //
+    // bi = balance index i     | |  bi ^   = i                                                  //
+    // i = invariant                                                                             //
+    **********************************************************************************************/
+
+    let invariant = WAD;
+    for (let i = 0; i < normalizedWeights.length; ++i) {
+        invariant = MathSol.mulUpFixed(
+            invariant,
+            MathSol.powUpFixed(balances[i], normalizedWeights[i]),
+        );
+    }
+
     if (invariant === 0n) {
         throw new Error('ZeroInvariant');
     }
