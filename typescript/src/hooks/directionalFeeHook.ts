@@ -2,9 +2,14 @@ import { HookBase } from './types';
 import { MathSol } from '../utils/math';
 import { SwapInput } from '@/vault/types';
 
+interface MinimalToken {
+    address: string;
+    decimals: bigint;
+    index: bigint;
+}
 
 export type HookStateDirectionalFee = {
-    tokens: string[];
+    tokens: MinimalToken[];
     balancesLiveScaled18: bigint[];
 }
 
@@ -27,12 +32,19 @@ export class DirectionalFeeHook implements HookBase {
 
         const lastBalancesLiveScaled18 = hookState.balancesLiveScaled18;
 
-        const tokenInIndex = hookState.tokens.indexOf(params.tokenIn);
-        const tokenOutIndex = hookState.tokens.indexOf(params.tokenOut);
+        // TODO: Confirm if `SwapInput` is already tokenIn and TokenOut or just TokenGiven and TokenCalculated.
+        // Depending on the answer, the index can be assumed to be 0 and 1 for in and out.
+        // If it is not, we need to find the index of the token in the pool.
+
+        const tokenInIndex = hookState.tokens.map(token => token.address.toLowerCase()).indexOf(params.tokenIn.toLowerCase());
+        const tokenOutIndex = hookState.tokens.map(token => token.address.toLowerCase()).indexOf(params.tokenOut.toLowerCase());
+
+        const decimalsToScaleWith = params.swapKind === 0 ? ( 18n - hookState.tokens[tokenInIndex].decimals) : (18n - hookState.tokens[tokenOutIndex].decimals);
+        const amountsScaled18 = params.amountRaw * 10n ** decimalsToScaleWith
 
         const calculatedSwapFeePercentage = this.calculateExpectedSwapFeePercentage(
             lastBalancesLiveScaled18,
-            params.amountRaw, // does this need to be scaled? 
+            amountsScaled18,
             tokenInIndex,
             tokenOutIndex
         );
@@ -53,6 +65,7 @@ export class DirectionalFeeHook implements HookBase {
         indexIn: number,
         indexOut: number
     ): bigint {
+
         const finalBalanceTokenIn = poolBalances[indexIn] + swapAmount;
         const finalBalanceTokenOut = poolBalances[indexOut] - swapAmount;
 
