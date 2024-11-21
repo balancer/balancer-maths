@@ -1,4 +1,4 @@
-from src.maths import mul_down_fixed
+from src.maths import mul_down_fixed, Rounding
 from src.pools.stable_math import (
     compute_invariant,
     compute_out_given_exact_in,
@@ -33,8 +33,11 @@ class Stable:
             invariant,
         )
 
-    def compute_invariant(self, balances_live_scaled18):
-        return compute_invariant(self.amp, balances_live_scaled18)
+    def compute_invariant(self, balances_live_scaled18, rounding):
+        invariant = compute_invariant(self.amp, balances_live_scaled18)
+        if invariant > 0:
+            invariant = invariant if rounding == Rounding.ROUND_DOWN else invariant + 1
+        return invariant
 
     def compute_balance(
         self,
@@ -46,7 +49,7 @@ class Stable:
             self.amp,
             balances_live_scaled18,
             mul_down_fixed(
-                self.compute_invariant(balances_live_scaled18),
+                self.compute_invariant(balances_live_scaled18, Rounding.ROUND_UP),
                 invariant_ratio,
             ),
             token_in_index,

@@ -1,4 +1,11 @@
+from enum import Enum
 from src.log_exp_math import LogExpMath
+
+
+class Rounding(Enum):
+    ROUND_UP = 0
+    ROUND_DOWN = 1
+
 
 MAX_POW_RELATIVE_ERROR = 10000
 WAD = 1000000000000000000
@@ -39,6 +46,20 @@ def div_up(a: int, b: int) -> int:
         return 0
 
     return 1 + (a - 1) // b
+
+
+# @dev Return (a * b) / c, rounding up.
+def mul_div_up(a: int, b: int, c: int) -> int:
+    product = a * b
+    # // The traditional divUp formula is:
+    # // divUp(x, y) := (x + y - 1) / y
+    # // To avoid intermediate overflow in the addition, we distribute the division and get:
+    # // divUp(x, y) := (x - 1) / y + 1
+    # // Note that this requires x != 0, if x == 0 then the result is zero
+    # //
+    # // Equivalent to:
+    # // result = a == 0 ? 0 : (a * b - 1) / c + 1;
+    return (product - 1) // c + 1
 
 
 def pow_down_fixed(x: int, y: int, version: int = None) -> int:

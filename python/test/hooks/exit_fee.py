@@ -40,7 +40,7 @@ pool = {
         "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
     ],
-    "scalingFactors": [1000000000000000000, 1000000000000000000],
+    "scalingFactors": [1, 1],
     "weights": [500000000000000000, 500000000000000000],
     "swapFee": 100000000000000000,
     "balancesLiveScaled18": [5000000000000000, 5000000000000000000],
@@ -63,7 +63,7 @@ def test_hook_exit_fee_no_fee():
     )
     assert test["amounts_out_raw"] == [
             316227766016,
-            316227766016840
+            316227766016844
         ]
     
 def test_hook_exit_fee_with_fee():
@@ -79,5 +79,5 @@ def test_hook_exit_fee_with_fee():
     )
     assert test["amounts_out_raw"] == [
             300416377716,
-            300416377715998
+            300416377716002
         ]

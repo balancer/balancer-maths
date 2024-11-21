@@ -54,8 +54,8 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             max_amounts_in_scaled18,
             pool_state["totalSupply"],
             pool_state["swapFee"],
-            lambda balances_live_scaled18: pool_class.compute_invariant(
-                balances_live_scaled18
+            lambda balances_live_scaled18, rounding: pool_class.compute_invariant(
+                balances_live_scaled18, rounding
             ),
         )
         bpt_amount_out = computed["bpt_amount_out"]
@@ -94,7 +94,11 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         # A Pool's token balance always decreases after an exit
         # Computes protocol and pool creator fee which is eventually taken from pool balance
         aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
-            swap_fee_amounts_scaled18[i], pool_state["aggregateSwapFee"]
+            swap_fee_amounts_scaled18[i],
+            pool_state["aggregateSwapFee"],
+            pool_state["scalingFactors"],
+            pool_state["tokenRates"],
+            i,
         )
 
         # Update the balances with the incoming amounts and subtract the swap fees

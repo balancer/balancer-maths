@@ -7,7 +7,9 @@ from src.utils import (
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
 )
-from src.maths import mul_up_fixed
+from src.maths import mul_up_fixed, mul_div_up, complement_fixed, WAD
+
+_MINIMUM_TRADE_AMOUNT = 1e6
 
 
 class SwapKind(Enum):
@@ -29,7 +31,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     if input_index == -1:
         raise SystemError("Output token not found on pool")
 
-    amount_given_scaled18 = _update_amount_given_in_vars(
+    amount_given_scaled18 = _compute_amount_given_scaled18(
         swap_input["amount_raw"],
         swap_input["swap_kind"],
         input_index,
@@ -72,28 +74,42 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         "index_out": output_index,
     }
 
+    total_swap_fee_amount_scaled18 = 0
+    if swap_params["swap_kind"] == SwapKind.GIVENIN.value:
+        # Round up to avoid losses during precision loss.
+        total_swap_fee_amount_scaled18 = mul_up_fixed(
+            swap_params["amount_given_scaled18"],
+            swap_fee,
+        )
+        swap_params["amount_given_scaled18"] -= total_swap_fee_amount_scaled18
+
+    _ensure_valid_swap_amount(swap_params["amount_given_scaled18"])
+
     amount_calculated_scaled18 = pool_class.on_swap(swap_params)
 
-    # Set swap_fee_amount_scaled18 based on the amountCalculated.
-    swap_fee_amount_scaled18 = 0
-    if swap_fee > 0:
-        # Swap fee is always a percentage of the amountCalculated.
-        # On ExactIn, subtract it from the calculated
-        # amountOut. On ExactOut, add it to the calculated amountIn.
-        # Round up to avoid losses during precision loss.
-        swap_fee_amount_scaled18 = mul_up_fixed(amount_calculated_scaled18, swap_fee)
+    _ensure_valid_swap_amount(amount_calculated_scaled18)
 
     amount_calculated_raw = 0
     if swap_input["swap_kind"] == SwapKind.GIVENIN.value:
-        amount_calculated_scaled18 -= swap_fee_amount_scaled18
         # For `ExactIn` the amount calculated is leaving the Vault, so we round down.
         amount_calculated_raw = _to_raw_undo_rate_round_down(
             amount_calculated_scaled18,
             pool_state["scalingFactors"][output_index],
-            pool_state["tokenRates"][output_index],
+            # // If the swap is ExactIn, the amountCalculated is the amount of tokenOut. So, we want to use the rate
+            # // rounded up to calculate the amountCalculatedRaw, because scale down (undo rate) is a division, the
+            # // larger the rate, the smaller the amountCalculatedRaw. So, any rounding imprecision will stay in the
+            # // Vault and not be drained by the user.
+            _compute_rate_round_up(pool_state["tokenRates"][output_index]),
         )
     else:
-        amount_calculated_scaled18 += swap_fee_amount_scaled18
+        # // To ensure symmetry with EXACT_IN, the swap fee used by ExactOut is
+        # // `amountCalculated * fee% / (100% - fee%)`. Add it to the calculated amountIn. Round up to avoid losses
+        # // during precision loss.
+        total_swap_fee_amount_scaled18 = mul_div_up(
+            amount_calculated_scaled18, swap_fee, complement_fixed(swap_fee)
+        )
+        amount_calculated_scaled18 += total_swap_fee_amount_scaled18
+
         # For `ExactOut` the amount calculated is entering the Vault, so we round up.
         amount_calculated_raw = _to_raw_undo_rate_round_up(
             amount_calculated_scaled18,
@@ -102,8 +118,11 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         )
 
     aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
-        swap_fee_amount_scaled18,
+        total_swap_fee_amount_scaled18,
         pool_state["aggregateSwapFee"],
+        pool_state["scalingFactors"],
+        pool_state["tokenRates"],
+        input_index,
     )
 
     # For ExactIn, we increase the tokenIn balance by `amountIn`,
@@ -114,8 +133,8 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     # `amountOut`.
     balance_in_increment, balance_out_decrement = (
         (
-            amount_given_scaled18,
-            amount_calculated_scaled18 + aggregate_swap_fee_amount_scaled18,
+            amount_given_scaled18 - aggregate_swap_fee_amount_scaled18,
+            amount_calculated_scaled18,
         )
         if swap_input["swap_kind"] == SwapKind.GIVENIN.value
         else (
@@ -165,7 +184,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     return amount_calculated_raw
 
 
-def _update_amount_given_in_vars(
+def _compute_amount_given_scaled18(
     amount_given_raw: int,
     swap_kind: SwapKind,
     index_in: int,
@@ -190,3 +209,24 @@ def _update_amount_given_in_vars(
         )
 
     return amount_given_scaled_18
+
+
+# /**
+# * @notice Rounds up a rate informed by a rate provider.
+# * @dev Rates calculated by an external rate provider have rounding errors. Intuitively, a rate provider
+# * rounds the rate down so the pool math is executed with conservative amounts. However, when upscaling or
+# * downscaling the amount out, the rate should be rounded up to make sure the amounts scaled are conservative.
+# */
+def _compute_rate_round_up(rate: int) -> int:
+    # // If rate is divisible by FixedPoint.ONE, roundedRate and rate will be equal. It means that rate has 18 zeros,
+    # // so there's no rounding issue and the rate should not be rounded up.
+    rounded_rate = (rate / WAD) * WAD
+    return rate if rounded_rate == rate else rate + 1
+
+
+# // Minimum token value in or out (applied to scaled18 values), enforced as a security measure to block potential
+# // exploitation of rounding errors. This is called in the swap context, so zero is not a valid amount.
+def _ensure_valid_swap_amount(trade_amount: int) -> bool:
+    if trade_amount < _MINIMUM_TRADE_AMOUNT:
+        raise SystemError("TradeAmountTooSmall")
+    return True
