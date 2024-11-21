@@ -33,7 +33,7 @@ _MIN_INVARIANT_RATIO = int(0.7e18)
 # Invariant is used to collect protocol swap fees by comparing its value between two times.
 # So we can round always to the same direction. It is also used to initiate the BPT amount
 # and, because there is a minimum BPT, we round down the invariant.
-def compute_invariant(normalized_weights: list[int], balances: list[int]) -> int:
+def compute_invariant_down(normalized_weights: list[int], balances: list[int]) -> int:
     # **********************************************************************************************
     #  invariant               _____
     #  wi = weight index i      | |      wi
@@ -46,6 +46,27 @@ def compute_invariant(normalized_weights: list[int], balances: list[int]) -> int
         invariant = mul_down_fixed(
             invariant,
             pow_down_fixed(balances[i], normalized_weights[i]),
+        )
+
+    if invariant == 0:
+        raise ValueError("ZeroInvariant")
+
+    return invariant
+
+
+def compute_invariant_up(normalized_weights: list[int], balances: list[int]) -> int:
+    # **********************************************************************************************
+    #  invariant               _____
+    #  wi = weight index i      | |      wi
+    #  bi = balance index i     | |  bi ^   = i
+    #  i = invariant
+    # **********************************************************************************************
+
+    invariant = WAD
+    for i in range(len(normalized_weights)):
+        invariant = mul_up_fixed(
+            invariant,
+            pow_up_fixed(balances[i], normalized_weights[i]),
         )
 
     if invariant == 0:

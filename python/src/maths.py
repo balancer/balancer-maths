@@ -1,4 +1,11 @@
+from enum import Enum
 from src.log_exp_math import LogExpMath
+
+
+class Rounding(Enum):
+    ROUND_UP = 0
+    ROUND_DOWN = 1
+
 
 MAX_POW_RELATIVE_ERROR = 10000
 WAD = 1000000000000000000
