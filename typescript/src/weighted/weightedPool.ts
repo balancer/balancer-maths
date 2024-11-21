@@ -4,16 +4,18 @@ import {
     MaxSingleTokenRemoveParams,
     MaxSwapParams,
     type PoolBase,
+    Rounding,
     SwapKind,
     type SwapParams,
 } from '../vault/types';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,
-    _computeInvariant,
     _computeBalanceOutGivenInvariant,
     _MAX_IN_RATIO,
     _MAX_OUT_RATIO,
+    _computeInvariantUp,
+    _computeInvariantDown,
 } from './weightedMath';
 
 export class Weighted implements PoolBase {
@@ -95,8 +97,20 @@ export class Weighted implements PoolBase {
             amountGivenScaled18,
         );
     }
-    computeInvariant(balancesLiveScaled18: bigint[]): bigint {
-        return _computeInvariant(this.normalizedWeights, balancesLiveScaled18);
+    computeInvariant(
+        balancesLiveScaled18: bigint[],
+        rounding: Rounding,
+    ): bigint {
+        if (rounding === Rounding.ROUND_UP)
+            return _computeInvariantUp(
+                this.normalizedWeights,
+                balancesLiveScaled18,
+            );
+        else
+            return _computeInvariantDown(
+                this.normalizedWeights,
+                balancesLiveScaled18,
+            );
     }
     computeBalance(
         balancesLiveScaled18: bigint[],

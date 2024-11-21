@@ -4,6 +4,7 @@ import {
     MaxSingleTokenRemoveParams,
     MaxSwapParams,
     type PoolBase,
+    Rounding,
     SwapKind,
     type SwapParams,
 } from '../vault/types';
@@ -105,8 +106,16 @@ export class Stable implements PoolBase {
             invariant,
         );
     }
-    computeInvariant(balancesLiveScaled18: bigint[]): bigint {
-        return _computeInvariant(this.amp, balancesLiveScaled18);
+    computeInvariant(
+        balancesLiveScaled18: bigint[],
+        rounding: Rounding,
+    ): bigint {
+        let invariant = _computeInvariant(this.amp, balancesLiveScaled18);
+        if (invariant > 0) {
+            invariant =
+                rounding == Rounding.ROUND_DOWN ? invariant : invariant + 1n;
+        }
+        return invariant;
     }
     computeBalance(
         balancesLiveScaled18: bigint[],
@@ -116,8 +125,8 @@ export class Stable implements PoolBase {
         return _computeBalance(
             this.amp,
             balancesLiveScaled18,
-            MathSol.mulDownFixed(
-                this.computeInvariant(balancesLiveScaled18),
+            MathSol.mulUpFixed(
+                this.computeInvariant(balancesLiveScaled18, Rounding.ROUND_UP),
                 invariantRatio,
             ),
             tokenInIndex,

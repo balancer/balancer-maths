@@ -19,19 +19,19 @@ describe('custom pool tests', () => {
                 '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
                 '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75',
             ],
-            scalingFactors: [1000000000000000000n, 1000000000000000000n],
+            scalingFactors: [1n, 1n],
             weights: [500000000000000000n, 500000000000000000n],
             swapFee: 0n,
             balancesLiveScaled18: [64604926441576011n, 46686842105263157924n],
             tokenRates: [1000000000000000000n, 1000000000000000000n],
             totalSupply: 1736721048412749353n,
-            randoms: [77n, 88n],
+            randoms: [7000000000000000000n, 8000000000000000000n],
             aggregateSwapFee: 0n,
         };
 
         const calculatedAmount = vault.swap(
             {
-                amountRaw: 1n,
+                amountRaw: 1000000000000000000n,
                 tokenIn: '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
                 tokenOut: '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75',
                 swapKind: 0,

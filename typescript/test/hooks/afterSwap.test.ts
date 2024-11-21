@@ -13,7 +13,7 @@ const pool = {
         '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
         '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75',
     ],
-    scalingFactors: [1000000000000000000n, 1000000000000000000n],
+    scalingFactors: [1n, 1n],
     weights: [500000000000000000n, 500000000000000000n],
     swapFee: 100000000000000000n,
     aggregateSwapFee: 500000000000000000n,
@@ -24,10 +24,12 @@ const pool = {
 
 const swapInput = {
     swapKind: SwapKind.GivenIn,
-    amountRaw: 1n,
+    amountRaw: 1000000000000000000n,
     tokenIn: pool.tokens[0],
     tokenOut: pool.tokens[1],
 };
+
+const expectedCalculated = 100000000000n;
 
 describe('hook - afterSwap', () => {
     const vault = new Vault({
@@ -47,8 +49,9 @@ describe('hook - afterSwap', () => {
         const inputHookState = {
             expectedBalancesLiveScaled18: [
                 pool.balancesLiveScaled18[0] + swapInput.amountRaw,
-                999999910000000000n,
+                pool.balancesLiveScaled18[1] - expectedCalculated,
             ],
+            expectedCalculated,
         };
         const test = vault.swap(
             swapInput,
@@ -66,11 +69,15 @@ describe('hook - afterSwap', () => {
             hook state is used to pass expected value to tests
             Aggregate fee amount is 50% of swap fee
         */
+        const expectedAggregateSwapFeeAmount = 50000000000000000n;
         const inputHookState = {
             expectedBalancesLiveScaled18: [
-                pool.balancesLiveScaled18[0] + swapInput.amountRaw,
-                999999905000000000n,
+                pool.balancesLiveScaled18[0] +
+                    swapInput.amountRaw -
+                    expectedAggregateSwapFeeAmount,
+                pool.balancesLiveScaled18[1] - expectedCalculated,
             ],
+            expectedCalculated,
         };
         const test = vault.swap(swapInput, pool, inputHookState);
         expect(test).to.eq(1n);
@@ -92,7 +99,7 @@ class CustomPool implements PoolBase {
     }
 
     onSwap(): bigint {
-        return 100000000000n;
+        return expectedCalculated;
     }
     computeInvariant(): bigint {
         return 1n;
@@ -155,12 +162,9 @@ class CustomHook implements HookBase {
         expect(tokenIn).to.eq(swapInput.tokenIn);
         expect(tokenOut).to.eq(swapInput.tokenOut);
         expect(amountInScaled18).to.eq(swapInput.amountRaw);
-        expect(amountCalculatedRaw).to.eq(90000000000n);
-        expect(amountCalculatedScaled18).to.eq(90000000000n);
-        expect(amountOutScaled18).to.eq(90000000000n);
-        expect(tokenInBalanceScaled18).to.eq(
-            pool.balancesLiveScaled18[0] + swapInput.amountRaw,
-        );
+        expect(amountCalculatedRaw).to.eq(expectedCalculated);
+        expect(amountCalculatedScaled18).to.eq(expectedCalculated);
+        expect(amountOutScaled18).to.eq(expectedCalculated);
         expect([tokenInBalanceScaled18, tokenOutBalanceScaled18]).to.deep.eq(
             hookState.expectedBalancesLiveScaled18,
         );
