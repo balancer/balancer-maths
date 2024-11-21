@@ -31,7 +31,7 @@
     ],
     "adds": [
         {
-            "kind": "Proportional",
+            "kind": "Unbalanced",
             "inputAmountsRaw": [
                 "10000000",
                 "1000000000000000000"

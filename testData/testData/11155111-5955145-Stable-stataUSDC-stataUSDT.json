@@ -5,17 +5,34 @@
             "amountRaw": "10000000",
             "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
             "tokenOut": "0x978206fae13faf5a8d293fb614326b237684b750",
-            "outputRaw": "8947834"
+            "outputRaw": "8945672"
         },
         {
             "swapKind": 1,
             "amountRaw": "2000000000",
             "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
             "tokenOut": "0x978206fae13faf5a8d293fb614326b237684b750",
-            "outputRaw": "2235311719"
+            "outputRaw": "2235851957"
         }
     ],
-    "adds": [],
+    "adds": [
+        {
+            "kind": "Unbalanced",
+            "inputAmountsRaw": [
+                "10000000",
+                "10000000"
+            ],
+            "bptOutRaw": "23950966095277339208"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "8842467",
+                "0"
+            ],
+            "bptOutRaw": "10000000000000000000"
+        }
+    ],
     "removes": [],
     "pool": {
         "chainId": "11155111",
@@ -33,12 +50,12 @@
         "swapFee": "1000000000000000",
         "totalSupply": "84540023180127896688109",
         "balancesLiveScaled18": [
-            "41556173972660554119671",
-            "46289901763553987504447"
+            "41595408773782450249339",
+            "46344814851454586344910"
         ],
         "tokenRates": [
-            "1175834330352565609",
-            "1312927080803109625"
+            "1176944481304720919",
+            "1314484588541265655"
         ],
         "amp": "1000000",
         "aggregateSwapFee": "0"

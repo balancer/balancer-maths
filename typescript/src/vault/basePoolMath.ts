@@ -1,11 +1,12 @@
 import { MathSol } from '../utils/math';
+import { Rounding } from './types';
 
 export function computeAddLiquidityUnbalanced(
     currentBalances: bigint[],
     exactAmounts: bigint[],
     totalSupply: bigint,
     swapFeePercentage: bigint,
-    computeInvariant: (balances: bigint[]) => bigint,
+    computeInvariant: (balances: bigint[], rounding: Rounding) => bigint,
 ): { bptAmountOut: bigint; swapFeeAmounts: bigint[] } {
     /***********************************************************************
 		//                                                                    //
@@ -27,29 +28,34 @@ export function computeAddLiquidityUnbalanced(
 
     // Loop through each token, updating the balance with the added amount.
     for (let index = 0; index < currentBalances.length; index++) {
-        newBalances[index] = currentBalances[index] + exactAmounts[index];
+        newBalances[index] = currentBalances[index] + exactAmounts[index] - 1n;
     }
 
     // Calculate the invariant using the current balances (before the addition).
-    const currentInvariant = computeInvariant(currentBalances);
+    const currentInvariant = computeInvariant(
+        currentBalances,
+        Rounding.ROUND_UP,
+    );
 
     // Calculate the new invariant using the new balances (after the addition).
-    const newInvariant = computeInvariant(newBalances);
+    const newInvariant = computeInvariant(newBalances, Rounding.ROUND_DOWN);
 
     // Calculate the new invariant ratio by dividing the new invariant by the old invariant.
     const invariantRatio = MathSol.divDownFixed(newInvariant, currentInvariant);
 
     // Loop through each token to apply fees if necessary.
     for (let index = 0; index < currentBalances.length; index++) {
-        // Check if the new balance is greater than the proportional balance.
-        // If so, calculate the taxable amount.
-        if (
-            newBalances[index] >
-            MathSol.mulUpFixed(invariantRatio, currentBalances[index])
-        ) {
-            const taxableAmount =
-                newBalances[index] -
-                MathSol.mulUpFixed(invariantRatio, currentBalances[index]);
+        // Check if the new balance is greater than the equivalent proportional balance.
+        // If so, calculate the taxable amount, rounding in favor of the protocol.
+        // We round the second term down to subtract less and get a higher `taxableAmount`,
+        // which charges higher swap fees. This will lower `newBalances`, which in turn lowers
+        // `invariantWithFeesApplied` below.
+        const proportionalTokenBalance = MathSol.mulDownFixed(
+            invariantRatio,
+            currentBalances[index],
+        );
+        if (newBalances[index] > proportionalTokenBalance) {
+            const taxableAmount = newBalances[index] - proportionalTokenBalance;
             // Calculate fee amount
             swapFeeAmounts[index] = MathSol.mulUpFixed(
                 taxableAmount,
@@ -62,17 +68,26 @@ export function computeAddLiquidityUnbalanced(
     }
 
     // Calculate the new invariant with fees applied.
-    const invariantWithFeesApplied = computeInvariant(newBalances);
+    const invariantWithFeesApplied = computeInvariant(
+        newBalances,
+        Rounding.ROUND_DOWN,
+    );
 
     // Calculate the amount of BPT to mint. This is done by multiplying the
     // total supply with the ratio of the change in invariant.
-    const bptAmountOut = MathSol.mulDownFixed(
-        totalSupply,
-        MathSol.divDownFixed(
-            invariantWithFeesApplied - currentInvariant,
-            currentInvariant,
-        ),
-    );
+    // Since we multiply and divide we don't need to use FP math.
+    // Round down since we're calculating BPT amount out. This is the most important result of this function,
+    // equivalent to:
+    // `totalSupply * (invariantWithFeesApplied / currentInvariant - 1)`
+
+    // Then, to round `bptAmountOut` down we use `invariantWithFeesApplied` rounded down and `currentInvariant`
+    // rounded up.
+    // If rounding makes `invariantWithFeesApplied` smaller or equal to `currentInvariant`, this would effectively
+    // be a donation. In that case we just let checked math revert for simplicity; it's not a valid use-case to
+    // support at this point.
+    const bptAmountOut =
+        (totalSupply * (invariantWithFeesApplied - currentInvariant)) /
+        currentInvariant;
     return { bptAmountOut, swapFeeAmounts };
 }
 
@@ -248,7 +263,7 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     exactAmountOut: bigint,
     totalSupply: bigint,
     swapFeePercentage: bigint,
-    computeInvariant: (balances: bigint[]) => bigint,
+    computeInvariant: (balances: bigint[], rounding: Rounding) => bigint,
 ): {
     bptAmountIn: bigint;
     swapFeeAmounts: bigint[];
@@ -267,13 +282,19 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     newBalances[tokenOutIndex] = newBalances[tokenOutIndex] - exactAmountOut;
 
     // Calculate the invariant using the current balances.
-    const currentInvariant = computeInvariant(currentBalances);
+    const currentInvariant = computeInvariant(
+        currentBalances,
+        Rounding.ROUND_DOWN,
+    );
 
     // Calculate the new invariant ratio by dividing the new invariant by the current invariant.
     // Calculate the taxable amount by subtracting the new balance from the equivalent proportional balance.
     const taxableAmount =
         MathSol.mulUpFixed(
-            MathSol.divUpFixed(computeInvariant(newBalances), currentInvariant),
+            MathSol.divUpFixed(
+                computeInvariant(newBalances, Rounding.ROUND_DOWN),
+                currentInvariant,
+            ),
             currentBalances[tokenOutIndex],
         ) - newBalances[tokenOutIndex];
 
@@ -287,7 +308,10 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     newBalances[tokenOutIndex] = newBalances[tokenOutIndex] - fee;
 
     // Calculate the new invariant with fees applied.
-    const invariantWithFeesApplied = computeInvariant(newBalances);
+    const invariantWithFeesApplied = computeInvariant(
+        newBalances,
+        Rounding.ROUND_DOWN,
+    );
 
     // Create swap fees amount array and set the single fee we charge
     const swapFeeAmounts = new Array(numTokens);

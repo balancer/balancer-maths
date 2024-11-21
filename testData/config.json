@@ -34,7 +34,7 @@
             ],
             "adds": [
                 {
-                    "kind": "Proportional",
+                    "kind": "Unbalanced",
                     "inputAmountsRaw": [
                         "10000000",
                         "1000000000000000000"
@@ -117,7 +117,31 @@
                     "tokenOut": "0x978206fae13faf5a8d293fb614326b237684b750"
                 }
             ],
-            "adds": [],
+            "adds": [
+                {
+                    "kind": "Unbalanced",
+                    "inputAmountsRaw": [
+                        "10000000",
+                        "10000000"
+                    ],
+                    "tokens": [
+                        "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
+                        "0x978206fae13faf5a8d293fb614326b237684b750"
+                    ],
+                    "decimals": [
+                        6,
+                        6
+                    ]
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": [
+                        "10000000000000000000"
+                    ],
+                    "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
+                    "decimals": 6
+                }
+            ],
             "removes": []
         }
     ]

@@ -380,8 +380,8 @@ export class Vault {
                 maxAmountsInScaled18,
                 poolState.totalSupply,
                 poolState.swapFee,
-                (balancesLiveScaled18) =>
-                    pool.computeInvariant(balancesLiveScaled18),
+                (balancesLiveScaled18, rounding) =>
+                    pool.computeInvariant(balancesLiveScaled18, rounding),
             );
             bptAmountOut = computed.bptAmountOut;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
@@ -576,8 +576,8 @@ export class Vault {
                 amountsOutScaled18[tokenOutIndex],
                 poolState.totalSupply,
                 poolState.swapFee,
-                (balancesLiveScaled18) =>
-                    pool.computeInvariant(balancesLiveScaled18),
+                (balancesLiveScaled18, rounding) =>
+                    pool.computeInvariant(balancesLiveScaled18, rounding),
             );
             bptAmountIn = computed.bptAmountIn;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;

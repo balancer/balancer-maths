@@ -18,6 +18,11 @@ export enum SwapKind {
     GivenOut = 1,
 }
 
+export enum Rounding {
+    ROUND_UP = 0,
+    ROUND_DOWN = 1,
+}
+
 export interface PoolBase {
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint;
     getMaxSingleTokenRemoveAmount(
@@ -25,7 +30,10 @@ export interface PoolBase {
     ): bigint;
     getMaxSingleTokenAddAmount(): bigint;
     onSwap(swapParams: SwapParams): bigint;
-    computeInvariant(balancesLiveScaled18: bigint[]): bigint;
+    computeInvariant(
+        balancesLiveScaled18: bigint[],
+        rounding: Rounding,
+    ): bigint;
     computeBalance(
         balancesLiveScaled18: bigint[],
         tokenInIndex: number,
