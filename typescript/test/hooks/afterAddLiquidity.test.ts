@@ -22,7 +22,7 @@ const pool = {
         '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
         '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75',
     ],
-    scalingFactors: [1000000000000000000n, 1000000000000000000n],
+    scalingFactors: [1n, 1n],
     weights: [500000000000000000n, 500000000000000000n],
     swapFee: 100000000000000000n,
     aggregateSwapFee: 500000000000000000n,
@@ -62,17 +62,17 @@ describe('hook - afterAddLiquidity', () => {
             200000000000000001n,
             100000000000000001n,
         ]);
-        expect(test.bptAmountOutRaw).to.deep.eq(146464294351915965n);
+        expect(test.bptAmountOutRaw).to.deep.eq(146464294351867896n);
     });
 
     test('aggregateSwapFee of 50% should take half of remaining', () => {
         /*
             hook state is used to pass expected value to tests
-            aggregate fee amount is 2554373534619714n which is deducted from amount in
+            aggregate fee amount is 2554373534622012n which is deducted from amount in
         */
         const inputHookState = {
             expectedBalancesLiveScaled18: [
-                1197445626465380286n,
+                1200000000000000000n - 2554373534622012n,
                 1100000000000000000n,
             ],
         };
@@ -85,7 +85,7 @@ describe('hook - afterAddLiquidity', () => {
             200000000000000001n,
             100000000000000001n,
         ]);
-        expect(test.bptAmountOutRaw).to.deep.eq(146464294351915965n);
+        expect(test.bptAmountOutRaw).to.deep.eq(146464294351867896n);
     });
 });
 
@@ -119,7 +119,7 @@ class CustomHook implements HookBase {
         )
             throw new Error('Unexpected hookState');
         expect(kind).to.eq(addLiquidityInput.kind);
-        expect(bptAmountOut).to.eq(146464294351915965n);
+        expect(bptAmountOut).to.eq(146464294351867896n);
         expect(amountsInScaled18).to.deep.eq(addLiquidityInput.maxAmountsInRaw);
         expect(amountsInRaw).to.deep.eq(addLiquidityInput.maxAmountsInRaw);
         expect(balancesScaled18).to.deep.eq(

@@ -12,7 +12,7 @@ const poolState = {
         '0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9',
         '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75',
     ],
-    scalingFactors: [1000000000000000000n, 1000000000000000000n],
+    scalingFactors: [1n, 1n],
     weights: [500000000000000000n, 500000000000000000n],
     swapFee: 100000000000000000n,
     aggregateSwapFee: 0n,
@@ -43,7 +43,7 @@ describe('hook - exitFee', () => {
         );
         expect(outPutAmount.amountsOutRaw).to.deep.eq([
             316227766016n,
-            316227766016840n,
+            316227766016844n,
         ]);
     });
 
@@ -59,7 +59,7 @@ describe('hook - exitFee', () => {
         );
         expect(outPutAmount.amountsOutRaw).to.deep.eq([
             300416377716n,
-            300416377715998n,
+            300416377716002n,
         ]);
     });
 });
