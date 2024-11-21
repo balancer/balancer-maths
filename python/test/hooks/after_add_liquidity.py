@@ -46,7 +46,7 @@ class CustomHook:
         if not (isinstance(hook_state, dict) and hook_state is not None and 'expected_balances_live_scaled18' in hook_state):
             raise ValueError('Unexpected hookState')
         assert kind == add_liquidity_input['kind']
-        assert bpt_amount_out == 146464294351915965
+        assert bpt_amount_out == 146464294351867896
         assert amounts_in_scaled18 == add_liquidity_input['max_amounts_in_raw']
         assert amounts_in_raw == add_liquidity_input['max_amounts_in_raw']
         assert balances_scaled18 == hook_state['expected_balances_live_scaled18']
@@ -90,7 +90,7 @@ pool = {
         "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
     ],
-    "scalingFactors": [1000000000000000000, 1000000000000000000],
+    "scalingFactors": [1, 1],
     "weights": [500000000000000000, 500000000000000000],
     "swapFee": 100000000000000000,
     "balancesLiveScaled18": [1000000000000000000, 1000000000000000000],
@@ -123,15 +123,15 @@ def test_hook_after_add_liquidity_no_fee():
             200000000000000001,
             100000000000000001,
         ]
-    assert test["bpt_amount_out_raw"] == 146464294351915965
+    assert test["bpt_amount_out_raw"] == 146464294351867896
 
 def test_hook_after_add_liquidity_with_fee():
     # aggregateSwapFee of 50% should take half of remaining
     # hook state is used to pass expected value to tests
-    # aggregate fee amount is 2554373534619714n which is deducted from amount in
+    # aggregate fee amount is 2554373534622012 which is deducted from amount in
     input_hook_state = {
             "expected_balances_live_scaled18": [
-                1197445626465380286,
+                1200000000000000000 - 2554373534622012,
                 1100000000000000000,
             ],
         }
@@ -145,5 +145,5 @@ def test_hook_after_add_liquidity_with_fee():
             200000000000000001,
             100000000000000001,
         ]
-    assert test["bpt_amount_out_raw"] == 146464294351915965
+    assert test["bpt_amount_out_raw"] == 146464294351867896
 
