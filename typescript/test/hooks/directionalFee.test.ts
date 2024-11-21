@@ -1,56 +1,64 @@
 // pnpm test -- directionalFee.test.ts
 import { describe, expect, test } from 'vitest';
-import { SwapKind, Vault, SwapInput } from '../../src';
+import { SwapKind, Vault, SwapInput, PoolState } from '../../src';
 import { DirectionalFeeHook, HookStateDirectionalFee } from '../../src/hooks/directionalFeeHook';
 
 
-const poolBalancesScaled18 = [5000000000000000000n, 5000000000000000000n];
-const swapAmountRaw = 1000000000000000n;
-const staticSwapFeePercentage = 100000000000000n; // 0.01%
-const poolTokens = ['0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9', '0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75'];
+const poolBalancesScaled18 = [20000000000000000000000n, 20000000000000000000000n];
+const swapAmountRaw = 100000000n;
+const staticSwapFeePercentage = 1000000000000000n; // 0.1%
+const poolTokens = [
+    {
+        address: '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0',
+        decimals: 6n,
+        index: 0n
+    },
+    {
+        address: '0xFF34B3d4Aee8ddCd6F9AFFFB6Fe49bD371b8a357',
+        decimals: 18n,
+        index: 1n
+    }];
 
-const hookState : HookStateDirectionalFee = {
+const scalingFactors = [1000000000000n, 1n];
+const totalSupply = 40000000000000000000000n;
+
+const hookState: HookStateDirectionalFee = {
     tokens: poolTokens,
     balancesLiveScaled18: poolBalancesScaled18,
-}
+};
 
-const poolStateWithHook = {
-    poolType: 'WEIGHTED',
+const stablePoolStateWithHook: PoolState = {
+    poolType: 'STABLE',
     hookType: 'DirectionalFee',
-    chainId: '11155111',
-    blockNumber: '5955145',
-    poolAddress: '0x03722034317d8fb16845213bd3ce15439f9ce136',
-    tokens: poolTokens,
-    scalingFactors: [1000000000000000000n, 1000000000000000000n],
-    swapFee: staticSwapFeePercentage,
-    balancesLiveScaled18: poolBalancesScaled18,
+    tokens: poolTokens.map(token => token.address),
+    scalingFactors: scalingFactors,
     tokenRates: [1000000000000000000n, 1000000000000000000n],
-    totalSupply: 158113883008415798n,
-    aggregateSwapFee: 0n,
-    weights: [500000000000000000n, 500000000000000000n],
-
-}
-
-const poolStateWithoutHook = {
-    poolType: 'WEIGHTED',
-    chainId: '11155111',
-    blockNumber: '5955145',
-    poolAddress: '0x03722034317d8fb16845213bd3ce15439f9ce136',
-    tokens: poolTokens,
-    scalingFactors: [1000000000000000000n, 1000000000000000000n],
-    swapFee: staticSwapFeePercentage,
     balancesLiveScaled18: poolBalancesScaled18,
-    tokenRates: [1000000000000000000n, 1000000000000000000n],
-    totalSupply: 158113883008415798n,
+    swapFee: staticSwapFeePercentage,
     aggregateSwapFee: 0n,
-    weights: [500000000000000000n, 500000000000000000n],
-}
+    totalSupply: totalSupply,
+    amp: 10000n,
+    hookState: hookState,
+};
+
+const stablePoolStateWithoutHook: PoolState = {
+    poolType: 'STABLE',
+    tokens: poolTokens.map(token => token.address),
+    scalingFactors: scalingFactors,
+    tokenRates: [1000000000000000000n, 1000000000000000000n],
+    balancesLiveScaled18: poolBalancesScaled18,
+    swapFee: staticSwapFeePercentage,
+    aggregateSwapFee: 0n,
+    totalSupply: totalSupply,
+    amp: 10000n,
+    hookState: hookState,
+};
 
 const swapParams : SwapInput = {
     swapKind: SwapKind.GivenIn,
     amountRaw: swapAmountRaw,
-    tokenIn: poolTokens[0], 
-    tokenOut: poolTokens[1],
+    tokenIn: poolTokens[0].address, 
+    tokenOut: poolTokens[1].address,
 };
 
 describe('hook - directionalFee', () => {
@@ -73,34 +81,55 @@ describe('hook - directionalFee', () => {
         expect(success).toBe(true);
         expect(dynamicSwapFee).toEqual(staticSwapFeePercentage);
     })
-    test('it uses dynamic swap fee with high enough swap amount', () => {
+    test('it uses dynamic swap fee with high enough swap amount - given out', () => {
         // swap amount is big enough to trigger dynamic swap fee
         const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(swapParams, staticSwapFeePercentage, hookState);
         expect(success).toBe(true);
         expect(dynamicSwapFee).toBeGreaterThan(staticSwapFeePercentage);
+        // based on this simulation https://dashboard.tenderly.co/mcquardt/project/simulator/3e0f9953-f1f7-4936-b083-cbd2958bd801?trace=0.1.0.2.2.0.3.18 
+        expect(dynamicSwapFee).toEqual(5000000000000000n);
     })
 
     test('directionalFee higher than static swap fee', () => {
-        // this one triggers the dynamic swap fee computation & usage
-        const newSwapInput = {
-            ...swapParams,
-            swapInput: poolBalancesScaled18[0] / 10n,
-        };
-
+        // based on this simulation https://dashboard.tenderly.co/mcquardt/project/simulator/3e0f9953-f1f7-4936-b083-cbd2958bd801?trace=0.1.0.2.2.0.3.18 
         const outputAmountWithHook = vault.swap(
-            newSwapInput,
-            poolStateWithHook,
+            swapParams,
+            stablePoolStateWithHook,
             hookState
         )
+        expect(outputAmountWithHook).toEqual(99499505472260433154n);
 
         // since no hook is part of the pool state, the vault should
         // not compute the onDymamicSwapFee logic and should go with the
         // static swap fee percentage.
         const outputAmountWithoutHook = vault.swap(
-            newSwapInput,
-            poolStateWithoutHook,
+            swapParams,
+            stablePoolStateWithoutHook,
             hookState
         )
+        // This must always hold, otherwise the hook is wrongly implemented
         expect(outputAmountWithHook).toBeLessThan(outputAmountWithoutHook);
+
+    })
+    test('directional fee lower than static swap fee - given in ', () => {
+        // due to swap amount, the dynamic swap fee is lower than the static swap fee
+        // so the vault will use the static swap fee percentage to calculate the swap
+        // https://dashboard.tenderly.co/mcquardt/project/simulator/a4b17794-6eef-4f21-8eee-1297bc280ddd?trace=0.1.0.2.2.0.3.21
+
+        const swapParamsWithLowerAmountIn = {
+            ...swapParams,
+            amountRaw: 1000000n
+        }
+
+        const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(swapParamsWithLowerAmountIn, staticSwapFeePercentage, hookState);
+        expect(success).toBe(true);
+        expect(dynamicSwapFee).toEqual(1000000000000000n);
+
+        const outputAmountWithHook = vault.swap(
+            swapParamsWithLowerAmountIn,
+            stablePoolStateWithHook,
+            hookState
+        )
+        expect(outputAmountWithHook).toEqual(998999950149802562n);
     })
 })
