@@ -172,14 +172,12 @@ export function computeProportionalAmountsOut(
 	// bpt = bptTotalSupply                                                                      //
 	**********************************************************************************************/
 
-    // Since we're computing an amount out, we round down overall. This means rounding down on both the
-    // multiplication and division.
-
-    const bptRatio = MathSol.divDownFixed(bptAmountIn, bptTotalSupply);
-
+    // Create a new array to hold the amounts of each token to be withdrawn.
     const amountsOut: bigint[] = [];
-    for (let i = 0; i < balances.length; i++) {
-        amountsOut.push(MathSol.mulDownFixed(balances[i], bptRatio));
+    for (let i = 0; i < balances.length; ++i) {
+        // Since we multiply and divide we don't need to use FP math.
+        // Round down since we're calculating amounts out.
+        amountsOut.push((balances[i] * bptAmountIn) / bptTotalSupply);
     }
     return amountsOut;
 }
@@ -223,24 +221,25 @@ export function computeRemoveLiquiditySingleTokenExactIn(
     // Compute the amount to be withdrawn from the pool.
     const amountOut = currentBalances[tokenOutIndex] - newBalance;
 
-    // Calculate the non-taxable balance proportionate to the BPT burnt.
-    const nonTaxableBalance = MathSol.divUpFixed(
-        MathSol.mulUpFixed(newSupply, currentBalances[tokenOutIndex]),
+    const newBalanceBeforeTax = MathSol.mulDivUpFixed(
+        newSupply,
+        currentBalances[tokenOutIndex],
         totalSupply,
     );
 
-    // Compute the taxable amount: the difference between the non-taxable balance and actual withdrawal.
-    const taxableAmount = nonTaxableBalance - newBalance;
+    // Compute the taxable amount: the difference between the new proportional and disproportional balances.
+    const taxableAmount = newBalanceBeforeTax - newBalance;
 
     // Calculate the swap fee on the taxable amount.
     const fee = MathSol.mulUpFixed(taxableAmount, swapFeePercentage);
 
-    // Create swap fees amount array and set the single fee we charge
+    // Create swap fees amount array and set the single fee we charge.
     const swapFeeAmounts = new Array(currentBalances.length);
     swapFeeAmounts[tokenOutIndex] = fee;
 
     // Return the net amount after subtracting the fee.
     const amountOutWithFee = amountOut - fee;
+
     return {
         amountOutWithFee,
         swapFeeAmounts,
@@ -276,7 +275,7 @@ export function computeRemoveLiquiditySingleTokenExactOut(
 
     // Copy currentBalances to newBalances
     for (let index = 0; index < currentBalances.length; index++) {
-        newBalances[index] = currentBalances[index];
+        newBalances[index] = currentBalances[index] - 1n;
     }
     // Update the balance of tokenOutIndex with exactAmountOut.
     newBalances[tokenOutIndex] = newBalances[tokenOutIndex] - exactAmountOut;
@@ -284,19 +283,22 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     // Calculate the invariant using the current balances.
     const currentInvariant = computeInvariant(
         currentBalances,
-        Rounding.ROUND_DOWN,
+        Rounding.ROUND_UP,
     );
 
-    // Calculate the new invariant ratio by dividing the new invariant by the current invariant.
-    // Calculate the taxable amount by subtracting the new balance from the equivalent proportional balance.
+    // We round invariant ratio up (see reason below).
+    // This invariant ratio could be rounded up even more by rounding `currentInvariant` down. But since it only
+    // affects the taxable amount and the fee calculation, whereas `currentInvariant` affects BPT in more directly,
+    // we use `currentInvariant` rounded up here as well.
+    const invariantRatio = MathSol.divUpFixed(
+        computeInvariant(newBalances, Rounding.ROUND_UP),
+        currentInvariant,
+    );
+
+    // Taxable amount is proportional to invariant ratio; a larger taxable amount rounds in the Vault's favor.
     const taxableAmount =
-        MathSol.mulUpFixed(
-            MathSol.divUpFixed(
-                computeInvariant(newBalances, Rounding.ROUND_DOWN),
-                currentInvariant,
-            ),
-            currentBalances[tokenOutIndex],
-        ) - newBalances[tokenOutIndex];
+        MathSol.mulUpFixed(invariantRatio, currentBalances[tokenOutIndex]) -
+        newBalances[tokenOutIndex];
 
     const fee =
         MathSol.divUpFixed(
@@ -316,15 +318,22 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     // Create swap fees amount array and set the single fee we charge
     const swapFeeAmounts = new Array(numTokens);
     swapFeeAmounts[tokenOutIndex] = fee;
-
-    // mulUp/divUp maximize the amount of tokens burned for the security reasons
-    const bptAmountIn = MathSol.divUpFixed(
-        MathSol.mulUpFixed(
-            totalSupply,
-            currentInvariant - invariantWithFeesApplied,
-        ),
+    // Calculate the amount of BPT to burn. This is done by multiplying the total supply by the ratio of the
+    // invariant delta to the current invariant.
+    //
+    // Calculating BPT amount in, so we round up. This is the most important result of this function, equivalent to:
+    // `totalSupply * (1 - invariantWithFeesApplied / currentInvariant)`.
+    // Then, to round `bptAmountIn` up we use `invariantWithFeesApplied` rounded down and `currentInvariant`
+    // rounded up.
+    //
+    // Since `currentInvariant` is rounded up and `invariantWithFeesApplied` is rounded down, the difference
+    // should always be positive. The checked math will revert if that is not the case.
+    const bptAmountIn = MathSol.mulDivUpFixed(
+        totalSupply,
+        currentInvariant - invariantWithFeesApplied,
         currentInvariant,
     );
+
     return {
         bptAmountIn,
         swapFeeAmounts,
