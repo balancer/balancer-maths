@@ -1,7 +1,8 @@
 import { AddKind, RemoveKind, SwapInput, SwapKind } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
+import { HookStateDirectionalFee } from './directionalFeeHook';
 
-export type HookState = HookStateExitFee;
+export type HookState = HookStateExitFee | HookStateDirectionalFee;
 
 export type AfterSwapParams = {
     kind: SwapKind;
