@@ -50,7 +50,7 @@ const stablePoolStateWithoutHook: PoolState = {
     swapFee: staticSwapFeePercentage,
     aggregateSwapFee: 0n,
     totalSupply: totalSupply,
-    amp: 10000n,
+    amp: 1000000n,
     hookState: hookState,
 };
 
