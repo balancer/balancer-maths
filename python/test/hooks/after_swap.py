@@ -34,7 +34,7 @@ pool = {
         "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
         "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
     ],
-    "scalingFactors": [1000000000000000000, 1000000000000000000],
+    "scalingFactors": [1, 1],
     "weights": [500000000000000000, 500000000000000000],
     "swapFee": 100000000000000000,
     "balancesLiveScaled18": [1000000000000000000, 1000000000000000000],
@@ -45,11 +45,13 @@ pool = {
 
 
 swap_input = {
-    "amount_raw": 1,
+    "amount_raw": 1000000000000000000,
     "swap_kind": SwapKind.GIVENIN.value,
     "token_in": pool['tokens'][0],
     "token_out": pool['tokens'][1],
 }
+
+expected_calculated = 100000000000
 
 class CustomPool():
     def __init__(self, pool_state):
@@ -109,10 +111,9 @@ class CustomHook:
         assert params['token_in'] == swap_input['token_in']
         assert params['token_out'] == swap_input['token_out']
         assert params['amount_in_scaled18'] == swap_input['amount_raw']
-        assert params['amount_calculated_raw'] == 90000000000
-        assert params['amount_calculated_scaled18'] == 90000000000
-        assert params['amount_out_scaled18'] == 90000000000
-        assert params['token_in_balance_scaled18'] == int(pool['balancesLiveScaled18'][0] + swap_input['amount_raw'])
+        assert params['amount_calculated_raw'] == expected_calculated
+        assert params['amount_calculated_scaled18'] == expected_calculated
+        assert params['amount_out_scaled18'] == expected_calculated
         assert [token_in_balanceScaled18, token_out_balance_scaled18] == hook_state['expectedBalancesLiveScaled18']
         return {'success': True, 'hook_adjusted_amount_calculated_raw': 1}
 
@@ -131,7 +132,7 @@ def test_hook_after_swap_no_fee():
     input_hook_state = {
             "expectedBalancesLiveScaled18": [
                 pool['balancesLiveScaled18'][0] + swap_input['amount_raw'],
-                999999910000000000,
+                pool['balancesLiveScaled18'][1] - expected_calculated,
             ],
         }
     test = vault.swap(
@@ -146,10 +147,11 @@ def test_hook_after_swap_with_fee():
     # aggregateSwapFee of 50% should take half of remaining
     # hook state is used to pass expected value to tests
     # Aggregate fee amount is 50% of swap fee
+    expected_aggregate_swap_fee_amount = 50000000000000000
     input_hook_state = {
             "expectedBalancesLiveScaled18": [
-                pool['balancesLiveScaled18'][0] + swap_input['amount_raw'],
-                999999905000000000,
+                pool['balancesLiveScaled18'][0] + swap_input['amount_raw'] - expected_aggregate_swap_fee_amount,
+                pool['balancesLiveScaled18'][1] - expected_calculated,
             ],
         }
     test = vault.swap(

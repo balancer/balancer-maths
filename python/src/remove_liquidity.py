@@ -92,8 +92,8 @@ def remove_liquidity(
             amounts_out_scaled18[token_out_index],
             pool_state["totalSupply"],
             pool_state["swapFee"],
-            lambda balances_live_scaled18: pool_class.compute_invariant(
-                balances_live_scaled18
+            lambda balances_live_scaled18, rounding: pool_class.compute_invariant(
+                balances_live_scaled18, rounding
             ),
         )
         bpt_amount_in = computed["bptAmountIn"]
@@ -116,7 +116,11 @@ def remove_liquidity(
         # A Pool's token balance always decreases after an exit
         # Computes protocol and pool creator fee which is eventually taken from pool balance
         aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
-            swap_fee_amounts_scaled18[i], pool_state["aggregateSwapFee"]
+            swap_fee_amounts_scaled18[i],
+            pool_state["aggregateSwapFee"],
+            pool_state["scalingFactors"],
+            pool_state["tokenRates"],
+            i,
         )
 
         updated_balances_live_scaled18[i] = updated_balances_live_scaled18[i] - (

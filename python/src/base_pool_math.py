@@ -4,6 +4,8 @@ from src.maths import (
     mul_up_fixed,
     div_up_fixed,
     complement_fixed,
+    mul_div_up,
+    Rounding,
 )
 
 
@@ -34,25 +36,30 @@ def compute_add_liquidity_unbalanced(
 
     # Loop through each token, updating the balance with the added amount.
     for index in range(len(current_balances)):
-        new_balances[index] = current_balances[index] + exact_amounts[index]
+        new_balances[index] = current_balances[index] + exact_amounts[index] - 1
 
     # Calculate the invariant using the current balances (before the addition).
-    current_invariant = compute_invariant(current_balances)
+    current_invariant = compute_invariant(current_balances, Rounding.ROUND_UP)
 
     # Calculate the new invariant using the new balances (after the addition).
-    new_invariant = compute_invariant(new_balances)
+    new_invariant = compute_invariant(new_balances, Rounding.ROUND_DOWN)
 
     # Calculate the new invariant ratio by dividing the new invariant by the old invariant.
     invariant_ratio = div_down_fixed(new_invariant, current_invariant)
 
     # Loop through each token to apply fees if necessary.
     for index in range(len(current_balances)):
-        # Check if the new balance is greater than the proportional balance.
-        # If so, calculate the taxable amount.
-        if new_balances[index] > mul_up_fixed(invariant_ratio, current_balances[index]):
-            taxable_amount = new_balances[index] - mul_up_fixed(
-                invariant_ratio, current_balances[index]
-            )
+        # // Check if the new balance is greater than the equivalent proportional balance.
+        # // If so, calculate the taxable amount, rounding in favor of the protocol.
+        # // We round the second term down to subtract less and get a higher `taxableAmount`,
+        # // which charges higher swap fees. This will lower `newBalances`, which in turn lowers
+        # // `invariantWithFeesApplied` below.
+        proportional_token_balance = mul_down_fixed(
+            invariant_ratio, current_balances[index]
+        )
+
+        if new_balances[index] > proportional_token_balance:
+            taxable_amount = new_balances[index] - proportional_token_balance
             # Calculate fee amount
             swap_fee_amounts[index] = mul_up_fixed(taxable_amount, swap_fee_percentage)
             # Subtract the fee from the new balance.
@@ -60,16 +67,23 @@ def compute_add_liquidity_unbalanced(
             new_balances[index] = new_balances[index] - swap_fee_amounts[index]
 
     # Calculate the new invariant with fees applied.
-    invariant_with_fees_applied = compute_invariant(new_balances)
+    invariant_with_fees_applied = compute_invariant(new_balances, Rounding.ROUND_DOWN)
 
-    # Calculate the amount of BPT to mint. This is done by multiplying the
-    # total supply with the ratio of the change in invariant.
-    bpt_amount_out = mul_down_fixed(
-        total_supply,
-        div_down_fixed(
-            invariant_with_fees_applied - current_invariant, current_invariant
-        ),
-    )
+    # // Calculate the amount of BPT to mint. This is done by multiplying the
+    # // total supply with the ratio of the change in invariant.
+    # // Since we multiply and divide we don't need to use FP math.
+    # // Round down since we're calculating BPT amount out. This is the most important result of this function,
+    # // equivalent to:
+    # // `totalSupply * (invariantWithFeesApplied / currentInvariant - 1)`
+
+    # // Then, to round `bptAmountOut` down we use `invariantWithFeesApplied` rounded down and `currentInvariant`
+    # // rounded up.
+    # // If rounding makes `invariantWithFeesApplied` smaller or equal to `currentInvariant`, this would effectively
+    # // be a donation. In that case we just let checked math revert for simplicity; it's not a valid use-case to
+    # // support at this point.
+    bpt_amount_out = (
+        total_supply * (invariant_with_fees_applied - current_invariant)
+    ) // current_invariant
 
     return {"bpt_amount_out": bpt_amount_out, "swap_fee_amounts": swap_fee_amounts}
 
@@ -157,14 +171,12 @@ def compute_proportional_amounts_out(
     # // bpt = bpttotal_supply                                                                      //
     # **********************************************************************************************/
 
-    # // Since we're computing an amount out, we round down overall. This means rounding down on both the
-    # // multiplication and division.
-
-    bpt_ratio = div_down_fixed(bpt_amount_in, bpt_total_supply)
-
+    # // Create a new array to hold the amounts of each token to be withdrawn.
     amounts_out = [0] * len(balances)
     for index in range(len(balances)):
-        amounts_out[index] = mul_down_fixed(balances[index], bpt_ratio)
+        # // Since we multiply and divide we don't need to use FP math.
+        # // Round down since we're calculating amounts out.
+        amounts_out[index] = (balances[index] * bpt_amount_in) // bpt_total_supply
     return amounts_out
 
 
@@ -203,14 +215,12 @@ def compute_remove_liquidity_single_token_exact_in(
     # // Compute the amount to be withdrawn from the pool.
     amount_out = current_balances[token_out_index] - new_balance
 
-    # // Calculate the non-taxable balance proportionate to the BPT burnt.
-    non_taxable_balance = div_up_fixed(
-        mul_up_fixed(new_supply, current_balances[token_out_index]),
-        total_supply,
+    new_balance_before_tax = mul_div_up(
+        new_supply, current_balances[token_out_index], total_supply
     )
 
     # // Compute the taxable amount: the difference between the non-taxable balance and actual withdrawal.
-    taxable_amount = non_taxable_balance - new_balance
+    taxable_amount = new_balance_before_tax - new_balance
 
     # // Calculate the swap fee on the taxable amount.
     fee = mul_up_fixed(taxable_amount, swap_fee_percentage)
@@ -253,19 +263,22 @@ def compute_remove_liquidity_single_token_exact_out(
 
     # // Copy current_balances to new_balances
     for index in range(len(current_balances)):
-        new_balances[index] = current_balances[index]
+        new_balances[index] = current_balances[index] - 1
 
     # // Update the balance of token_out_index with exact_amount_out.
     new_balances[token_out_index] = new_balances[token_out_index] - exact_amount_out
 
     # // Calculate the invariant using the current balances.
-    current_invariant = compute_invariant(current_balances)
+    current_invariant = compute_invariant(current_balances, Rounding.ROUND_UP)
 
-    # // Calculate the new invariant ratio by dividing the new invariant by the current invariant.
-    # // Calculate the taxable amount by subtracting the new balance from the equivalent proportional balance.
+    invariant_ratio = div_up_fixed(
+        compute_invariant(new_balances, Rounding.ROUND_UP), current_invariant
+    )
+
+    # Taxable amount is proportional to invariant ratio; a larger taxable amount rounds in the Vault's favor.
     taxable_amount = (
         mul_up_fixed(
-            div_up_fixed(compute_invariant(new_balances), current_invariant),
+            invariant_ratio,
             current_balances[token_out_index],
         )
         - new_balances[token_out_index]
@@ -283,20 +296,25 @@ def compute_remove_liquidity_single_token_exact_out(
     new_balances[token_out_index] = new_balances[token_out_index] - fee
 
     # // Calculate the new invariant with fees applied.
-    invariant_with_fees_applied = compute_invariant(new_balances)
+    invariant_with_fees_applied = compute_invariant(new_balances, Rounding.ROUND_DOWN)
 
     # // Create swap fees amount array and set the single fee we charge
     swap_fee_amounts = [0] * num_tokens
     swap_fee_amounts[token_out_index] = fee
-
-    # // mulUp/divUp maximize the amount of tokens burned for the security reasons
-    bpt_amount_in = div_up_fixed(
-        mul_up_fixed(
-            total_supply,
-            current_invariant - invariant_with_fees_applied,
-        ),
-        current_invariant,
+    # // Calculate the amount of BPT to burn. This is done by multiplying the total supply by the ratio of the
+    # // invariant delta to the current invariant.
+    # //
+    # // Calculating BPT amount in, so we round up. This is the most important result of this function, equivalent to:
+    # // `totalSupply * (1 - invariantWithFeesApplied / currentInvariant)`.
+    # // Then, to round `bptAmountIn` up we use `invariantWithFeesApplied` rounded down and `currentInvariant`
+    # // rounded up.
+    # //
+    # // Since `currentInvariant` is rounded up and `invariantWithFeesApplied` is rounded down, the difference
+    # // should always be positive. The checked math will revert if that is not the case.
+    bpt_amount_in = mul_div_up(
+        total_supply, current_invariant - invariant_with_fees_applied, current_invariant
     )
+
     return {
         "bptAmountIn": bpt_amount_in,
         "swap_fee_amounts": swap_fee_amounts,

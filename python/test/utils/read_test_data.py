@@ -34,7 +34,7 @@ def read_test_data():
                         test_data["adds"].append(
                             {
                                 **add,
-                                "kind" : 0 if add["kind"] == 'Proportional' else 1,
+                                "kind" : 0 if add["kind"] == 'Unbalanced' else 1,
                                 "test": filename,
                             }
                         )

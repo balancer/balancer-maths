@@ -18,14 +18,14 @@ def find_case_insensitive_index_in_list(strings, target):
 def _to_scaled_18_apply_rate_round_down(
     amount: int, scaling_factor: int, rate: int
 ) -> int:
-    return mul_down_fixed(mul_down_fixed(amount, scaling_factor), rate)
+    return mul_down_fixed(amount * scaling_factor, rate)
 
 
 def _to_scaled_18_apply_rate_round_up(
     amount: int, scaling_factor: int, rate: int
 ) -> int:
     return mul_up_fixed(
-        mul_up_fixed(amount, scaling_factor),
+        amount * scaling_factor,
         rate,
     )
 
@@ -39,10 +39,11 @@ def _to_raw_undo_rate_round_down(
     scaling_factor: int,
     token_rate: int,
 ) -> int:
-    # Do division last, and round scalingFactor * tokenRate up to divide by a larger number.
+    # // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
+    # // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
     return div_down_fixed(
         amount,
-        mul_up_fixed(scaling_factor, token_rate),
+        scaling_factor * token_rate,
     )
 
 
@@ -51,10 +52,11 @@ def _to_raw_undo_rate_round_up(
     scaling_factor: int,
     token_rate: int,
 ) -> int:
-    # Do division last, and round scalingFactor * tokenRate down to divide by a smaller number.
+    # // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
+    # // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
     return div_up_fixed(
         amount,
-        mul_down_fixed(scaling_factor, token_rate),
+        scaling_factor * token_rate,
     )
 
 
@@ -81,12 +83,19 @@ def _copy_to_scaled18_apply_rate_round_up_array(amounts, scaling_factors, token_
 def _compute_and_charge_aggregate_swap_fees(
     swap_fee_amount_scaled18: int,
     aggregate_swap_fee_percentage: int,
+    decimal_scaling_factors,
+    token_rates,
+    index: int,
 ) -> int:
     if swap_fee_amount_scaled18 > 0 and aggregate_swap_fee_percentage > 0:
-        return mul_up_fixed(
-            swap_fee_amount_scaled18,
-            aggregate_swap_fee_percentage,
+        # // The total swap fee does not go into the pool; amountIn does, and the raw fee at this point does not
+        # // modify it. Given that all of the fee may belong to the pool creator (i.e. outside pool balances),
+        # // we round down to protect the invariant.
+        total_swap_fee_amount_raw = _to_raw_undo_rate_round_down(
+            swap_fee_amount_scaled18, decimal_scaling_factors[index], token_rates[index]
         )
+
+        return mul_down_fixed(total_swap_fee_amount_raw, aggregate_swap_fee_percentage)
 
     return 0
 

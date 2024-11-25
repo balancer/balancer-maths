@@ -1,7 +1,9 @@
+from src.maths import Rounding
 from src.pools.weighted_math import (
     compute_out_given_exact_in,
     compute_in_given_exact_out,
-    compute_invariant,
+    compute_invariant_up,
+    compute_invariant_down,
     compute_balance_out_given_invariant,
 )
 from src.swap import SwapKind
@@ -29,8 +31,13 @@ class Weighted:
             swap_params["amount_given_scaled18"],
         )
 
-    def compute_invariant(self, balances_live_scaled18):
-        return compute_invariant(self.normalized_weights, balances_live_scaled18)
+    def compute_invariant(self, balances_live_scaled18, rounding):
+        if rounding == Rounding.ROUND_UP:
+            return compute_invariant_up(self.normalized_weights, balances_live_scaled18)
+        else:
+            return compute_invariant_down(
+                self.normalized_weights, balances_live_scaled18
+            )
 
     def compute_balance(
         self,
