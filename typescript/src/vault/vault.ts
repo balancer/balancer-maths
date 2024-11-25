@@ -26,6 +26,7 @@ import {
 import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
 import { defaultHook } from '../hooks/constants';
 import { ExitFeeHook } from '../hooks/exitFeeHook';
+import { DirectionalFeeHook } from '../hooks/directionalFeeHook';
 
 const _MINIMUM_TRADE_AMOUNT = 1e6;
 // const _MINIMUM_WRAP_AMOUNT = 1e3;
@@ -53,6 +54,7 @@ export class Vault {
         };
         this.hookClasses = {
             ExitFee: ExitFeeHook,
+            DirectionalFee: DirectionalFeeHook,
             // custom hooks take precedence over base types
             ...hookClasses,
         };
