@@ -163,8 +163,8 @@ def compute_balance(
     # Calculate inv2 and c
     inv2 = invariant * invariant
 
-    c = div_up(inv2, amp_times_total * p_d) * AMP_PRECISION * balances[token_index]
-    b = sum_balances + (invariant // amp_times_total) * AMP_PRECISION
+    c = div_up(inv2 * AMP_PRECISION, amp_times_total * p_d) * balances[token_index]
+    b = sum_balances + (invariant * AMP_PRECISION) // amp_times_total
     # Initial approximation of tokenBalance
     prev_token_balance = int(0)
     token_balance = div_up(inv2 + c, invariant + b)
