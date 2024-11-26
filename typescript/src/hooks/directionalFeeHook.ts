@@ -11,7 +11,7 @@ interface MinimalToken {
 export type HookStateDirectionalFee = {
     tokens: MinimalToken[];
     balancesLiveScaled18: bigint[];
-}
+};
 
 export class DirectionalFeeHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
@@ -23,38 +23,47 @@ export class DirectionalFeeHook implements HookBase {
     public shouldCallAfterRemoveLiquidity = false;
     public enableHookAdjustedAmounts = false;
 
-
     onComputeDynamicSwapFee(
         params: SwapInput,
         staticSwapFeePercentage: bigint,
-        hookState: HookStateDirectionalFee
+        hookState: HookStateDirectionalFee,
     ): { success: boolean; dynamicSwapFee: bigint } {
-
         const lastBalancesLiveScaled18 = hookState.balancesLiveScaled18;
 
         // TODO: Confirm if `SwapInput` is already tokenIn and TokenOut or just TokenGiven and TokenCalculated.
         // Depending on the answer, the index can be assumed to be 0 and 1 for in and out.
         // If it is not, we need to find the index of the token in the pool.
 
-        const tokenInIndex = hookState.tokens.map(token => token.address.toLowerCase()).indexOf(params.tokenIn.toLowerCase());
-        const tokenOutIndex = hookState.tokens.map(token => token.address.toLowerCase()).indexOf(params.tokenOut.toLowerCase());
+        const tokenInIndex = hookState.tokens
+            .map((token) => token.address.toLowerCase())
+            .indexOf(params.tokenIn.toLowerCase());
+        const tokenOutIndex = hookState.tokens
+            .map((token) => token.address.toLowerCase())
+            .indexOf(params.tokenOut.toLowerCase());
 
-        const decimalsToScaleWith = params.swapKind === 0 ? ( 18n - hookState.tokens[tokenInIndex].decimals) : (18n - hookState.tokens[tokenOutIndex].decimals);
-        const amountsScaled18 = params.amountRaw * 10n ** decimalsToScaleWith
+        const decimalsToScaleWith =
+            params.swapKind === 0
+                ? 18n - hookState.tokens[tokenInIndex].decimals
+                : 18n - hookState.tokens[tokenOutIndex].decimals;
+        const amountsScaled18 = params.amountRaw * 10n ** decimalsToScaleWith;
 
-        const calculatedSwapFeePercentage = this.calculateExpectedSwapFeePercentage(
-            lastBalancesLiveScaled18,
-            amountsScaled18,
-            tokenInIndex,
-            tokenOutIndex
-        );
+        const calculatedSwapFeePercentage =
+            this.calculateExpectedSwapFeePercentage(
+                lastBalancesLiveScaled18,
+                amountsScaled18,
+                tokenInIndex,
+                tokenOutIndex,
+            );
 
         // Charge the static or calculated fee, whichever is greater.
-        const dynamicSwapFee = calculatedSwapFeePercentage > staticSwapFeePercentage ? calculatedSwapFeePercentage : staticSwapFeePercentage;
+        const dynamicSwapFee =
+            calculatedSwapFeePercentage > staticSwapFeePercentage
+                ? calculatedSwapFeePercentage
+                : staticSwapFeePercentage;
 
         return {
             success: true,
-            dynamicSwapFee: dynamicSwapFee
+            dynamicSwapFee: dynamicSwapFee,
         };
     }
 
@@ -63,9 +72,8 @@ export class DirectionalFeeHook implements HookBase {
         poolBalances: bigint[],
         swapAmount: bigint,
         indexIn: number,
-        indexOut: number
+        indexOut: number,
     ): bigint {
-
         const finalBalanceTokenIn = poolBalances[indexIn] + swapAmount;
         const finalBalanceTokenOut = poolBalances[indexOut] - swapAmount;
 
