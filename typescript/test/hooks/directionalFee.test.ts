@@ -1,10 +1,7 @@
 // pnpm test -- directionalFee.test.ts
 import { describe, expect, test } from 'vitest';
 import { SwapKind, Vault, SwapInput, SwapParams, StableState } from '../../src';
-import {
-    DirectionalFeeHook,
-    HookStateDirectionalFee,
-} from '../../src/hooks/directionalFeeHook';
+import { DirectionalFeeHook } from '../../src/hooks/directionalFeeHook';
 
 const poolBalancesScaled18 = [
     20000000000000000000000n,
@@ -28,11 +25,6 @@ const poolTokens = [
 
 const scalingFactors = [1000000000000n, 1n];
 const totalSupply = 40000000000000000000000n;
-
-const hookState: HookStateDirectionalFee = {
-    tokens: poolTokens,
-    balancesLiveScaled18: poolBalancesScaled18,
-};
 
 const stablePoolStateWithHook: StableState = {
     poolAddress: '0xb4cd36aba5d75feb6bf2b8512dbf8fbd8add3656',
@@ -86,7 +78,6 @@ describe('hook - directionalFee', () => {
             swapParams,
             stablePoolStateWithHook.poolAddress,
             0n,
-            hookState,
         );
         expect(success).toBe(true);
         expect(dynamicSwapFee).toBeGreaterThan(0n);
@@ -101,7 +92,6 @@ describe('hook - directionalFee', () => {
             newSwapParams,
             stablePoolStateWithHook.poolAddress,
             staticSwapFeePercentage,
-            hookState,
         );
         expect(success).toBe(true);
         expect(dynamicSwapFee).toEqual(staticSwapFeePercentage);
@@ -112,7 +102,6 @@ describe('hook - directionalFee', () => {
             swapParams,
             stablePoolStateWithHook.poolAddress,
             staticSwapFeePercentage,
-            hookState,
         );
         expect(success).toBe(true);
         expect(dynamicSwapFee).toBeGreaterThan(staticSwapFeePercentage);
@@ -125,7 +114,7 @@ describe('hook - directionalFee', () => {
         const outputAmountWithHook = vault.swap(
             swapInput,
             stablePoolStateWithHook,
-            hookState,
+            {},
         );
         expect(outputAmountWithHook).toEqual(99499505472260433154n);
 
@@ -135,7 +124,7 @@ describe('hook - directionalFee', () => {
         const outputAmountWithoutHook = vault.swap(
             swapInput,
             stablePoolStateWithoutHook,
-            hookState,
+            {},
         );
         // This must always hold, otherwise the hook is wrongly implemented
         expect(outputAmountWithHook).toBeLessThan(outputAmountWithoutHook);
@@ -154,7 +143,6 @@ describe('hook - directionalFee', () => {
             { ...swapParams, amountGivenScaled18: 1000000000000000000n },
             stablePoolStateWithHook.poolAddress,
             staticSwapFeePercentage,
-            hookState,
         );
         expect(success).toBe(true);
         expect(dynamicSwapFee).toEqual(1000000000000000n);
@@ -162,7 +150,7 @@ describe('hook - directionalFee', () => {
         const outputAmountWithHook = vault.swap(
             swapParamsWithLowerAmountIn,
             stablePoolStateWithHook,
-            hookState,
+            {},
         );
         expect(outputAmountWithHook).toEqual(998999950149802562n);
     });
@@ -179,7 +167,7 @@ describe('hook - directionalFee', () => {
         const amountIn = vault.swap(
             swapParamsGivenOut,
             stablePoolStateWithHook,
-            hookState,
+            {},
         );
         expect(amountIn).toEqual(1001002n);
     });
@@ -194,7 +182,7 @@ describe('hook - directionalFee', () => {
         const amountIn = vault.swap(
             swapParamsGivenOut,
             stablePoolStateWithHook,
-            hookState,
+            {},
         );
         expect(amountIn).toEqual(100503015n);
     });

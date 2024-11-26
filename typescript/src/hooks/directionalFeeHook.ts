@@ -2,17 +2,6 @@ import { HookBase } from './types';
 import { MathSol } from '../utils/math';
 import { SwapParams } from '@/vault/types';
 
-interface MinimalToken {
-    address: string;
-    decimals: bigint;
-    index: bigint;
-}
-
-export type HookStateDirectionalFee = {
-    tokens: MinimalToken[];
-    balancesLiveScaled18: bigint[];
-};
-
 export class DirectionalFeeHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
     public shouldCallBeforeSwap = false;
@@ -27,13 +16,10 @@ export class DirectionalFeeHook implements HookBase {
         params: SwapParams,
         pool: string,
         staticSwapFeePercentage: bigint,
-        hookState: HookStateDirectionalFee,
     ): { success: boolean; dynamicSwapFee: bigint } {
-        const lastBalancesLiveScaled18 = hookState.balancesLiveScaled18;
-
         const calculatedSwapFeePercentage =
             this.calculateExpectedSwapFeePercentage(
-                lastBalancesLiveScaled18,
+                params.balancesLiveScaled18,
                 params.amountGivenScaled18,
                 params.indexIn,
                 params.indexOut,

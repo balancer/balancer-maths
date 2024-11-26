@@ -6,13 +6,9 @@ import {
     SwapParams,
 } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
-import { HookStateDirectionalFee } from './directionalFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
 
-export type HookState =
-    | HookStateExitFee
-    | HookStateDirectionalFee
-    | HookStateStableSurge;
+export type HookState = HookStateExitFee | HookStateStableSurge;
 
 export type AfterSwapParams = {
     kind: SwapKind;
