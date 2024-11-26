@@ -181,10 +181,10 @@ export function _computeBalance(
     const inv2 = invariant * invariant;
     // We remove the balance from c by multiplying it.
     const c =
-        MathSol.divUp(inv2, ampTimesTotal * P_D) *
-        AMP_PRECISION *
+        MathSol.divUp(inv2 * AMP_PRECISION, ampTimesTotal * P_D) *
         balances[tokenIndex];
-    const b = sum + (invariant / ampTimesTotal) * AMP_PRECISION;
+
+    const b = sum + (invariant * AMP_PRECISION) / ampTimesTotal;
     // We iterate to find the balance.
     let prevTokenBalance = 0n;
     // We multiply the first iteration outside the loop with the invariant to set the value of the
