@@ -27,6 +27,7 @@ import { HookBase, HookClassConstructor, HookState } from '../hooks/types';
 import { defaultHook } from '../hooks/constants';
 import { ExitFeeHook } from '../hooks/exitFeeHook';
 import { DirectionalFeeHook } from '../hooks/directionalFeeHook';
+import { StableSurgeHook } from '../hooks/stableSurgeHook';
 
 const _MINIMUM_TRADE_AMOUNT = 1e6;
 // const _MINIMUM_WRAP_AMOUNT = 1e3;
@@ -55,6 +56,7 @@ export class Vault {
         this.hookClasses = {
             ExitFee: ExitFeeHook,
             DirectionalFee: DirectionalFeeHook,
+            StableSurge: StableSurgeHook,
             // custom hooks take precedence over base types
             ...hookClasses,
         };
@@ -179,17 +181,6 @@ export class Vault {
             );
         }
 
-        let swapFee = poolState.swapFee;
-        if (hook.shouldCallComputeDynamicSwapFee) {
-            const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(
-                swapInput,
-                poolState.swapFee,
-                hookState,
-            );
-            if (success) swapFee = dynamicSwapFee;
-        }
-
-        // _swap()
         const swapParams: SwapParams = {
             swapKind: swapInput.swapKind,
             amountGivenScaled18,
@@ -197,6 +188,19 @@ export class Vault {
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
+
+        let swapFee = poolState.swapFee;
+        if (hook.shouldCallComputeDynamicSwapFee) {
+            const { success, dynamicSwapFee } = hook.onComputeDynamicSwapFee(
+                swapParams,
+                poolState.poolAddress,
+                poolState.swapFee,
+                hookState,
+            );
+            if (success) swapFee = dynamicSwapFee;
+        }
+
+        // _swap()
 
         let totalSwapFeeAmountScaled18 = 0n;
         if (swapParams.swapKind === SwapKind.GivenIn) {
@@ -822,7 +826,7 @@ export class Vault {
     // exploitation of rounding errors. This is called in the swap context, so zero is not a valid amount.
     private _ensureValidSwapAmount(tradeAmount: bigint): boolean {
         if (tradeAmount < _MINIMUM_TRADE_AMOUNT) {
-            throw new Error('TradeAmountTooSmall');
+            throw new Error(`TradeAmountTooSmall ${tradeAmount}`);
         }
         return true;
     }

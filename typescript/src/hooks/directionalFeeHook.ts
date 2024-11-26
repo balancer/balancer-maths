@@ -1,17 +1,6 @@
 import { HookBase } from './types';
 import { MathSol } from '../utils/math';
-import { SwapInput } from '@/vault/types';
-
-interface MinimalToken {
-    address: string;
-    decimals: bigint;
-    index: bigint;
-}
-
-export type HookStateDirectionalFee = {
-    tokens: MinimalToken[];
-    balancesLiveScaled18: bigint[];
-};
+import { SwapParams } from '@/vault/types';
 
 export class DirectionalFeeHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
@@ -24,31 +13,16 @@ export class DirectionalFeeHook implements HookBase {
     public enableHookAdjustedAmounts = false;
 
     onComputeDynamicSwapFee(
-        params: SwapInput,
+        params: SwapParams,
+        pool: string,
         staticSwapFeePercentage: bigint,
-        hookState: HookStateDirectionalFee,
     ): { success: boolean; dynamicSwapFee: bigint } {
-        const lastBalancesLiveScaled18 = hookState.balancesLiveScaled18;
-
-        const tokenInIndex = hookState.tokens
-            .map((token) => token.address.toLowerCase())
-            .indexOf(params.tokenIn.toLowerCase());
-        const tokenOutIndex = hookState.tokens
-            .map((token) => token.address.toLowerCase())
-            .indexOf(params.tokenOut.toLowerCase());
-
-        const decimalsToScaleWith =
-            params.swapKind === 0
-                ? 18n - hookState.tokens[tokenInIndex].decimals
-                : 18n - hookState.tokens[tokenOutIndex].decimals;
-        const amountsScaled18 = params.amountRaw * 10n ** decimalsToScaleWith;
-
         const calculatedSwapFeePercentage =
             this.calculateExpectedSwapFeePercentage(
-                lastBalancesLiveScaled18,
-                amountsScaled18,
-                tokenInIndex,
-                tokenOutIndex,
+                params.balancesLiveScaled18,
+                params.amountGivenScaled18,
+                params.indexIn,
+                params.indexOut,
             );
 
         // Charge the static or calculated fee, whichever is greater.
