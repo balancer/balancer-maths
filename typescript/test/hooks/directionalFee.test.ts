@@ -108,7 +108,7 @@ describe('hook - directionalFee', () => {
         expect(dynamicSwapFee).toEqual(5000000000000000n);
     });
 
-    test('directionalFee higher than static swap fee', () => {
+    test('directional fee higher than static swap fee - given in', () => {
         // based on this simulation https://dashboard.tenderly.co/mcquardt/project/simulator/3e0f9953-f1f7-4936-b083-cbd2958bd801?trace=0.1.0.2.2.0.3.18
         const outputAmountWithHook = vault.swap(
             swapParams,
@@ -153,4 +153,36 @@ describe('hook - directionalFee', () => {
         );
         expect(outputAmountWithHook).toEqual(998999950149802562n);
     });
+    test('directional fee lower than static swap fee - given out',  () => {
+        // with 1 DAI out, the dynamic swap fee hook does not get triggered
+        // therefore the direction fee is lower than the static swap fee
+        // and the static swap fee is being charged by the vault
+        // sim: https://dashboard.tenderly.co/mcquardt/project/simulator/06bc1601-1987-4a9a-99cb-e565bb57218d
+        const swapParamsGivenOut = {
+            ...swapParams,
+            amountRaw: 1000000000000000000n,
+            swapKind: SwapKind.GivenOut,
+        };
+        const amountIn = vault.swap(
+            swapParamsGivenOut,
+            stablePoolStateWithHook,
+            hookState,
+        );
+        expect(amountIn).toEqual(1001002n);
+    });
+    test('directional fee higher than static swap fee - given out', () => {
+        // with 100 DAI out, the dynamic swap fee hook does get triggered
+        // sim: https://dashboard.tenderly.co/mcquardt/project/simulator/571c3a06-d969-43fd-b4b8-08833b9c0997?trace=0.1.0.2.2.0.3.21.0
+        const swapParamsGivenOut = {
+            ...swapParams,
+            amountRaw: 100000000000000000000n,
+            swapKind: SwapKind.GivenOut,
+        };
+        const amountIn = vault.swap(
+            swapParamsGivenOut,
+            stablePoolStateWithHook,
+            hookState,
+        );
+        expect(amountIn).toEqual(100503015n);
+    })
 });
