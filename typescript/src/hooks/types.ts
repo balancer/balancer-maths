@@ -1,8 +1,18 @@
-import { AddKind, RemoveKind, SwapInput, SwapKind } from '@/vault/types';
+import {
+    AddKind,
+    RemoveKind,
+    SwapInput,
+    SwapKind,
+    SwapParams,
+} from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateDirectionalFee } from './directionalFeeHook';
+import { HookStateStableSurge } from './stableSurgeHook';
 
-export type HookState = HookStateExitFee | HookStateDirectionalFee;
+export type HookState =
+    | HookStateExitFee
+    | HookStateDirectionalFee
+    | HookStateStableSurge;
 
 export type AfterSwapParams = {
     kind: SwapKind;
@@ -66,7 +76,8 @@ export interface HookBase {
         hookAdjustedAmountCalculatedRaw: bigint;
     };
     onComputeDynamicSwapFee(
-        params: SwapInput,
+        params: SwapParams,
+        pool: string,
         staticSwapFeePercentage: bigint,
         hookState: HookState | unknown,
     ): { success: boolean; dynamicSwapFee: bigint };

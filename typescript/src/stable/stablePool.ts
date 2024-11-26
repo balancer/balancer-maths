@@ -8,6 +8,7 @@ import {
     SwapKind,
     type SwapParams,
 } from '../vault/types';
+import { StableState } from './data';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,
@@ -18,7 +19,7 @@ import {
 export class Stable implements PoolBase {
     public amp: bigint;
 
-    constructor(poolState: { amp: bigint }) {
+    constructor(poolState: StableState) {
         this.amp = poolState.amp;
     }
 

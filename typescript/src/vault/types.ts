@@ -1,7 +1,11 @@
+import { StableState } from '@/stable';
+import { WeightedState } from '@/weighted';
+
 /**
  * State of a pool. Note - rates, fees, totalSupply use scaled 18.
  */
-export type PoolState = {
+export type BasePoolState = {
+    poolAddress: string;
     poolType: string;
     tokens: string[];
     scalingFactors: bigint[];
@@ -12,6 +16,8 @@ export type PoolState = {
     totalSupply: bigint;
     hookType?: string;
 };
+
+export type PoolState = BasePoolState | WeightedState | StableState;
 
 export enum SwapKind {
     GivenIn = 0,
