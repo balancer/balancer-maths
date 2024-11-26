@@ -30,10 +30,6 @@ export class DirectionalFeeHook implements HookBase {
     ): { success: boolean; dynamicSwapFee: bigint } {
         const lastBalancesLiveScaled18 = hookState.balancesLiveScaled18;
 
-        // TODO: Confirm if `SwapInput` is already tokenIn and TokenOut or just TokenGiven and TokenCalculated.
-        // Depending on the answer, the index can be assumed to be 0 and 1 for in and out.
-        // If it is not, we need to find the index of the token in the pool.
-
         const tokenInIndex = hookState.tokens
             .map((token) => token.address.toLowerCase())
             .indexOf(params.tokenIn.toLowerCase());
