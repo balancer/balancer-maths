@@ -826,7 +826,7 @@ export class Vault {
     // exploitation of rounding errors. This is called in the swap context, so zero is not a valid amount.
     private _ensureValidSwapAmount(tradeAmount: bigint): boolean {
         if (tradeAmount < _MINIMUM_TRADE_AMOUNT) {
-            throw new Error('TradeAmountTooSmall');
+            throw new Error(`TradeAmountTooSmall ${tradeAmount}`);
         }
         return true;
     }
