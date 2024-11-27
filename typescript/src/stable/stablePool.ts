@@ -8,7 +8,7 @@ import {
     SwapKind,
     type SwapParams,
 } from '../vault/types';
-import { StableState } from './data';
+import { StableMutable } from './data';
 import {
     _computeOutGivenExactIn,
     _computeInGivenExactOut,
@@ -19,7 +19,7 @@ import {
 export class Stable implements PoolBase {
     public amp: bigint;
 
-    constructor(poolState: StableState) {
+    constructor(poolState: StableMutable) {
         this.amp = poolState.amp;
     }
 
@@ -41,16 +41,16 @@ export class Stable implements PoolBase {
             return MathSol.divDownFixed(
                 MathSol.mulDownFixed(
                     balancesLiveScaled18[indexOut],
-                    MathSol.divDownFixed(
-                        tokenRates[indexOut],
-                        tokenRates[indexIn],
-                    ),
+                    tokenRates[indexOut],
                 ),
-                scalingFactors[indexIn],
+                scalingFactors[indexIn] * tokenRates[indexIn],
             );
         return MathSol.divDownFixed(
-            balancesLiveScaled18[indexOut],
-            scalingFactors[indexOut],
+            MathSol.mulDownFixed(
+                balancesLiveScaled18[indexOut],
+                tokenRates[indexOut],
+            ),
+            scalingFactors[indexOut] * tokenRates[indexOut],
         );
     }
 

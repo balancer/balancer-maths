@@ -18,10 +18,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [1000000000000000000n, 1000000000000000000n],
-                    scalingFactors: [
-                        1000000000000000000000000000000n,
-                        1000000000000000000n,
-                    ],
+                    scalingFactors: [1000000000000n, 1n],
                     indexIn: 0,
                     indexOut: 1,
                 };
@@ -37,10 +34,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [1000000000000000000n, 1000000000000000000n],
-                    scalingFactors: [
-                        1000000000000000000000000000000n,
-                        1000000000000000000n,
-                    ],
+                    scalingFactors: [1000000000000n, 1n],
                     indexIn: 0,
                     indexOut: 1,
                 };
@@ -58,10 +52,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [2000000000000000000n, 4000000000000000000n],
-                    scalingFactors: [
-                        1000000000000000000n,
-                        1000000000000000000000000000000n,
-                    ],
+                    scalingFactors: [1n, 1000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };
@@ -77,10 +68,7 @@ describe('stable pool', () => {
                         40000000000000000000n,
                     ],
                     tokenRates: [2000000000000000000n, 4000000000000000000n],
-                    scalingFactors: [
-                        1000000000000000000n,
-                        1000000000000000000000000000000n,
-                    ],
+                    scalingFactors: [1n, 1000000000000n],
                     indexIn: 0,
                     indexOut: 1,
                 };

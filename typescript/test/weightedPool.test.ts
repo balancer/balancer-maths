@@ -1,3 +1,4 @@
+//  pnpm test -- weightedPool.test.ts
 import { describe, expect, test } from 'vitest';
 import { SwapKind } from '../src/index';
 import { Weighted } from '../src/weighted';
@@ -16,10 +17,7 @@ describe('weighted pool', () => {
                     40000000000000000000n,
                 ],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
-                scalingFactors: [
-                    1000000000000000000n,
-                    1000000000000000000000000000000n,
-                ],
+                scalingFactors: [1n, 1000000000000n],
                 indexIn: 0,
                 indexOut: 1,
             };
@@ -35,15 +33,40 @@ describe('weighted pool', () => {
                     40000000000000000000n,
                 ],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
-                scalingFactors: [
-                    1000000000000000000n,
-                    1000000000000000000000000000000n,
-                ],
+                scalingFactors: [1n, 1000000000000n],
                 indexIn: 0,
                 indexOut: 1,
             };
             const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
             expect(maxSwapAmount).to.eq(12000000n);
+        });
+        test('exact out', () => {
+            const pool = new Weighted({
+                weights: [
+                    330000000000000000n,
+                    330000000000000000n,
+                    340000000000000000n,
+                ],
+            });
+            const swapParams = {
+                swapKind: SwapKind.GivenIn,
+                amountGivenScaled18: 0n,
+                balancesLiveScaled18: [
+                    3000000000000000000n,
+                    2341576000000000000n,
+                    3000000000000000000n,
+                ],
+                tokenRates: [
+                    1000000000000000000n,
+                    1000000000000000000n,
+                    1000000000000000000n,
+                ],
+                scalingFactors: [1000000000000n, 1000000000000n, 1n],
+                indexIn: 2,
+                indexOut: 0,
+            };
+            const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
+            expect(maxSwapAmount).to.eq(900000000000000000n);
         });
     });
 });
