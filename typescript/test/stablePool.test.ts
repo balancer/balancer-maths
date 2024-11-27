@@ -23,7 +23,7 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(40000000n);
+                expect(maxSwapAmount).to.eq(340282366920938463403374607n);
             });
             test('exact out', () => {
                 const swapParams = {
@@ -39,7 +39,7 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(40000000000000000000n);
+                expect(maxSwapAmount).to.eq(340282366920938463403374607n);
             });
         });
         describe('with rate', () => {
@@ -57,7 +57,9 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(80000000000000000000n);
+                expect(maxSwapAmount).to.eq(
+                    170141183460469231701687303715884105728n,
+                );
             });
             test('exact out', () => {
                 const swapParams = {
@@ -73,7 +75,9 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(40000000n);
+                expect(maxSwapAmount).to.eq(
+                    170141183460469231701687303715884105728n,
+                );
             });
         });
     });
