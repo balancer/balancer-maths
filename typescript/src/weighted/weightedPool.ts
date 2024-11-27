@@ -37,14 +37,16 @@ export class Weighted implements PoolBase {
                     swapParams.balancesLiveScaled18[swapParams.indexIn],
                     _MAX_IN_RATIO,
                 ),
-                swapParams.scalingFactors[swapParams.indexIn],
+                swapParams.scalingFactors[swapParams.indexIn] *
+                    swapParams.tokenRates[swapParams.indexIn],
             );
         return MathSol.divDownFixed(
             MathSol.mulDownFixed(
                 swapParams.balancesLiveScaled18[swapParams.indexOut],
                 _MAX_OUT_RATIO,
             ),
-            swapParams.scalingFactors[swapParams.indexOut],
+            swapParams.scalingFactors[swapParams.indexOut] *
+                swapParams.tokenRates[swapParams.indexOut],
         );
     }
 

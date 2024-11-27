@@ -133,7 +133,7 @@ input_hook_state = {
 
 vault = Vault()
 
-calculated_result = vault.add_liquidity(
+calculated_result = vault.remove_liquidity(
     add_liquidity_input,
     pool,
     hook_state=input_hook_state
