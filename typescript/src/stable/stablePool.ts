@@ -1,4 +1,4 @@
-import { MAX_UINT256 } from '../constants';
+import { MAX_UINT256, MAX_BALANCE } from '../constants';
 import { MathSol } from '../utils/math';
 import {
     MaxSingleTokenRemoveParams,
@@ -29,28 +29,13 @@ export class Stable implements PoolBase {
      * @returns Returned amount/scaling is respective to the tokenOut because that’s what we’re taking out of the pool and what limits the swap size.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
-        const {
-            swapKind,
-            balancesLiveScaled18,
-            indexIn,
-            indexOut,
-            tokenRates,
-            scalingFactors,
-        } = maxSwapParams;
-        if (swapKind === SwapKind.GivenIn)
-            return MathSol.divDownFixed(
-                MathSol.mulDownFixed(
-                    balancesLiveScaled18[indexOut],
-                    tokenRates[indexOut],
-                ),
-                scalingFactors[indexIn] * tokenRates[indexIn],
-            );
+        const { balancesLiveScaled18, indexIn, tokenRates, scalingFactors } =
+            maxSwapParams;
+
+        const diff = MAX_BALANCE - balancesLiveScaled18[indexIn];
         return MathSol.divDownFixed(
-            MathSol.mulDownFixed(
-                balancesLiveScaled18[indexOut],
-                tokenRates[indexOut],
-            ),
-            scalingFactors[indexOut] * tokenRates[indexOut],
+            diff,
+            scalingFactors[indexIn] * tokenRates[indexIn],
         );
     }
 
