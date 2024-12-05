@@ -1,5 +1,6 @@
 import { MAX_UINT256, MAX_BALANCE } from '../constants';
 import { MathSol } from '../utils/math';
+import { toRawUndoRateRoundDown } from '../vault/utils';
 import {
     MaxSingleTokenRemoveParams,
     MaxSwapParams,
@@ -24,18 +25,39 @@ export class Stable implements PoolBase {
     }
 
     /**
-     * Returns the max amount that can be swapped (in relation to the amount specified by user).
+     * Returns the max amount that can be swapped in relation to the swapKind.
      * @param maxSwapParams
-     * @returns Returned amount/scaling is respective to the tokenOut because that’s what we’re taking out of the pool and what limits the swap size.
+     * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
-        const { balancesLiveScaled18, indexIn, tokenRates, scalingFactors } =
-            maxSwapParams;
-
-        const diff = MAX_BALANCE - balancesLiveScaled18[indexIn];
-        return MathSol.divDownFixed(
-            diff,
-            scalingFactors[indexIn] * tokenRates[indexIn],
+        const {
+            balancesLiveScaled18,
+            indexIn,
+            indexOut,
+            tokenRates,
+            scalingFactors,
+            swapKind,
+        } = maxSwapParams;
+        if (swapKind === SwapKind.GivenIn) {
+            // MAX_BALANCE comes from SC limit and is max pool can hold
+            const diff = MAX_BALANCE - balancesLiveScaled18[indexIn];
+            // Scale to token in (and remove rate)
+            return toRawUndoRateRoundDown(
+                diff,
+                scalingFactors[indexIn],
+                tokenRates[indexIn],
+            );
+        }
+        // 99% of token out balance
+        const max = MathSol.mulDownFixed(
+            990000000000000000n,
+            balancesLiveScaled18[indexOut],
+        );
+        // Scale to token out
+        return toRawUndoRateRoundDown(
+            max,
+            scalingFactors[indexOut],
+            tokenRates[indexOut],
         );
     }
 

@@ -9,7 +9,25 @@ describe('stable pool', () => {
     });
     describe('getMaxSwapAmount', () => {
         describe('no rate', () => {
-            test('exact in', () => {
+            test('exact in, 18 decimals', () => {
+                const swapParams = {
+                    swapKind: SwapKind.GivenIn,
+                    amountGivenScaled18: 0n,
+                    balancesLiveScaled18: [
+                        60000000000000000000n,
+                        40000000000000000000n,
+                    ],
+                    tokenRates: [1000000000000000000n, 1000000000000000000n],
+                    scalingFactors: [1n, 1000000000000n],
+                    indexIn: 0,
+                    indexOut: 1,
+                };
+                const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
+                expect(maxSwapAmount).to.eq(
+                    340282366920938463403374607431768211456n,
+                );
+            });
+            test('exact in, 6 decimals', () => {
                 const swapParams = {
                     swapKind: SwapKind.GivenIn,
                     amountGivenScaled18: 0n,
@@ -25,7 +43,7 @@ describe('stable pool', () => {
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
                 expect(maxSwapAmount).to.eq(340282366920938463403374607n);
             });
-            test('exact out', () => {
+            test('exact out, 18decimals', () => {
                 const swapParams = {
                     swapKind: SwapKind.GivenOut,
                     amountGivenScaled18: 0n,
@@ -39,7 +57,23 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(340282366920938463403374607n);
+                expect(maxSwapAmount).to.eq(39600000000000000000n);
+            });
+            test('exact out, 6decimals', () => {
+                const swapParams = {
+                    swapKind: SwapKind.GivenOut,
+                    amountGivenScaled18: 0n,
+                    balancesLiveScaled18: [
+                        60000000000000000000n,
+                        40000000000000000000n,
+                    ],
+                    tokenRates: [1000000000000000000n, 1000000000000000000n],
+                    scalingFactors: [1n, 1000000000000n],
+                    indexIn: 0,
+                    indexOut: 1,
+                };
+                const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
+                expect(maxSwapAmount).to.eq(39600000n);
             });
         });
         describe('with rate', () => {
@@ -75,9 +109,7 @@ describe('stable pool', () => {
                     indexOut: 1,
                 };
                 const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
-                expect(maxSwapAmount).to.eq(
-                    170141183460469231701687303715884105728n,
-                );
+                expect(maxSwapAmount).to.eq(9900000n);
             });
         });
     });

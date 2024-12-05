@@ -1,5 +1,6 @@
 import { MAX_UINT256 } from '../constants';
 import { MathSol } from '../utils/math';
+import { toRawUndoRateRoundDown } from '../vault/utils';
 import {
     MaxSingleTokenRemoveParams,
     MaxSwapParams,
@@ -26,27 +27,41 @@ export class Weighted implements PoolBase {
     }
 
     /**
-     * Returns the max amount that can be swapped (in relation to the amount specified by user).
+     * Returns the max amount that can be swapped in relation to the swapKind.
      * @param maxSwapParams
-     * @returns Returned amount/scaling is respective to the tokenOut because that’s what we’re taking out of the pool and what limits the swap size.
+     * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
-    getMaxSwapAmount(swapParams: MaxSwapParams): bigint {
-        if (swapParams.swapKind === SwapKind.GivenIn)
-            return MathSol.divDownFixed(
-                MathSol.mulDownFixed(
-                    swapParams.balancesLiveScaled18[swapParams.indexIn],
-                    _MAX_IN_RATIO,
-                ),
-                swapParams.scalingFactors[swapParams.indexIn] *
-                    swapParams.tokenRates[swapParams.indexIn],
+    getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
+        const {
+            balancesLiveScaled18,
+            indexIn,
+            indexOut,
+            tokenRates,
+            scalingFactors,
+            swapKind,
+        } = maxSwapParams;
+        if (swapKind === SwapKind.GivenIn) {
+            const max18 = MathSol.mulDownFixed(
+                balancesLiveScaled18[indexIn],
+                _MAX_IN_RATIO,
             );
-        return MathSol.divDownFixed(
-            MathSol.mulDownFixed(
-                swapParams.balancesLiveScaled18[swapParams.indexOut],
-                _MAX_OUT_RATIO,
-            ),
-            swapParams.scalingFactors[swapParams.indexOut] *
-                swapParams.tokenRates[swapParams.indexOut],
+            // Scale to token in (and remove rate)
+            return toRawUndoRateRoundDown(
+                max18,
+                scalingFactors[indexIn],
+                tokenRates[indexIn],
+            );
+        }
+
+        const max18 = MathSol.mulDownFixed(
+            balancesLiveScaled18[indexOut],
+            _MAX_OUT_RATIO,
+        );
+        // Scale to token out
+        return toRawUndoRateRoundDown(
+            max18,
+            scalingFactors[indexOut],
+            tokenRates[indexOut],
         );
     }
 

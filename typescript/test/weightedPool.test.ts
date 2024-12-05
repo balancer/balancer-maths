@@ -8,7 +8,7 @@ describe('weighted pool', () => {
         weights: [60000000000000000000n, 40000000000000000000n],
     });
     describe('getMaxSwapAmount', () => {
-        test('exact in', () => {
+        test('exact in, 18 decimals', () => {
             const swapParams = {
                 swapKind: SwapKind.GivenIn,
                 amountGivenScaled18: 0n,
@@ -23,6 +23,22 @@ describe('weighted pool', () => {
             };
             const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
             expect(maxSwapAmount).to.eq(18000000000000000000n);
+        });
+        test('exact in, 6 decimals', () => {
+            const swapParams = {
+                swapKind: SwapKind.GivenIn,
+                amountGivenScaled18: 0n,
+                balancesLiveScaled18: [
+                    60000000000000000000n,
+                    40000000000000000000n,
+                ],
+                tokenRates: [1000000000000000000n, 1000000000000000000n],
+                scalingFactors: [1000000000000n, 1n],
+                indexIn: 0,
+                indexOut: 1,
+            };
+            const maxSwapAmount = pool.getMaxSwapAmount(swapParams);
+            expect(maxSwapAmount).to.eq(18000000n);
         });
         test('exact out', () => {
             const swapParams = {
