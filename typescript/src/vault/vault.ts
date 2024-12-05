@@ -9,7 +9,13 @@ import {
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
-import { isSameAddress } from './utils';
+import {
+    isSameAddress,
+    toRawUndoRateRoundDown,
+    toRawUndoRateRoundUp,
+    toScaled18ApplyRateRoundDown,
+    toScaled18ApplyRateRoundUp,
+} from './utils';
 import {
     AddKind,
     AddLiquidityInput,
@@ -221,7 +227,7 @@ export class Vault {
         let amountCalculatedRaw = 0n;
         if (swapInput.swapKind === SwapKind.GivenIn) {
             // For `ExactIn` the amount calculated is leaving the Vault, so we round down.
-            amountCalculatedRaw = this._toRawUndoRateRoundDown(
+            amountCalculatedRaw = toRawUndoRateRoundDown(
                 amountCalculatedScaled18,
                 poolState.scalingFactors[outputIndex],
                 // If the swap is ExactIn, the amountCalculated is the amount of tokenOut. So, we want to use the rate
@@ -243,7 +249,7 @@ export class Vault {
             amountCalculatedScaled18 += totalSwapFeeAmountScaled18;
 
             // For `ExactOut` the amount calculated is entering the Vault, so we round up.
-            amountCalculatedRaw = this._toRawUndoRateRoundUp(
+            amountCalculatedRaw = toRawUndoRateRoundUp(
                 amountCalculatedScaled18,
                 poolState.scalingFactors[inputIndex],
                 poolState.tokenRates[inputIndex],
@@ -415,7 +421,7 @@ export class Vault {
         const amountsInRaw: bigint[] = new Array(poolState.tokens.length);
         for (let i = 0; i < poolState.tokens.length; i++) {
             // amountsInRaw are amounts actually entering the Pool, so we round up.
-            amountsInRaw[i] = this._toRawUndoRateRoundUp(
+            amountsInRaw[i] = toRawUndoRateRoundUp(
                 amountsInScaled18[i],
                 poolState.scalingFactors[i],
                 poolState.tokenRates[i],
@@ -593,7 +599,7 @@ export class Vault {
 
         for (let i = 0; i < poolState.tokens.length; ++i) {
             // amountsOut are amounts exiting the Pool, so we round down.
-            amountsOutRaw[i] = this._toRawUndoRateRoundDown(
+            amountsOutRaw[i] = toRawUndoRateRoundDown(
                 amountsOutScaled18[i],
                 poolState.scalingFactors[i],
                 poolState.tokenRates[i],
@@ -660,7 +666,7 @@ export class Vault {
             // The total swap fee does not go into the pool; amountIn does, and the raw fee at this point does not
             // modify it. Given that all of the fee may belong to the pool creator (i.e. outside pool balances),
             // we round down to protect the invariant.
-            const totalSwapFeeAmountRaw = this._toRawUndoRateRoundDown(
+            const totalSwapFeeAmountRaw = toRawUndoRateRoundDown(
                 swapFeeAmountScaled18,
                 decimalScalingFactors[index],
                 tokenRates[index],
@@ -705,11 +711,7 @@ export class Vault {
         tokenRates: bigint[],
     ): bigint[] {
         return amounts.map((a, i) =>
-            this._toScaled18ApplyRateRoundDown(
-                a,
-                scalingFactors[i],
-                tokenRates[i],
-            ),
+            toScaled18ApplyRateRoundDown(a, scalingFactors[i], tokenRates[i]),
         );
     }
 
@@ -722,11 +724,7 @@ export class Vault {
         tokenRates: bigint[],
     ): bigint[] {
         return amounts.map((a, i) =>
-            this._toScaled18ApplyRateRoundUp(
-                a,
-                scalingFactors[i],
-                tokenRates[i],
-            ),
+            toScaled18ApplyRateRoundUp(a, scalingFactors[i], tokenRates[i]),
         );
     }
 
@@ -742,69 +740,17 @@ export class Vault {
         // to a lower calculated amountOut, favoring the pool.
         const amountGivenScaled18 =
             swapKind === SwapKind.GivenIn
-                ? this._toScaled18ApplyRateRoundDown(
+                ? toScaled18ApplyRateRoundDown(
                       amountGivenRaw,
                       scalingFactors[indexIn],
                       tokenRates[indexIn],
                   )
-                : this._toScaled18ApplyRateRoundUp(
+                : toScaled18ApplyRateRoundUp(
                       amountGivenRaw,
                       scalingFactors[indexOut],
                       this._computeRateRoundUp(tokenRates[indexOut]),
                   );
         return amountGivenScaled18;
-    }
-
-    /**
-     * @dev Reverses the `scalingFactor` and `tokenRate` applied to `amount`, resulting in a smaller or equal value
-     * depending on whether it needed scaling/rate adjustment or not. The result is rounded down.
-     */
-    private _toRawUndoRateRoundDown(
-        amount: bigint,
-        scalingFactor: bigint,
-        tokenRate: bigint,
-    ): bigint {
-        // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
-        // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
-        return MathSol.divDownFixed(amount, scalingFactor * tokenRate);
-    }
-
-    /**
-     * @dev Reverses the `scalingFactor` and `tokenRate` applied to `amount`, resulting in a smaller or equal value
-     * depending on whether it needed scaling/rate adjustment or not. The result is rounded up.
-     */
-    private _toRawUndoRateRoundUp(
-        amount: bigint,
-        scalingFactor: bigint,
-        tokenRate: bigint,
-    ): bigint {
-        // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
-        // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
-        return MathSol.divUpFixed(amount, scalingFactor * tokenRate);
-    }
-
-    /**
-     * @dev Applies `scalingFactor` and `tokenRate` to `amount`, resulting in a larger or equal value depending on
-     * whether it needed scaling/rate adjustment or not. The result is rounded down.
-     */
-    private _toScaled18ApplyRateRoundDown(
-        amount: bigint,
-        scalingFactor: bigint,
-        tokenRate: bigint,
-    ): bigint {
-        return MathSol.mulDownFixed(amount * scalingFactor, tokenRate);
-    }
-
-    /**
-     * @dev Applies `scalingFactor` and `tokenRate` to `amount`, resulting in a larger or equal value depending on
-     * whether it needed scaling/rate adjustment or not. The result is rounded up.
-     */
-    private _toScaled18ApplyRateRoundUp(
-        amount: bigint,
-        scalingFactor: bigint,
-        tokenRate: bigint,
-    ): bigint {
-        return MathSol.mulUpFixed(amount * scalingFactor, tokenRate);
     }
 
     /**
