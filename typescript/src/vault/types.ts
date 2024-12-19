@@ -14,6 +14,7 @@ export type BasePoolState = {
     swapFee: bigint;
     aggregateSwapFee: bigint;
     totalSupply: bigint;
+    supportsUnbalancedLiquidity: boolean;
     hookType?: string;
 };
 

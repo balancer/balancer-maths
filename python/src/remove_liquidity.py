@@ -4,6 +4,7 @@ from src.utils import (
     _get_single_input_index,
     _to_raw_undo_rate_round_down,
     _compute_and_charge_aggregate_swap_fees,
+    _require_unbalanced_liquidity_enabled,
 )
 from src.base_pool_math import (
     compute_proportional_amounts_out,
@@ -64,6 +65,7 @@ def remove_liquidity(
             remove_liquidity_input["max_bpt_amount_in_raw"],
         )
     elif remove_liquidity_input["kind"] == RemoveKind.SINGLE_TOKEN_EXACT_IN.value:
+        _require_unbalanced_liquidity_enabled(pool_state)
         bpt_amount_in = remove_liquidity_input["max_bpt_amount_in_raw"]
         amounts_out_scaled18 = min_amounts_out_scaled18
         token_out_index = _get_single_input_index(
@@ -83,6 +85,7 @@ def remove_liquidity(
         amounts_out_scaled18[token_out_index] = computed["amount_out_with_fee"]
         swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
     elif remove_liquidity_input["kind"] == RemoveKind.SINGLE_TOKEN_EXACT_OUT.value:
+        _require_unbalanced_liquidity_enabled(pool_state)
         amounts_out_scaled18 = min_amounts_out_scaled18
         token_out_index = _get_single_input_index(
             remove_liquidity_input["min_amounts_out_raw"]

@@ -152,6 +152,10 @@ function mapPool(
                 pool as TransformBigintToString<WeightedPool>
             ).weights.map((w) => BigInt(w)),
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity:
+                pool.supportsUnbalancedLiquidity === undefined
+                    ? true
+                    : pool.supportsUnbalancedLiquidity,
         };
     }
     if (pool.poolType === 'STABLE') {
@@ -166,6 +170,10 @@ function mapPool(
             totalSupply: BigInt(pool.totalSupply),
             amp: BigInt((pool as TransformBigintToString<StablePool>).amp),
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity:
+                pool.supportsUnbalancedLiquidity === undefined
+                    ? true
+                    : pool.supportsUnbalancedLiquidity,
         };
     }
     if (pool.poolType === 'Buffer') {

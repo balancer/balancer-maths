@@ -114,3 +114,8 @@ def _get_single_input_index(max_amounts_in):
         raise ValueError("All zero inputs for single token add")
 
     return input_index
+
+
+def _require_unbalanced_liquidity_enabled(pool_state):
+    if not pool_state.get("supportsUnbalancedLiquidity", True):
+        raise ValueError("DoesNotSupportUnbalancedLiquidity")

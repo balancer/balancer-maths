@@ -19,6 +19,7 @@ const poolState = {
     balancesLiveScaled18: [5000000000000000n, 5000000000000000000n],
     tokenRates: [1000000000000000000n, 1000000000000000000n],
     totalSupply: 158113883008415798n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const removeLiquidityInput = {

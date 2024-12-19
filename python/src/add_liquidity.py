@@ -4,6 +4,7 @@ from src.utils import (
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
     _get_single_input_index,
+    _require_unbalanced_liquidity_enabled,
 )
 from src.base_pool_math import (
     compute_add_liquidity_unbalanced,
@@ -48,6 +49,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             updated_balances_live_scaled18[i] = a
 
     if add_liquidity_input["kind"] == Kind.UNBALANCED.value:
+        _require_unbalanced_liquidity_enabled(pool_state)
         amounts_in_scaled18 = max_amounts_in_scaled18
         computed = compute_add_liquidity_unbalanced(
             updated_balances_live_scaled18,
@@ -63,6 +65,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
 
     elif add_liquidity_input["kind"] == Kind.SINGLE_TOKEN_EXACT_OUT.value:
+        _require_unbalanced_liquidity_enabled(pool_state)
         token_index = _get_single_input_index(max_amounts_in_scaled18)
         amounts_in_scaled18 = max_amounts_in_scaled18
         bpt_amount_out = add_liquidity_input["min_bpt_amount_out_raw"]

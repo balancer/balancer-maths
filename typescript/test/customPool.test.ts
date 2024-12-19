@@ -27,6 +27,7 @@ describe('custom pool tests', () => {
             totalSupply: 1736721048412749353n,
             randoms: [7000000000000000000n, 8000000000000000000n],
             aggregateSwapFee: 0n,
+            supportsUnbalancedLiquidity: true,
         };
 
         const calculatedAmount = vault.swap(
@@ -47,6 +48,14 @@ class CustomPool implements PoolBase {
 
     constructor(poolState: { randoms: bigint[] }) {
         this.randoms = poolState.randoms;
+    }
+
+    getMaximumInvariantRatio(): bigint {
+        return 1n;
+    }
+
+    getMinimumInvariantRatio(): bigint {
+        return 1n;
     }
 
     getMaxSwapAmount(): bigint {

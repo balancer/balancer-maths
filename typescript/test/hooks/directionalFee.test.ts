@@ -38,6 +38,7 @@ const stablePoolStateWithHook: StableState = {
     aggregateSwapFee: 0n,
     totalSupply: totalSupply,
     amp: 1000000n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const stablePoolStateWithoutHook: StableState = {
@@ -51,6 +52,7 @@ const stablePoolStateWithoutHook: StableState = {
     aggregateSwapFee: 0n,
     totalSupply: totalSupply,
     amp: 1000000n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const swapInput: SwapInput = {
