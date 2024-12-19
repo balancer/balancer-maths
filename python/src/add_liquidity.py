@@ -54,6 +54,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             max_amounts_in_scaled18,
             pool_state["totalSupply"],
             pool_state["swapFee"],
+            pool_class.get_maximum_invariant_ratio(),
             lambda balances_live_scaled18, rounding: pool_class.compute_invariant(
                 balances_live_scaled18, rounding
             ),
@@ -71,6 +72,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             bpt_amount_out,
             pool_state["totalSupply"],
             pool_state["swapFee"],
+            pool_class.get_maximum_invariant_ratio(),
             lambda balances_live_scaled18, token_index, invariant_ratio: pool_class.compute_balance(
                 balances_live_scaled18, token_index, invariant_ratio
             ),

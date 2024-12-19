@@ -5,6 +5,11 @@ from src.maths import div_up
 # we have chosen the rounding direction to favor the protocol in all cases.
 AMP_PRECISION = int(1000)
 
+# Invariant growth limit: non-proportional add cannot cause the invariant to increase by more than this ratio.
+_MIN_INVARIANT_RATIO = int(60e16)  # 60%
+# Invariant shrink limit: non-proportional remove cannot cause the invariant to decrease by less than this ratio.
+_MAX_INVARIANT_RATIO = int(500e16)  # 500%
+
 
 def compute_invariant(amplification_parameter: int, balances: list[int]) -> int:
     """

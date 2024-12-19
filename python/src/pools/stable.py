@@ -4,6 +4,8 @@ from src.pools.stable_math import (
     compute_out_given_exact_in,
     compute_in_given_exact_out,
     compute_balance,
+    _MAX_INVARIANT_RATIO,
+    _MIN_INVARIANT_RATIO,
 )
 from src.swap import SwapKind
 
@@ -11,6 +13,12 @@ from src.swap import SwapKind
 class Stable:
     def __init__(self, pool_state):
         self.amp = pool_state["amp"]
+
+    def get_maximum_invariant_ratio(self) -> int:
+        return _MAX_INVARIANT_RATIO
+
+    def get_minimum_invariant_ratio(self) -> int:
+        return _MIN_INVARIANT_RATIO
 
     def on_swap(self, swap_params):
         invariant = compute_invariant(self.amp, swap_params["balances_live_scaled18"])
