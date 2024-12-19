@@ -15,6 +15,8 @@ import {
     _computeBalanceOutGivenInvariant,
     _MAX_IN_RATIO,
     _MAX_OUT_RATIO,
+    _MAX_INVARIANT_RATIO,
+    _MIN_INVARIANT_RATIO,
     _computeInvariantUp,
     _computeInvariantDown,
 } from './weightedMath';
@@ -24,6 +26,14 @@ export class Weighted implements PoolBase {
 
     constructor(poolState: { weights: bigint[] }) {
         this.normalizedWeights = poolState.weights;
+    }
+
+    getMaximumInvariantRatio(): bigint {
+        return _MAX_INVARIANT_RATIO;
+    }
+
+    getMinimumInvariantRatio(): bigint {
+        return _MIN_INVARIANT_RATIO;
     }
 
     /**

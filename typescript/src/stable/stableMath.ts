@@ -1,5 +1,10 @@
 import { MathSol } from '../utils/math';
 
+// Invariant growth limit: non-proportional add cannot cause the invariant to increase by more than this ratio.
+export const _MIN_INVARIANT_RATIO = BigInt(60e16); // 60%
+// Invariant shrink limit: non-proportional remove cannot cause the invariant to decrease by less than this ratio.
+export const _MAX_INVARIANT_RATIO = BigInt(500e16); // 500%
+
 // For security reasons, to help ensure that for all possible "round trip" paths
 // the caller always receives the same or fewer tokens than supplied,
 // we have chosen the rounding direction to favor the protocol in all cases.
