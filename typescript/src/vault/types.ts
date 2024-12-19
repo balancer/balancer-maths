@@ -45,6 +45,8 @@ export interface PoolBase {
         tokenInIndex: number,
         invariantRatio: bigint,
     ): bigint;
+    getMaximumInvariantRatio(): bigint;
+    getMinimumInvariantRatio(): bigint;
 }
 
 export type MaxSwapParams = {

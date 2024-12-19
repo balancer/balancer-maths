@@ -1,6 +1,7 @@
 import { MAX_UINT256, MAX_BALANCE } from '../constants';
 import { MathSol } from '../utils/math';
 import { toRawUndoRateRoundDown } from '../vault/utils';
+import { _MAX_INVARIANT_RATIO, _MIN_INVARIANT_RATIO } from './stableMath';
 import {
     MaxSingleTokenRemoveParams,
     MaxSwapParams,
@@ -22,6 +23,14 @@ export class Stable implements PoolBase {
 
     constructor(poolState: StableMutable) {
         this.amp = poolState.amp;
+    }
+
+    getMaximumInvariantRatio(): bigint {
+        return _MAX_INVARIANT_RATIO;
+    }
+
+    getMinimumInvariantRatio(): bigint {
+        return _MIN_INVARIANT_RATIO;
     }
 
     /**

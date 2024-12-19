@@ -28,6 +28,12 @@ class CustomPool():
     def __init__(self, pool_state):
         self.pool_state = pool_state
 
+    def get_maximum_invariant_ratio(self) -> int:
+        return 1
+
+    def get_minimum_invariant_ratio(self) -> int:
+        return 1
+
     def on_swap(self, swap_params):
        return 1
 

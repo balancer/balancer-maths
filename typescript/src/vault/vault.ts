@@ -392,6 +392,7 @@ export class Vault {
                 maxAmountsInScaled18,
                 poolState.totalSupply,
                 poolState.swapFee,
+                pool.getMaximumInvariantRatio(),
                 (balancesLiveScaled18, rounding) =>
                     pool.computeInvariant(balancesLiveScaled18, rounding),
             );
@@ -407,6 +408,7 @@ export class Vault {
                 bptAmountOut,
                 poolState.totalSupply,
                 poolState.swapFee,
+                pool.getMaximumInvariantRatio(),
                 (balancesLiveScaled18, tokenIndex, invariantRatio) =>
                     pool.computeBalance(
                         balancesLiveScaled18,
@@ -566,6 +568,7 @@ export class Vault {
                 removeLiquidityInput.maxBptAmountInRaw,
                 poolState.totalSupply,
                 poolState.swapFee,
+                pool.getMinimumInvariantRatio(),
                 (balancesLiveScaled18, tokenIndex, invariantRatio) =>
                     pool.computeBalance(
                         balancesLiveScaled18,
@@ -588,6 +591,7 @@ export class Vault {
                 amountsOutScaled18[tokenOutIndex],
                 poolState.totalSupply,
                 poolState.swapFee,
+                pool.getMinimumInvariantRatio(),
                 (balancesLiveScaled18, rounding) =>
                     pool.computeInvariant(balancesLiveScaled18, rounding),
             );

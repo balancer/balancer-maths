@@ -73,6 +73,14 @@ class CustomPool implements PoolBase {
         return 1n;
     }
 
+    getMinimumInvariantRatio(): bigint {
+        return 1n;
+    }
+
+    getMaximumInvariantRatio(): bigint {
+        return 1n;
+    }
+
     getMaxSingleTokenRemoveAmount() {
         return 1n;
     }

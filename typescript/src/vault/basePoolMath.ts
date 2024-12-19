@@ -6,17 +6,18 @@ export function computeAddLiquidityUnbalanced(
     exactAmounts: bigint[],
     totalSupply: bigint,
     swapFeePercentage: bigint,
+    maxInvariantRatio: bigint,
     computeInvariant: (balances: bigint[], rounding: Rounding) => bigint,
 ): { bptAmountOut: bigint; swapFeeAmounts: bigint[] } {
     /***********************************************************************
-		//                                                                    //
-		// s = totalSupply                                 (iFees - iCur)     //
-		// b = tokenBalance                  bptOut = s *  --------------     //
-		// bptOut = bptAmountOut                                iCur          //
-		// iFees = invariantWithFeesApplied                                   //
-		// iCur = currentInvariant                                            //
-		// iNew = newInvariant                                                //
-		***********************************************************************/
+        //                                                                    //
+        // s = totalSupply                                 (iFees - iCur)     //
+        // b = tokenBalance                  bptOut = s *  --------------     //
+        // bptOut = bptAmountOut                                iCur          //
+        // iFees = invariantWithFeesApplied                                   //
+        // iCur = currentInvariant                                            //
+        // iNew = newInvariant                                                //
+        ***********************************************************************/
 
     // Determine the number of tokens in the pool.
     const numTokens = currentBalances.length;
@@ -42,6 +43,11 @@ export function computeAddLiquidityUnbalanced(
 
     // Calculate the new invariant ratio by dividing the new invariant by the old invariant.
     const invariantRatio = MathSol.divDownFixed(newInvariant, currentInvariant);
+
+    // ensureInvariantRatioBelowMaximumBound(pool, invariantRatio);
+    if (invariantRatio > maxInvariantRatio) {
+        throw Error(`InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`);
+    }
 
     // Loop through each token to apply fees if necessary.
     for (let index = 0; index < currentBalances.length; index++) {
@@ -97,6 +103,7 @@ export function computeAddLiquiditySingleTokenExactOut(
     exactBptAmountOut: bigint,
     totalSupply: bigint,
     swapFeePercentage: bigint,
+    maxInvariantRatio: bigint,
     computeBalance: (
         balancesLiveScaled18: bigint[],
         tokenInIndex: number,
@@ -108,13 +115,19 @@ export function computeAddLiquiditySingleTokenExactOut(
 } {
     // Calculate new supply after minting exactBptAmountOut
     const newSupply = exactBptAmountOut + totalSupply;
+
+    const invariantRatio = MathSol.divUpFixed(newSupply, totalSupply)
+    // ensureInvariantRatioBelowMaximumBound(pool, invariantRatio);
+    if (invariantRatio > maxInvariantRatio) {
+        throw Error(`InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`);
+    }
     // Calculate the initial amount of the input token needed for the desired amount of BPT out
     // "divUp" leads to a higher "newBalance," which in turn results in a larger "amountIn."
     // This leads to receiving more tokens for the same amount of BTP minted.
     const newBalance = computeBalance(
         currentBalances,
         tokenInIndex,
-        MathSol.divUpFixed(newSupply, totalSupply),
+        invariantRatio,
     );
     const amountIn = newBalance - currentBalances[tokenInIndex];
 
@@ -164,13 +177,13 @@ export function computeProportionalAmountsOut(
     bptAmountIn: bigint,
 ): bigint[] {
     /**********************************************************************************************
-	// computeProportionalAmountsOut                                                             //
-	// (per token)                                                                               //
-	// aO = tokenAmountOut             /        bptIn         \                                  //
-	// b = tokenBalance      a0 = b * | ---------------------  |                                 //
-	// bptIn = bptAmountIn             \     bptTotalSupply    /                                 //
-	// bpt = bptTotalSupply                                                                      //
-	**********************************************************************************************/
+    // computeProportionalAmountsOut                                                             //
+    // (per token)                                                                               //
+    // aO = tokenAmountOut             /        bptIn         \                                  //
+    // b = tokenBalance      a0 = b * | ---------------------  |                                 //
+    // bptIn = bptAmountIn             \     bptTotalSupply    /                                 //
+    // bpt = bptTotalSupply                                                                      //
+    **********************************************************************************************/
 
     // Create a new array to hold the amounts of each token to be withdrawn.
     const amountsOut: bigint[] = [];
@@ -201,6 +214,7 @@ export function computeRemoveLiquiditySingleTokenExactIn(
     exactBptAmountIn: bigint,
     totalSupply: bigint,
     swapFeePercentage: bigint,
+    minInvariantRatio: bigint,
     computeBalance: (
         balancesLiveScaled18: bigint[],
         tokenInIndex: number,
@@ -209,13 +223,18 @@ export function computeRemoveLiquiditySingleTokenExactIn(
 ): { amountOutWithFee: bigint; swapFeeAmounts: bigint[] } {
     // Calculate new supply accounting for burning exactBptAmountIn
     const newSupply = totalSupply - exactBptAmountIn;
+
+    const invariantRatio = MathSol.divUpFixed(newSupply, totalSupply);
+    if (invariantRatio < minInvariantRatio) {
+        throw Error(`InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`);
+    }
     // Calculate the new balance of the output token after the BPT burn.
     // "divUp" leads to a higher "newBalance," which in turn results in a lower "amountOut."
     // This leads to giving less tokens for the same amount of BTP burned.
     const newBalance = computeBalance(
         currentBalances,
         tokenOutIndex,
-        MathSol.divUpFixed(newSupply, totalSupply),
+        invariantRatio,
     );
 
     // Compute the amount to be withdrawn from the pool.
@@ -262,6 +281,7 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     exactAmountOut: bigint,
     totalSupply: bigint,
     swapFeePercentage: bigint,
+    minInvariantRatio: bigint,
     computeInvariant: (balances: bigint[], rounding: Rounding) => bigint,
 ): {
     bptAmountIn: bigint;
@@ -294,6 +314,10 @@ export function computeRemoveLiquiditySingleTokenExactOut(
         computeInvariant(newBalances, Rounding.ROUND_UP),
         currentInvariant,
     );
+
+    if (invariantRatio < minInvariantRatio) {
+        throw Error(`InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`);
+    }
 
     // Taxable amount is proportional to invariant ratio; a larger taxable amount rounds in the Vault's favor.
     const taxableAmount =

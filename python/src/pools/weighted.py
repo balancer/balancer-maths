@@ -5,6 +5,8 @@ from src.pools.weighted_math import (
     compute_invariant_up,
     compute_invariant_down,
     compute_balance_out_given_invariant,
+    _MAX_INVARIANT_RATIO,
+    _MIN_INVARIANT_RATIO,
 )
 from src.swap import SwapKind
 
@@ -12,6 +14,12 @@ from src.swap import SwapKind
 class Weighted:
     def __init__(self, pool_state):
         self.normalized_weights = pool_state["weights"]
+
+    def get_maximum_invariant_ratio(self) -> int:
+        return _MAX_INVARIANT_RATIO
+
+    def get_minimum_invariant_ratio(self) -> int:
+        return _MIN_INVARIANT_RATIO
 
     def on_swap(self, swap_params):
         if swap_params["swap_kind"] == SwapKind.GIVENIN.value:

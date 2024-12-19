@@ -75,6 +75,7 @@ def remove_liquidity(
             remove_liquidity_input["max_bpt_amount_in_raw"],
             pool_state["totalSupply"],
             pool_state["swapFee"],
+            pool_class.get_minimum_invariant_ratio(),
             lambda balancesLiveScaled18, tokenIndex, invariantRatio: pool_class.compute_balance(
                 balancesLiveScaled18, tokenIndex, invariantRatio
             ),
@@ -92,6 +93,7 @@ def remove_liquidity(
             amounts_out_scaled18[token_out_index],
             pool_state["totalSupply"],
             pool_state["swapFee"],
+            pool_class.get_minimum_invariant_ratio(),
             lambda balances_live_scaled18, rounding: pool_class.compute_invariant(
                 balances_live_scaled18, rounding
             ),

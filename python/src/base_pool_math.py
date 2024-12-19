@@ -14,6 +14,7 @@ def compute_add_liquidity_unbalanced(
     exact_amounts,
     total_supply,
     swap_fee_percentage,
+    max_invariant_ratio,
     compute_invariant,
 ):
     # /***********************************************************************
@@ -46,6 +47,12 @@ def compute_add_liquidity_unbalanced(
 
     # Calculate the new invariant ratio by dividing the new invariant by the old invariant.
     invariant_ratio = div_down_fixed(new_invariant, current_invariant)
+
+    # Add check for max invariant ratio
+    if invariant_ratio > max_invariant_ratio:
+        raise ValueError(
+            f"InvariantRatioAboveMax {invariant_ratio} {max_invariant_ratio}"
+        )
 
     # Loop through each token to apply fees if necessary.
     for index in range(len(current_balances)):
@@ -104,17 +111,23 @@ def compute_add_liquidity_single_token_exact_out(
     exact_bpt_amount_out,
     total_supply,
     swap_fee_percentage,
+    max_invariant_ratio,
     compute_balance,
 ):
     # Calculate new supply after minting exactBptamount_out
     new_supply = exact_bpt_amount_out + total_supply
 
+    invariant_ratio = div_up_fixed(new_supply, total_supply)
+    # Add check for max invariant ratio
+    if invariant_ratio > max_invariant_ratio:
+        raise ValueError(
+            f"InvariantRatioAboveMax {invariant_ratio} {max_invariant_ratio}"
+        )
+
     # Calculate the initial amount of the input token needed for the desired amount of BPT out
     # "divUp" leads to a higher "new_balance," which in turn results in a larger "amountIn."
     # This leads to receiving more tokens for the same amount of BTP minted.
-    new_balance = compute_balance(
-        current_balances, token_in_index, div_up_fixed(new_supply, total_supply)
-    )
+    new_balance = compute_balance(current_balances, token_in_index, invariant_ratio)
     amount_in = new_balance - current_balances[token_in_index]
 
     # Calculate the taxable amount, which is the difference
@@ -199,17 +212,26 @@ def compute_remove_liquidity_single_token_exact_in(
     exact_bpt_amount_in,
     total_supply,
     swap_fee_percentage,
+    min_invariant_ratio,
     compute_balance,
 ):
     # // Calculate new supply accounting for burning exactBptAmountIn
     new_supply = total_supply - exact_bpt_amount_in
+
+    invariant_ratio = div_up_fixed(new_supply, total_supply)
+    # Add check for min invariant ratio
+    if invariant_ratio < min_invariant_ratio:
+        raise ValueError(
+            f"InvariantRatioBelowMin {invariant_ratio} {min_invariant_ratio}"
+        )
+
     # // Calculate the new balance of the output token after the BPT burn.
     # // "divUp" leads to a higher "new_balance," which in turn results in a lower "amount_out."
     # // This leads to giving less tokens for the same amount of BTP burned.
     new_balance = compute_balance(
         current_balances,
         token_out_index,
-        div_up_fixed(new_supply, total_supply),
+        invariant_ratio,
     )
 
     # // Compute the amount to be withdrawn from the pool.
@@ -253,6 +275,7 @@ def compute_remove_liquidity_single_token_exact_out(
     exact_amount_out,
     total_supply,
     swap_fee_percentage,
+    min_invariant_ratio,
     compute_invariant,
 ):
     # // Determine the number of tokens in the pool.
@@ -274,6 +297,12 @@ def compute_remove_liquidity_single_token_exact_out(
     invariant_ratio = div_up_fixed(
         compute_invariant(new_balances, Rounding.ROUND_UP), current_invariant
     )
+
+    # Add check for min invariant ratio
+    if invariant_ratio < min_invariant_ratio:
+        raise ValueError(
+            f"InvariantRatioBelowMin {invariant_ratio} {min_invariant_ratio}"
+        )
 
     # Taxable amount is proportional to invariant ratio; a larger taxable amount rounds in the Vault's favor.
     taxable_amount = (
