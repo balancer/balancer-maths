@@ -386,6 +386,7 @@ export class Vault {
         let swapFeeAmountsScaled18: bigint[];
 
         if (addLiquidityInput.kind === AddKind.UNBALANCED) {
+            this._requireUnbalancedLiquidityEnabled(poolState);
             amountsInScaled18 = maxAmountsInScaled18;
             const computed = computeAddLiquidityUnbalanced(
                 updatedBalancesLiveScaled18,
@@ -399,6 +400,7 @@ export class Vault {
             bptAmountOut = computed.bptAmountOut;
             swapFeeAmountsScaled18 = computed.swapFeeAmounts;
         } else if (addLiquidityInput.kind === AddKind.SINGLE_TOKEN_EXACT_OUT) {
+            this._requireUnbalancedLiquidityEnabled(poolState);
             const tokenIndex = this._getSingleInputIndex(maxAmountsInScaled18);
             amountsInScaled18 = maxAmountsInScaled18;
             bptAmountOut = addLiquidityInput.minBptAmountOutRaw;
@@ -557,6 +559,7 @@ export class Vault {
         } else if (
             removeLiquidityInput.kind === RemoveKind.SINGLE_TOKEN_EXACT_IN
         ) {
+            this._requireUnbalancedLiquidityEnabled(poolState);
             bptAmountIn = removeLiquidityInput.maxBptAmountInRaw;
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(
@@ -581,6 +584,7 @@ export class Vault {
         } else if (
             removeLiquidityInput.kind === RemoveKind.SINGLE_TOKEN_EXACT_OUT
         ) {
+            this._requireUnbalancedLiquidityEnabled(poolState);
             amountsOutScaled18 = minAmountsOutScaled18;
             tokenOutIndex = this._getSingleInputIndex(
                 removeLiquidityInput.minAmountsOutRaw,
@@ -779,5 +783,11 @@ export class Vault {
             throw new Error(`TradeAmountTooSmall ${tradeAmount}`);
         }
         return true;
+    }
+
+    private _requireUnbalancedLiquidityEnabled(poolState: PoolState): void {
+        if (!poolState.supportsUnbalancedLiquidity) {
+            throw new Error('DoesNotSupportUnbalancedLiquidity');
+        }
     }
 }

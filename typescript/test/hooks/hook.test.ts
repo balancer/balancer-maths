@@ -31,6 +31,7 @@ describe('hook tests', () => {
         totalSupply: 1736721048412749353n,
         randoms: [77n, 88n],
         aggregateSwapFee: 0n,
+        supportsUnbalancedLiquidity: true,
     };
     test('should throw when no hook state passed', () => {
         expect(() => {
@@ -65,6 +66,14 @@ class CustomPool implements PoolBase {
 
     constructor(poolState: { randoms: bigint[] }) {
         this.randoms = poolState.randoms;
+    }
+
+    getMaximumInvariantRatio(): bigint {
+        return 1n;
+    }
+
+    getMinimumInvariantRatio(): bigint {
+        return 1n;
     }
 
     getMaxSwapAmount(): bigint {

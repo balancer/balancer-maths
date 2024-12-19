@@ -20,6 +20,7 @@ const pool = {
     balancesLiveScaled18: [2000000000000000000n, 2000000000000000000n],
     tokenRates: [1000000000000000000n, 1000000000000000000n],
     totalSupply: 1000000000000000000n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const swapInput = {

@@ -19,6 +19,7 @@ const poolState: StableState = {
     tokenRates: [1000000000000000000n, 1000000000000000000n],
     totalSupply: 100000000000000000000000n,
     amp: 1000000n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const hookState: HookStateStableSurge = {

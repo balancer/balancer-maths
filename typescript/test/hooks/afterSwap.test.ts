@@ -20,6 +20,7 @@ const pool = {
     balancesLiveScaled18: [1000000000000000000n, 1000000000000000000n],
     tokenRates: [1000000000000000000n, 1000000000000000000n],
     totalSupply: 1000000000000000000n,
+    supportsUnbalancedLiquidity: true,
 };
 
 const swapInput = {
@@ -86,6 +87,14 @@ describe('hook - afterSwap', () => {
 
 class CustomPool implements PoolBase {
     constructor() {}
+
+    getMaximumInvariantRatio(): bigint {
+        return 1n;
+    }
+
+    getMinimumInvariantRatio(): bigint {
+        return 1n;
+    }
 
     getMaxSwapAmount(): bigint {
         return 1n;
