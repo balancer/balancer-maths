@@ -48,6 +48,7 @@ export class WeightedPool {
 
     async fetchImmutableData(
         address: Address,
+        blockNumber: bigint,
     ): Promise<TransformBigintToString<WeightedImmutable>> {
         const poolTokensCall = {
             address: this.vault,
@@ -72,6 +73,7 @@ export class WeightedPool {
         const multicallResult = await this.client.multicall({
             contracts: [poolTokensCall, tokenRatesCall, tokenWeightsCall],
             allowFailure: false,
+            blockNumber,
         });
         return {
             tokens: multicallResult[0][0].map((token) => token),
@@ -82,6 +84,7 @@ export class WeightedPool {
 
     async fetchMutableData(
         address: Address,
+        blockNumber: bigint,
     ): Promise<TransformBigintToString<WeightedMutable>> {
         const totalSupplyCall = {
             address: this.vault,
@@ -118,6 +121,7 @@ export class WeightedPool {
                 poolConfigCall,
             ],
             allowFailure: false,
+            blockNumber,
         });
         return {
             swapFee: multicallResult[3].staticSwapFeePercentage.toString(),

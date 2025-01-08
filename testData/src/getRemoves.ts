@@ -101,6 +101,7 @@ async function queryRemoveLiquidity(
     poolAddress: Address,
     poolType: string,
     removeTestInput: RemoveTestInput,
+    blockNumber: bigint,
 ): Promise<RemoveLiquidityQueryOutput> {
     const removeLiquidityInput = getInput(removeTestInput, chainId, rpcUrl);
     // Onchain provider is used to fetch pool state
@@ -111,7 +112,11 @@ async function queryRemoveLiquidity(
     );
     // Simulate addLiquidity to get the amount of BPT out
     const removeLiquidity = new RemoveLiquidity();
-    return await removeLiquidity.query(removeLiquidityInput, poolState);
+    return await removeLiquidity.query(
+        removeLiquidityInput,
+        poolState,
+        blockNumber,
+    );
 }
 
 export async function getRemoveLiquiditys(
@@ -120,6 +125,7 @@ export async function getRemoveLiquiditys(
     chainId: number,
     poolAddress: Address,
     poolType: string,
+    blockNumber: bigint,
 ): Promise<RemoveLiquidityResult[] | undefined> {
     if (!removeTestInputs) return undefined;
     const results: RemoveLiquidityResult[] = [];
@@ -132,6 +138,7 @@ export async function getRemoveLiquiditys(
             poolAddress,
             poolType,
             removeTestInput,
+            blockNumber,
         );
         results.push({
             kind: removeTestInput.kind,

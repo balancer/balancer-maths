@@ -24,6 +24,7 @@ async function querySwap(
     poolAddress: Address,
     rpcUrl: string,
     swap: SwapInput,
+    blockNumber: bigint,
 ): Promise<bigint> {
     const swapInput: SdkSwapInput = {
         chainId: chainId,
@@ -56,11 +57,15 @@ async function querySwap(
     const sdkSwap = new Swap(swapInput);
     let result = 0n;
     if (swap.swapKind === SwapKind.GivenIn) {
-        const queryResult = (await sdkSwap.query(rpcUrl)) as ExactInQueryOutput;
+        const queryResult = (await sdkSwap.query(
+            rpcUrl,
+            blockNumber,
+        )) as ExactInQueryOutput;
         result = queryResult.expectedAmountOut.amount;
     } else {
         const queryResult = (await sdkSwap.query(
             rpcUrl,
+            blockNumber,
         )) as ExactOutQueryOutput;
         result = queryResult.expectedAmountIn.amount;
     }
@@ -72,13 +77,20 @@ export async function getSwaps(
     rpcUrl: string,
     chainId: number,
     poolAddress: Address,
+    blockNumber: bigint,
 ): Promise<SwapResult[] | undefined> {
     if (!swapTestInputs) return undefined;
     const results: SwapResult[] = [];
     console.log('Querying swaps...');
     for (const swap of swapTestInputs) {
         // get swap. TODO - put this in a multicall?
-        const result = await querySwap(chainId, poolAddress, rpcUrl, swap);
+        const result = await querySwap(
+            chainId,
+            poolAddress,
+            rpcUrl,
+            swap,
+            blockNumber,
+        );
         results.push({
             ...swap,
             amountRaw: swap.amountRaw.toString(),

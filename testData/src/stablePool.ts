@@ -48,6 +48,7 @@ export class StablePool {
 
     async fetchImmutableData(
         address: Address,
+        blockNumber: bigint,
     ): Promise<TransformBigintToString<StableImmutable>> {
         const poolTokensCall = {
             address: this.vault,
@@ -64,6 +65,7 @@ export class StablePool {
         const multicallResult = await this.client.multicall({
             contracts: [poolTokensCall, tokenRatesCall],
             allowFailure: false,
+            blockNumber,
         });
         return {
             tokens: multicallResult[0][0].map((token) => token),
@@ -73,6 +75,7 @@ export class StablePool {
 
     async fetchMutableData(
         address: Address,
+        blockNumber: bigint,
     ): Promise<TransformBigintToString<StableMutable>> {
         const totalSupplyCall = {
             address: this.vault,
@@ -117,6 +120,7 @@ export class StablePool {
                 poolConfigCall,
             ],
             allowFailure: false,
+            blockNumber,
         });
         return {
             swapFee: multicallResult[4].staticSwapFeePercentage.toString(),

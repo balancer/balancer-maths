@@ -44,13 +44,20 @@ async function fetchTestData(input: TestInput): Promise<TestOutput> {
         poolType,
         poolAddress,
     );
-    const swapResults = await getSwaps(swaps, rpcUrl, chainId, poolAddress);
+    const swapResults = await getSwaps(
+        swaps,
+        rpcUrl,
+        chainId,
+        poolAddress,
+        blockNumber,
+    );
     const addResults = await getAddLiquiditys(
         adds,
         rpcUrl,
         chainId,
         poolAddress,
         poolType,
+        blockNumber,
     );
     const removeResults = await getRemoveLiquiditys(
         removes,
@@ -58,6 +65,7 @@ async function fetchTestData(input: TestInput): Promise<TestOutput> {
         chainId,
         poolAddress,
         poolType,
+        blockNumber,
     );
     return {
         swaps: swapResults,
