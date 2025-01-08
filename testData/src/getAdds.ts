@@ -73,6 +73,7 @@ async function queryAddLiquidity(
     poolAddress: Address,
     poolType: string,
     addTestInput: AddTestInput,
+    blockNumber: bigint,
 ): Promise<AddLiquidityQueryOutput> {
     const addLiquidityInput = getInput(addTestInput, chainId, rpcUrl);
     // Onchain provider is used to fetch pool state
@@ -83,7 +84,7 @@ async function queryAddLiquidity(
     );
     // Simulate addLiquidity to get the amount of BPT out
     const addLiquidity = new AddLiquidity();
-    return await addLiquidity.query(addLiquidityInput, poolState);
+    return await addLiquidity.query(addLiquidityInput, poolState, blockNumber);
 }
 
 export async function getAddLiquiditys(
@@ -92,6 +93,7 @@ export async function getAddLiquiditys(
     chainId: number,
     poolAddress: Address,
     poolType: string,
+    blockNumber: bigint,
 ): Promise<AddLiquidityResult[] | undefined> {
     if (!addTestInputs) return undefined;
     const results: AddLiquidityResult[] = [];
@@ -104,6 +106,7 @@ export async function getAddLiquiditys(
             poolAddress,
             poolType,
             addTestInput,
+            blockNumber,
         );
         results.push({
             kind: addTestInput.kind,

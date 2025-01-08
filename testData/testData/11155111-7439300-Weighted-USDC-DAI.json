@@ -5,28 +5,28 @@
             "amountRaw": "10000000",
             "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
             "tokenOut": "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357",
-            "outputRaw": "10592674053685596682"
+            "outputRaw": "8920009849766722311"
         },
         {
             "swapKind": 1,
             "amountRaw": "20000000000000000000",
             "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
             "tokenOut": "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357",
-            "outputRaw": "18898326"
+            "outputRaw": "22461437"
         },
         {
             "swapKind": 0,
             "amountRaw": "700000000000000000000",
             "tokenIn": "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357",
             "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
-            "outputRaw": "606063849"
+            "outputRaw": "691273441"
         },
         {
             "swapKind": 1,
             "amountRaw": "7777777",
             "tokenIn": "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357",
             "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
-            "outputRaw": "8421556599143908405"
+            "outputRaw": "7096762762105745646"
         }
     ],
     "adds": [
@@ -36,12 +36,12 @@
                 "10000000",
                 "1000000000000000000"
             ],
-            "bptOutRaw": "5631900243848744611"
+            "bptOutRaw": "5249632476460424979"
         },
         {
             "kind": "SingleToken",
             "inputAmountsRaw": [
-                "19436969",
+                "21192628",
                 "0"
             ],
             "bptOutRaw": "10000000000000000000"
@@ -50,7 +50,7 @@
             "kind": "SingleToken",
             "inputAmountsRaw": [
                 "0",
-                "20818417837946914642"
+                "19122124552221037291"
             ],
             "bptOutRaw": "10000000000000000000"
         }
@@ -59,15 +59,15 @@
         {
             "kind": "Proportional",
             "amountsOutRaw": [
-                "966474",
-                "1035165113532170619"
+                "1053500",
+                "950574080886610561"
             ],
             "bptInRaw": "1000000000000000000"
         },
         {
             "kind": "SingleTokenExactIn",
             "amountsOutRaw": [
-                "1923187",
+                "2096306",
                 "0"
             ],
             "bptInRaw": "1000000000000000000"
@@ -76,7 +76,7 @@
             "kind": "SingleTokenExactIn",
             "amountsOutRaw": [
                 "0",
-                "2059875141716257380"
+                "1891499077903496683"
             ],
             "bptInRaw": "1000000000000000000"
         },
@@ -86,7 +86,7 @@
                 "0",
                 "1000000000000000000"
             ],
-            "bptInRaw": "485466034811659347"
+            "bptInRaw": "528675666737307963"
         },
         {
             "kind": "SingleTokenExactOut",
@@ -94,14 +94,14 @@
                 "1000000",
                 "0"
             ],
-            "bptInRaw": "519970598348271946"
+            "bptInRaw": "477022603767197245"
         }
     ],
     "pool": {
         "chainId": "11155111",
-        "blockNumber": "5955145",
+        "blockNumber": "7439300",
         "poolType": "WEIGHTED",
-        "poolAddress": "0xfd882a11cf794ce28b6c9952192f117cca2d2733",
+        "poolAddress": "0x86fde41ff01b35846eb2f27868fb2938addd44c4",
         "tokens": [
             "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8",
             "0xFF34B3d4Aee8ddCd6F9AFFFB6Fe49bD371b8a357"
@@ -115,10 +115,10 @@
             "500000000000000000"
         ],
         "swapFee": "10000000000000000",
-        "totalSupply": "9907877047668934752231",
+        "totalSupply": "6565147517543863649467",
         "balancesLiveScaled18": [
-            "9575711462000000000000",
-            "10256288668913000293429"
+            "6916384366000000000000",
+            "6240659067374271172646"
         ],
         "tokenRates": [
             "1000000000000000000",

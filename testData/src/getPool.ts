@@ -6,7 +6,7 @@ import type { PoolBase } from './types';
 export async function getPool(
     rpcUrl: string,
     chainId: number,
-    blockNumber: number,
+    blockNumber: bigint,
     poolType: string,
     poolAddress: Address,
 ): Promise<PoolBase> {
@@ -19,8 +19,14 @@ export async function getPool(
         throw new Error(`getPool: Unsupported pool type: ${poolType}`);
 
     console.log('Fetching pool data...');
-    const immutable = await poolData[poolType].fetchImmutableData(poolAddress);
-    const mutable = await poolData[poolType].fetchMutableData(poolAddress);
+    const immutable = await poolData[poolType].fetchImmutableData(
+        poolAddress,
+        blockNumber,
+    );
+    const mutable = await poolData[poolType].fetchMutableData(
+        poolAddress,
+        blockNumber,
+    );
     console.log('Done');
 
     return {

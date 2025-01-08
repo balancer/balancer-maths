@@ -5,7 +5,7 @@ import type { RemoveLiquidityResult, RemoveTestInput } from './getRemoves';
 
 export type PoolBase = {
     chainId: number;
-    blockNumber: number;
+    blockNumber: bigint;
     poolType: string;
     poolAddress: Address;
 };
