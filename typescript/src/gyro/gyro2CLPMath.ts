@@ -2,7 +2,7 @@
 // It is also used to collect protocol swap fees by comparing its value between two times.
 // We can always round in the same direction. It is also used to initialize the BPT amount and,
 
-import { FixedPointFunction, MathSol, WAD } from '@/utils/math';
+import { FixedPointFunction, MathSol, WAD } from '../utils/math';
 import { Rounding } from '../vault/types';
 import { GyroPoolMath } from './gyroPoolMath';
 
