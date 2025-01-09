@@ -1,6 +1,6 @@
 import { BasePoolState } from '@/vault/types';
 
-type PoolType = 'GYRO2CLP';
+type PoolType = 'GYRO';
 export type Gyro2CLPImmutable = {
     sqrtAlpha: bigint;
     sqrtBeta: bigint;
