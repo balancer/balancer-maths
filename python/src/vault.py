@@ -1,11 +1,12 @@
 from src.swap import swap
 from src.add_liquidity import add_liquidity
 from src.remove_liquidity import remove_liquidity
-from src.pools.weighted import Weighted
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
-from src.pools.stable import Stable
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
+from src.pools.weighted import Weighted
+from src.pools.stable import Stable
+from src.pools.gyro.gyro2CLP import Gyro2CLP
 
 
 class Vault:
@@ -13,6 +14,7 @@ class Vault:
         self.pool_classes = {
             "WEIGHTED": Weighted,
             "STABLE": Stable,
+            "GYRO": Gyro2CLP,
         }
         self.hook_classes = {"ExitFee": ExitFeeHook}
         if custom_pool_classes is not None:
