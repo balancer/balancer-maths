@@ -1,4 +1,4 @@
-import { HookBase } from './types';
+import { HookBase, HookStateBase } from './types';
 import { MathSol, WAD } from '../utils/math';
 import { SwapKind, SwapParams } from '../vault/types';
 import {
@@ -7,7 +7,7 @@ import {
     _computeInGivenExactOut,
 } from '../stable/stableMath';
 
-export type HookStateStableSurge = {
+export type HookStateStableSurge = HookStateBase & {
     amp: bigint;
     surgeThresholdPercentage: bigint;
 };

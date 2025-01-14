@@ -1,8 +1,8 @@
 import { RemoveKind } from '../vault/types';
-import { HookBase } from './types';
+import { HookBase, HookStateBase } from './types';
 import { MathSol } from '../utils/math';
 
-export type HookStateExitFee = {
+export type HookStateExitFee = HookStateBase & {
     tokens: string[];
     removeLiquidityHookFeePercentage: bigint;
 };
