@@ -8,6 +8,7 @@ import {
 } from '../stable/stableMath';
 
 export type HookStateStableSurge = HookStateBase & {
+    hookType: 'StableSurge';
     amp: bigint;
     surgeThresholdPercentage: bigint;
 };

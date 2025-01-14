@@ -23,6 +23,7 @@ const poolState: StableState = {
 };
 
 const hookState: HookStateStableSurge = {
+    hookType: 'StableSurge',
     surgeThresholdPercentage: 300000000000000000n,
     amp: poolState.amp,
 };

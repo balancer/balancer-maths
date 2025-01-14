@@ -3,6 +3,7 @@ import { HookBase, HookStateBase } from './types';
 import { MathSol } from '../utils/math';
 
 export type HookStateExitFee = HookStateBase & {
+    hookType: 'ExitFee';
     tokens: string[];
     removeLiquidityHookFeePercentage: bigint;
 };
