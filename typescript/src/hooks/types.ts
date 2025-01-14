@@ -8,6 +8,10 @@ import {
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
 
+export type HookStateBase = {
+    hookType: string;
+}
+
 export type HookState = HookStateExitFee | HookStateStableSurge;
 
 export type AfterSwapParams = {
