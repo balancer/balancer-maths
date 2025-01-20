@@ -18,24 +18,45 @@ export function calculateBufferAmounts(
     kind: SwapKind,
     amountRaw: bigint,
     rate: bigint,
+    scalingFactor: bigint,
 ): bigint {
     if (direction === WrappingDirection.WRAP) {
         // Amount in is underlying tokens, amount out is wrapped tokens
         if (kind === SwapKind.GivenIn) {
             // previewDeposit
-            return _convertToShares(amountRaw, rate, Rounding.DOWN);
+            return _convertToShares(
+                amountRaw,
+                rate,
+                scalingFactor,
+                Rounding.DOWN,
+            );
         } else {
             // previewMint
-            return _convertToAssets(amountRaw, rate, Rounding.UP);
+            return _convertToAssets(
+                amountRaw,
+                rate,
+                scalingFactor,
+                Rounding.UP,
+            );
         }
     } else {
         // Amount in is wrapped tokens, amount out is underlying tokens
         if (kind === SwapKind.GivenIn) {
             // previewRedeem
-            return _convertToAssets(amountRaw, rate, Rounding.DOWN);
+            return _convertToAssets(
+                amountRaw,
+                rate,
+                scalingFactor,
+                Rounding.DOWN,
+            );
         } else {
             // previewWithdraw
-            return _convertToShares(amountRaw, rate, Rounding.UP);
+            return _convertToShares(
+                amountRaw,
+                rate,
+                scalingFactor,
+                Rounding.UP,
+            );
         }
     }
 }
@@ -44,17 +65,22 @@ export function calculateBufferAmounts(
 function _convertToShares(
     assets: bigint,
     rate: bigint,
+    scalingFactor: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding === Rounding.UP) return MathSol.divUpFixed(assets, rate);
-    return MathSol.divDownFixed(assets, rate);
+    const assetsScale18 = assets * scalingFactor;
+    if (rounding === Rounding.UP)
+        return MathSol.divUpFixed(assetsScale18, rate);
+    return MathSol.divDownFixed(assetsScale18, rate);
 }
 
 function _convertToAssets(
     shares: bigint,
     rate: bigint,
+    scalingFactor: bigint,
     rounding: Rounding,
 ): bigint {
-    if (rounding === Rounding.UP) return MathSol.mulUpFixed(shares, rate);
-    return MathSol.mulDownFixed(shares, rate);
+    const sharesRaw = shares / scalingFactor; // TODO: think a bit about rounding direction
+    if (rounding === Rounding.UP) return MathSol.mulUpFixed(sharesRaw, rate);
+    return MathSol.mulDownFixed(sharesRaw, rate);
 }
