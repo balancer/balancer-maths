@@ -1,0 +1,29 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amountRaw": "1000000000000000000",
+            "tokenIn": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+            "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+            "outputRaw": "1010169874970004407"
+        },
+        {
+            "swapKind": 0,
+            "amountRaw": "1000000000000000000",
+            "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+            "tokenOut": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+            "outputRaw": "989932510143102028"
+        }
+    ],
+    "pool": {
+        "chainId": "1",
+        "blockNumber": "21671845",
+        "poolType": "Buffer",
+        "poolAddress": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+        "tokens": [
+            "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        ],
+        "rate": "1010169874970004409"
+    }
+}

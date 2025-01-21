@@ -161,6 +161,69 @@
                     "decimals": 6
                 }
             ]
+        },
+        {
+            "testName": "Buffer-csUSDC",
+            "chainId": "1",
+            "blockNumber": "21671845",
+            "poolAddress": "0x7204B7Dbf9412567835633B6F00C3Edc3a8D6330",
+            "poolType": "Buffer",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0x7204B7Dbf9412567835633B6F00C3Edc3a8D6330",
+                    "tokenOut": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000",
+                    "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                    "tokenOut": "0x7204B7Dbf9412567835633B6F00C3Edc3a8D6330"
+                }
+            ]
+        },
+        {
+            "testName": "Buffer-waEthUSDC",
+            "chainId": "1",
+            "blockNumber": "21671845",
+            "poolAddress": "0xD4fa2D31b7968E448877f69A96DE69f5de8cD23E",
+            "poolType": "Buffer",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0xD4fa2D31b7968E448877f69A96DE69f5de8cD23E",
+                    "tokenOut": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000",
+                    "tokenIn": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                    "tokenOut": "0xD4fa2D31b7968E448877f69A96DE69f5de8cD23E"
+                }
+            ]
+        },
+        {
+            "testName": "Buffer-waEthLidoWETH",
+            "chainId": "1",
+            "blockNumber": "21671845",
+            "poolAddress": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+            "poolType": "Buffer",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
+                    "tokenOut": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                    "tokenOut": "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9"
+                }
+            ]
         }
     ]
 }
