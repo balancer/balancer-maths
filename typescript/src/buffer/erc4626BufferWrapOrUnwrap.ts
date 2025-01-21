@@ -28,5 +28,6 @@ export function erc4626BufferWrapOrUnwrap(
         input.swapKind,
         input.amountRaw,
         poolState.rate,
+        poolState.scalingFactor,
     );
 }
