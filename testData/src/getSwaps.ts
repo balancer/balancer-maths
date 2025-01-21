@@ -25,6 +25,7 @@ async function querySwap(
     rpcUrl: string,
     swap: SwapInput,
     blockNumber: bigint,
+    poolType: string,
 ): Promise<bigint> {
     const swapInput: SdkSwapInput = {
         chainId: chainId,
@@ -42,6 +43,7 @@ async function querySwap(
                         decimals: 18,
                     }, // tokenOut
                 ],
+                isBuffer: poolType === 'Buffer' ? [true] : [false],
                 protocolVersion: 3,
                 inputAmountRaw:
                     swap.swapKind === SwapKind.GivenIn
@@ -78,6 +80,7 @@ export async function getSwaps(
     chainId: number,
     poolAddress: Address,
     blockNumber: bigint,
+    poolType: string,
 ): Promise<SwapResult[] | undefined> {
     if (!swapTestInputs) return undefined;
     const results: SwapResult[] = [];
@@ -90,6 +93,7 @@ export async function getSwaps(
             rpcUrl,
             swap,
             blockNumber,
+            poolType,
         );
         results.push({
             ...swap,

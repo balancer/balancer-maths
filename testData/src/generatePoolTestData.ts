@@ -50,6 +50,7 @@ async function fetchTestData(input: TestInput): Promise<TestOutput> {
         chainId,
         poolAddress,
         blockNumber,
+        poolType,
     );
     const addResults = await getAddLiquiditys(
         adds,
