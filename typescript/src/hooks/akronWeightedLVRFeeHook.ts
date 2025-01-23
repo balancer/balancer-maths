@@ -1,25 +1,19 @@
 import { HookBase } from './types';
-import { MathSol } from '../utils/math';
-import { 
-    SwapParams, 
-    PoolBase, 
-    PoolState,
-    SwapKind
-} from '@/vault/types';
+import { SwapParams, SwapKind } from '@/vault/types';
 import { 
     _computeSwapFeePercentageGivenExactIn,
     _computeSwapFeePercentageGivenExactOut 
 } from '@/weighted/AkronWeightedMath';
 
-export type HookStateAkronLVRFee = {
+export type HookStateAkronWeightedLVRFee = {
     lastBalances: bigint[];
-    normalizedWeights: bigint[];
+    weights: bigint[];
     minimumSwapFeePercentage: bigint;
 };
 
-export class AkronLVRFeeHook implements HookBase {
+export class AkronWeightedLVRFeeHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
-    public shouldCallBeforeSwap = false;
+    public shouldCallBeforeSwap = true;
     public shouldCallAfterSwap = false;
     public shouldCallBeforeAddLiquidity = false;
     public shouldCallAfterAddLiquidity = false;
@@ -31,7 +25,7 @@ export class AkronLVRFeeHook implements HookBase {
         params: SwapParams,
         pool: string,
         staticSwapFeePercentage: bigint,
-        hookState: HookStateAkronLVRFee,
+        hookState: HookStateAkronWeightedLVRFee,
     ): { success: boolean; dynamicSwapFee: bigint } {
 
         const calculatedSwapFeePercentage =
@@ -39,19 +33,19 @@ export class AkronLVRFeeHook implements HookBase {
                 ? _computeSwapFeePercentageGivenExactIn(
                     params.balancesLiveScaled18[params.indexIn],
                     hookState.lastBalances[params.indexIn],
-                    hookState.normalizedWeights[params.indexIn],
+                    hookState.weights[params.indexIn],
                     params.balancesLiveScaled18[params.indexOut],
                     hookState.lastBalances[params.indexOut],
-                    hookState.normalizedWeights[params.indexOut],
+                    hookState.weights[params.indexOut],
                     params.amountGivenScaled18,
                 )
                 : _computeSwapFeePercentageGivenExactOut(
                     params.balancesLiveScaled18[params.indexIn],
                     hookState.lastBalances[params.indexIn],
-                    hookState.normalizedWeights[params.indexIn],
+                    hookState.weights[params.indexIn],
                     params.balancesLiveScaled18[params.indexOut],
                     hookState.lastBalances[params.indexOut],
-                    hookState.normalizedWeights[params.indexOut],
+                    hookState.weights[params.indexOut],
                     params.amountGivenScaled18,
                 );
 
@@ -84,7 +78,7 @@ export class AkronLVRFeeHook implements HookBase {
     }
 
     onBeforeSwap() {
-        return { success: false, hookAdjustedBalancesScaled18: [] };
+        return { success: true, hookAdjustedBalancesScaled18: [] };
     }
 
     onAfterSwap() {
@@ -92,4 +86,4 @@ export class AkronLVRFeeHook implements HookBase {
     } 
 }
 
-export default AkronLVRFeeHook;
+export default AkronWeightedLVRFeeHook;
