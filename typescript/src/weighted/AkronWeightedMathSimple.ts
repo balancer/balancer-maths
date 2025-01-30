@@ -49,7 +49,7 @@ export const _getSwapFeePercentageGivenExactIn = (
     grossAmountIn: bigint,    
 ): bigint => {
     /**********************************************************************************************
-    // outGivenExactIn                                                                                //
+    // outGivenExactInWithFees                                                                   //
     // aO = amountOut                                                                            //
     // bO = balanceOut                                                                           //
     // bI = balanceIn              /      /            bI + aI        \    (wI / wO) \           //

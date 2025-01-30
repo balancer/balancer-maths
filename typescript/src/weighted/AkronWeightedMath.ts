@@ -152,7 +152,7 @@ export const _getSwapFeePercentageGivenExactIn = (
     grossAmountIn: bigint,    
 ): bigint => {
     /**********************************************************************************************
-    // outGivenExactIn                                                                                //
+    // outGivenExactInWithFees                                                                   //
     // aO = amountOut                                                                            //
     // bO = balanceOut                                                                           //
     // bI = balanceIn              /      /            bI + aI        \    (wI / wO) \           //
@@ -161,8 +161,8 @@ export const _getSwapFeePercentageGivenExactIn = (
     // wO = weightOut                                                                            //
     **********************************************************************************************/
         
-    // grossSwapFee = inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
-    // lastSwapFee = inGivenExactOutWithFees(lastAmountIn) - inGivenExactOut(lastAmountIn)
+    // grossSwapFee = outGivenExactIn(grossAmountIn) - outGivenExactInWithFees(grossAmountIn)
+    // lastSwapFee = outGivenExactIn(lastAmountIn) - outGivenExactInWithFees(lastAmountIn)
     // netSwapFee = grossSwapFee - lastSwapFee
 
     if (grossAmountIn > MathSol.mulDownFixed(balanceIn, _MAX_IN_RATIO)) {
@@ -218,6 +218,10 @@ export const _getSwapFeePercentageGivenExactOut = (
     // wI = weightIn               \  \     ( bO - aO * 2)        /                   /          //
     // wO = weightOut                                                                            //
     **********************************************************************************************/
+        
+    // grossSwapFee = inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
+    // lastSwapFee = inGivenExactOutWithFees(lastAmountIn) - inGivenExactOut(lastAmountIn)
+    // netSwapFee = grossSwapFee - lastSwapFee
 
     if (grossAmountOut > MathSol.mulDownFixed(balanceOut, _MAX_OUT_RATIO)) {
             throw new Error('MaxOutRatio exceeded');
