@@ -55,16 +55,6 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
-    swap_fee = pool_state["swapFee"]
-    if hook_class.should_call_compute_dynamic_swap_fee:
-        hook_return = hook_class.onComputeDynamicSwapFee(
-            swap_input,
-            pool_state["swapFee"],
-            hook_state,
-        )
-        if hook_return["success"] is True:
-            swap_fee = hook_return["dynamicSwapFee"]
-
     # _swap()
     swap_params = {
         "swap_kind": swap_input["swap_kind"],
@@ -73,6 +63,16 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         "index_in": input_index,
         "index_out": output_index,
     }
+
+    swap_fee = pool_state["swapFee"]
+    if hook_class.should_call_compute_dynamic_swap_fee:
+        hook_return = hook_class.on_compute_dynamic_swap_fee(
+            swap_params,
+            pool_state["swapFee"],
+            hook_state,
+        )
+        if hook_return["success"] is True:
+            swap_fee = hook_return["dynamic_swap_fee"]
 
     total_swap_fee_amount_scaled18 = 0
     if swap_params["swap_kind"] == SwapKind.GIVENIN.value:

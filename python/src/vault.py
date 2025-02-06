@@ -6,6 +6,7 @@ from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_o
 from src.pools.stable import Stable
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
+from src.hooks.stable_surge_hook import StableSurgeHook
 
 
 class Vault:
@@ -14,7 +15,7 @@ class Vault:
             "WEIGHTED": Weighted,
             "STABLE": Stable,
         }
-        self.hook_classes = {"ExitFee": ExitFeeHook}
+        self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
         if custom_pool_classes is not None:
             self.pool_classes.update(custom_pool_classes)
 
