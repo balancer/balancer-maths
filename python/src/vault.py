@@ -8,6 +8,7 @@ from src.pools.weighted import Weighted
 from src.pools.stable import Stable
 from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
+from src.hooks.stable_surge_hook import StableSurgeHook
 
 
 class Vault:
@@ -18,7 +19,7 @@ class Vault:
             "GYRO": Gyro2CLP,
             "GYROE": GyroECLP,
         }
-        self.hook_classes = {"ExitFee": ExitFeeHook}
+        self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
         if custom_pool_classes is not None:
             self.pool_classes.update(custom_pool_classes)
 

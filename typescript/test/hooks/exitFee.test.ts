@@ -23,7 +23,7 @@ const poolState = {
 };
 
 const removeLiquidityInput = {
-    pool: '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
+    pool: '0x03722034317d8fb16845213bd3ce15439f9ce136',
     minAmountsOutRaw: [1n, 1n],
     maxBptAmountInRaw: 10000000000000n,
     kind: RemoveKind.PROPORTIONAL,
