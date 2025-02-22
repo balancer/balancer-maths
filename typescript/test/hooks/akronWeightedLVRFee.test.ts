@@ -1,7 +1,7 @@
 // pnpm test -- exitFee.test.ts
 import { describe, expect, test } from 'vitest';
 import { SwapKind, SwapInput, PoolState, Vault } from '../../src';
-import { HookStateAkronWeightedLVRFee } from '@/hooks/akronWeightedLVRFeeHook';
+import { HookStateAkronWeightedLVRFee } from '@/hooks/akronWeightedLVRFeeHookCompex';
 
 const poolState = {
     poolType: 'WEIGHTED',
@@ -24,7 +24,6 @@ const poolState = {
 };
 
 const hookState: HookStateAkronWeightedLVRFee = {
-    lastBalances: [1000000000000000000n, 1000000000000000000n],
     weights: poolState.weights,
     minimumSwapFeePercentage: poolState.swapFee,
 };

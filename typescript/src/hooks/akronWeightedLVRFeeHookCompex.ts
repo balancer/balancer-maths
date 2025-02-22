@@ -3,9 +3,10 @@ import { SwapParams, SwapKind } from '@/vault/types';
 import { 
     _computeSwapFeePercentageGivenExactIn,
     _computeSwapFeePercentageGivenExactOut 
-} from '@/weighted/AkronWeightedMathSimple';
+} from '@/weighted/AkronWeightedMathComplex';
 
 export type HookStateAkronWeightedLVRFee = {
+    lastBalances: bigint[];
     weights: bigint[];
     minimumSwapFeePercentage: bigint;
 };
@@ -31,13 +32,19 @@ export class AkronWeightedLVRFeeHook implements HookBase {
             params.swapKind === SwapKind.GivenIn
                 ? _computeSwapFeePercentageGivenExactIn(
                     params.balancesLiveScaled18[params.indexIn],
+                    hookState.lastBalances[params.indexIn],
                     hookState.weights[params.indexIn],
+                    params.balancesLiveScaled18[params.indexOut],
+                    hookState.lastBalances[params.indexOut],
                     hookState.weights[params.indexOut],
                     params.amountGivenScaled18,
                 )
                 : _computeSwapFeePercentageGivenExactOut(
+                    params.balancesLiveScaled18[params.indexIn],
+                    hookState.lastBalances[params.indexIn],
                     hookState.weights[params.indexIn],
                     params.balancesLiveScaled18[params.indexOut],
+                    hookState.lastBalances[params.indexOut],
                     hookState.weights[params.indexOut],
                     params.amountGivenScaled18,
                 );

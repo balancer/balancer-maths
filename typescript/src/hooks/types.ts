@@ -7,7 +7,7 @@ import {
 } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
-import { HookStateAkronWeightedLVRFee } from './akronWeightedLVRFeeHook';
+import { HookStateAkronWeightedLVRFee } from './akronWeightedLVRFeeHookCompex';
 
 export type HookState = HookStateExitFee | HookStateStableSurge | HookStateAkronWeightedLVRFee;
 
