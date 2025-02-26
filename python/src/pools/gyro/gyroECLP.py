@@ -20,22 +20,23 @@ class PoolParams:
 
 class GyroECLP:
     def __init__(self, pool_state):
+        print(pool_state)
         self.pool_params = PoolParams(
             eclp_params=EclpParams(
-                alpha=pool_state.params_alpha,
-                beta=pool_state.params_beta,
-                c=pool_state.params_c,
-                s=pool_state.params_s,
-                lambda_=pool_state.params_lambda,
+                alpha=pool_state.get("paramsAlpha"),
+                beta=pool_state.get("paramsBeta"),
+                c=pool_state.get("paramsC"),
+                s=pool_state.get("paramsS"),
+                lambda_=pool_state.get("paramsLambda"),
             ),
             derived_eclp_params=DerivedEclpParams(
-                tauAlpha=Vector2(x=pool_state.tau_alpha_x, y=pool_state.tau_alpha_y),
-                tauBeta=Vector2(x=pool_state.tau_beta_x, y=pool_state.tau_beta_y),
-                u=pool_state.u,
-                v=pool_state.v,
-                w=pool_state.w,
-                z=pool_state.z,
-                dSq=pool_state.d_sq,
+                tauAlpha=Vector2(x=pool_state.get("tauAlphaX"), y=pool_state.get("tauAlphaY")),
+                tauBeta=Vector2(x=pool_state.get("tauBetaY"), y=pool_state.get("tauBetaY")),
+                u=pool_state.get("u"),
+                v=pool_state.get("v"),
+                w=pool_state.get("w"),
+                z=pool_state.get("z"),
+                dSq=pool_state.get("dSq"),
             ),
         )
 

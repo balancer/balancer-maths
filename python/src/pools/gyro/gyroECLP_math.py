@@ -166,9 +166,9 @@ class GyroECLPMath:
 
     @classmethod
     def max_balances1(cls, p: EclpParams, d: DerivedEclpParams, r: Vector2) -> int:
-        term_xp1 = SignedFixedPoint.div_xp_u(d.tau_beta.x - d.tau_alpha.x, d.d_sq)
+        term_xp1 = SignedFixedPoint.div_xp_u(d.tauBeta.x - d.tauAlpha.x, d.dSq)
 
-        term_xp2 = SignedFixedPoint.div_xp_u(d.tau_alpha.y - d.tau_beta.y, d.d_sq)
+        term_xp2 = SignedFixedPoint.div_xp_u(d.tauAlpha.y - d.tauBeta.y, d.dSq)
 
         yp = SignedFixedPoint.mul_down_xp_to_np_u(
             SignedFixedPoint.mul_down_mag_u(
@@ -188,14 +188,14 @@ class GyroECLPMath:
 
     @classmethod
     def calc_at_a_chi(cls, x: int, y: int, p: EclpParams, d: DerivedEclpParams) -> int:
-        d_sq2 = SignedFixedPoint.mul_xp_u(d.dSq, d.dSq)
+        dSq2 = SignedFixedPoint.mul_xp_u(d.dSq, d.dSq)
 
         term_xp = SignedFixedPoint.div_xp_u(
             SignedFixedPoint.div_down_mag_u(
                 SignedFixedPoint.div_down_mag_u(d.w, p.lambda_) + d.z,
                 p.lambda_,
             ),
-            d_sq2,
+            dSq2,
         )
 
         val = SignedFixedPoint.mul_down_xp_to_np_u(
@@ -210,19 +210,19 @@ class GyroECLPMath:
         val += SignedFixedPoint.mul_down_xp_to_np_u(
             SignedFixedPoint.mul_down_mag_u(term_np1, p.s)
             + SignedFixedPoint.mul_down_mag_u(term_np2, p.c),
-            SignedFixedPoint.div_xp_u(d.u, d_sq2),
+            SignedFixedPoint.div_xp_u(d.u, dSq2),
         )
 
         val += SignedFixedPoint.mul_down_xp_to_np_u(
             SignedFixedPoint.mul_down_mag_u(x, p.s)
             + SignedFixedPoint.mul_down_mag_u(y, p.c),
-            SignedFixedPoint.div_xp_u(d.v, d_sq2),
+            SignedFixedPoint.div_xp_u(d.v, dSq2),
         )
         return val
 
     @classmethod
     def calc_a_chi_a_chi_in_xp(cls, p: EclpParams, d: DerivedEclpParams) -> int:
-        d_sq3 = SignedFixedPoint.mul_xp_u(
+        dSq3 = SignedFixedPoint.mul_xp_u(
             SignedFixedPoint.mul_xp_u(d.dSq, d.dSq),
             d.dSq,
         )
@@ -231,7 +231,7 @@ class GyroECLPMath:
             p.lambda_,
             SignedFixedPoint.div_xp_u(
                 SignedFixedPoint.mul_xp_u(2 * d.u, d.v),
-                d_sq3,
+                dSq3,
             ),
         )
 
@@ -239,19 +239,19 @@ class GyroECLPMath:
             SignedFixedPoint.mul_up_mag_u(
                 SignedFixedPoint.div_xp_u(
                     SignedFixedPoint.mul_xp_u(d.u + 1, d.u + 1),
-                    d_sq3,
+                    dSq3,
                 ),
                 p.lambda_,
             ),
             p.lambda_,
         )
 
-        val += SignedFixedPoint.div_xp_u(SignedFixedPoint.mul_xp_u(d.v, d.v), d_sq3)
+        val += SignedFixedPoint.div_xp_u(SignedFixedPoint.mul_xp_u(d.v, d.v), dSq3)
 
         term_xp = SignedFixedPoint.div_up_mag_u(d.w, p.lambda_) + d.z
         val += SignedFixedPoint.div_xp_u(
             SignedFixedPoint.mul_xp_u(term_xp, term_xp),
-            d_sq3,
+            dSq3,
         )
 
         return val
@@ -404,8 +404,8 @@ class GyroECLPMath:
         c: int,
         r: Vector2,
         ab: Vector2,
-        tau_beta: Vector2,
-        d_sq: int,
+        tauBeta: Vector2,
+        dSq: int,
     ) -> int:
         lam_bar = Vector2(
             x=SignedFixedPoint.ONE_XP
@@ -427,12 +427,12 @@ class GyroECLPMath:
                 SignedFixedPoint.mul_down_mag_u(
                     SignedFixedPoint.mul_down_mag_u(-xp, s), c
                 ),
-                SignedFixedPoint.div_xp_u(lam_bar.y, d_sq),
+                SignedFixedPoint.div_xp_u(lam_bar.y, dSq),
             )
         else:
             q["b"] = SignedFixedPoint.mul_up_xp_to_np_u(
                 SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(-xp, s), c),
-                SignedFixedPoint.div_xp_u(lam_bar.x, d_sq) + 1,
+                SignedFixedPoint.div_xp_u(lam_bar.x, dSq) + 1,
             )
 
         s_term = Vector2(
@@ -440,13 +440,13 @@ class GyroECLPMath:
                 SignedFixedPoint.mul_down_mag_u(
                     SignedFixedPoint.mul_down_mag_u(lam_bar.y, s), s
                 ),
-                d_sq,
+                dSq,
             ),
             y=SignedFixedPoint.div_xp_u(
                 SignedFixedPoint.mul_up_mag_u(
                     SignedFixedPoint.mul_up_mag_u(lam_bar.x, s), s
                 ),
-                d_sq + 1,
+                dSq + 1,
             )
             + 1,
         )
@@ -454,7 +454,7 @@ class GyroECLPMath:
         s_term.x = SignedFixedPoint.ONE_XP - s_term.x
         s_term.y = SignedFixedPoint.ONE_XP - s_term.y
 
-        q["c"] = -cls.calc_xp_xp_div_lambda_lambda(x, r, lambda_, s, c, tau_beta, d_sq)
+        q["c"] = -cls.calc_xp_xp_div_lambda_lambda(x, r, lambda_, s, c, tauBeta, dSq)
         q["c"] = q["c"] + SignedFixedPoint.mul_down_xp_to_np_u(
             SignedFixedPoint.mul_down_mag_u(r.y, r.y), s_term.y
         )
@@ -482,17 +482,17 @@ class GyroECLPMath:
         lambda_: int,
         s: int,
         c: int,
-        tau_beta: Vector2,
-        d_sq: int,
+        tauBeta: Vector2,
+        dSq: int,
     ) -> int:
         sq_vars = Vector2(
-            x=SignedFixedPoint.mul_xp_u(d_sq, d_sq),
+            x=SignedFixedPoint.mul_xp_u(dSq, dSq),
             y=SignedFixedPoint.mul_up_mag_u(r.x, r.x),
         )
 
         q = {"a": 0, "b": 0, "c": 0}
         term_xp = SignedFixedPoint.div_xp_u(
-            SignedFixedPoint.mul_xp_u(tau_beta.x, tau_beta.y), sq_vars.x
+            SignedFixedPoint.mul_xp_u(tauBeta.x, tauBeta.y), sq_vars.x
         )
 
         if term_xp > 0:
@@ -507,25 +507,25 @@ class GyroECLPMath:
                 SignedFixedPoint.mul_down_mag_u(q["a"], c), term_xp
             )
 
-        if tau_beta.x < 0:
+        if tauBeta.x < 0:
             q["b"] = SignedFixedPoint.mul_up_xp_to_np_u(
                 SignedFixedPoint.mul_up_mag_u(
                     SignedFixedPoint.mul_up_mag_u(r.x, x), 2 * c
                 ),
-                -SignedFixedPoint.div_xp_u(tau_beta.x, d_sq) + 3,
+                -SignedFixedPoint.div_xp_u(tauBeta.x, dSq) + 3,
             )
         else:
             q["b"] = SignedFixedPoint.mul_up_xp_to_np_u(
                 SignedFixedPoint.mul_down_mag_u(
                     SignedFixedPoint.mul_down_mag_u(-r.y, x), 2 * c
                 ),
-                SignedFixedPoint.div_xp_u(tau_beta.x, d_sq),
+                SignedFixedPoint.div_xp_u(tauBeta.x, dSq),
             )
         q["a"] = q["a"] + q["b"]
 
         term_xp2 = (
             SignedFixedPoint.div_xp_u(
-                SignedFixedPoint.mul_xp_u(tau_beta.y, tau_beta.y), sq_vars.x
+                SignedFixedPoint.mul_xp_u(tauBeta.y, tauBeta.y), sq_vars.x
             )
             + 7
         )
@@ -539,7 +539,7 @@ class GyroECLPMath:
             SignedFixedPoint.mul_down_mag_u(
                 SignedFixedPoint.mul_down_mag_u(-r.y, x), 2 * s
             ),
-            SignedFixedPoint.div_xp_u(tau_beta.y, d_sq),
+            SignedFixedPoint.div_xp_u(tauBeta.y, dSq),
         )
 
         q["b"] = q["b"] + q["c"] + SignedFixedPoint.mul_up_mag_u(x, x)
@@ -569,7 +569,7 @@ class GyroECLPMath:
             x=cls.virtual_offset0(params, d, r), y=cls.virtual_offset1(params, d, r)
         )
         return cls.solve_quadratic_swap(
-            params.lambda_, x, params.s, params.c, r, ab, d.tau_beta, d.d_sq
+            params.lambda_, x, params.s, params.c, r, ab, d.tauBeta, d.dSq
         )
 
     @classmethod
@@ -586,6 +586,6 @@ class GyroECLPMath:
             params.s,
             r,
             ba,
-            Vector2(x=-d.tau_alpha.x, y=d.tau_alpha.y),
-            d.d_sq,
+            Vector2(x=-d.tauAlpha.x, y=d.tauAlpha.y),
+            d.dSq,
         )
