@@ -256,6 +256,39 @@
                     "tokenIn": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                     "tokenOut": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613"
                 }
+            ],
+            "adds": [
+                {
+                    "kind": "Unbalanced",
+                    "inputAmountsRaw": [
+                        "1000000000000000000",
+                        "1000000000000000000"
+                    ],
+                    "tokens": [
+                        "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
+                        "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
+                    ],
+                    "decimals": [
+                        18,
+                        18
+                    ]
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": [
+                        "1000000000000000"
+                    ],
+                    "tokenIn": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
+                    "decimals": 18
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": [
+                        "1000000000000000"
+                    ],
+                    "tokenIn": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                    "decimals": 18
+                }
             ]
         }
     ]

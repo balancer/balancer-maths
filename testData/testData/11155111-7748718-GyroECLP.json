@@ -29,6 +29,32 @@
             "outputRaw": "10102532135967"
         }
     ],
+    "adds": [
+        {
+            "kind": "Unbalanced",
+            "inputAmountsRaw": [
+                "1000000000000000000",
+                "1000000000000000000"
+            ],
+            "bptOutRaw": "535740808545469"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "0",
+                "3751931476957855248"
+            ],
+            "bptOutRaw": "1000000000000000"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "3752577002386175353",
+                "0"
+            ],
+            "bptOutRaw": "1000000000000000"
+        }
+    ],
     "pool": {
         "chainId": "11155111",
         "blockNumber": "7748718",
