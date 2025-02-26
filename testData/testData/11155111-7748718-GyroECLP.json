@@ -55,6 +55,48 @@
             "bptOutRaw": "1000000000000000"
         }
     ],
+    "removes": [
+        {
+            "kind": "Proportional",
+            "amountsOutRaw": [
+                "1866574253910",
+                "1866574253910"
+            ],
+            "bptInRaw": "1000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "0",
+                "3714203719112322"
+            ],
+            "bptInRaw": "1000000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "37147546215432546",
+                "0"
+            ],
+            "bptInRaw": "10000000000000"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "0",
+                "100000000000000000"
+            ],
+            "bptInRaw": "26924481195102"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "100000000000000000",
+                "0"
+            ],
+            "bptInRaw": "26920442359386"
+        }
+    ],
     "pool": {
         "chainId": "11155111",
         "blockNumber": "7748718",
