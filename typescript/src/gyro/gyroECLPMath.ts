@@ -240,6 +240,8 @@ export class GyroECLPMath {
     ): bigint {
         const dSq2 = SignedFixedPoint.mulXpU(d.dSq, d.dSq);
 
+        // (cx - sy) * (w/lambda + z) / lambda
+        //      account for 2 factors of dSq (4 s,c factors)
         const termXp = SignedFixedPoint.divXpU(
             SignedFixedPoint.divDownMagU(
                 SignedFixedPoint.divDownMagU(d.w, p.lambda) + d.z,
@@ -254,21 +256,33 @@ export class GyroECLPMath {
             termXp,
         );
 
-        const termNp1 = SignedFixedPoint.mulDownMagU(x, p.lambda);
-        const termNp2 = SignedFixedPoint.mulDownMagU(y, p.lambda);
+        // (x lambda s + y lambda c) * u, note u > 0
+        let termNp =
+            SignedFixedPoint.mulDownMagU(
+                SignedFixedPoint.mulDownMagU(x, p.lambda),
+                p.s,
+            ) +
+            SignedFixedPoint.mulDownMagU(
+                SignedFixedPoint.mulDownMagU(y, p.lambda),
+                p.c,
+            );
+        val =
+            val +
+            SignedFixedPoint.mulDownXpToNpU(
+                termNp,
+                SignedFixedPoint.divXpU(d.u, dSq2),
+            );
 
-        val += SignedFixedPoint.mulDownXpToNpU(
-            SignedFixedPoint.mulDownMagU(termNp1, p.s) +
-                SignedFixedPoint.mulDownMagU(termNp2, p.c),
-            SignedFixedPoint.divXpU(d.u, dSq2),
-        );
-
-        val += SignedFixedPoint.mulDownXpToNpU(
+        // (sx+cy) * v, note v > 0
+        termNp =
             SignedFixedPoint.mulDownMagU(x, p.s) +
-                SignedFixedPoint.mulDownMagU(y, p.c),
-            SignedFixedPoint.divXpU(d.v, dSq2),
-        );
-
+            SignedFixedPoint.mulDownMagU(y, p.c);
+        val =
+            val +
+            SignedFixedPoint.mulDownXpToNpU(
+                termNp,
+                SignedFixedPoint.divXpU(d.v, dSq2),
+            );
         return val;
     }
 
@@ -321,40 +335,64 @@ export class GyroECLPMath {
         }
 
         const atAChi = this.calcAtAChi(x, y, params, derived);
-        const achiachi = this.calcAChiAChiInXp(params, derived);
+        const invariantResult = this.calcInvariantSqrt(x, y, params, derived);
+        const sqrt = invariantResult[0];
+        let err = invariantResult[1];
 
-        // Calculate error (simplified for this example)
-        const err =
+        // Note: the minimum non-zero value of sqrt is 1e-9 since the minimum argument is 1e-18
+        if (sqrt > 0) {
+            // err + 1 to account for O(eps_np) term ignored before
+            err = SignedFixedPoint.divUpMagU(err + 1n, 2n * sqrt);
+        } else {
+            // In the false case here, the extra precision error does not magnify, and so the error inside the sqrt is
+            // O(1e-18)
+            // somedayTODO: The true case will almost surely never happen (can it be removed)
+            err = err > 0 ? GyroPoolMath.sqrt(err, 5n) : BigInt(1e9);
+        }
+        // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
+        err =
             (SignedFixedPoint.mulUpMagU(params.lambda, x + y) / this._ONE_XP +
+                err +
                 1n) *
             20n;
 
+        const achiachi = this.calcAChiAChiInXp(params, derived);
+        // A chi \cdot A chi > 1, so round it up to round denominator up.
+        // Denominator uses extra precision, so we do * 1/denominator so we are sure the calculation doesn't overflow.
         const mulDenominator = SignedFixedPoint.divXpU(
             this._ONE_XP,
             achiachi - this._ONE_XP,
         );
 
+        // As alternative, could do, but could overflow: invariant = (AtAChi.add(sqrt) - err).divXp(denominator);
         const invariant = SignedFixedPoint.mulDownXpToNpU(
-            atAChi - err,
+            atAChi + sqrt - err,
             mulDenominator,
         );
-
-        // Error calculation (simplified)
-        const scaledErr = SignedFixedPoint.mulUpXpToNpU(err, mulDenominator);
-        const totalErr =
-            scaledErr +
-            (invariant *
-                ((params.lambda * params.lambda) /
-                    BigInt('10000000000000000000000000000000000000')) *
+        // Error scales if denominator is small.
+        // NB: This error calculation computes the error in the expression "numerator / denominator", but in this code
+        // We actually use the formula "numerator * (1 / denominator)" to compute the invariant. This affects this line
+        // and the one below.
+        err = SignedFixedPoint.mulUpXpToNpU(err, mulDenominator);
+        // Account for relative error due to error in the denominator.
+        // Error in denominator is O(epsilon) if lambda<1e11, scale up by 10 to be sure we catch it, and add O(eps).
+        // Error in denominator is lambda^2 * 2e-37 and scales relative to the result / denominator.
+        // Scale by a constant to account for errors in the scaling factor itself and limited compounding.
+        // Calculating lambda^2 without decimals so that the calculation will never overflow, the lost precision isn't
+        // important.
+        err =
+            err +
+            (SignedFixedPoint.mulUpXpToNpU(invariant, mulDenominator) *
+                ((params.lambda * params.lambda) / BigInt(1e36)) *
                 40n) /
                 this._ONE_XP +
             1n;
 
-        if (invariant + totalErr > this._MAX_INVARIANT) {
+        if (invariant + err > this._MAX_INVARIANT) {
             throw new MaxInvariantExceededError();
         }
 
-        return [invariant, totalErr];
+        return [invariant, err];
     }
 
     static calcMinAtxAChiySqPlusAtxSq(
@@ -577,7 +615,7 @@ export class GyroECLPMath {
                 SignedFixedPoint.mulUpMagU(y, y)) /
             BigInt('1000000000000000000000000000000000000000'); // 1e38
 
-        val = val > 0n ? GyroPoolMath.sqrt(val > 0n ? val : 0n, 5n) : 0n;
+        val = val > 0n ? GyroPoolMath.sqrt(val, 5n) : 0n;
 
         return [val, err];
     }
@@ -834,7 +872,7 @@ export class GyroECLPMath {
         }
         q.a = q.a + q.b;
 
-        const termXp2 =
+        let termXp2 =
             SignedFixedPoint.divXpU(
                 SignedFixedPoint.mulXpU(tauBeta.y, tauBeta.y),
                 sqVars.x,
@@ -866,6 +904,11 @@ export class GyroECLPMath {
                 ? SignedFixedPoint.divUpMagU(q.a, lambda)
                 : SignedFixedPoint.divDownMagU(q.a, lambda);
 
+        termXp2 =
+            SignedFixedPoint.divXpU(
+                SignedFixedPoint.mulXpU(tauBeta.x, tauBeta.x),
+                sqVars.x,
+            ) + 7n;
         const val = SignedFixedPoint.mulUpMagU(
             SignedFixedPoint.mulUpMagU(sqVars.y, c),
             c,
