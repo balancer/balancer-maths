@@ -1,5 +1,7 @@
 from src.maths import div_down_fixed, mul_up_fixed, mul_down_fixed, div_up_fixed
 
+MAX_UINT256 = 2**256 - 1
+
 
 def find_case_insensitive_index_in_list(strings, target):
     # Convert the target to lowercase

@@ -17,6 +17,8 @@ const _require = (b: boolean, message: string) => {
     if (!b) throw new Error(message);
 };
 
+export type FixedPointFunction = (a: bigint, b: bigint) => bigint;
+
 export class MathSol {
     static max(a: bigint, b: bigint): bigint {
         return a >= b ? a : b;

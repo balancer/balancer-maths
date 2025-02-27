@@ -1,3 +1,4 @@
+import { GyroECLPState } from '@/gyro';
 import { StableState } from '@/stable';
 import { WeightedState } from '@/weighted';
 
@@ -18,7 +19,11 @@ export type BasePoolState = {
     hookType?: string;
 };
 
-export type PoolState = BasePoolState | WeightedState | StableState;
+export type PoolState =
+    | BasePoolState
+    | WeightedState
+    | StableState
+    | GyroECLPState;
 
 export enum SwapKind {
     GivenIn = 0,

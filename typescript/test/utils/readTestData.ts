@@ -1,4 +1,5 @@
 import { BufferState } from '@/buffer/data';
+import { GyroECLPState } from '@/gyro';
 import type { StableState } from '@/stable/data';
 import type { WeightedState } from '@/weighted/data';
 import * as fs from 'node:fs';
@@ -16,7 +17,9 @@ type StablePool = PoolBase & StableState;
 
 type BufferPool = PoolBase & BufferState;
 
-type SupportedPools = WeightedPool | StablePool | BufferPool;
+type GyroEPool = PoolBase & GyroECLPState;
+
+type SupportedPools = WeightedPool | StablePool | BufferPool | GyroEPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -180,6 +183,37 @@ function mapPool(
         return {
             ...pool,
             rate: BigInt(pool.rate),
+        };
+    }
+    if (pool.poolType === 'GYROE') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity:
+                pool.supportsUnbalancedLiquidity === undefined
+                    ? true
+                    : pool.supportsUnbalancedLiquidity,
+            paramsAlpha: BigInt(pool.paramsAlpha),
+            paramsBeta: BigInt(pool.paramsBeta),
+            paramsC: BigInt(pool.paramsC),
+            paramsS: BigInt(pool.paramsS),
+            paramsLambda: BigInt(pool.paramsLambda),
+            tauAlphaX: BigInt(pool.tauAlphaX),
+            tauAlphaY: BigInt(pool.tauAlphaY),
+            tauBetaX: BigInt(pool.tauBetaX),
+            tauBetaY: BigInt(pool.tauBetaY),
+            u: BigInt(pool.u),
+            v: BigInt(pool.v),
+            w: BigInt(pool.w),
+            z: BigInt(pool.z),
+            dSq: BigInt(pool.dSq),
         };
     }
     console.log(pool);

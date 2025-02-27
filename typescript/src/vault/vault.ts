@@ -8,6 +8,7 @@ import {
 } from './basePoolMath';
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
+import { GyroECLP } from '../gyro';
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
 import {
     isSameAddress,
@@ -56,6 +57,7 @@ export class Vault {
         this.poolClasses = {
             WEIGHTED: Weighted,
             STABLE: Stable,
+            GYROE: GyroECLP,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
         };
