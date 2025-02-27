@@ -20,7 +20,6 @@ class PoolParams:
 
 class GyroECLP:
     def __init__(self, pool_state):
-        print(pool_state)
         self.pool_params = PoolParams(
             eclp_params=EclpParams(
                 alpha=pool_state.get("paramsAlpha"),
@@ -30,8 +29,12 @@ class GyroECLP:
                 lambda_=pool_state.get("paramsLambda"),
             ),
             derived_eclp_params=DerivedEclpParams(
-                tauAlpha=Vector2(x=pool_state.get("tauAlphaX"), y=pool_state.get("tauAlphaY")),
-                tauBeta=Vector2(x=pool_state.get("tauBetaY"), y=pool_state.get("tauBetaY")),
+                tauAlpha=Vector2(
+                    x=pool_state.get("tauAlphaX"), y=pool_state.get("tauAlphaY")
+                ),
+                tauBeta=Vector2(
+                    x=pool_state.get("tauBetaX"), y=pool_state.get("tauBetaY")
+                ),
                 u=pool_state.get("u"),
                 v=pool_state.get("v"),
                 w=pool_state.get("w"),
@@ -69,7 +72,7 @@ class GyroECLP:
                 invariant,
             )
 
-        return GyroECLPMath.calc_out_given_in(
+        return GyroECLPMath.calc_in_given_out(
             swap_params["balances_live_scaled18"],
             swap_params["amount_given_scaled18"],
             token_in_is_token_0,

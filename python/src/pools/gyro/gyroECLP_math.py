@@ -204,20 +204,25 @@ class GyroECLPMath:
             term_xp,
         )
 
-        term_np1 = SignedFixedPoint.mul_down_mag_u(x, p.lambda_)
-        term_np2 = SignedFixedPoint.mul_down_mag_u(y, p.lambda_)
-
-        val += SignedFixedPoint.mul_down_xp_to_np_u(
-            SignedFixedPoint.mul_down_mag_u(term_np1, p.s)
-            + SignedFixedPoint.mul_down_mag_u(term_np2, p.c),
-            SignedFixedPoint.div_xp_u(d.u, dSq2),
+        ## (x lambda s + y lambda c) * u, note u > 0
+        term_np = SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(x, p.lambda_), p.s
+        ) + SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(y, p.lambda_), p.c
         )
 
-        val += SignedFixedPoint.mul_down_xp_to_np_u(
-            SignedFixedPoint.mul_down_mag_u(x, p.s)
-            + SignedFixedPoint.mul_down_mag_u(y, p.c),
-            SignedFixedPoint.div_xp_u(d.v, dSq2),
+        val = val + SignedFixedPoint.mul_down_xp_to_np_u(
+            term_np, SignedFixedPoint.div_xp_u(d.u, dSq2)
         )
+
+        # (sx+cy) * v, note v > 0
+        term_np = SignedFixedPoint.mul_down_mag_u(
+            x, p.s
+        ) + SignedFixedPoint.mul_down_mag_u(y, p.c)
+        val = val + SignedFixedPoint.mul_down_xp_to_np_u(
+            term_np, SignedFixedPoint.div_xp_u(d.v, dSq2)
+        )
+
         return val
 
     @classmethod
@@ -266,39 +271,247 @@ class GyroECLPMath:
             raise MaxBalancesExceededError()
 
         at_a_chi = cls.calc_at_a_chi(x, y, params, derived)
-        achiachi = cls.calc_a_chi_a_chi_in_xp(params, derived)
+        invariant_result = cls.calc_invariant_sqrt(x, y, params, derived)
+        sqrt = invariant_result[0]
+        err = invariant_result[1]
 
-        # Calculate error (simplified)
+        # Note: the minimum non-zero value of sqrt is 1e-9 since the minimum argument is 1e-18
+        if sqrt > 0:
+            # err + 1 to account for O(eps_np) term ignored before
+            err = SignedFixedPoint.div_up_mag_u(err + 1, 2 * sqrt)
+        else:
+            # In the false case here, the extra precision error does not magnify, and so the error inside the sqrt is
+            # O(1e-18)
+            # somedayTODO: The true case will almost surely never happen (can it be removed)
+            err = sqrt(err, 5) if err > 0 else int(1e9)
+
+        # Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
         err = (
-            SignedFixedPoint.mul_up_mag_u(params.lambda_, x + y) // cls._ONE_XP + 1
+            SignedFixedPoint.mul_up_mag_u(params.lambda_, x + y) // cls._ONE_XP
+            + err
+            + 1
         ) * 20
 
-        mul_denominator = SignedFixedPoint.div_xp_u(cls._ONE_XP, achiachi - cls._ONE_XP)
-
-        invariant = SignedFixedPoint.mul_down_xp_to_np_u(
-            at_a_chi - err, mul_denominator
+        achiachi = cls.calc_a_chi_a_chi_in_xp(params, derived)
+        # A chi \cdot A chi > 1, so round it up to round denominator up.
+        # Denominator uses extra precision, so we do * 1/denominator so we are sure the calculation doesn't overflow.
+        mul_denominator = SignedFixedPoint.div_xp_u(
+            cls._ONE_XP,
+            achiachi - cls._ONE_XP,
         )
 
-        # Error calculation (simplified)
-        scaled_err = SignedFixedPoint.mul_up_xp_to_np_u(err, mul_denominator)
-        total_err = (
-            scaled_err
+        # As an alternative, could do, but could overflow:
+        # invariant = (AtAChi.add(sqrt) - err).divXp(denominator)
+        invariant = SignedFixedPoint.mul_down_xp_to_np_u(
+            at_a_chi + sqrt - err,
+            mul_denominator,
+        )
+
+        # Error scales if denominator is small.
+        # NB: This error calculation computes the error in the expression "numerator / denominator",
+        # but in this code, we actually use the formula "numerator * (1 / denominator)" to compute the invariant.
+        # This affects this line and the one below.
+        err = SignedFixedPoint.mul_up_xp_to_np_u(err, mul_denominator)
+
+        # Account for relative error due to error in the denominator.
+        # Error in denominator is O(epsilon) if lambda<1e11, scale up by 10 to be sure we catch it, and add O(eps).
+        # Error in denominator is lambda^2 * 2e-37 and scales relative to the result / denominator.
+        # Scale by a constant to account for errors in the scaling factor itself and limited compounding.
+        # Calculating lambda^2 without decimals so that the calculation will never overflow, the lost precision isn't important.
+        err = (
+            err
             + (
-                invariant
-                * (
-                    (params.lambda_ * params.lambda_)
-                    // int("10000000000000000000000000000000000000")
-                )
+                SignedFixedPoint.mul_up_xp_to_np_u(invariant, mul_denominator)
+                * ((params.lambda_ * params.lambda_) // int(1e36))
                 * 40
             )
             // cls._ONE_XP
             + 1
         )
 
-        if invariant + total_err > cls.MAX_INVARIANT:
+        if invariant + err > cls.MAX_INVARIANT:
             raise MaxInvariantExceededError()
 
-        return invariant, total_err
+        return invariant, err
+
+    @classmethod
+    def calc_invariant_sqrt(
+        cls,
+        x: int,
+        y: int,
+        p: EclpParams,
+        d: DerivedEclpParams,
+    ) -> tuple[int, int]:
+        val = (
+            cls.calc_min_atx_a_chiy_sq_plus_atx_sq(x, y, p, d)
+            + cls.calc_2_atx_aty_a_chix_a_chiy(x, y, p, d)
+            + cls.calc_min_aty_a_chix_sq_plus_aty_sq(x, y, p, d)
+        )
+
+        err = (
+            SignedFixedPoint.mul_up_mag_u(x, x) + SignedFixedPoint.mul_up_mag_u(y, y)
+        ) // int(1e38)
+
+        val = sqrt(val, 5) if val > 0 else 0
+
+        return val, err
+
+    @classmethod
+    def calc_min_atx_a_chiy_sq_plus_atx_sq(
+        cls,
+        x: int,
+        y: int,
+        p: EclpParams,
+        d: DerivedEclpParams,
+    ) -> int:
+        term_np = SignedFixedPoint.mul_up_mag_u(
+            SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(x, x), p.c),
+            p.c,
+        ) + SignedFixedPoint.mul_up_mag_u(
+            SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(y, y), p.s),
+            p.s,
+        )
+
+        term_np -= SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(
+                SignedFixedPoint.mul_down_mag_u(x, y), p.c * 2
+            ),
+            p.s,
+        )
+
+        term_xp = (
+            SignedFixedPoint.mul_xp_u(d.u, d.u)
+            + SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.mul_xp_u(d.u * 2, d.v), p.lambda_
+            )
+            + SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.div_down_mag_u(
+                    SignedFixedPoint.mul_xp_u(d.v, d.v), p.lambda_
+                ),
+                p.lambda_,
+            )
+        )
+
+        term_xp = SignedFixedPoint.div_xp_u(
+            term_xp,
+            SignedFixedPoint.mul_xp_u(
+                SignedFixedPoint.mul_xp_u(
+                    SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq
+                ),
+                d.dSq,
+            ),
+        )
+
+        val = SignedFixedPoint.mul_down_xp_to_np_u(-term_np, term_xp)
+
+        val += SignedFixedPoint.mul_down_xp_to_np_u(
+            SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.div_down_mag_u(term_np - 9, p.lambda_), p.lambda_
+            ),
+            SignedFixedPoint.div_xp_u(SignedFixedPoint.ONE_XP, d.dSq),
+        )
+
+        return val
+
+    @classmethod
+    def calc_2_atx_aty_a_chix_a_chiy(
+        cls,
+        x: int,
+        y: int,
+        p: EclpParams,
+        d: DerivedEclpParams,
+    ) -> int:
+        term_np = SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(
+                SignedFixedPoint.mul_down_mag_u(x, x)
+                - SignedFixedPoint.mul_up_mag_u(y, y),
+                2 * p.c,
+            ),
+            p.s,
+        )
+
+        xy = SignedFixedPoint.mul_down_mag_u(y, 2 * x)
+
+        term_np += SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(xy, p.c), p.c
+        ) - SignedFixedPoint.mul_down_mag_u(
+            SignedFixedPoint.mul_down_mag_u(xy, p.s), p.s
+        )
+
+        term_xp = SignedFixedPoint.mul_xp_u(d.z, d.u) + SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.mul_xp_u(d.w, d.v), p.lambda_
+            ),
+            p.lambda_,
+        )
+
+        term_xp += SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.mul_xp_u(d.w, d.u) + SignedFixedPoint.mul_xp_u(d.z, d.v),
+            p.lambda_,
+        )
+
+        term_xp = SignedFixedPoint.div_xp_u(
+            term_xp,
+            SignedFixedPoint.mul_xp_u(
+                SignedFixedPoint.mul_xp_u(
+                    SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq
+                ),
+                d.dSq,
+            ),
+        )
+
+        return SignedFixedPoint.mul_down_xp_to_np_u(term_np, term_xp)
+
+    @classmethod
+    def calc_min_aty_a_chix_sq_plus_aty_sq(
+        cls,
+        x: int,
+        y: int,
+        p: EclpParams,
+        d: DerivedEclpParams,
+    ) -> int:
+        term_np = SignedFixedPoint.mul_up_mag_u(
+            SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(x, x), p.s),
+            p.s,
+        ) + SignedFixedPoint.mul_up_mag_u(
+            SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(y, y), p.c),
+            p.c,
+        )
+
+        term_np += SignedFixedPoint.mul_up_mag_u(
+            SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(x, y), p.s * 2),
+            p.c,
+        )
+
+        term_xp = SignedFixedPoint.mul_xp_u(d.z, d.z) + SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.mul_xp_u(d.w, d.w), p.lambda_
+            ),
+            p.lambda_,
+        )
+
+        term_xp += SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.mul_xp_u(2 * d.z, d.w), p.lambda_
+        )
+
+        term_xp = SignedFixedPoint.div_xp_u(
+            term_xp,
+            SignedFixedPoint.mul_xp_u(
+                SignedFixedPoint.mul_xp_u(
+                    SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq
+                ),
+                d.dSq,
+            ),
+        )
+
+        val = SignedFixedPoint.mul_down_xp_to_np_u(-term_np, term_xp)
+
+        val += SignedFixedPoint.mul_down_xp_to_np_u(
+            term_np - 9,
+            SignedFixedPoint.div_xp_u(SignedFixedPoint.ONE_XP, d.dSq),
+        )
+
+        return val
 
     @classmethod
     def calc_spot_price0in1(
@@ -554,6 +767,13 @@ class GyroECLPMath:
             SignedFixedPoint.div_up_mag_u(q["a"], lambda_)
             if q["a"] > 0
             else SignedFixedPoint.div_down_mag_u(q["a"], lambda_)
+        )
+
+        term_xp2 = (
+            SignedFixedPoint.div_xp_u(
+                SignedFixedPoint.mul_xp_u(tauBeta.x, tauBeta.x), sq_vars.x
+            )
+            + 7
         )
 
         val = SignedFixedPoint.mul_up_mag_u(

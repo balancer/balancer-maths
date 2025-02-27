@@ -34,7 +34,9 @@ class SignedFixedPoint:
 
     @classmethod
     def mul_down_mag_u(cls, a: int, b: int) -> int:
-        return (a * b) // cls.ONE
+        product = a * b
+        result = abs(product) // cls.ONE
+        return -result if product < 0 else result
 
     @classmethod
     def mul_up_mag(cls, a: int, b: int) -> int:
@@ -74,7 +76,12 @@ class SignedFixedPoint:
     def div_down_mag_u(cls, a: int, b: int) -> int:
         if b == 0:
             raise FixedPointError("ZeroDivision")
-        return (a * cls.ONE) // b
+
+        # Implement truncating division (division toward zero)
+        product = a * cls.ONE
+        abs_result = abs(product) // abs(b)
+        # Apply the correct sign
+        return -abs_result if (product < 0) != (b < 0) else abs_result
 
     @classmethod
     def div_up_mag(cls, a: int, b: int) -> int:
@@ -193,16 +200,21 @@ class SignedFixedPoint:
 
     @classmethod
     def mul_up_xp_to_np_u(cls, a: int, b: int) -> int:
-        e_19 = int("10000000000000000000")
+        e_19 = 10**19
         b1 = b // e_19
         b2 = b % e_19
         prod1 = a * b1
         prod2 = a * b2
-        return (
-            (prod1 + prod2 // e_19) // e_19
-            if prod1 <= 0 and prod2 <= 0
-            else (prod1 + prod2 // e_19 - 1) // e_19 + 1
-        )
+
+        # For division, implement truncation toward zero (like Solidity)
+        def trunc_div(x, y):
+            result = abs(x) // abs(y)
+            return -result if (x < 0) != (y < 0) else result
+
+        if prod1 <= 0 and prod2 <= 0:
+            return trunc_div(prod1 + trunc_div(prod2, e_19), e_19)
+        else:
+            return trunc_div(prod1 + trunc_div(prod2, e_19) - 1, e_19) + 1
 
     @classmethod
     def complement(cls, x: int) -> int:
