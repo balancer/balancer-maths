@@ -4,3 +4,4 @@ export * from './gyro2CLPPool';
 export * from './gyroECLPData';
 export * from './gyroECLPMath';
 export * from './gyroECLPPool';
+export * from './signedFixedPoint';
