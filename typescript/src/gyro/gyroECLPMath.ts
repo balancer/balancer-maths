@@ -1,4 +1,4 @@
-
+import { GyroPoolMath } from './gyroPoolMath';
 import { SignedFixedPoint } from './signedFixedPoint';
 import {_require} from '../utils/math';
 
