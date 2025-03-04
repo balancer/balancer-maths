@@ -13,7 +13,7 @@ export const min = (values: bigint[]): bigint =>
 export const max = (values: bigint[]): bigint =>
     values.reduce((a, b) => (a > b ? a : b));
 
-const _require = (b: boolean, message: string) => {
+export const _require = (b: boolean, message: string) => {
     if (!b) throw new Error(message);
 };
 
