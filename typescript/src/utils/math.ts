@@ -4,6 +4,9 @@ export const RAY = 1000000000000000000000000000000000000n;
 export const TWO_WAD = 2000000000000000000n;
 export const FOUR_WAD = 4000000000000000000n;
 export const HUNDRED_WAD = 100000000000000000000n;
+export const MAX_UINT256 = BigInt(
+    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+);
 
 export const abs = (n: bigint): bigint => (n < 0n ? -n : n);
 

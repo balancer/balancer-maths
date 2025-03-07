@@ -2,6 +2,8 @@ type PoolType = 'Buffer';
 
 export type BufferMutable = {
     rate: bigint;
+    maxDeposit?: bigint;
+    maxMint?: bigint;
 };
 
 export type BufferImmutable = {
