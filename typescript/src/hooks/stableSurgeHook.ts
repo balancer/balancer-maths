@@ -112,7 +112,11 @@ export class StableSurgeHook implements HookBase {
     }
 
     private findMedian(balances: bigint[]): bigint {
-        const sortedBalances = balances.sort();
+        const sortedBalances = balances.sort((a, b) => {
+            if (a < b) return -1;
+            if (a > b) return 1;
+            return 0;
+        });
         const mid = Math.floor(sortedBalances.length / 2);
 
         if (sortedBalances.length % 2 == 0) {
