@@ -120,7 +120,9 @@ export function readTestData(directoryPath: string): TestData {
                         })),
                     );
 
-                pools.set(file, mapPool(jsonData.pool));
+                if (jsonData.pool) {
+                    pools.set(file, mapPool(jsonData.pool));
+                }
             } catch (error) {
                 console.error(`Error parsing JSON file ${file}:`, error);
             }

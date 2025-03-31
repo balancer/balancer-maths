@@ -1,11 +1,11 @@
-import type { TestInput, TestOutput } from './types';
+import type { PoolTestInput, PoolTestOutput } from './types';
 import { getSwaps } from './getSwaps';
 import { getPool } from './getPool';
 import { getAddLiquiditys } from './getAdds';
 import { getRemoveLiquiditys } from './getRemoves';
 
 export async function generatePoolTestData(
-    input: TestInput,
+    input: PoolTestInput,
     overwrite = false,
 ) {
     const path = `./testData/${input.chainId}-${input.blockNumber}-${input.testName}.json`;
@@ -26,7 +26,7 @@ export async function generatePoolTestData(
     console.log('Complete');
 }
 
-async function fetchTestData(input: TestInput): Promise<TestOutput> {
+async function fetchTestData(input: PoolTestInput): Promise<PoolTestOutput> {
     const {
         rpcUrl,
         chainId,

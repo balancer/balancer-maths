@@ -1,4 +1,5 @@
 import { generatePoolTestData } from './src/generatePoolTestData';
+import { generateSwapPathTestData } from './src/generateSwapPathTestData';
 import type { Config } from './src/types';
 
 const RPC_URL = {
@@ -17,6 +18,20 @@ async function generateTestData() {
         await generatePoolTestData(
             {
                 ...poolTest,
+                rpcUrl,
+            },
+            overWrite,
+        );
+    }
+    for (const swapPathTest of config.swapPathTests) {
+        const rpcUrl = RPC_URL[swapPathTest.chainId];
+        if (!rpcUrl)
+            throw new Error(
+                `Missing RPC env for chain: ${swapPathTest.chainId}`,
+            );
+        await generateSwapPathTestData(
+            {
+                ...swapPathTest,
                 rpcUrl,
             },
             overWrite,
