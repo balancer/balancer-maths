@@ -6,8 +6,6 @@ import {
     type ExactInQueryOutput,
     type ExactOutQueryOutput,
 } from '@balancer/sdk';
-import { PoolBase } from './types';
-import { getPool } from './getPool';
 
 export type SwapPathInput = {
     swapKind: SwapKind;
@@ -20,12 +18,12 @@ export type SwapPathInput = {
 };
 
 export type SwapPathResult = Omit<SwapPathInput, 'amountRaw' | 'pools'> & {
-    pools: PoolBase[];
+    pools: Address[];
     amountRaw: string;
     outputRaw: string;
 };
 
-async function querySwapPaths(
+async function querySwapPath(
     chainId: number,
     rpcUrl: string,
     swapPathInput: SwapPathInput,
@@ -74,43 +72,25 @@ async function querySwapPaths(
     return result;
 }
 
-export async function getSwapPaths(
-    swapPathInputs: SwapPathInput[],
+export async function getSwapPath(
+    swapPathInput: SwapPathInput,
     rpcUrl: string,
     chainId: number,
     blockNumber: bigint,
-): Promise<SwapPathResult[] | undefined> {
-    if (!swapPathInputs) return undefined;
-    const results: SwapPathResult[] = [];
-    console.log('Querying swaps...');
-    for (const swapPathInput of swapPathInputs) {
-        // get swap. TODO - put this in a multicall?
-        const result = await querySwapPaths(
-            chainId,
-            rpcUrl,
-            swapPathInput,
-            blockNumber,
-        );
+): Promise<SwapPathResult> {
+    console.log('Querying swap paths...');
+    const result = await querySwapPath(
+        chainId,
+        rpcUrl,
+        swapPathInput,
+        blockNumber,
+    );
 
-        const pools = await Promise.all(
-            swapPathInput.pools.map((pool) =>
-                getPool(
-                    rpcUrl,
-                    chainId,
-                    blockNumber,
-                    pool.poolType,
-                    pool.poolAddress,
-                ),
-            ),
-        );
-
-        results.push({
-            ...swapPathInput,
-            pools,
-            amountRaw: swapPathInput.amountRaw.toString(),
-            outputRaw: result.toString(),
-        });
-    }
     console.log('Done');
-    return results;
+    return {
+        ...swapPathInput,
+        pools: swapPathInput.pools.map((pool) => pool.poolAddress),
+        amountRaw: swapPathInput.amountRaw.toString(),
+        outputRaw: result.toString(),
+    };
 }

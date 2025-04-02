@@ -328,8 +328,7 @@
             "testName": "Path-USDC-DAI",
             "chainId": "11155111",
             "blockNumber": "7439300",
-            "swapPathInputs": [
-                {
+            "swapPathInput": {
                     "swapKind": 0,
                     "amountRaw": "10000000",
                     "tokens": [
@@ -343,14 +342,12 @@
                         }
                     ]
                 }
-            ]
         },
         {
             "testName": "Path-stataUSDC-BPT-WETH",
             "chainId": "11155111",
             "blockNumber": "7303517",
-            "swapPathInputs": [
-                {
+            "swapPathInput": {
                     "swapKind": 0,
                     "amountRaw": "1000000",
                     "tokens": [
@@ -369,14 +366,12 @@
                         }
                     ]
                 }
-            ]
         },
         {
             "testName": "Path-WETH-BPT-stataUSDC",
             "chainId": "11155111",
             "blockNumber": "7303517",
-            "swapPathInputs": [
-                {
+            "swapPathInput": {
                     "swapKind": 0,
                     "amountRaw": "100000000000000",
                     "tokens": [
@@ -395,7 +390,7 @@
                         }
                     ]
                 }
-            ]
+
         }
     ]
 }

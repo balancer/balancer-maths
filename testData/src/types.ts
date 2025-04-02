@@ -2,7 +2,7 @@ import type { Address } from 'viem';
 import type { AddLiquidityResult, AddTestInput } from './getAdds';
 import type { SwapResult, SwapInput } from './getSwaps';
 import type { RemoveLiquidityResult, RemoveTestInput } from './getRemoves';
-import { SwapPathInput, SwapPathResult } from './getSwapPaths';
+import { SwapPathInput, SwapPathResult } from './getSwapPath';
 
 // Read from main test config file
 export type Config = {
@@ -15,25 +15,26 @@ export type TestBase = {
     blockNumber: bigint;
 };
 
-export type PoolBase = TestBase & {
+export type PoolBase = {
     poolType: string;
     poolAddress: Address;
 };
 
 // Each pool/chain/block has its own set of swap/add/remove tests
-type PoolTestConfig = PoolBase & {
-    testName: string;
-    swaps: SwapInput[];
-    adds: AddTestInput[];
-    removes: RemoveTestInput[];
-};
+type PoolTestConfig = TestBase &
+    PoolBase & {
+        testName: string;
+        swaps: SwapInput[];
+        adds: AddTestInput[];
+        removes: RemoveTestInput[];
+    };
 
 export type PoolTestInput = PoolTestConfig & {
     rpcUrl: string;
 };
 
 export type PoolTestOutput = {
-    pool: PoolBase;
+    pool: PoolBase & TestBase;
     swaps: SwapResult[] | undefined;
     adds: AddLiquidityResult[] | undefined;
     removes: RemoveLiquidityResult[] | undefined;
@@ -41,7 +42,7 @@ export type PoolTestOutput = {
 
 type SwapPathTestConfig = TestBase & {
     testName: string;
-    swapPathInputs: SwapPathInput[];
+    swapPathInput: SwapPathInput;
 };
 
 export type SwapPathTestInput = SwapPathTestConfig & {
@@ -49,5 +50,7 @@ export type SwapPathTestInput = SwapPathTestConfig & {
 };
 
 export type SwapPathTestOutput = {
-    swapPaths: SwapPathResult[] | undefined;
+    swapPath: SwapPathResult;
+    pools: PoolBase[];
+    test: TestBase;
 };

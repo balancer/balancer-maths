@@ -1,5 +1,6 @@
 import type { SwapPathTestInput, SwapPathTestOutput } from './types';
-import { getSwapPaths } from './getSwapPaths';
+import { getSwapPath } from './getSwapPath';
+import { getPool } from './getPool';
 
 export async function generateSwapPathTestData(
     input: SwapPathTestInput,
@@ -26,15 +27,29 @@ export async function generateSwapPathTestData(
 async function fetchTestData(
     input: SwapPathTestInput,
 ): Promise<SwapPathTestOutput> {
-    const { rpcUrl, chainId, blockNumber, swapPathInputs } = input;
-    const swapPaths = await getSwapPaths(
-        swapPathInputs,
+    const { rpcUrl, chainId, blockNumber, swapPathInput } = input;
+    const swapPath = await getSwapPath(
+        swapPathInput,
         rpcUrl,
         chainId,
         blockNumber,
     );
 
+    const pools = await Promise.all(
+        swapPathInput.pools.map((pool) =>
+            getPool(
+                rpcUrl,
+                chainId,
+                blockNumber,
+                pool.poolType,
+                pool.poolAddress,
+            ),
+        ),
+    );
+
     return {
-        swapPaths,
+        test: { chainId, blockNumber },
+        swapPath,
+        pools,
     };
 }
