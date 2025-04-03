@@ -1,7 +1,7 @@
 import type { Address } from 'viem';
 import { WeightedPool } from './weightedPool';
 import { StablePool } from './stablePool';
-import type { PoolBase } from './types';
+import type { PoolBase, TestBase } from './types';
 import { BufferPool } from './buffer';
 import { GyroECLPPool } from './gyroECLP';
 
@@ -11,7 +11,7 @@ export async function getPool(
     blockNumber: bigint,
     poolType: string,
     poolAddress: Address,
-): Promise<PoolBase> {
+): Promise<PoolBase & TestBase> {
     // Find onchain data fetching via pool type
     const poolData: Record<
         string,

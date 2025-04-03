@@ -1,6 +1,7 @@
 import type { SwapPathTestInput, SwapPathTestOutput } from './types';
 import { getSwapPath } from './getSwapPath';
 import { getPool } from './getPool';
+import { getUnderlyingTokens } from './getUnderlyingTokens';
 
 export async function generateSwapPathTestData(
     input: SwapPathTestInput,
@@ -47,9 +48,12 @@ async function fetchTestData(
         ),
     );
 
+    const underlyingTokens = await getUnderlyingTokens(pools, rpcUrl, chainId);
+
     return {
         test: { chainId, blockNumber },
         swapPath,
         pools,
+        underlyingTokens,
     };
 }

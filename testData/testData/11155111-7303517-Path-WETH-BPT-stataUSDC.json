@@ -73,5 +73,6 @@
             "amp": "1000000",
             "aggregateSwapFee": "0"
         }
-    ]
+    ],
+    "underlyingTokens": []
 }

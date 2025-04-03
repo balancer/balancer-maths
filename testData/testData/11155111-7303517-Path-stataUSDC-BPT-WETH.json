@@ -73,5 +73,6 @@
             ],
             "aggregateSwapFee": "0"
         }
-    ]
+    ],
+    "underlyingTokens": []
 }
