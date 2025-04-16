@@ -16,6 +16,10 @@ type PriceRatioState = {
     endFourthRootPriceRatio: bigint;
 };
 
+const a = 0;
+const b = 1;
+const INITIALIZATION_MAX_BALANCE_A = 1_000_000n * WAD;
+
 export function computeCurrentVirtualBalances(
     currentTimestamp: bigint,
     balancesScaled18: bigint[],
@@ -61,13 +65,14 @@ export function computeCurrentVirtualBalances(
         currentTimestamp > priceRatioState.priceRatioUpdateStartTime &&
         lastTimestamp < priceRatioState.priceRatioUpdateEndTime
     ) {
-        [currentVirtualBalanceA, currentVirtualBalanceB] = calculateVirtualBalancesUpdatingPriceRatio(
-            currentFourthRootPriceRatio,
-            balancesScaled18,
-            lastVirtualBalanceA,
-            lastVirtualBalanceB,
-            isPoolAboveCenter,
-        );
+        [currentVirtualBalanceA, currentVirtualBalanceB] =
+            calculateVirtualBalancesUpdatingPriceRatio(
+                currentFourthRootPriceRatio,
+                balancesScaled18,
+                lastVirtualBalanceA,
+                lastVirtualBalanceB,
+                isPoolAboveCenter,
+            );
         changed = true;
     }
 
@@ -396,4 +401,74 @@ export function computeInGivenOut(
         virtualBalanceTokenIn;
 
     return amountInScaled18;
+}
+
+export function computeTheoreticalPriceRatioAndBalances(
+    minPrice: bigint,
+    maxPrice: bigint,
+    targetPrice: bigint,
+): {
+    realBalances: bigint[];
+    virtualBalances: bigint[];
+    fourthRootPriceRatio: bigint;
+} {
+    // In the formulas below, Ra_max is a random number that defines the maximum real balance of token A, and
+    // consequently a random initial liquidity. We will scale all balances according to the actual amount of
+    // liquidity provided during initialization.
+    const sqrtPriceRatio = sqrtScaled18(
+        MathSol.divDownFixed(maxPrice, minPrice),
+    );
+    const fourthRootPriceRatio = sqrtScaled18(sqrtPriceRatio);
+
+    const virtualBalances: bigint[] = [];
+    // Va = Ra_max / (sqrtPriceRatio - 1)
+    virtualBalances[a] = MathSol.divDownFixed(
+        INITIALIZATION_MAX_BALANCE_A,
+        sqrtPriceRatio - WAD,
+    );
+    // Vb = minPrice * (Va + Ra_max)
+    virtualBalances[b] = MathSol.mulDownFixed(
+        minPrice,
+        virtualBalances[a] + INITIALIZATION_MAX_BALANCE_A,
+    );
+
+    const realBalances: bigint[] = [];
+    // Rb = sqrt(targetPrice * Vb * (Ra_max + Va)) - Vb
+    realBalances[b] =
+        sqrtScaled18(
+            MathSol.mulUpFixed(
+                MathSol.mulUpFixed(targetPrice, virtualBalances[b]),
+                INITIALIZATION_MAX_BALANCE_A + virtualBalances[a],
+            ),
+        ) - virtualBalances[b];
+    // Ra = (Rb + Vb - (Va * targetPrice)) / targetPrice
+    realBalances[a] = MathSol.divDownFixed(
+        realBalances[b] +
+            virtualBalances[b] -
+            MathSol.mulDownFixed(virtualBalances[a], targetPrice),
+        targetPrice,
+    );
+
+    return { realBalances, virtualBalances, fourthRootPriceRatio };
+}
+
+/**
+ * Modified version of ReClammPool.computeInitialBalanceRatio
+ * Useful for computing "proportion" value used to calculate token amounts needed to init pool
+ */
+export function computeInitialBalanceRatio(
+    minPrice: bigint,
+    maxPrice: bigint,
+    targetPrice: bigint,
+): bigint {
+    const { realBalances } = computeTheoreticalPriceRatioAndBalances(
+        minPrice,
+        maxPrice,
+        targetPrice,
+    );
+    return MathSol.divDownFixed(realBalances[b], realBalances[a]);
+}
+
+function sqrtScaled18(valueScaled18: bigint): bigint {
+    return sqrt(valueScaled18 * WAD);
 }
