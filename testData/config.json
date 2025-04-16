@@ -1,6 +1,39 @@
 {
     "poolTests": [
         {
+            "testName": "ReClamm-WETH-USDC",
+            "chainId": "8453",
+            "blockNumber": "29000654",
+            "poolAddress": "0xde842def79c17a52d7fb4b61c238d78fd18f11e6",
+            "poolType": "RECLAMM",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "100000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x4200000000000000000000000000000000000006"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "1000000000000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x4200000000000000000000000000000000000006"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "20000000000000",
+                    "tokenIn": "0x4200000000000000000000000000000000000006",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "700000",
+                    "tokenIn": "0x4200000000000000000000000000000000000006",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                }
+            ]
+        },
+        {
             "testName": "Weighted-USDC-DAI",
             "chainId": "11155111",
             "blockNumber": "7439300",
