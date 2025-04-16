@@ -25,23 +25,12 @@ type ReClammMutable = {
     endFourthRootPriceRatio: bigint;
     priceRatioUpdateStartTime: bigint;
     priceRatioUpdateEndTime: bigint;
+    currentTimestamp: bigint;
 };
 
 type ReClammImmutable = {
     tokens: bigint[];
     scalingFactors: bigint[];
-    initialMinPrice: bigint;
-    initialMaxPrice: bigint;
-    initialTargetPrice: bigint;
-    initialPriceShiftDailyRate: bigint;
-    initialCenterednessMargin: bigint;
-    minCenterednessMargin: bigint;
-    maxCenterednessMargin: bigint;
-    minTokenBalanceScaled18: bigint;
-    minPoolCenteredness: bigint;
-    maxPriceShiftDailyRate: bigint;
-    minPriceRatioUpdateDuration: bigint;
-    minFourthRootPriceRatioDelta: bigint;
 };
 
 type TransformBigintToString<T> = {
@@ -83,13 +72,8 @@ export class ReClammPool {
             functionName: 'getPoolTokenRates',
             args: [address],
         } as const;
-        const immutableDataCall = {
-            address,
-            abi: reclammAbi,
-            functionName: 'getReClammPoolImmutableData',
-        } as const;
         const multicallResult = await this.client.multicall({
-            contracts: [poolTokensCall, tokenRatesCall, immutableDataCall],
+            contracts: [poolTokensCall, tokenRatesCall],
             allowFailure: false,
             blockNumber,
         });
@@ -97,18 +81,6 @@ export class ReClammPool {
         return {
             tokens: multicallResult[0][0].map((token) => token),
             scalingFactors: multicallResult[1][0].map((sf) => sf.toString()),
-            initialMinPrice: multicallResult[2].initialMinPrice.toString(),
-            initialMaxPrice: multicallResult[2].initialMaxPrice.toString(),
-            initialTargetPrice: multicallResult[2].initialTargetPrice.toString(),
-            initialPriceShiftDailyRate: multicallResult[2].initialPriceShiftDailyRate.toString(),
-            initialCenterednessMargin: multicallResult[2].initialCenterednessMargin.toString(),
-            minCenterednessMargin: multicallResult[2].minCenterednessMargin.toString(),
-            maxCenterednessMargin: multicallResult[2].maxCenterednessMargin.toString(),
-            minTokenBalanceScaled18: multicallResult[2].minTokenBalanceScaled18.toString(),
-            minPoolCenteredness: multicallResult[2].minPoolCenteredness.toString(),
-            maxPriceShiftDailyRate: multicallResult[2].maxPriceShiftDailyRate.toString(),
-            minPriceRatioUpdateDuration: multicallResult[2].minPriceRatioUpdateDuration.toString(),
-            minFourthRootPriceRatioDelta: multicallResult[2].minFourthRootPriceRatioDelta.toString(),
         };
     }
 
@@ -136,6 +108,11 @@ export class ReClammPool {
             allowFailure: false,
             blockNumber,
         });
+
+        const block = await this.client.getBlock({
+            blockNumber
+          })
+
         return {
             aggregateSwapFee: multicallResult[0].aggregateSwapFeePercentage.toString(),
             swapFee: multicallResult[1].staticSwapFeePercentage.toString(),
@@ -151,6 +128,7 @@ export class ReClammPool {
             endFourthRootPriceRatio: multicallResult[1].endFourthRootPriceRatio.toString(),
             priceRatioUpdateStartTime: multicallResult[1].priceRatioUpdateStartTime.toString(),
             priceRatioUpdateEndTime: multicallResult[1].priceRatioUpdateEndTime.toString(),
+            currentTimestamp: block.timestamp.toString(),
         };
     }
 }

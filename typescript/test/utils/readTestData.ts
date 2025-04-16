@@ -234,18 +234,15 @@ function mapPool(
                 pool.supportsUnbalancedLiquidity === undefined
                     ? true
                     : pool.supportsUnbalancedLiquidity,
-            initialMinPrice: BigInt(pool.initialMinPrice),
-            initialMaxPrice: BigInt(pool.initialMaxPrice),
-            initialTargetPrice: BigInt(pool.initialTargetPrice),
-            initialPriceShiftDailyRate: BigInt(pool.initialPriceShiftDailyRate),
-            initialCenterednessMargin: BigInt(pool.initialCenterednessMargin),
-            minCenterednessMargin: BigInt(pool.minCenterednessMargin),
-            maxCenterednessMargin: BigInt(pool.maxCenterednessMargin),
-            minTokenBalanceScaled18: BigInt(pool.minTokenBalanceScaled18),
-            minPoolCenteredness: BigInt(pool.minPoolCenteredness),
-            maxPriceShiftDailyRate: BigInt(pool.maxPriceShiftDailyRate),
-            minPriceRatioUpdateDuration: BigInt(pool.minPriceRatioUpdateDuration),
-            minFourthRootPriceRatioDelta: BigInt(pool.minFourthRootPriceRatioDelta),
+            lastVirtualBalances: pool.lastVirtualBalances.map((b) => BigInt(b)),
+            priceShiftDailyRateInSeconds: BigInt(pool.priceShiftDailyRateInSeconds),
+            lastTimestamp: BigInt(pool.lastTimestamp),
+            currentTimestamp: BigInt(pool.currentTimestamp),
+            centerednessMargin: BigInt(pool.centerednessMargin),
+            startFourthRootPriceRatio: BigInt(pool.startFourthRootPriceRatio),
+            endFourthRootPriceRatio: BigInt(pool.endFourthRootPriceRatio),
+            priceRatioUpdateStartTime: BigInt(pool.priceRatioUpdateStartTime),
+            priceRatioUpdateEndTime: BigInt(pool.priceRatioUpdateEndTime),
         };
     }
     console.log(pool);

@@ -42,18 +42,6 @@
             "1",
             "1000000000000"
         ],
-        "initialMinPrice": "1000000000000000000000",
-        "initialMaxPrice": "4000000000000000000000",
-        "initialTargetPrice": "2500000000000000000000",
-        "initialPriceShiftDailyRate": "1000000000000000000",
-        "initialCenterednessMargin": "200000000000000000",
-        "minCenterednessMargin": "0",
-        "maxCenterednessMargin": "1000000000000000000",
-        "minTokenBalanceScaled18": "1000000000000",
-        "minPoolCenteredness": "1000",
-        "maxPriceShiftDailyRate": "5000000000000000000",
-        "minPriceRatioUpdateDuration": "21600",
-        "minFourthRootPriceRatioDelta": "1000",
         "aggregateSwapFee": "500000000000000000",
         "swapFee": "10000000000000000",
         "totalSupply": "3562375912878650",
@@ -76,6 +64,7 @@
         "startFourthRootPriceRatio": "0",
         "endFourthRootPriceRatio": "1414213562373095048",
         "priceRatioUpdateStartTime": "1744790653",
-        "priceRatioUpdateEndTime": "1744790653"
+        "priceRatioUpdateEndTime": "1744790653",
+        "currentTimestamp": "1744790655"
     }
 }
