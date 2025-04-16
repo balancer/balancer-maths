@@ -2,25 +2,25 @@ import { MAX_BALANCE } from '../constants';
 import {
     MaxSwapParams,
     type PoolBase,
-    Rounding,
     SwapKind,
     type SwapParams,
 } from '../vault/types';
 import { toRawUndoRateRoundDown } from '../vault/utils';
 import { MathSol } from '../utils/math';
-import { ReClammImmutable } from './reClammData';
-
-type PoolParams = {
-    test: bigint;
-};
+import { ReClammState } from './reClammData';
+import {
+    computeCenteredness,
+    computeCurrentVirtualBalances,
+    computeInGivenOut,
+    computeOutGivenIn,
+} from './reClammMath';
 
 export class ReClamm implements PoolBase {
-    public poolParams: PoolParams;
-
-    constructor(poolState: ReClammImmutable) {
-        this.poolParams = {
-            test: 1n,
-        };
+    private readonly MIN_TOKEN_BALANCE_SCALED18 = 1000000000000n;
+    private readonly MIN_POOL_CENTEREDNESS = 1000n;
+    public reClammState: ReClammState;
+    constructor(reClammState: ReClammState) {
+        this.reClammState = reClammState;
     }
 
     getMaximumInvariantRatio(): bigint {
@@ -41,6 +41,8 @@ export class ReClamm implements PoolBase {
      * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
+        // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool). 
+        // This would give the maximum amount in.
         const {
             balancesLiveScaled18,
             indexIn,
@@ -83,80 +85,125 @@ export class ReClamm implements PoolBase {
     }
 
     onSwap(swapParams: SwapParams): bigint {
-        // const {
-        //     swapKind,
-        //     balancesLiveScaled18: balancesScaled18,
-        //     indexIn,
-        //     amountGivenScaled18,
-        // } = swapParams;
+        const {
+            swapKind,
+            balancesLiveScaled18,
+            indexIn,
+            indexOut,
+            amountGivenScaled18,
+        } = swapParams;
 
-        // const tokenInIsToken0 = indexIn === 0;
+        const computeResult =
+            this._computeCurrentVirtualBalances(balancesLiveScaled18);
 
+        if (swapKind === SwapKind.GivenIn) {
+            const amountCalculatedScaled18 = computeOutGivenIn(
+                balancesLiveScaled18,
+                computeResult.currentVirtualBalanceA,
+                computeResult.currentVirtualBalanceB,
+                indexIn,
+                indexOut,
+                amountGivenScaled18,
+            );
 
-        // const [currentInvariant, invErr] =
-        //     GyroECLPMath.calculateInvariantWithError(
-        //         balancesScaled18,
-        //         eclpParams,
-        //         derivedECLPParams,
-        //     );
-        // // invariant = overestimate in x-component, underestimate in y-component
-        // // No overflow in `+` due to constraints to the different values enforced in GyroECLPMath.
-        // const invariant: Vector2 = {
-        //     x: currentInvariant + 2n * invErr,
-        //     y: currentInvariant,
-        // };
+            this._ensureValidPoolStateAfterSwap(
+                balancesLiveScaled18,
+                computeResult.currentVirtualBalanceA,
+                computeResult.currentVirtualBalanceB,
+                amountGivenScaled18,
+                amountCalculatedScaled18,
+                indexIn,
+                indexOut,
+            );
 
-        // if (swapKind === SwapKind.GivenIn) {
-        //     const amountOutScaled18 = GyroECLPMath.calcOutGivenIn(
-        //         balancesScaled18,
-        //         amountGivenScaled18,
-        //         tokenInIsToken0,
-        //         eclpParams,
-        //         derivedECLPParams,
-        //         invariant,
-        //     );
+            return amountCalculatedScaled18;
+        }
 
-        //     return amountOutScaled18;
-        // }
+        const amountCalculatedScaled18 = computeInGivenOut(
+            balancesLiveScaled18,
+            computeResult.currentVirtualBalanceA,
+            computeResult.currentVirtualBalanceB,
+            indexIn,
+            indexOut,
+            amountGivenScaled18,
+        );
+        
+        this._ensureValidPoolStateAfterSwap(
+            balancesLiveScaled18,
+            computeResult.currentVirtualBalanceA,
+            computeResult.currentVirtualBalanceB,
+            amountCalculatedScaled18,
+            amountGivenScaled18,
+            indexIn,
+            indexOut,
+        );
 
-        // const amountInScaled18 = GyroECLPMath.calcInGivenOut(
-        //     balancesScaled18,
-        //     amountGivenScaled18,
-        //     tokenInIsToken0,
-        //     eclpParams,
-        //     derivedECLPParams,
-        //     invariant,
-        // );
+        return amountCalculatedScaled18;
+    }
 
-        // return amountInScaled18;
+    computeInvariant(): bigint {
+        // Only needed for unbalanced liquidity and thats not possible in this pool
         return 0n;
     }
 
-    computeInvariant(
-        balancesLiveScaled18: bigint[],
-        rounding: Rounding,
-    ): bigint {
-        // const { eclpParams, derivedECLPParams } = this.poolParams;
-        // const [currentInvariant, invErr] =
-        //     GyroECLPMath.calculateInvariantWithError(
-        //         balancesLiveScaled18,
-        //         eclpParams,
-        //         derivedECLPParams,
-        //     );
-
-        // if (rounding == Rounding.ROUND_DOWN) {
-        //     return currentInvariant - invErr;
-        // } else {
-        //     return currentInvariant + invErr;
-        // }
+    computeBalance(): bigint {
+        // Only needed for unbalanced liquidity and thats not possible in this pool
         return 0n;
     }
 
-    computeBalance(
-        balancesLiveScaled18: bigint[],
-        tokenInIndex: number,
-        invariantRatio: bigint,
-    ): bigint {
-        return 0n;
+    _computeCurrentVirtualBalances(balancesScaled18: bigint[]): {
+        currentVirtualBalanceA: bigint;
+        currentVirtualBalanceB: bigint;
+        changed: boolean;
+    } {
+        return computeCurrentVirtualBalances(
+            this.reClammState.currentTimestamp,
+            balancesScaled18,
+            this.reClammState.lastVirtualBalances[0],
+            this.reClammState.lastVirtualBalances[1],
+            this.reClammState.priceShiftDailyRateInSeconds,
+            this.reClammState.lastTimestamp,
+            this.reClammState.centerednessMargin,
+            {
+                priceRatioUpdateStartTime:
+                    this.reClammState.priceRatioUpdateStartTime,
+                priceRatioUpdateEndTime:
+                    this.reClammState.priceRatioUpdateEndTime,
+                startFourthRootPriceRatio:
+                    this.reClammState.startFourthRootPriceRatio,
+                endFourthRootPriceRatio:
+                    this.reClammState.endFourthRootPriceRatio,
+            },
+        );
+    }
+
+    _ensureValidPoolStateAfterSwap(
+        currentBalancesScaled18: bigint[],
+        currentVirtualBalanceA: bigint,
+        currentVirtualBalanceB: bigint,
+        amountInScaled18: bigint,
+        amountOutScaled18: bigint,
+        indexIn: number,
+        indexOut: number
+    ) {
+        currentBalancesScaled18[indexIn] += amountInScaled18;
+        // The swap functions `computeOutGivenIn` and `computeInGivenOut` ensure that the amountOutScaled18 is
+        // never greater than the balance of the token being swapped out. Therefore, the math below will never
+        // underflow. Nevertheless, since these considerations involve code outside this function, it is safest
+        // to still use checked math here.
+        currentBalancesScaled18[indexOut] -= amountOutScaled18;
+
+        if (currentBalancesScaled18[indexOut] < this.MIN_TOKEN_BALANCE_SCALED18) {
+            // If one of the token balances is below the minimum, the price ratio update is unreliable.
+            throw new Error(`reClammPool: TokenBalanceTooLow`);
+        }
+
+        if (
+            computeCenteredness(currentBalancesScaled18, currentVirtualBalanceA, currentVirtualBalanceB) <
+            this.MIN_POOL_CENTEREDNESS
+        ) {
+            // If the pool centeredness is below the minimum, the price ratio update is unreliable.
+            throw new Error(`reClammPool: PoolCenterednessTooLow`);
+        }
     }
 }

@@ -131,7 +131,7 @@ export class MathSol {
     }
 }
 
-class LogExpMath {
+export class LogExpMath {
     // All fixed point multiplications and divisions are inlined. This means we need to divide by ONE when multiplying
     // two numbers, and multiply by ONE when dividing them.
 
