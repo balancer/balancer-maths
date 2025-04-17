@@ -230,10 +230,7 @@ function mapPool(
             tokenRates: pool.tokenRates.map((r) => BigInt(r)),
             totalSupply: BigInt(pool.totalSupply),
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
-            supportsUnbalancedLiquidity:
-                pool.supportsUnbalancedLiquidity === undefined
-                    ? true
-                    : pool.supportsUnbalancedLiquidity,
+            supportsUnbalancedLiquidity: false,
             lastVirtualBalances: pool.lastVirtualBalances.map((b) => BigInt(b)),
             priceShiftDailyRateInSeconds: BigInt(pool.priceShiftDailyRateInSeconds),
             lastTimestamp: BigInt(pool.lastTimestamp),

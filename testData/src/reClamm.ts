@@ -20,7 +20,6 @@ type ReClammMutable = {
     lastVirtualBalances: bigint[];
     priceShiftDailyRateInSeconds: bigint;
     centerednessMargin: bigint;
-    currentFourthRootPriceRatio: bigint;
     startFourthRootPriceRatio: bigint;
     endFourthRootPriceRatio: bigint;
     priceRatioUpdateStartTime: bigint;
@@ -123,7 +122,6 @@ export class ReClammPool {
             lastVirtualBalances: multicallResult[1].lastVirtualBalances.map((b) => b.toString()),
             priceShiftDailyRateInSeconds: multicallResult[1].priceShiftDailyRateInSeconds.toString(),
             centerednessMargin: multicallResult[1].centerednessMargin.toString(),
-            currentFourthRootPriceRatio: multicallResult[1].currentFourthRootPriceRatio.toString(),
             startFourthRootPriceRatio: multicallResult[1].startFourthRootPriceRatio.toString(),
             endFourthRootPriceRatio: multicallResult[1].endFourthRootPriceRatio.toString(),
             priceRatioUpdateStartTime: multicallResult[1].priceRatioUpdateStartTime.toString(),
