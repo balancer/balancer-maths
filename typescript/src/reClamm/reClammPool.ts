@@ -1,13 +1,10 @@
-import { MAX_BALANCE } from '../constants';
 import {
     MaxSwapParams,
     type PoolBase,
     SwapKind,
     type SwapParams,
 } from '../vault/types';
-import { toRawUndoRateRoundDown } from '../vault/utils';
-import { MathSol } from '../utils/math';
-import { ReClammState } from './reClammData';
+import { ReClammMutable } from './reClammData';
 import {
     computeCenteredness,
     computeCurrentVirtualBalances,
@@ -18,8 +15,8 @@ import {
 export class ReClamm implements PoolBase {
     private readonly MIN_TOKEN_BALANCE_SCALED18 = 1000000000000n;
     private readonly MIN_POOL_CENTEREDNESS = 1000n;
-    public reClammState: ReClammState;
-    constructor(reClammState: ReClammState) {
+    public reClammState: ReClammMutable;
+    constructor(reClammState: ReClammMutable) {
         this.reClammState = reClammState;
     }
 
@@ -41,37 +38,30 @@ export class ReClamm implements PoolBase {
      * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
-        // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool). 
-        // This would give the maximum amount in.
         const {
             balancesLiveScaled18,
             indexIn,
             indexOut,
-            tokenRates,
-            scalingFactors,
             swapKind,
         } = maxSwapParams;
+        const maxAmountOut = balancesLiveScaled18[indexOut] - this.MIN_TOKEN_BALANCE_SCALED18;
+
         if (swapKind === SwapKind.GivenIn) {
-            // MAX_BALANCE comes from SC limit and is max pool can hold
-            const diff = MAX_BALANCE - balancesLiveScaled18[indexIn];
-            // Scale to token in (and remove rate)
-            return toRawUndoRateRoundDown(
-                diff,
-                scalingFactors[indexIn],
-                tokenRates[indexIn],
+            // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool). 
+            // This would give the maximum amount in.
+            const computeResult =
+            this._computeCurrentVirtualBalances(balancesLiveScaled18);
+            const amountCalculatedScaled18 = computeInGivenOut(
+                balancesLiveScaled18,
+                computeResult.currentVirtualBalanceA,
+                computeResult.currentVirtualBalanceB,
+                indexIn,
+                indexOut,
+                maxAmountOut,
             );
+            return amountCalculatedScaled18 - 1n;
         }
-        // 99% of token out balance
-        const max = MathSol.mulDownFixed(
-            990000000000000000n,
-            balancesLiveScaled18[indexOut],
-        );
-        // Scale to token out
-        return toRawUndoRateRoundDown(
-            max,
-            scalingFactors[indexOut],
-            tokenRates[indexOut],
-        );
+        return maxAmountOut;
     }
 
     getMaxSingleTokenAddAmount(): bigint {
@@ -186,20 +176,22 @@ export class ReClamm implements PoolBase {
         indexIn: number,
         indexOut: number
     ) {
-        currentBalancesScaled18[indexIn] += amountInScaled18;
+        // Create a copy of the balances array
+        const updatedBalances = [...currentBalancesScaled18];
+        updatedBalances[indexIn] += amountInScaled18;
         // The swap functions `computeOutGivenIn` and `computeInGivenOut` ensure that the amountOutScaled18 is
         // never greater than the balance of the token being swapped out. Therefore, the math below will never
         // underflow. Nevertheless, since these considerations involve code outside this function, it is safest
         // to still use checked math here.
-        currentBalancesScaled18[indexOut] -= amountOutScaled18;
+        updatedBalances[indexOut] -= amountOutScaled18;
 
-        if (currentBalancesScaled18[indexOut] < this.MIN_TOKEN_BALANCE_SCALED18) {
+        if (updatedBalances[indexOut] < this.MIN_TOKEN_BALANCE_SCALED18) {
             // If one of the token balances is below the minimum, the price ratio update is unreliable.
             throw new Error(`reClammPool: TokenBalanceTooLow`);
         }
 
         if (
-            computeCenteredness(currentBalancesScaled18, currentVirtualBalanceA, currentVirtualBalanceB) <
+            computeCenteredness(updatedBalances, currentVirtualBalanceA, currentVirtualBalanceB) <
             this.MIN_POOL_CENTEREDNESS
         ) {
             // If the pool centeredness is below the minimum, the price ratio update is unreliable.
