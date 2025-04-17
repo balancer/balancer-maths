@@ -46,7 +46,9 @@ export function computeAddLiquidityUnbalanced(
 
     // ensureInvariantRatioBelowMaximumBound(pool, invariantRatio);
     if (invariantRatio > maxInvariantRatio) {
-        throw Error(`InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`);
+        throw Error(
+            `InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`,
+        );
     }
 
     // Loop through each token to apply fees if necessary.
@@ -116,10 +118,12 @@ export function computeAddLiquiditySingleTokenExactOut(
     // Calculate new supply after minting exactBptAmountOut
     const newSupply = exactBptAmountOut + totalSupply;
 
-    const invariantRatio = MathSol.divUpFixed(newSupply, totalSupply)
+    const invariantRatio = MathSol.divUpFixed(newSupply, totalSupply);
     // ensureInvariantRatioBelowMaximumBound(pool, invariantRatio);
     if (invariantRatio > maxInvariantRatio) {
-        throw Error(`InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`);
+        throw Error(
+            `InvariantRatioAboveMax ${invariantRatio} ${maxInvariantRatio}`,
+        );
     }
     // Calculate the initial amount of the input token needed for the desired amount of BPT out
     // "divUp" leads to a higher "newBalance," which in turn results in a larger "amountIn."
@@ -226,7 +230,9 @@ export function computeRemoveLiquiditySingleTokenExactIn(
 
     const invariantRatio = MathSol.divUpFixed(newSupply, totalSupply);
     if (invariantRatio < minInvariantRatio) {
-        throw Error(`InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`);
+        throw Error(
+            `InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`,
+        );
     }
     // Calculate the new balance of the output token after the BPT burn.
     // "divUp" leads to a higher "newBalance," which in turn results in a lower "amountOut."
@@ -316,7 +322,9 @@ export function computeRemoveLiquiditySingleTokenExactOut(
     );
 
     if (invariantRatio < minInvariantRatio) {
-        throw Error(`InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`);
+        throw Error(
+            `InvariantRatioBelowMin ${invariantRatio} ${minInvariantRatio}`,
+        );
     }
 
     // Taxable amount is proportional to invariant ratio; a larger taxable amount rounds in the Vault's favor.

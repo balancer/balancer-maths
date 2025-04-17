@@ -2,6 +2,7 @@ import { BufferState } from '@/buffer/data';
 import { GyroECLPState } from '@/gyro';
 import type { StableState } from '@/stable/data';
 import type { WeightedState } from '@/weighted/data';
+import type { LiquidityBootstrappingState } from '@/liquidityBootstrapping';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -19,7 +20,14 @@ type BufferPool = PoolBase & BufferState;
 
 type GyroEPool = PoolBase & GyroECLPState;
 
-type SupportedPools = WeightedPool | StablePool | BufferPool | GyroEPool;
+type LiquidityBootstrappingPool = PoolBase & LiquidityBootstrappingState;
+
+type SupportedPools =
+    | WeightedPool
+    | StablePool
+    | BufferPool
+    | GyroEPool
+    | LiquidityBootstrappingPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -214,6 +222,26 @@ function mapPool(
             w: BigInt(pool.w),
             z: BigInt(pool.z),
             dSq: BigInt(pool.dSq),
+        };
+    }
+    if (pool.poolType === 'LIQUIDITY_BOOTSTRAPPING') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            weights: (
+                pool as TransformBigintToString<LiquidityBootstrappingPool>
+            ).weights.map((w) => BigInt(w)),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity:
+                pool.supportsUnbalancedLiquidity === undefined
+                    ? true
+                    : pool.supportsUnbalancedLiquidity,
         };
     }
     console.log(pool);
