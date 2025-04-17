@@ -9,6 +9,7 @@ import {
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
 import { GyroECLP } from '../gyro';
+import { ReClamm } from '../reClamm';
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
 import {
     isSameAddress,
@@ -58,6 +59,7 @@ export class Vault {
             WEIGHTED: Weighted,
             STABLE: Stable,
             GYROE: GyroECLP,
+            RECLAMM: ReClamm,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
         };

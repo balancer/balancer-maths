@@ -1,0 +1,48 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amountRaw": "3200000",
+            "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "tokenOut": "0x4200000000000000000000000000000000000006",
+            "outputRaw": "1924690155046817"
+        }
+    ],
+    "pool": {
+        "chainId": "8453",
+        "blockNumber": "29019692",
+        "poolType": "RECLAMM",
+        "poolAddress": "0xee57Cd1561b85D4EBFD42f613015920892b8E995",
+        "tokens": [
+            "0x4200000000000000000000000000000000000006",
+            "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        ],
+        "scalingFactors": [
+            "1",
+            "1000000000000"
+        ],
+        "aggregateSwapFee": "500000000000000000",
+        "swapFee": "1000000000000000",
+        "totalSupply": "4402584882289178759",
+        "balancesLiveScaled18": [
+            "3000000000000000",
+            "5420631000000000000"
+        ],
+        "tokenRates": [
+            "1000000000000000000",
+            "1000000000000000000"
+        ],
+        "lastTimestamp": "1744824595",
+        "lastVirtualBalances": [
+            "49455844119052476",
+            "78508718650673466896"
+        ],
+        "priceShiftDailyRateInSeconds": "8022527256536",
+        "centerednessMargin": "200000000000000000",
+        "startFourthRootPriceRatio": "0",
+        "endFourthRootPriceRatio": "1064844316803015895",
+        "priceRatioUpdateStartTime": "1744824595",
+        "priceRatioUpdateEndTime": "1744824595",
+        "currentTimestamp": "1744828731"
+    }
+}

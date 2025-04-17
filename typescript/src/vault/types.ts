@@ -1,6 +1,7 @@
 import { GyroECLPState } from '@/gyro';
 import { StableState } from '@/stable';
 import { WeightedState } from '@/weighted';
+import { ReClammState } from '@/reClamm';
 
 /**
  * State of a pool. Note - rates, fees, totalSupply use scaled 18.
@@ -23,7 +24,8 @@ export type PoolState =
     | BasePoolState
     | WeightedState
     | StableState
-    | GyroECLPState;
+    | GyroECLPState
+    | ReClammState;
 
 export enum SwapKind {
     GivenIn = 0,

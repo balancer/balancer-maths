@@ -1,5 +1,6 @@
 import { BufferState } from '@/buffer/data';
 import { GyroECLPState } from '@/gyro';
+import { ReClammState } from '@/reClamm';
 import type { StableState } from '@/stable/data';
 import type { WeightedState } from '@/weighted/data';
 import * as fs from 'node:fs';
@@ -19,7 +20,9 @@ type BufferPool = PoolBase & BufferState;
 
 type GyroEPool = PoolBase & GyroECLPState;
 
-type SupportedPools = WeightedPool | StablePool | BufferPool | GyroEPool;
+type ReClammPool = PoolBase & ReClammState;
+
+type SupportedPools = WeightedPool | StablePool | BufferPool | GyroEPool | ReClammPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -214,6 +217,29 @@ function mapPool(
             w: BigInt(pool.w),
             z: BigInt(pool.z),
             dSq: BigInt(pool.dSq),
+        };
+    }
+    if (pool.poolType === 'RECLAMM') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity: false,
+            lastVirtualBalances: pool.lastVirtualBalances.map((b) => BigInt(b)),
+            priceShiftDailyRateInSeconds: BigInt(pool.priceShiftDailyRateInSeconds),
+            lastTimestamp: BigInt(pool.lastTimestamp),
+            currentTimestamp: BigInt(pool.currentTimestamp),
+            centerednessMargin: BigInt(pool.centerednessMargin),
+            startFourthRootPriceRatio: BigInt(pool.startFourthRootPriceRatio),
+            endFourthRootPriceRatio: BigInt(pool.endFourthRootPriceRatio),
+            priceRatioUpdateStartTime: BigInt(pool.priceRatioUpdateStartTime),
+            priceRatioUpdateEndTime: BigInt(pool.priceRatioUpdateEndTime),
         };
     }
     console.log(pool);
