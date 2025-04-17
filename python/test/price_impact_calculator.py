@@ -1,4 +1,9 @@
-from src.pools.stable_math import compute_invariant, compute_out_given_exact_in
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+from pools.stable_math import compute_invariant, compute_out_given_exact_in
 
 DECIMALS = 10**18
 
