@@ -9,6 +9,7 @@ import {
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
 import { GyroECLP } from '../gyro';
+import { ReClamm } from '../reClamm';
 import { LiquidityBootstrapping } from '../liquidityBootstrapping';
 
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
@@ -60,6 +61,7 @@ export class Vault {
             WEIGHTED: Weighted,
             STABLE: Stable,
             GYROE: GyroECLP,
+            RECLAMM: ReClamm,
             LIQUIDITY_BOOTSTRAPPING: LiquidityBootstrapping,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,

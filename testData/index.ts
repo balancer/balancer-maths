@@ -4,6 +4,7 @@ import type { Config } from './src/types';
 const RPC_URL = {
     1: Bun.env.ETHEREUM_RPC_URL,
     11155111: Bun.env.SEPOLIA_RPC_URL,
+    8453: Bun.env.BASE_RPC_URL,
 };
 
 async function generateTestData() {

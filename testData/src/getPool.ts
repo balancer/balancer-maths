@@ -4,6 +4,7 @@ import { StablePool } from './stablePool';
 import type { PoolBase } from './types';
 import { BufferPool } from './buffer';
 import { GyroECLPPool } from './gyroECLP';
+import { ReClammPool } from './reClamm';
 import { LiquidityBootstrappingPool } from './liquidityBootstrappingPool';
 
 export async function getPool(
@@ -20,6 +21,7 @@ export async function getPool(
         | StablePool
         | BufferPool
         | GyroECLPPool
+        | ReClammPool
         | LiquidityBootstrappingPool
     > = {
         WEIGHTED: new WeightedPool(rpcUrl, chainId),
@@ -30,6 +32,7 @@ export async function getPool(
             rpcUrl,
             chainId,
         ),
+        RECLAMM: new ReClammPool(rpcUrl, chainId),
     };
     if (!poolData[poolType])
         throw new Error(`getPool: Unsupported pool type: ${poolType}`);
