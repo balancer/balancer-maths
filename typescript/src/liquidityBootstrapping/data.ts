@@ -14,4 +14,6 @@ export type LiquidityBootstrappingImmutable = {
     isProjectTokenSwapInBlocked: boolean;
 };
 
-export type LiquidityBootstrappingMutable = WeightedImmutable;
+export type LiquidityBootstrappingMutable = {
+    isSwapEnabled: boolean;
+} & WeightedImmutable;

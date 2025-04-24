@@ -7,12 +7,16 @@ import {
 } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
+import { HookStateLiquidityBootstrapping } from './liquidityBootstrappingHook';
 
 export type HookStateBase = {
     hookType: string;
 };
 
-export type HookState = HookStateExitFee | HookStateStableSurge;
+export type HookState =
+    | HookStateExitFee
+    | HookStateStableSurge
+    | HookStateLiquidityBootstrapping;
 
 export type AfterSwapParams = {
     kind: SwapKind;
