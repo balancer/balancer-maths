@@ -17,7 +17,6 @@ export type LBPoolImmutableData = {
     startTime: bigint;
     endTime: bigint;
     projectTokenIndex: number;
-    reserveTokenIndex: number;
     isProjectTokenSwapInBlocked: boolean;
 };
 
@@ -83,7 +82,6 @@ export class LiquidityBootstrappingPool {
             startTime,
             endTime,
             projectTokenIndex,
-            reserveTokenIndex,
             isProjectTokenSwapInBlocked,
         } = (await this.client.readContract({
             ...call,
@@ -98,7 +96,6 @@ export class LiquidityBootstrappingPool {
             startTime: startTime.toString(),
             endTime: endTime.toString(),
             projectTokenIndex: Number(projectTokenIndex),
-            reserveTokenIndex: Number(reserveTokenIndex),
             isProjectTokenSwapInBlocked,
         };
     }

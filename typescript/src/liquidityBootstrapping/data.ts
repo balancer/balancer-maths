@@ -10,7 +10,6 @@ export type LiquidityBootstrappingState = BasePoolState & {
 
 export type LiquidityBootstrappingImmutable = {
     projectTokenIndex: number;
-    reserveTokenIndex: number;
     isProjectTokenSwapInBlocked: boolean;
 };
 
