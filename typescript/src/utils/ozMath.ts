@@ -15,31 +15,31 @@ export function sqrt(a: bigint): bigint {
     let aa = a;
     let xn = 1n;
 
-    if (aa >= (1n << 128n)) {
+    if (aa >= 1n << 128n) {
         aa >>= 128n;
         xn <<= 64n;
     }
-    if (aa >= (1n << 64n)) {
+    if (aa >= 1n << 64n) {
         aa >>= 64n;
         xn <<= 32n;
     }
-    if (aa >= (1n << 32n)) {
+    if (aa >= 1n << 32n) {
         aa >>= 32n;
         xn <<= 16n;
     }
-    if (aa >= (1n << 16n)) {
+    if (aa >= 1n << 16n) {
         aa >>= 16n;
         xn <<= 8n;
     }
-    if (aa >= (1n << 8n)) {
+    if (aa >= 1n << 8n) {
         aa >>= 8n;
         xn <<= 4n;
     }
-    if (aa >= (1n << 4n)) {
+    if (aa >= 1n << 4n) {
         aa >>= 4n;
         xn <<= 2n;
     }
-    if (aa >= (1n << 2n)) {
+    if (aa >= 1n << 2n) {
         xn <<= 1n;
     }
 

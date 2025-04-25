@@ -38,19 +38,16 @@ export class ReClamm implements PoolBase {
      * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
-        const {
-            balancesLiveScaled18,
-            indexIn,
-            indexOut,
-            swapKind,
-        } = maxSwapParams;
-        const maxAmountOut = balancesLiveScaled18[indexOut] - this.MIN_TOKEN_BALANCE_SCALED18;
+        const { balancesLiveScaled18, indexIn, indexOut, swapKind } =
+            maxSwapParams;
+        const maxAmountOut =
+            balancesLiveScaled18[indexOut] - this.MIN_TOKEN_BALANCE_SCALED18;
 
         if (swapKind === SwapKind.GivenIn) {
-            // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool). 
+            // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool).
             // This would give the maximum amount in.
             const computeResult =
-            this._computeCurrentVirtualBalances(balancesLiveScaled18);
+                this._computeCurrentVirtualBalances(balancesLiveScaled18);
             const amountCalculatedScaled18 = computeInGivenOut(
                 balancesLiveScaled18,
                 computeResult.currentVirtualBalanceA,
@@ -117,7 +114,7 @@ export class ReClamm implements PoolBase {
             indexOut,
             amountGivenScaled18,
         );
-        
+
         this._ensureValidPoolStateAfterSwap(
             balancesLiveScaled18,
             computeResult.currentVirtualBalanceA,
@@ -174,7 +171,7 @@ export class ReClamm implements PoolBase {
         amountInScaled18: bigint,
         amountOutScaled18: bigint,
         indexIn: number,
-        indexOut: number
+        indexOut: number,
     ) {
         // Create a copy of the balances array
         const updatedBalances = [...currentBalancesScaled18];
@@ -191,8 +188,11 @@ export class ReClamm implements PoolBase {
         }
 
         if (
-            computeCenteredness(updatedBalances, currentVirtualBalanceA, currentVirtualBalanceB) <
-            this.MIN_POOL_CENTEREDNESS
+            computeCenteredness(
+                updatedBalances,
+                currentVirtualBalanceA,
+                currentVirtualBalanceB,
+            ) < this.MIN_POOL_CENTEREDNESS
         ) {
             // If the pool centeredness is below the minimum, the price ratio update is unreliable.
             throw new Error(`reClammPool: PoolCenterednessTooLow`);
