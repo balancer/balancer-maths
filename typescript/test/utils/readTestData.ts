@@ -267,10 +267,9 @@ function mapPool(
                 pool as TransformBigintToString<LiquidityBootstrappingPool>
             ).weights.map((w) => BigInt(w)),
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
-            supportsUnbalancedLiquidity:
-                pool.supportsUnbalancedLiquidity === undefined
-                    ? true
-                    : pool.supportsUnbalancedLiquidity,
+            // smart contracts allow for unbalanced liquidity. Due to low likelihood
+            // of this being within maths/SOR, we set it to false
+            supportsUnbalancedLiquidity: false,
         };
     }
     console.log(pool);
