@@ -9,8 +9,6 @@ export class LiquidityBootstrapping extends Weighted {
     lbpState: LiquidityBootstrappingState;
 
     constructor(poolState: LiquidityBootstrappingState) {
-        // extract the projectTokenStartWeight and projectTokenEndWeight
-        // from the pool state
         const projectTokenStartWeight =
             poolState.startWeights[poolState.projectTokenIndex];
         const projectTokenEndWeight =
@@ -29,7 +27,6 @@ export class LiquidityBootstrapping extends Weighted {
         );
 
         // weighted pool only requires weights
-        // const { weights } = poolState;
         super({ weights });
 
         this.lbpState = poolState;
