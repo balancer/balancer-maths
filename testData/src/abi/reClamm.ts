@@ -20,18 +20,28 @@ export const reclammAbi = [
                     },
                     {
                         internalType: 'uint256',
-                        name: 'priceShiftDailyRate',
+                        name: 'dailyPriceShiftExponent',
                         type: 'uint256',
-                    },
-                    {
-                        internalType: 'uint96',
-                        name: 'fourthRootPriceRatio',
-                        type: 'uint96',
                     },
                     {
                         internalType: 'uint64',
                         name: 'centerednessMargin',
                         type: 'uint64',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialMinPrice',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialMaxPrice',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialTargetPrice',
+                        type: 'uint256',
                     },
                 ],
                 internalType: 'struct ReClammPoolParams',
@@ -49,12 +59,22 @@ export const reclammAbi = [
     },
     {
         inputs: [],
-        name: 'AmountOutBiggerThanBalance',
+        name: 'AmountOutGreaterThanBalance',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'BalanceRatioExceedsTolerance',
         type: 'error',
     },
     {
         inputs: [],
         name: 'BaseOutOfBounds',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'DailyPriceShiftExponentTooHigh',
         type: 'error',
     },
     {
@@ -120,16 +140,11 @@ export const reclammAbi = [
         inputs: [
             {
                 internalType: 'uint256',
-                name: 'resolvedStartTime',
-                type: 'uint256',
-            },
-            {
-                internalType: 'uint256',
-                name: 'endTime',
+                name: 'fourthRootPriceRatioDelta',
                 type: 'uint256',
             },
         ],
-        name: 'GradualUpdateTimeTravel',
+        name: 'FourthRootPriceRatioDeltaBelowMin',
         type: 'error',
     },
     {
@@ -160,7 +175,38 @@ export const reclammAbi = [
     },
     {
         inputs: [],
+        name: 'InvalidInitialPrice',
+        type: 'error',
+    },
+    {
+        inputs: [],
         name: 'InvalidShortString',
+        type: 'error',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'uint256',
+                name: 'resolvedStartTime',
+                type: 'uint256',
+            },
+            {
+                internalType: 'uint256',
+                name: 'endTime',
+                type: 'uint256',
+            },
+        ],
+        name: 'InvalidStartTime',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'InvalidStartTime',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'InvalidToken',
         type: 'error',
     },
     {
@@ -180,7 +226,17 @@ export const reclammAbi = [
     },
     {
         inputs: [],
-        name: 'PoolIsOutOfRange',
+        name: 'PoolNotInitialized',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'PoolOutsideTargetRange',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'PriceRatioUpdateDurationTooShort',
         type: 'error',
     },
     {
@@ -207,6 +263,17 @@ export const reclammAbi = [
             },
         ],
         name: 'SafeCastOverflowedUintDowncast',
+        type: 'error',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'uint256',
+                name: 'value',
+                type: 'uint256',
+            },
+        ],
+        name: 'SafeCastOverflowedUintToInt',
         type: 'error',
     },
     {
@@ -244,6 +311,16 @@ export const reclammAbi = [
     {
         inputs: [],
         name: 'VaultIsNotLocked',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'VaultNotSet',
+        type: 'error',
+    },
+    {
+        inputs: [],
+        name: 'WrongInitializationPrices',
         type: 'error',
     },
     {
@@ -287,6 +364,25 @@ export const reclammAbi = [
             },
         ],
         name: 'CenterednessMarginUpdated',
+        type: 'event',
+    },
+    {
+        anonymous: false,
+        inputs: [
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'dailyPriceShiftExponent',
+                type: 'uint256',
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'dailyPriceShiftBase',
+                type: 'uint256',
+            },
+        ],
+        name: 'DailyPriceShiftExponentUpdated',
         type: 'event',
     },
     {
@@ -343,25 +439,6 @@ export const reclammAbi = [
         anonymous: false,
         inputs: [
             {
-                indexed: false,
-                internalType: 'uint256',
-                name: 'priceShiftDailyRate',
-                type: 'uint256',
-            },
-            {
-                indexed: false,
-                internalType: 'uint256',
-                name: 'priceShiftDailyRangeInSeconds',
-                type: 'uint256',
-            },
-        ],
-        name: 'PriceShiftDailyRateUpdated',
-        type: 'event',
-    },
-    {
-        anonymous: false,
-        inputs: [
-            {
                 indexed: true,
                 internalType: 'address',
                 name: 'from',
@@ -388,9 +465,15 @@ export const reclammAbi = [
         inputs: [
             {
                 indexed: false,
-                internalType: 'uint256[]',
-                name: 'virtualBalances',
-                type: 'uint256[]',
+                internalType: 'uint256',
+                name: 'virtualBalanceA',
+                type: 'uint256',
+            },
+            {
+                indexed: false,
+                internalType: 'uint256',
+                name: 'virtualBalanceB',
+                type: 'uint256',
             },
         ],
         name: 'VirtualBalancesUpdated',
@@ -516,6 +599,110 @@ export const reclammAbi = [
             },
         ],
         stateMutability: 'pure',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'computeCurrentFourthRootPriceRatio',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'computeCurrentPoolCenteredness',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'computeCurrentPriceRange',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: 'minPrice',
+                type: 'uint256',
+            },
+            {
+                internalType: 'uint256',
+                name: 'maxPrice',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'computeCurrentVirtualBalances',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: 'currentVirtualBalanceA',
+                type: 'uint256',
+            },
+            {
+                internalType: 'uint256',
+                name: 'currentVirtualBalanceB',
+                type: 'uint256',
+            },
+            {
+                internalType: 'bool',
+                name: 'changed',
+                type: 'bool',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'computeInitialBalanceRatio',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'contract IERC20',
+                name: 'referenceToken',
+                type: 'address',
+            },
+            {
+                internalType: 'uint256',
+                name: 'referenceAmountIn',
+                type: 'uint256',
+            },
+        ],
+        name: 'computeInitialBalances',
+        outputs: [
+            {
+                internalType: 'uint256[]',
+                name: 'initialBalances',
+                type: 'uint256[]',
+            },
+        ],
+        stateMutability: 'view',
         type: 'function',
     },
     {
@@ -696,19 +883,6 @@ export const reclammAbi = [
     },
     {
         inputs: [],
-        name: 'getCurrentFourthRootPriceRatio',
-        outputs: [
-            {
-                internalType: 'uint96',
-                name: '',
-                type: 'uint96',
-            },
-        ],
-        stateMutability: 'view',
-        type: 'function',
-    },
-    {
-        inputs: [],
         name: 'getCurrentLiveBalances',
         outputs: [
             {
@@ -722,17 +896,25 @@ export const reclammAbi = [
     },
     {
         inputs: [],
-        name: 'getCurrentVirtualBalances',
+        name: 'getDailyPriceShiftBase',
         outputs: [
             {
-                internalType: 'uint256[]',
-                name: 'currentVirtualBalances',
-                type: 'uint256[]',
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
             },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'getDailyPriceShiftExponent',
+        outputs: [
             {
-                internalType: 'bool',
-                name: 'changed',
-                type: 'bool',
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
             },
         ],
         stateMutability: 'view',
@@ -821,9 +1003,14 @@ export const reclammAbi = [
         name: 'getLastVirtualBalances',
         outputs: [
             {
-                internalType: 'uint256[]',
-                name: '',
-                type: 'uint256[]',
+                internalType: 'uint256',
+                name: 'virtualBalanceA',
+                type: 'uint256',
+            },
+            {
+                internalType: 'uint256',
+                name: 'virtualBalanceB',
+                type: 'uint256',
             },
         ],
         stateMutability: 'view',
@@ -967,7 +1154,7 @@ export const reclammAbi = [
                     },
                     {
                         internalType: 'uint256',
-                        name: 'priceShiftDailyRangeInSeconds',
+                        name: 'dailyPriceShiftBase',
                         type: 'uint256',
                     },
                     {
@@ -1040,6 +1227,66 @@ export const reclammAbi = [
                         name: 'decimalScalingFactors',
                         type: 'uint256[]',
                     },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialMinPrice',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialMaxPrice',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialTargetPrice',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialDailyPriceShiftExponent',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'initialCenterednessMargin',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'minCenterednessMargin',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'maxCenterednessMargin',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'minTokenBalanceScaled18',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'minPoolCenteredness',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'maxDailyPriceShiftExponent',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'minPriceRatioUpdateDuration',
+                        type: 'uint256',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'minFourthRootPriceRatioDelta',
+                        type: 'uint256',
+                    },
                 ],
                 internalType: 'struct ReClammPoolImmutableData',
                 name: 'data',
@@ -1052,19 +1299,6 @@ export const reclammAbi = [
     {
         inputs: [],
         name: 'getStaticSwapFeePercentage',
-        outputs: [
-            {
-                internalType: 'uint256',
-                name: '',
-                type: 'uint256',
-            },
-        ],
-        stateMutability: 'view',
-        type: 'function',
-    },
-    {
-        inputs: [],
-        name: 'getTimeConstant',
         outputs: [
             {
                 internalType: 'uint256',
@@ -1151,6 +1385,37 @@ export const reclammAbi = [
         name: 'incrementNonce',
         outputs: [],
         stateMutability: 'nonpayable',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'isPoolWithinTargetRange',
+        outputs: [
+            {
+                internalType: 'bool',
+                name: '',
+                type: 'bool',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'isPoolWithinTargetRangeUsingCurrentVirtualBalances',
+        outputs: [
+            {
+                internalType: 'bool',
+                name: 'isWithinTargetRange',
+                type: 'bool',
+            },
+            {
+                internalType: 'bool',
+                name: 'virtualBalancesChanged',
+                type: 'bool',
+            },
+        ],
+        stateMutability: 'view',
         type: 'function',
     },
     {
@@ -1866,6 +2131,25 @@ export const reclammAbi = [
         inputs: [
             {
                 internalType: 'uint256',
+                name: 'newDailyPriceShiftExponent',
+                type: 'uint256',
+            },
+        ],
+        name: 'setDailyPriceShiftExponent',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'nonpayable',
+        type: 'function',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'uint256',
                 name: 'endFourthRootPriceRatio',
                 type: 'uint256',
             },
@@ -1881,20 +2165,13 @@ export const reclammAbi = [
             },
         ],
         name: 'setPriceRatioState',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
-        inputs: [
+        outputs: [
             {
                 internalType: 'uint256',
-                name: 'newPriceShiftDailyRate',
+                name: 'actualPriceRatioUpdateStartTime',
                 type: 'uint256',
             },
         ],
-        name: 'setPriceShiftDailyRate',
-        outputs: [],
         stateMutability: 'nonpayable',
         type: 'function',
     },
