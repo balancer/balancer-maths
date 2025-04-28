@@ -116,6 +116,7 @@ export class LiquidityBootstrappingPool {
                 weights: string[];
                 swapFee: string;
                 tokenRates: string[];
+                currentTimestamp: string;
             }
         >
     > {
@@ -151,6 +152,8 @@ export class LiquidityBootstrappingPool {
 
         const tokenRates = multicallResult[1][1] as bigint[];
 
+        const { timestamp } = await this.client.getBlock();
+
         return {
             balancesLiveScaled18: balancesLiveScaled18.map((b) => b.toString()),
             weights: normalizedWeights.map((w) => w.toString()),
@@ -161,6 +164,7 @@ export class LiquidityBootstrappingPool {
             isPoolPaused,
             isPoolInRecoveryMode,
             isSwapEnabled,
+            currentTimestamp: timestamp.toString(),
         };
     }
 }

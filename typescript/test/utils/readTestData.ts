@@ -261,15 +261,20 @@ function mapPool(
             balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
                 BigInt(b),
             ),
+            startTime: BigInt(pool.startTime),
+            endTime: BigInt(pool.endTime),
             tokenRates: pool.tokenRates.map((r) => BigInt(r)),
             totalSupply: BigInt(pool.totalSupply),
             weights: (
                 pool as TransformBigintToString<LiquidityBootstrappingPool>
             ).weights.map((w) => BigInt(w)),
+            startWeights: pool.startWeights.map((w) => BigInt(w)),
+            endWeights: pool.endWeights.map((w) => BigInt(w)),
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
             // smart contracts allow for unbalanced liquidity. Due to low likelihood
             // of this being within maths/SOR, we set it to false
             supportsUnbalancedLiquidity: false,
+            currentTimestamp: BigInt(pool.currentTimestamp ?? Date.now()),
         };
     }
     console.log(pool);

@@ -44,7 +44,6 @@
         "startTime": "1744204169",
         "endTime": "1744546169",
         "projectTokenIndex": 0,
-        "reserveTokenIndex": 1,
         "isProjectTokenSwapInBlocked": false,
         "balancesLiveScaled18": ["1000000000000000000", "1000000000000000000"],
         "weights": ["480300584795321638", "519699415204678362"],
@@ -54,6 +53,7 @@
         "isPoolInitialized": true,
         "isPoolPaused": false,
         "isPoolInRecoveryMode": false,
-        "isSwapEnabled": true
+        "isSwapEnabled": true,
+        "currentTimestamp": "1744221012"
     }
 }

@@ -3,12 +3,33 @@ import { Weighted } from '../weighted/weightedPool';
 
 import type { LiquidityBootstrappingState } from './data';
 
+import { getNormalizedWeights } from '../utils/liquidityBootstrapping';
+
 export class LiquidityBootstrapping extends Weighted {
     lbpState: LiquidityBootstrappingState;
 
     constructor(poolState: LiquidityBootstrappingState) {
+        // extract the projectTokenStartWeight and projectTokenEndWeight
+        // from the pool state
+        const projectTokenStartWeight =
+            poolState.startWeights[poolState.projectTokenIndex];
+        const projectTokenEndWeight =
+            poolState.endWeights[poolState.projectTokenIndex];
+
+        const currentTime = poolState.currentTimestamp ?? BigInt(Date.now());
+
+        // calculate weights from the pool state
+        const weights = getNormalizedWeights(
+            poolState.projectTokenIndex,
+            currentTime,
+            poolState.startTime,
+            poolState.endTime,
+            projectTokenStartWeight,
+            projectTokenEndWeight,
+        );
+
         // weighted pool only requires weights
-        const { weights } = poolState;
+        // const { weights } = poolState;
         super({ weights });
 
         this.lbpState = poolState;
