@@ -1,6 +1,21 @@
 {
     "poolTests": [
         {
+            "testName": "Paraswap-Weighted-Issue",
+            "chainId": "8453",
+            "blockNumber": "29508532",
+            "poolAddress": "0xaf5b7999f491c42c05b5a2ca80f1d200d617cc8c",
+            "poolType": "WEIGHTED",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "3000000000000000",
+                    "tokenIn": "0x4200000000000000000000000000000000000006",
+                    "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                }
+            ]
+        },
+        {
             "testName": "ReClamm-WETH-USDC-Bring-Out-Of-Range",
             "chainId": "8453",
             "blockNumber": "29019692",
