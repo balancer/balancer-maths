@@ -25,7 +25,7 @@ export function computeCurrentVirtualBalances(
     balancesScaled18: bigint[],
     lastVirtualBalanceA: bigint,
     lastVirtualBalanceB: bigint,
-    priceShiftDailyRateInSeconds: bigint,
+    dailyPriceShiftBase: bigint,
     lastTimestamp: bigint,
     centerednessMargin: bigint,
     priceRatioState: PriceRatioState,
@@ -91,7 +91,7 @@ export function computeCurrentVirtualBalances(
                 currentVirtualBalanceA,
                 currentVirtualBalanceB,
                 isPoolAboveCenter,
-                priceShiftDailyRateInSeconds,
+                dailyPriceShiftBase,
                 currentTimestamp,
                 lastTimestamp,
             );
@@ -112,7 +112,7 @@ function computeVirtualBalancesUpdatingPriceRange(
     virtualBalanceA: bigint,
     virtualBalanceB: bigint,
     isPoolAboveCenter: boolean,
-    priceShiftDailyRateInSeconds: bigint,
+    dailyPriceShiftBase: bigint,
     currentTimestamp: bigint,
     lastTimestamp: bigint,
 ): [bigint, bigint] {
@@ -132,11 +132,12 @@ function computeVirtualBalancesUpdatingPriceRange(
             ? [virtualBalanceA, virtualBalanceB]
             : [virtualBalanceB, virtualBalanceA];
 
-    // // Vb = Vb * (1 - priceShiftDailyRateInSeconds)^(T_curr - T_last)
+    // Vb = Vb * (1 - tau)^(T_curr - T_last)
+    // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
     virtualBalanceOvervalued = MathSol.mulDownFixed(
         virtualBalanceOvervalued,
         LogExpMath.pow(
-            WAD - priceShiftDailyRateInSeconds,
+            dailyPriceShiftBase,
             (currentTimestamp - lastTimestamp) * WAD,
         ),
     );

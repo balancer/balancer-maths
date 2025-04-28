@@ -18,7 +18,7 @@ type ReClammMutable = {
     // ReClamm
     lastTimestamp: bigint;
     lastVirtualBalances: bigint[];
-    priceShiftDailyRateInSeconds: bigint;
+    dailyPriceShiftBase: bigint;
     centerednessMargin: bigint;
     startFourthRootPriceRatio: bigint;
     endFourthRootPriceRatio: bigint;
@@ -100,32 +100,40 @@ export class ReClammPool {
         } as const;
 
         const multicallResult = await this.client.multicall({
-            contracts: [
-                poolConfigCall,
-                dynamicDataCall,
-            ],
+            contracts: [poolConfigCall, dynamicDataCall],
             allowFailure: false,
             blockNumber,
         });
 
         const block = await this.client.getBlock({
-            blockNumber
-          })
+            blockNumber,
+        });
 
         return {
-            aggregateSwapFee: multicallResult[0].aggregateSwapFeePercentage.toString(),
+            aggregateSwapFee:
+                multicallResult[0].aggregateSwapFeePercentage.toString(),
             swapFee: multicallResult[1].staticSwapFeePercentage.toString(),
             totalSupply: multicallResult[1].totalSupply.toString(),
-            balancesLiveScaled18: multicallResult[1].balancesLiveScaled18.map((b) => b.toString()),
+            balancesLiveScaled18: multicallResult[1].balancesLiveScaled18.map(
+                (b) => b.toString(),
+            ),
             tokenRates: multicallResult[1].tokenRates.map((b) => b.toString()),
             lastTimestamp: multicallResult[1].lastTimestamp.toString(),
-            lastVirtualBalances: multicallResult[1].lastVirtualBalances.map((b) => b.toString()),
-            priceShiftDailyRateInSeconds: multicallResult[1].priceShiftDailyRateInSeconds.toString(),
-            centerednessMargin: multicallResult[1].centerednessMargin.toString(),
-            startFourthRootPriceRatio: multicallResult[1].startFourthRootPriceRatio.toString(),
-            endFourthRootPriceRatio: multicallResult[1].endFourthRootPriceRatio.toString(),
-            priceRatioUpdateStartTime: multicallResult[1].priceRatioUpdateStartTime.toString(),
-            priceRatioUpdateEndTime: multicallResult[1].priceRatioUpdateEndTime.toString(),
+            lastVirtualBalances: multicallResult[1].lastVirtualBalances.map(
+                (b) => b.toString(),
+            ),
+            dailyPriceShiftBase:
+                multicallResult[1].dailyPriceShiftBase.toString(),
+            centerednessMargin:
+                multicallResult[1].centerednessMargin.toString(),
+            startFourthRootPriceRatio:
+                multicallResult[1].startFourthRootPriceRatio.toString(),
+            endFourthRootPriceRatio:
+                multicallResult[1].endFourthRootPriceRatio.toString(),
+            priceRatioUpdateStartTime:
+                multicallResult[1].priceRatioUpdateStartTime.toString(),
+            priceRatioUpdateEndTime:
+                multicallResult[1].priceRatioUpdateEndTime.toString(),
             currentTimestamp: block.timestamp.toString(),
         };
     }

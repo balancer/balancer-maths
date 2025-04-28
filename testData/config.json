@@ -1,96 +1,36 @@
 {
     "poolTests": [
         {
-            "testName": "ReClamm-WETH-USDC-Bring-Out-Of-Range",
+            "testName": "ReClamm-WETH-USDC-v2",
             "chainId": "8453",
-            "blockNumber": "29019692",
-            "poolAddress": "0xee57Cd1561b85D4EBFD42f613015920892b8E995",
+            "blockNumber": "29533250",
+            "poolAddress": "0x035d7213cbc08483aa78ced076dbdc8ac5a509c1",
             "poolType": "RECLAMM",
             "swaps": [
                 {
                     "swapKind": 0,
-                    "amountRaw": "3200000",
+                    "amountRaw": "10000",
                     "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
                     "tokenOut": "0x4200000000000000000000000000000000000006"
                 }
             ]
         },
         {
-            "testName": "ReClamm-WETH-USDC-Same-Timestamp",
+            "testName": "ReClamm-WETH-USDC-v2-out-of-range",
             "chainId": "8453",
-            "blockNumber": "29019693",
-            "poolAddress": "0xee57Cd1561b85D4EBFD42f613015920892b8E995",
+            "blockNumber": "29533259",
+            "poolAddress": "0x035d7213cbc08483aa78ced076dbdc8ac5a509c1",
             "poolType": "RECLAMM",
             "swaps": [
                 {
                     "swapKind": 0,
-                    "amountRaw": "100000",
-                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                    "tokenOut": "0x4200000000000000000000000000000000000006"
-                }
-            ]
-        },
-        {
-            "testName": "ReClamm-WETH-USDC-Out-Of-Range",
-            "chainId": "8453",
-            "blockNumber": "29019694",
-            "poolAddress": "0xee57Cd1561b85D4EBFD42f613015920892b8E995",
-            "poolType": "RECLAMM",
-            "swaps": [
-                {
-                    "swapKind": 0,
-                    "amountRaw": "100000",
-                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                    "tokenOut": "0x4200000000000000000000000000000000000006"
-                },
-                {
-                    "swapKind": 0,
-                    "amountRaw": "1000000000000",
-                    "tokenIn": "0x4200000000000000000000000000000000000006",
-                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                },
-                {
-                    "swapKind": 1,
-                    "amountRaw": "2200000000000",
+                    "amountRaw": "1000000",
                     "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
                     "tokenOut": "0x4200000000000000000000000000000000000006"
                 },
                 {
                     "swapKind": 1,
-                    "amountRaw": "200000",
-                    "tokenIn": "0x4200000000000000000000000000000000000006",
-                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                }
-            ]
-        },
-        {
-            "testName": "ReClamm-WETH-USDC",
-            "chainId": "8453",
-            "blockNumber": "29000654",
-            "poolAddress": "0xde842def79c17a52d7fb4b61c238d78fd18f11e6",
-            "poolType": "RECLAMM",
-            "swaps": [
-                {
-                    "swapKind": 0,
-                    "amountRaw": "100000",
-                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                    "tokenOut": "0x4200000000000000000000000000000000000006"
-                },
-                {
-                    "swapKind": 1,
-                    "amountRaw": "1000000000000",
-                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                    "tokenOut": "0x4200000000000000000000000000000000000006"
-                },
-                {
-                    "swapKind": 0,
-                    "amountRaw": "20000000000000",
-                    "tokenIn": "0x4200000000000000000000000000000000000006",
-                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                },
-                {
-                    "swapKind": 1,
-                    "amountRaw": "700000",
+                    "amountRaw": "1000000",
                     "tokenIn": "0x4200000000000000000000000000000000000006",
                     "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                 }
@@ -131,32 +71,22 @@
             "adds": [
                 {
                     "kind": "Unbalanced",
-                    "inputAmountsRaw": [
-                        "10000000",
-                        "1000000000000000000"
-                    ],
+                    "inputAmountsRaw": ["10000000", "1000000000000000000"],
                     "tokens": [
                         "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
                         "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357"
                     ],
-                    "decimals": [
-                        6,
-                        18
-                    ]
+                    "decimals": [6, 18]
                 },
                 {
                     "kind": "SingleToken",
-                    "bptOutRaw": [
-                        "10000000000000000000"
-                    ],
+                    "bptOutRaw": ["10000000000000000000"],
                     "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
                     "decimals": 6
                 },
                 {
                     "kind": "SingleToken",
-                    "bptOutRaw": [
-                        "10000000000000000000"
-                    ],
+                    "bptOutRaw": ["10000000000000000000"],
                     "tokenIn": "0xff34b3d4aee8ddcd6f9afffb6fe49bd371b8a357",
                     "decimals": 18
                 }
@@ -216,24 +146,16 @@
             "adds": [
                 {
                     "kind": "Unbalanced",
-                    "inputAmountsRaw": [
-                        "10000000",
-                        "10000000"
-                    ],
+                    "inputAmountsRaw": ["10000000", "10000000"],
                     "tokens": [
                         "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
                         "0x978206fae13faf5a8d293fb614326b237684b750"
                     ],
-                    "decimals": [
-                        6,
-                        6
-                    ]
+                    "decimals": [6, 6]
                 },
                 {
                     "kind": "SingleToken",
-                    "bptOutRaw": [
-                        "10000000000000000000"
-                    ],
+                    "bptOutRaw": ["10000000000000000000"],
                     "tokenIn": "0x8a88124522dbbf1e56352ba3de1d9f78c143751e",
                     "decimals": 6
                 }
@@ -364,24 +286,17 @@
                         "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
                         "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
                     ],
-                    "decimals": [
-                        18,
-                        18
-                    ]
+                    "decimals": [18, 18]
                 },
                 {
                     "kind": "SingleToken",
-                    "bptOutRaw": [
-                        "1000000000000000"
-                    ],
+                    "bptOutRaw": ["1000000000000000"],
                     "tokenIn": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
                     "decimals": 18
                 },
                 {
                     "kind": "SingleToken",
-                    "bptOutRaw": [
-                        "1000000000000000"
-                    ],
+                    "bptOutRaw": ["1000000000000000"],
                     "tokenIn": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                     "decimals": 18
                 }

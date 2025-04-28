@@ -2,17 +2,17 @@
     "swaps": [
         {
             "swapKind": 0,
-            "amountRaw": "100000",
+            "amountRaw": "10000",
             "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
             "tokenOut": "0x4200000000000000000000000000000000000006",
-            "outputRaw": "57872272166228"
+            "outputRaw": "5583342476300"
         }
     ],
     "pool": {
         "chainId": "8453",
-        "blockNumber": "29019693",
+        "blockNumber": "29533250",
         "poolType": "RECLAMM",
-        "poolAddress": "0xee57Cd1561b85D4EBFD42f613015920892b8E995",
+        "poolAddress": "0x035d7213cbc08483aa78ced076dbdc8ac5a509c1",
         "tokens": [
             "0x4200000000000000000000000000000000000006",
             "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -22,27 +22,27 @@
             "1000000000000"
         ],
         "aggregateSwapFee": "500000000000000000",
-        "swapFee": "1000000000000000",
-        "totalSupply": "4402584882289178759",
+        "swapFee": "500000000000000",
+        "totalSupply": "50410971148635723477836",
         "balancesLiveScaled18": [
-            "1075309844953183",
-            "8619031000000000000"
+            "14552907646299798",
+            "174459788000000000000"
         ],
         "tokenRates": [
             "1000000000000000000",
             "1000000000000000000"
         ],
-        "lastTimestamp": "1744828733",
+        "lastTimestamp": "1745855815",
         "lastVirtualBalances": [
-            "49455844119052476",
-            "78508718650673466896"
+            "5292078522152179508",
+            "9325176954769209651335"
         ],
-        "priceShiftDailyRateInSeconds": "8022527256536",
-        "centerednessMargin": "200000000000000000",
+        "dailyPriceShiftBase": "999991977472743464",
+        "centerednessMargin": "100000000000000000",
         "startFourthRootPriceRatio": "0",
-        "endFourthRootPriceRatio": "1064844316803015895",
-        "priceRatioUpdateStartTime": "1744824595",
-        "priceRatioUpdateEndTime": "1744824595",
-        "currentTimestamp": "1744828733"
+        "endFourthRootPriceRatio": "1010696708667094804",
+        "priceRatioUpdateStartTime": "1745855663",
+        "priceRatioUpdateEndTime": "1745855663",
+        "currentTimestamp": "1745855847"
     }
 }
