@@ -25,6 +25,7 @@ type ReClammMutable = {
     priceRatioUpdateStartTime: bigint;
     priceRatioUpdateEndTime: bigint;
     currentTimestamp: bigint;
+    isPoolWithinTargetRange: boolean;
 };
 
 type ReClammImmutable = {
@@ -98,9 +99,18 @@ export class ReClammPool {
             abi: reclammAbi,
             functionName: 'getReClammPoolDynamicData',
         } as const;
+        const isPoolWithinTargetRangeCall = {
+            address,
+            abi: reclammAbi,
+            functionName: 'isPoolWithinTargetRange',
+        } as const;
 
         const multicallResult = await this.client.multicall({
-            contracts: [poolConfigCall, dynamicDataCall],
+            contracts: [
+                poolConfigCall,
+                dynamicDataCall,
+                isPoolWithinTargetRangeCall,
+            ],
             allowFailure: false,
             blockNumber,
         });
@@ -135,6 +145,7 @@ export class ReClammPool {
             priceRatioUpdateEndTime:
                 multicallResult[1].priceRatioUpdateEndTime.toString(),
             currentTimestamp: block.timestamp.toString(),
+            isPoolWithinTargetRange: multicallResult[2],
         };
     }
 }
