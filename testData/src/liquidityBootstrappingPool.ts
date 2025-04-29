@@ -152,7 +152,11 @@ export class LiquidityBootstrappingPool {
 
         const tokenRates = multicallResult[1][1] as bigint[];
 
-        const { timestamp } = await this.client.getBlock();
+        // block 8085514 was at timestamp 1744221012
+        // fetching the timestamp via this.client.getBlock() returns the current timestamp
+        // and not the timestamp when this block was mined on sepolia. So it is hardcoded for
+        // testing purposes
+        const timestamp = 1744221012n;
 
         return {
             balancesLiveScaled18: balancesLiveScaled18.map((b) => b.toString()),
