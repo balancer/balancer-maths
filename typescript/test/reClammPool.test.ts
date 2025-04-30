@@ -7,7 +7,7 @@ describe('reClamm pool', () => {
     const pool = new ReClamm({
         lastTimestamp: 1744790653n,
         lastVirtualBalances: [943712943000000n, 1887425886000000000n],
-        priceShiftDailyRateInSeconds: 8022527256536n,
+        dailyPriceShiftBase: 8022527256536n,
         centerednessMargin: 200000000000000000n,
         startFourthRootPriceRatio: 0n,
         endFourthRootPriceRatio: 1414213562373095048n,
@@ -20,9 +20,7 @@ describe('reClamm pool', () => {
             const swapParams = {
                 swapKind: SwapKind.GivenIn,
                 amountGivenScaled18: 0n,
-                balancesLiveScaled18: [
-                    250000000000000n, 1096856000000000000n
-                ],
+                balancesLiveScaled18: [250000000000000n, 1096856000000000000n],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
                 scalingFactors: [1n, 1000000000000n],
                 indexIn: 0,
@@ -36,9 +34,7 @@ describe('reClamm pool', () => {
             const swapParams = {
                 swapKind: SwapKind.GivenOut,
                 amountGivenScaled18: 0n,
-                balancesLiveScaled18: [
-                    250000000000000n, 1096856000000000000n
-                ],
+                balancesLiveScaled18: [250000000000000n, 1096856000000000000n],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
                 scalingFactors: [1n, 1000000000000n],
                 indexIn: 0,
@@ -52,9 +48,7 @@ describe('reClamm pool', () => {
             const swapParams = {
                 swapKind: SwapKind.GivenIn,
                 amountGivenScaled18: 0n,
-                balancesLiveScaled18: [
-                    250000000000000n, 1096856000000000000n
-                ],
+                balancesLiveScaled18: [250000000000000n, 1096856000000000000n],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
                 scalingFactors: [1n, 1000000000000n],
                 indexIn: 1,
@@ -68,9 +62,7 @@ describe('reClamm pool', () => {
             const swapParams = {
                 swapKind: SwapKind.GivenOut,
                 amountGivenScaled18: 0n,
-                balancesLiveScaled18: [
-                    250000000000000n, 1096856000000000000n
-                ],
+                balancesLiveScaled18: [250000000000000n, 1096856000000000000n],
                 tokenRates: [1000000000000000000n, 1000000000000000000n],
                 scalingFactors: [1n, 1000000000000n],
                 indexIn: 1,
