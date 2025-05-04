@@ -4,6 +4,7 @@ import {
     _computeSwapFeePercentageGivenExactIn,
     _computeSwapFeePercentageGivenExactOut 
 } from '@/weighted/AkronWeightedMath';
+import { MathSol } from '../utils/math';
 
 export type HookStateAkronWeightedLVRFee = {
     weights: bigint[];
@@ -25,20 +26,18 @@ export class AkronWeightedLVRFeeHook implements HookBase {
         pool: string,
         staticSwapFeePercentage: bigint,
         hookState: HookStateAkronWeightedLVRFee,
-    ): { success: boolean; dynamicSwapFeePercentage: bigint } {
+    ): { success: boolean; dynamicSwapFee: bigint } {
 
         const calculatedSwapFeePercentage =
             params.swapKind === SwapKind.GivenIn
                 ? _computeSwapFeePercentageGivenExactIn(
                     params.balancesLiveScaled18[params.indexIn],
-                    hookState.weights[params.indexIn],
-                    hookState.weights[params.indexOut],
+                    MathSol.divDownFixed(hookState.weights[params.indexIn],hookState.weights[params.indexOut]),
                     params.amountGivenScaled18,
                 )
                 : _computeSwapFeePercentageGivenExactOut(
-                    hookState.weights[params.indexIn],
                     params.balancesLiveScaled18[params.indexOut],
-                    hookState.weights[params.indexOut],
+                    MathSol.divUpFixed(hookState.weights[params.indexOut],hookState.weights[params.indexIn]),
                     params.amountGivenScaled18,
                 );
 
@@ -50,7 +49,7 @@ export class AkronWeightedLVRFeeHook implements HookBase {
 
         return {
             success: true,
-            dynamicSwapFeePercentage: dynamicSwapFee,
+            dynamicSwapFee: dynamicSwapFee,
         };
     }
 
