@@ -25,7 +25,7 @@ export class AkronWeightedLVRFeeHook implements HookBase {
         pool: string,
         staticSwapFeePercentage: bigint,
         hookState: HookStateAkronWeightedLVRFee,
-    ): { success: boolean; dynamicSwapFee: bigint } {
+    ): { success: boolean; dynamicSwapFeePercentage: bigint } {
 
         const calculatedSwapFeePercentage =
             params.swapKind === SwapKind.GivenIn
@@ -50,7 +50,7 @@ export class AkronWeightedLVRFeeHook implements HookBase {
 
         return {
             success: true,
-            dynamicSwapFee: dynamicSwapFee,
+            dynamicSwapFeePercentage: dynamicSwapFee,
         };
     }
 

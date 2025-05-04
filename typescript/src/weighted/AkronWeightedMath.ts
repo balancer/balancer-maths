@@ -7,46 +7,10 @@ export const _MIN_WEIGHT = BigInt(0.01e18);
 // Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
 // ratio).
 
-// Swap limits: amounts swapped may not be larger than this percentage of the total balance.
-export const _MAX_IN_RATIO = BigInt(0.3e18);
-export const _MAX_OUT_RATIO = BigInt(0.3e18);
-
 export const _computeSwapFeePercentageGivenExactIn = (
     balanceIn: bigint,
-    weightIn: bigint,
-    weightOut: bigint,
-    amountIn: bigint,
-): bigint => {
-    
-    return _getSwapFeePercentageGivenExactIn(
-        balanceIn, 
-        MathSol.divDownFixed(weightIn, weightOut),
-        amountIn
-    );
-
-};
-
-
-export const _computeSwapFeePercentageGivenExactOut = (
-    weightIn: bigint,
-    balanceOut: bigint,
-    weightOut: bigint,
-    amountOut: bigint,
-): bigint => {
-    return _getSwapFeePercentageGivenExactOut(
-        balanceOut, 
-        MathSol.divUpFixed(weightOut, weightIn),
-        amountOut
-    );
-}
-
-
-
-// Computes the swap fee percentage in `tokenIn` if `amountIn` are sent
-export const _getSwapFeePercentageGivenExactIn = (
-    balanceIn: bigint,
     exponent: bigint,
-    grossAmountIn: bigint,    
+    amountIn: bigint,
 ): bigint => {
     /**********************************************************************************************
     // outGivenExactInWithFees                                                                   //
@@ -58,35 +22,22 @@ export const _getSwapFeePercentageGivenExactIn = (
     // wO = weightOut                                                                            //
     **********************************************************************************************/
         
-    // swapFee = outGivenExactIn(grossAmountIn) - outGivenExactInWithFees(grossAmountIn)
-
-    if (grossAmountIn > MathSol.mulDownFixed(balanceIn, _MAX_IN_RATIO)) {
-        throw new Error('MaxInRatio exceeded');
-    }    
-
-    const grossBaseWithFees = MathSol.divUpFixed(balanceIn + grossAmountIn, balanceIn + grossAmountIn * BigInt(2));
-    const grossBaseWithoutFees = MathSol.divUpFixed(balanceIn, balanceIn + grossAmountIn);
-
-    const grossPowerWithFees = MathSol.powUpFixed(grossBaseWithFees, exponent);
-    const grossPowerWithoutFees = MathSol.powUpFixed(grossBaseWithoutFees, exponent);
+    // swap fee is equal to outGivenExactIn(grossAmountIn) - outGivenExactInWithFees(grossAmountIn)
+    const powerWithFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceIn + amountIn, balanceIn + amountIn * BigInt(2)),exponent)
+    const powerWithoutFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceIn, balanceIn + amountIn), exponent)
 
     return MathSol.mulDivUpFixed(
         exponent,
-        MathSol.mulDivUpFixed(
-            balanceIn + grossAmountIn, 
-            grossPowerWithFees - grossPowerWithoutFees, 
-            grossPowerWithFees
-        ), 
-        grossAmountIn
-    );
-
+        MathSol.mulDivUpFixed(balanceIn + amountIn, powerWithFees - powerWithoutFees, powerWithFees),
+        amountIn
+    )
 };
 
-// Computes the swap fee percentage in `tokenIn` in order to take `amountOut`
-export const _getSwapFeePercentageGivenExactOut = (
+
+export const _computeSwapFeePercentageGivenExactOut = (
     balanceOut: bigint,
     exponent: bigint,
-    grossAmountOut: bigint,
+    amountOut: bigint,
 ): bigint => {
     /**********************************************************************************************
     // inGivenExactOutWithFees                                                                   //
@@ -98,21 +49,12 @@ export const _getSwapFeePercentageGivenExactOut = (
     // wO = weightOut                                                                            //
     **********************************************************************************************/
 
-    // swapFee = inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
+    // swap fee is equal to inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
 
-    if (grossAmountOut > MathSol.mulDownFixed(balanceOut, _MAX_OUT_RATIO)) {
-            throw new Error('MaxOutRatio exceeded');
-    }
+    const powerWithFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceOut - amountOut, balanceOut - amountOut * BigInt(2)), exponent)
+    const powerWithoutFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceOut, balanceOut - amountOut), exponent)
     
-    const grossBaseWithFees = MathSol.divUpFixed(balanceOut - grossAmountOut, balanceOut - grossAmountOut * BigInt(2));
-    const grossBaseWithoutFees = MathSol.divUpFixed(balanceOut, balanceOut - grossAmountOut);
+    return MathSol.divUpFixed(powerWithFees - powerWithoutFees, powerWithFees - WAD)
+}
 
-    const grossPowerWithFees = MathSol.powUpFixed(grossBaseWithFees, exponent);
-    const grossPowerWithoutFees = MathSol.powUpFixed(grossBaseWithoutFees, exponent);
 
-    return MathSol.divUpFixed(
-        grossPowerWithFees - grossPowerWithoutFees,
-        grossPowerWithFees - WAD
-    );
-
-};
