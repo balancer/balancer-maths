@@ -148,7 +148,7 @@ export class ReClamm implements PoolBase {
             balancesScaled18,
             this.reClammState.lastVirtualBalances[0],
             this.reClammState.lastVirtualBalances[1],
-            this.reClammState.priceShiftDailyRateInSeconds,
+            this.reClammState.dailyPriceShiftBase,
             this.reClammState.lastTimestamp,
             this.reClammState.centerednessMargin,
             {

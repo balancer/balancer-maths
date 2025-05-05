@@ -241,9 +241,7 @@ function mapPool(
             aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
             supportsUnbalancedLiquidity: false,
             lastVirtualBalances: pool.lastVirtualBalances.map((b) => BigInt(b)),
-            priceShiftDailyRateInSeconds: BigInt(
-                pool.priceShiftDailyRateInSeconds,
-            ),
+            dailyPriceShiftBase: BigInt(pool.dailyPriceShiftBase),
             lastTimestamp: BigInt(pool.lastTimestamp),
             currentTimestamp: BigInt(pool.currentTimestamp),
             centerednessMargin: BigInt(pool.centerednessMargin),

@@ -3,7 +3,7 @@ import { BasePoolState } from '@/vault/types';
 type PoolType = 'RECLAMM';
 export type ReClammMutable = {
     lastVirtualBalances: bigint[];
-    priceShiftDailyRateInSeconds: bigint;
+    dailyPriceShiftBase: bigint;
     lastTimestamp: bigint;
     currentTimestamp: bigint;
     centerednessMargin: bigint;
