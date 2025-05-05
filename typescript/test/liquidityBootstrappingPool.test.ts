@@ -7,6 +7,7 @@ import { LiquidityBootstrappingState } from '../src/liquidityBootstrapping/data'
 import { LiquidityBootstrapping } from '../src/liquidityBootstrapping/liquidityBootstrapping';
 describe('liquidityBootstrappingPool pool', () => {
     const poolState = {
+        currentTimestamp: 1744204169n,
         poolAddress: '0x1234567890abcdef1234567890abcdef12345678',
         startTime: 1744204169n,
         endTime: 1744546169n,

@@ -5,7 +5,7 @@ type PoolType = 'LIQUIDITY_BOOTSTRAPPING';
 
 export type LiquidityBootstrappingState = BasePoolState & {
     poolType: PoolType;
-    currentTimestamp?: bigint;
+    currentTimestamp: bigint;
 } & LiquidityBootstrappingImmutable &
     LiquidityBootstrappingMutable;
 

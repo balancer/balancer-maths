@@ -14,7 +14,7 @@ export class LiquidityBootstrapping extends Weighted {
         const projectTokenEndWeight =
             poolState.endWeights[poolState.projectTokenIndex];
 
-        const currentTime = poolState.currentTimestamp ?? BigInt(Date.now());
+        const currentTime = poolState.currentTimestamp;
 
         // calculate weights from the pool state
         const weights = getNormalizedWeights(
