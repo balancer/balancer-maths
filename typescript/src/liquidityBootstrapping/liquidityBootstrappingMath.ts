@@ -1,4 +1,4 @@
-import { MathSol, WAD } from './math';
+import { MathSol, WAD } from '../utils/math';
 
 /**
  * Calculates the normalized weights for a liquidity pool.

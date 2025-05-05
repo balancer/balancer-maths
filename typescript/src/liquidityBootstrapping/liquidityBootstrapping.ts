@@ -3,7 +3,7 @@ import { Weighted } from '../weighted/weightedPool';
 
 import type { LiquidityBootstrappingState } from './data';
 
-import { getNormalizedWeights } from '../utils/liquidityBootstrapping';
+import { getNormalizedWeights } from './liquidityBootstrappingMath';
 
 export class LiquidityBootstrapping extends Weighted {
     lbpState: LiquidityBootstrappingState;

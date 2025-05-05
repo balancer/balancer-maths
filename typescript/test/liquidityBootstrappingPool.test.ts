@@ -1,7 +1,7 @@
 //  pnpm test -- liquidityBootstrappingPool.test.ts
 
 import { describe, expect, test } from 'vitest';
-import { getNormalizedWeights } from '../src/utils/liquidityBootstrapping';
+import { getNormalizedWeights } from '../src/liquidityBootstrapping/liquidityBootstrappingMath';
 import { SwapKind } from '../src/index';
 import { LiquidityBootstrappingState } from '../src/liquidityBootstrapping/data';
 import { LiquidityBootstrapping } from '../src/liquidityBootstrapping/liquidityBootstrapping';
