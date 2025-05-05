@@ -11,7 +11,7 @@ import { liquidityBootstrappingAbi } from './abi/liquidityBootstrapping';
 
 export type LBPoolImmutableData = {
     tokens: string[];
-    decimalScalingFactors: bigint[];
+    scalingFactors: bigint[];
     startWeights: bigint[];
     endWeights: bigint[];
     startTime: bigint;
@@ -61,13 +61,7 @@ export class LiquidityBootstrappingPool {
     async fetchImmutableData(
         address: Address,
         blockNumber: bigint,
-    ): Promise<
-        TransformBigintToString<
-            Omit<LBPoolImmutableData, 'decimalScalingFactors'> & {
-                scalingFactors: string[];
-            }
-        >
-    > {
+    ): Promise<TransformBigintToString<LBPoolImmutableData>> {
         const call = {
             address,
             abi: liquidityBootstrappingAbi,
@@ -76,7 +70,7 @@ export class LiquidityBootstrappingPool {
 
         const {
             tokens,
-            decimalScalingFactors,
+            scalingFactors: decimalScalingFactors,
             startWeights,
             endWeights,
             startTime,
