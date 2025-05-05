@@ -79,7 +79,6 @@ function calculateValueChangeProgress(
 
     // Ensure MathSol.divDownFixed returns a BigInt
     const progress = MathSol.divDownFixed(secondsElapsed, totalSeconds);
-    console.log('calculateValueChangeProgress:', typeof progress, progress);
     return progress;
 }
 
