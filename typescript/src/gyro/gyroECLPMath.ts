@@ -1,6 +1,6 @@
 import { GyroPoolMath } from './gyroPoolMath';
 import { SignedFixedPoint } from './signedFixedPoint';
-import {_require} from '../utils/math';
+import { _require } from '../utils/math';
 
 export interface Vector2 {
     x: bigint;
@@ -78,34 +78,67 @@ export class GyroECLPMath {
     static readonly MAX_INVARIANT_RATIO = BigInt('5000000000000000000'); // 500e16 (500%)
 
     static validateParams(params: EclpParams): void {
-        _require(0 <= params.s && params.s <= this._ONE, `s must be >= 0 and <= ${this._ONE}`);
-        _require(0 <= params.c && params.c <= this._ONE, `c must be >= 0 and <= ${this._ONE}`);
+        _require(
+            0 <= params.s && params.s <= this._ONE,
+            `s must be >= 0 and <= ${this._ONE}`,
+        );
+        _require(
+            0 <= params.c && params.c <= this._ONE,
+            `c must be >= 0 and <= ${this._ONE}`,
+        );
 
-        const sc:Vector2 = {x: params.s, y: params.c};
+        const sc: Vector2 = { x: params.s, y: params.c };
         const scnorm2 = this.scalarProd(sc, sc);
 
-        _require(this._ONE - this._ROTATION_VECTOR_NORM_ACCURACY <= scnorm2 && scnorm2 <= this._ONE + this._ROTATION_VECTOR_NORM_ACCURACY, 'RotationVectorNotNormalized()');
-        _require(0 <= params.lambda && params.lambda <= this._MAX_STRETCH_FACTOR,`lambda must be >= 0 and <= ${this._MAX_STRETCH_FACTOR}`);
+        _require(
+            this._ONE - this._ROTATION_VECTOR_NORM_ACCURACY <= scnorm2 &&
+                scnorm2 <= this._ONE + this._ROTATION_VECTOR_NORM_ACCURACY,
+            'RotationVectorNotNormalized()',
+        );
+        _require(
+            0 <= params.lambda && params.lambda <= this._MAX_STRETCH_FACTOR,
+            `lambda must be >= 0 and <= ${this._MAX_STRETCH_FACTOR}`,
+        );
     }
 
-
-    static validateDerivedParams(params: EclpParams, derived: DerivedEclpParams): void {
+    static validateDerivedParams(
+        params: EclpParams,
+        derived: DerivedEclpParams,
+    ): void {
         _require(derived.tauAlpha.y > 0, 'tuaAlpha.y must be > 0');
         _require(derived.tauBeta.y > 0, 'tauBeta.y must be > 0');
-        _require(derived.tauBeta.x > derived.tauAlpha.x, 'tauBeta.x must be > tauAlpha.x');
+        _require(
+            derived.tauBeta.x > derived.tauAlpha.x,
+            'tauBeta.x must be > tauAlpha.x',
+        );
 
         const norm2 = this.scalarProdXp(derived.tauAlpha, derived.tauAlpha);
 
-        _require(this._ONE_XP - this._DERIVED_TAU_NORM_ACCURACY_XP <= norm2 && norm2 <= this._ONE_XP + this._DERIVED_TAU_NORM_ACCURACY_XP, 'RotationVectorNotNormalized()')
+        _require(
+            this._ONE_XP - this._DERIVED_TAU_NORM_ACCURACY_XP <= norm2 &&
+                norm2 <= this._ONE_XP + this._DERIVED_TAU_NORM_ACCURACY_XP,
+            'RotationVectorNotNormalized()',
+        );
         _require(derived.u <= this._ONE_XP, `u must be <= ${this._ONE_XP}`);
         _require(derived.v <= this._ONE_XP, `v must be <= ${this._ONE_XP}`);
         _require(derived.w <= this._ONE_XP, `w must be <= ${this._ONE_XP}`);
         _require(derived.z <= this._ONE_XP, `z must be <= ${this._ONE_XP}`);
 
-        _require(this._ONE_XP - this._DERIVED_DSQ_NORM_ACCURACY_XP <= derived.dSq && derived.dSq <= this._ONE_XP + this._DERIVED_DSQ_NORM_ACCURACY_XP, "DerivedDsqWrong()");
+        _require(
+            this._ONE_XP - this._DERIVED_DSQ_NORM_ACCURACY_XP <= derived.dSq &&
+                derived.dSq <=
+                    this._ONE_XP + this._DERIVED_DSQ_NORM_ACCURACY_XP,
+            'DerivedDsqWrong()',
+        );
 
-        const mulDenominator = SignedFixedPoint.divXpU(this._ONE_XP, (this.calcAChiAChiInXp(params, derived) - this._ONE_XP));
-        _require(mulDenominator <= this._MAX_INV_INVARIANT_DENOMINATOR_XP, `mulDenominator must be <= ${this._MAX_INV_INVARIANT_DENOMINATOR_XP}`);
+        const mulDenominator = SignedFixedPoint.divXpU(
+            this._ONE_XP,
+            this.calcAChiAChiInXp(params, derived) - this._ONE_XP,
+        );
+        _require(
+            mulDenominator <= this._MAX_INV_INVARIANT_DENOMINATOR_XP,
+            `mulDenominator must be <= ${this._MAX_INV_INVARIANT_DENOMINATOR_XP}`,
+        );
     }
 
     static scalarProd(t1: Vector2, t2: Vector2): bigint {

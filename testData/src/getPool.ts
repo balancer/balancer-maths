@@ -5,6 +5,7 @@ import type { PoolBase } from './types';
 import { BufferPool } from './buffer';
 import { GyroECLPPool } from './gyroECLP';
 import { ReClammPool } from './reClamm';
+import { LiquidityBootstrappingPool } from './liquidityBootstrappingPool';
 
 export async function getPool(
     rpcUrl: string,
@@ -16,12 +17,21 @@ export async function getPool(
     // Find onchain data fetching via pool type
     const poolData: Record<
         string,
-        WeightedPool | StablePool | BufferPool | GyroECLPPool | ReClammPool
+        | WeightedPool
+        | StablePool
+        | BufferPool
+        | GyroECLPPool
+        | ReClammPool
+        | LiquidityBootstrappingPool
     > = {
         WEIGHTED: new WeightedPool(rpcUrl, chainId),
         STABLE: new StablePool(rpcUrl, chainId),
         Buffer: new BufferPool(rpcUrl, chainId),
         GYROE: new GyroECLPPool(rpcUrl, chainId),
+        LIQUIDITY_BOOTSTRAPPING: new LiquidityBootstrappingPool(
+            rpcUrl,
+            chainId,
+        ),
         RECLAMM: new ReClammPool(rpcUrl, chainId),
     };
     if (!poolData[poolType])

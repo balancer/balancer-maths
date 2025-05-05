@@ -377,6 +377,39 @@
                     "decimals": 18
                 }
             ]
+        },
+        {
+            "testName": "LBP-BAL-DAI",
+            "chainId": "11155111",
+            "blockNumber": "8085514",
+            "poolAddress": "0x8E4Bd90c02b612594C96a31fADD7E4957bd5daBb",
+            "poolType": "LIQUIDITY_BOOTSTRAPPING",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                    "tokenOut": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                    "tokenOut": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
+                    "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0xB77EB1A70A96fDAAeB31DB1b42F2b8b5846b2613",
+                    "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
+                }
+            ]
         }
     ]
 }

@@ -3,6 +3,7 @@ import { GyroECLPState } from '@/gyro';
 import { ReClammState } from '@/reClamm';
 import type { StableState } from '@/stable/data';
 import type { WeightedState } from '@/weighted/data';
+import type { LiquidityBootstrappingState } from '@/liquidityBootstrapping';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -22,12 +23,15 @@ type GyroEPool = PoolBase & GyroECLPState;
 
 type ReClammPool = PoolBase & ReClammState;
 
+type LiquidityBootstrappingPool = PoolBase & LiquidityBootstrappingState;
+
 type SupportedPools =
     | WeightedPool
     | StablePool
     | BufferPool
     | GyroEPool
-    | ReClammPool;
+    | ReClammPool
+    | LiquidityBootstrappingPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -245,6 +249,30 @@ function mapPool(
             endFourthRootPriceRatio: BigInt(pool.endFourthRootPriceRatio),
             priceRatioUpdateStartTime: BigInt(pool.priceRatioUpdateStartTime),
             priceRatioUpdateEndTime: BigInt(pool.priceRatioUpdateEndTime),
+        };
+    }
+    if (pool.poolType === 'LIQUIDITY_BOOTSTRAPPING') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            startTime: BigInt(pool.startTime),
+            endTime: BigInt(pool.endTime),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            weights: (
+                pool as TransformBigintToString<LiquidityBootstrappingPool>
+            ).weights.map((w) => BigInt(w)),
+            startWeights: pool.startWeights.map((w) => BigInt(w)),
+            endWeights: pool.endWeights.map((w) => BigInt(w)),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            // smart contracts allow for unbalanced liquidity. Due to low likelihood
+            // of this being within maths/SOR, we set it to false
+            supportsUnbalancedLiquidity: false,
+            currentTimestamp: BigInt(pool.currentTimestamp ?? Date.now()),
         };
     }
     console.log(pool);
