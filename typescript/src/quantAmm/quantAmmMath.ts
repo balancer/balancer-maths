@@ -39,12 +39,12 @@ export const getFirstFourWeightsAndMultipliers = (
     tokens: string[],
     firstFourWeightsAndMultipliers: bigint[],
 ): { weights: bigint[]; multipliers: bigint[] } => {
-    const weights = new Array(tokens.length).fill(0n);
-    const multipliers = new Array(tokens.length).fill(0n);
-
     const lessThan4TokensOffset = tokens.length > 4 ? 4 : tokens.length;
 
-    for (let i = 0; i < tokens.length; i++) {
+    const weights = new Array(lessThan4TokensOffset).fill(0n);
+    const multipliers = new Array(lessThan4TokensOffset).fill(0n);
+
+    for (let i = 0; i < lessThan4TokensOffset; i++) {
         weights[i] = firstFourWeightsAndMultipliers[i];
         multipliers[i] =
             firstFourWeightsAndMultipliers[i + lessThan4TokensOffset];
@@ -57,12 +57,16 @@ export const getSecondFourWeightsAndMultipliers = (
     tokens: string[],
     secondFourWeightsAndMultipliers: bigint[],
 ): { weights: bigint[]; multipliers: bigint[] } => {
-    const weights = new Array(tokens.length).fill(0n);
-    const multipliers = new Array(tokens.length).fill(0n);
+    if (tokens.length <= 4) {
+        return { weights: [], multipliers: [] };
+    }
 
     const moreThan4TokensOffset = tokens.length - 4;
 
-    for (let i = 0; i < tokens.length; i++) {
+    const weights = new Array(moreThan4TokensOffset).fill(0n);
+    const multipliers = new Array(moreThan4TokensOffset).fill(0n);
+
+    for (let i = 0; i < moreThan4TokensOffset; i++) {
         weights[i] = secondFourWeightsAndMultipliers[i];
         multipliers[i] =
             secondFourWeightsAndMultipliers[i + moreThan4TokensOffset];

@@ -6,6 +6,7 @@ import { BufferPool } from './buffer';
 import { GyroECLPPool } from './gyroECLP';
 import { ReClammPool } from './reClamm';
 import { LiquidityBootstrappingPool } from './liquidityBootstrappingPool';
+import { QuantAmmPool } from './quantAmm';
 
 export async function getPool(
     rpcUrl: string,
@@ -23,6 +24,7 @@ export async function getPool(
         | GyroECLPPool
         | ReClammPool
         | LiquidityBootstrappingPool
+        | QuantAmmPool
     > = {
         WEIGHTED: new WeightedPool(rpcUrl, chainId),
         STABLE: new StablePool(rpcUrl, chainId),
@@ -33,6 +35,7 @@ export async function getPool(
             chainId,
         ),
         RECLAMM: new ReClammPool(rpcUrl, chainId),
+        QUANT_AMM_WEIGHTED: new QuantAmmPool(rpcUrl, chainId),
     };
     if (!poolData[poolType])
         throw new Error(`getPool: Unsupported pool type: ${poolType}`);

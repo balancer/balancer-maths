@@ -410,6 +410,93 @@
                     "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75"
                 }
             ]
+        },
+        {
+            "testName": "QuantAMM",
+            "chainId": "11155111",
+            "blockNumber": "8275355",
+            "poolAddress": "0xa3a6398f3b29b84a6657a1f4bce5c90f38462bf7",
+            "poolType": "QUANT_AMM_WEIGHTED",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0x29f2d40b0605204364af54ec677bd022da425d03",
+                    "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "100000",
+                    "tokenIn": "0x29f2d40b0605204364af54ec677bd022da425d03",
+                    "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000",
+                    "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+                    "tokenOut": "0x29f2d40b0605204364af54ec677bd022da425d03"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "2000000",
+                    "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+                    "tokenOut": "0x29f2d40b0605204364af54ec677bd022da425d03"
+                }
+            ],
+            "adds": [
+                {
+                    "kind": "Unbalanced",
+                    "inputAmountsRaw": ["10000000", "10000000"],
+                    "tokens": [
+                        "0x29f2d40b0605204364af54ec677bd022da425d03",
+                        "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"
+                    ],
+                    "decimals": [8, 6]
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": ["10000000"],
+                    "tokenIn": "0x29f2d40b0605204364af54ec677bd022da425d03",
+                    "decimals": 8
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": ["10000000"],
+                    "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+                    "decimals": 6
+                }
+            ],
+            "removes": [
+                {
+                    "kind": "Proportional",
+                    "bpt": "0xa3a6398f3b29b84a6657a1f4bce5c90f38462bf7",
+                    "bptInRaw": "100000000000000000"
+                },
+                {
+                    "kind": "SingleTokenExactIn",
+                    "bpt": "0xa3a6398f3b29b84a6657a1f4bce5c90f38462bf7",
+                    "bptInRaw": "100000000000000000",
+                    "token": "0x29f2d40b0605204364af54ec677bd022da425d03"
+                },
+                {
+                    "kind": "SingleTokenExactIn",
+                    "bpt": "0xa3a6398f3b29b84a6657a1f4bce5c90f38462bf7",
+                    "bptInRaw": "100000000000000000",
+                    "token": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"
+                },
+                {
+                    "kind": "SingleTokenExactOut",
+                    "token": "0x29f2d40b0605204364af54ec677bd022da425d03",
+                    "amountOutRaw": "10000000",
+                    "decimals": 8
+                },
+                {
+                    "kind": "SingleTokenExactOut",
+                    "token": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+                    "amountOutRaw": "10000000",
+                    "decimals": 6
+                }
+            ]
         }
     ]
 }

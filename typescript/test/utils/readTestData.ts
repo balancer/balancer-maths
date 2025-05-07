@@ -6,6 +6,7 @@ import type { WeightedState } from '@/weighted/data';
 import type { LiquidityBootstrappingState } from '@/liquidityBootstrapping';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { QuantAmmState } from '@/quantAmm/quantAmmData';
 
 type PoolBase = {
     chainId: number;
@@ -25,13 +26,16 @@ type ReClammPool = PoolBase & ReClammState;
 
 type LiquidityBootstrappingPool = PoolBase & LiquidityBootstrappingState;
 
+type QuantAmmPool = PoolBase & QuantAmmState;
+
 type SupportedPools =
     | WeightedPool
     | StablePool
     | BufferPool
     | GyroEPool
     | ReClammPool
-    | LiquidityBootstrappingPool;
+    | LiquidityBootstrappingPool
+    | QuantAmmPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -273,6 +277,31 @@ function mapPool(
             // of this being within maths/SOR, we set it to false
             supportsUnbalancedLiquidity: false,
             currentTimestamp: BigInt(pool.currentTimestamp ?? Date.now()),
+        };
+    }
+    if (pool.poolType === 'QUANT_AMM_WEIGHTED') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity:
+                pool.supportsUnbalancedLiquidity === undefined
+                    ? true
+                    : pool.supportsUnbalancedLiquidity,
+            maxTradeSizeRatio: BigInt(pool.maxTradeSizeRatio),
+            firstFourWeightsAndMultipliers:
+                pool.firstFourWeightsAndMultipliers.map((w) => BigInt(w)),
+            secondFourWeightsAndMultipliers:
+                pool.secondFourWeightsAndMultipliers.map((w) => BigInt(w)),
+            currentTimestamp: BigInt(pool.currentTimestamp),
+            lastInteropTime: BigInt(pool.lastInteropTime),
+            lastUpdateTime: BigInt(pool.lastUpdateTime),
         };
     }
     console.log(pool);

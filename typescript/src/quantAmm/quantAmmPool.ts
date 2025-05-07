@@ -6,8 +6,7 @@ import {
     _computeOutGivenExactIn,
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
-    Weighted,
-} from '@/weighted';
+} from '../weighted';
 import {
     SwapKind,
     type SwapParams,
@@ -23,7 +22,7 @@ import {
     getSecondFourWeightsAndMultipliers,
 } from './quantAmmMath';
 import { QuantAmmState } from './quantAmmData';
-import { toRawUndoRateRoundDown } from '@/vault/utils';
+import { toRawUndoRateRoundDown } from '../vault/utils';
 
 export class QuantAmm implements PoolBase {
     private weights: bigint[];
