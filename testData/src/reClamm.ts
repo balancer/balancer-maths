@@ -8,6 +8,7 @@ import {
 import { CHAINS, VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { vaultExplorerAbi } from './abi/vaultExplorer';
 import { reclammAbi } from './abi/reClamm';
+import { TransformBigintToString } from './types';
 
 type ReClammMutable = {
     swapFee: bigint;
@@ -31,14 +32,6 @@ type ReClammMutable = {
 type ReClammImmutable = {
     tokens: bigint[];
     scalingFactors: bigint[];
-};
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
 };
 
 export class ReClammPool {

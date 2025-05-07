@@ -9,6 +9,7 @@ import {
 import { CHAINS, VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { vaultExplorerAbi } from './abi/vaultExplorer';
 import { gyroECLPAbi } from './abi/gyroECLP';
+import { TransformBigintToString } from './types';
 
 type GyroECLPMutable = {
     swapFee: bigint;
@@ -35,14 +36,6 @@ type GyroECLPImmutable = {
     w: bigint;
     z: bigint;
     dSq: bigint;
-};
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
 };
 
 export class GyroECLPPool {

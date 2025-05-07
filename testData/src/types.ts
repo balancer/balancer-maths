@@ -33,3 +33,11 @@ export type TestOutput = {
     adds: AddLiquidityResult[] | undefined;
     removes: RemoveLiquidityResult[] | undefined;
 };
+
+export type TransformBigintToString<T> = {
+    [K in keyof T]: T[K] extends bigint
+        ? string
+        : T[K] extends bigint[]
+          ? string[]
+          : T[K];
+};

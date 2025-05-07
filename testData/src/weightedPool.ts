@@ -8,6 +8,7 @@ import {
 } from 'viem';
 import { CHAINS, VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { vaultExplorerAbi } from './abi/vaultExplorer';
+import { TransformBigintToString } from './types';
 
 export type WeightedImmutable = {
     tokens: bigint[];
@@ -21,14 +22,6 @@ type WeightedMutable = {
     balancesLiveScaled18: bigint[];
     tokenRates: bigint[];
     aggregateSwapFee: bigint;
-};
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
 };
 
 export class WeightedPool {

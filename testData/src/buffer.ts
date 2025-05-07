@@ -7,6 +7,7 @@ import {
     erc4626Abi,
 } from 'viem';
 import { CHAINS, VAULT_V3 } from '@balancer/sdk';
+import { TransformBigintToString } from './types';
 
 export type BufferImmutable = {
     tokens: Address[];
@@ -14,14 +15,6 @@ export type BufferImmutable = {
 
 type BufferMutable = {
     rate: bigint;
-};
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
 };
 
 export class BufferPool {

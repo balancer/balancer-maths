@@ -3,6 +3,7 @@ import { quantAmmAbi } from './abi/quantAmm';
 import { VAULT_V3 } from '@balancer/sdk';
 import { CHAINS } from '@balancer/sdk';
 import { vaultExplorerAbi } from './abi/vaultExplorer';
+import { TransformBigintToString } from './types';
 
 export interface QuantAmmMutableData {
     balancesLiveScaled18: bigint[];
@@ -21,14 +22,6 @@ export interface QuantAmmImmutableData {
     scalingFactors: bigint[];
     swapFee: bigint;
 }
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
-};
 
 export class QuantAmmPool {
     client: PublicClient;
