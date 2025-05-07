@@ -1375,4 +1375,4 @@ export const liquidityBootstrappingAbi = [
         stateMutability: 'view',
         type: 'function',
     },
-];
+] as const;
