@@ -49,33 +49,45 @@ export class QuantAmmPool {
         address: Address,
         blockNumber?: bigint,
     ): Promise<TransformBigintToString<QuantAmmImmutableData>> {
-        const data = await this.client.readContract({
+        const immutableDataCall = {
             address,
             abi: quantAmmAbi,
             functionName: 'getQuantAMMWeightedPoolImmutableData',
             blockNumber,
-        });
+        } as const;
 
-        const [scalingFactors] = await this.client.readContract({
+        const scalingFactorsCall = {
             address: this.vault,
             abi: vaultExplorerAbi,
             functionName: 'getPoolTokenRates',
             args: [address],
             blockNumber,
-        });
+        } as const;
 
-        const staticSwapFeePercentage = await this.client.readContract({
+        const staticSwapFeePercentageCall = {
             address,
             abi: quantAmmAbi,
             functionName: 'getStaticSwapFeePercentage',
             blockNumber,
+        } as const;
+
+        const multicallResult = await this.client.multicall({
+            contracts: [
+                immutableDataCall,
+                scalingFactorsCall,
+                staticSwapFeePercentageCall,
+            ],
+            allowFailure: false,
+            blockNumber,
         });
 
         return {
-            tokens: data.tokens.map((token: string) => token.toLowerCase()),
-            maxTradeSizeRatio: data.maxTradeSizeRatio.toString(),
-            scalingFactors: scalingFactors.map((sf) => sf.toString()),
-            swapFee: staticSwapFeePercentage.toString(),
+            tokens: multicallResult[0].tokens.map((token: string) =>
+                token.toLowerCase(),
+            ),
+            maxTradeSizeRatio: multicallResult[0].maxTradeSizeRatio.toString(),
+            scalingFactors: multicallResult[1][0].map((sf) => sf.toString()),
+            swapFee: multicallResult[2].toString(),
         };
     }
 
