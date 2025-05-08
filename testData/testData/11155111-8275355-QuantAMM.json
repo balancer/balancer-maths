@@ -1,0 +1,148 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amountRaw": "10000000",
+            "tokenIn": "0x29f2d40b0605204364af54ec677bd022da425d03",
+            "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+            "outputRaw": "9996948"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "100000",
+            "tokenIn": "0x29f2d40b0605204364af54ec677bd022da425d03",
+            "tokenOut": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+            "outputRaw": "99108"
+        },
+        {
+            "swapKind": 0,
+            "amountRaw": "1000000",
+            "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+            "tokenOut": "0x29f2d40b0605204364af54ec677bd022da425d03",
+            "outputRaw": "970368"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "2000000",
+            "tokenIn": "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8",
+            "tokenOut": "0x29f2d40b0605204364af54ec677bd022da425d03",
+            "outputRaw": "2063093"
+        }
+    ],
+    "adds": [
+        {
+            "kind": "Unbalanced",
+            "inputAmountsRaw": [
+                "10000000",
+                "10000000"
+            ],
+            "bptOutRaw": "999973433631575523"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "1",
+                "0"
+            ],
+            "bptOutRaw": "10000000"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "0",
+                "1"
+            ],
+            "bptOutRaw": "10000000"
+        }
+    ],
+    "removes": [
+        {
+            "kind": "Proportional",
+            "amountsOutRaw": [
+                "990515",
+                "1009623"
+            ],
+            "bptInRaw": "100000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "1970203",
+                "0"
+            ],
+            "bptInRaw": "100000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "0",
+                "2008209"
+            ],
+            "bptInRaw": "100000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "10000000",
+                "0"
+            ],
+            "bptInRaw": "508547636144733036"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "0",
+                "10000000"
+            ],
+            "bptInRaw": "498900641790957372"
+        }
+    ],
+    "pool": {
+        "chainId": "11155111",
+        "blockNumber": "8275355",
+        "poolType": "QUANT_AMM_WEIGHTED",
+        "poolAddress": "0xa3a6398f3b29b84a6657a1f4bce5c90f38462bf7",
+        "tokens": [
+            "0x29f2d40b0605204364af54ec677bd022da425d03",
+            "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"
+        ],
+        "maxTradeSizeRatio": "10000000000000000",
+        "scalingFactors": [
+            "10000000000",
+            "1000000000000"
+        ],
+        "swapFee": "10000000000000000",
+        "balancesLiveScaled18": [
+            "10525824160000000000",
+            "1072887109000000000000"
+        ],
+        "tokenRates": [
+            "1000000000000000000",
+            "1000000000000000000"
+        ],
+        "totalSupply": "106266075432411920362",
+        "firstFourWeightsAndMultipliers": [
+            "500000000000000000",
+            "500000000000000000",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+        ],
+        "secondFourWeightsAndMultipliers": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+        ],
+        "lastUpdateTime": "1742206416",
+        "lastInteropTime": "1742206416",
+        "currentTimestamp": "1746623760"
+    }
+}

@@ -8,6 +8,7 @@ import {
 import { CHAINS } from '@balancer/sdk';
 import { VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { liquidityBootstrappingAbi } from './abi/liquidityBootstrapping';
+import { TransformBigintToString } from './types';
 
 export type LBPoolImmutableData = {
     tokens: string[];
@@ -29,14 +30,6 @@ export type LBPoolDynamicData = {
     isPoolPaused: boolean;
     isPoolInRecoveryMode: boolean;
     isSwapEnabled: boolean;
-};
-
-type TransformBigintToString<T> = {
-    [K in keyof T]: T[K] extends bigint
-        ? string
-        : T[K] extends bigint[]
-          ? string[]
-          : T[K];
 };
 
 export class LiquidityBootstrappingPool {
@@ -62,25 +55,21 @@ export class LiquidityBootstrappingPool {
         address: Address,
         blockNumber: bigint,
     ): Promise<TransformBigintToString<LBPoolImmutableData>> {
-        const call = {
-            address,
-            abi: liquidityBootstrappingAbi,
-            functionName: 'getLBPoolImmutableData',
-        } as const;
-
         const {
             tokens,
-            scalingFactors: decimalScalingFactors,
+            decimalScalingFactors,
             startWeights,
             endWeights,
             startTime,
             endTime,
             projectTokenIndex,
             isProjectTokenSwapInBlocked,
-        } = (await this.client.readContract({
-            ...call,
+        } = await this.client.readContract({
+            address,
+            abi: liquidityBootstrappingAbi,
+            functionName: 'getLBPoolImmutableData',
             blockNumber,
-        })) as LBPoolImmutableData;
+        });
 
         return {
             tokens: [...tokens],

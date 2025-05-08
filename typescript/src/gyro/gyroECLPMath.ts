@@ -412,7 +412,7 @@ export class GyroECLPMath {
             // In the false case here, the extra precision error does not magnify, and so the error inside the sqrt is
             // O(1e-18)
             // somedayTODO: The true case will almost surely never happen (can it be removed)
-            err = err > 0 ? GyroPoolMath.sqrt(err, 5n) : BigInt(1e9);
+            err = err > 0 ? GyroPoolMath.sqrt(err, 5n) : BigInt('1000000000');
         }
         // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
         err =
@@ -448,7 +448,7 @@ export class GyroECLPMath {
         err =
             err +
             (SignedFixedPoint.mulUpXpToNpU(invariant, mulDenominator) *
-                ((params.lambda * params.lambda) / BigInt(1e36)) *
+                ((params.lambda * params.lambda) / BigInt('1000000000000000000000000000000000000')) *
                 40n) /
                 this._ONE_XP +
             1n;
