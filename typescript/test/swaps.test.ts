@@ -50,6 +50,6 @@ function areBigIntsWithinPercent(
     const difference = value1 > value2 ? value1 - value2 : value2 - value1;
     console.log('Buffer Difference: ', difference);
     const percentFactor = BigInt(Math.floor(percent * 1e8));
-    const tolerance = (value2 * percentFactor) / BigInt(1e10);
+    const tolerance = (value2 * percentFactor) / BigInt('10000000000');
     return difference <= tolerance;
 }

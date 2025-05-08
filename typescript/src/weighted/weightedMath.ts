@@ -2,19 +2,19 @@ import { MathSol, WAD } from '../utils/math';
 
 // A minimum normalized weight imposes a maximum weight ratio. We need this due to limitations in the
 // implementation of the power function, as these ratios are often exponents.
-export const _MIN_WEIGHT = BigInt(0.01e18);
+export const _MIN_WEIGHT = BigInt('10000000000000000'); // 0.01e18
 
 // Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
 // ratio).
 
 // Swap limits: amounts swapped may not be larger than this percentage of the total balance.
-export const _MAX_IN_RATIO = BigInt(0.3e18);
-export const _MAX_OUT_RATIO = BigInt(0.3e18);
+export const _MAX_IN_RATIO = BigInt('300000000000000000'); // 0.3e18
+export const _MAX_OUT_RATIO = BigInt('300000000000000000'); // 0.3e18
 
 // Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
-export const _MAX_INVARIANT_RATIO = BigInt(3e18);
+export const _MAX_INVARIANT_RATIO = BigInt('3000000000000000000'); // 3e18
 // Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
-export const _MIN_INVARIANT_RATIO = BigInt(0.7e18);
+export const _MIN_INVARIANT_RATIO = BigInt('700000000000000000'); // 0.7e18
 
 /**
  * @notice Compute the invariant, rounding down.

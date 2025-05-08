@@ -13,7 +13,7 @@ export const calculateBlockNormalisedWeight = (
     timeSinceLastUpdate: bigint,
 ): bigint => {
     // multiplier is always below 1, we multiply by 1e18 for rounding
-    const multiplierScaled18 = multiplier * BigInt(1e18);
+    const multiplierScaled18 = multiplier * BigInt('1000000000000000000');
 
     if (multiplier > 0n) {
         return (
