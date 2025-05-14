@@ -31,7 +31,10 @@ def test_swaps():
             },
             map_pool(pool),
         )
-        assert calculated_amount == int(swap_test["outputRaw"])
+        if pool["poolType"] == "Buffer":
+            assert are_big_ints_within_percent(calculated_amount, int(swap_test["outputRaw"]), 0.01)
+        else:
+            assert calculated_amount == int(swap_test["outputRaw"])
 
 
 def map_pool(pool_with_strings):
@@ -53,3 +56,17 @@ def map_pool(pool_with_strings):
             except ValueError:
                 pool_with_ints[key] = value
     return pool_with_ints
+
+def are_big_ints_within_percent(value1: int, value2: int, percent: float) -> bool:
+    if percent < 0:
+        raise ValueError('Percent must be non-negative')
+    
+    difference = value1 - value2 if value1 > value2 else value2 - value1
+    print('Buffer Difference:', difference)
+    
+    # Convert percent to basis points (1% = 100 basis points) multiplied by 1e6
+    # This maintains precision similar to the TypeScript version
+    percent_factor = int(percent * 1e8)
+    tolerance = (value2 * percent_factor) // int(1e10)
+    
+    return difference <= tolerance

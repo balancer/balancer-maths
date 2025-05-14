@@ -1,18 +1,16 @@
-import { HookBase } from './types';
-import { MathSol, WAD } from '../utils/math';
+import { HookBase, HookStateBase } from './types';
+import { MathSol } from '../utils/math';
 import { SwapKind, SwapParams } from '../vault/types';
-import {
-    _computeInvariant,
-    _computeOutGivenExactIn,
-    _computeInGivenExactOut,
-} from '../stable/stableMath';
+import { Stable } from '../stable';
 
-export type HookStateStableSurge = {
+export type HookStateStableSurge = HookStateBase & {
+    hookType: 'StableSurge';
     amp: bigint;
     surgeThresholdPercentage: bigint;
+    maxSurgeFeePercentage: bigint;
 };
 
-// Implementation from mono-repo commit: c70ec462344223998d8fee74c2455a55a145106d
+// Implementation from mono-repo commit: 1c9d6a2913eb2d1210019455b44192760d9beb03
 export class StableSurgeHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
     public shouldCallBeforeSwap = false;
@@ -23,65 +21,21 @@ export class StableSurgeHook implements HookBase {
     public shouldCallAfterRemoveLiquidity = false;
     public enableHookAdjustedAmounts = false;
 
-    MAX_SURGE_FEE_PERCENTAGE = BigInt(95e16); // 95%
-
     onComputeDynamicSwapFee(
         params: SwapParams,
         pool: string,
         staticSwapFeePercentage: bigint,
         hookState: HookStateStableSurge,
     ): { success: boolean; dynamicSwapFee: bigint } {
-        const invariant = _computeInvariant(
-            hookState.amp,
-            params.balancesLiveScaled18,
-        );
-
-        let amountCalculatedScaled18: bigint;
-        if (params.swapKind === SwapKind.GivenIn) {
-            amountCalculatedScaled18 = _computeOutGivenExactIn(
-                hookState.amp,
-                params.balancesLiveScaled18,
-                params.indexIn,
-                params.indexOut,
-                params.amountGivenScaled18,
-                invariant,
-            );
-
-            // Swap fee is always a percentage of the amountCalculated. On ExactIn, subtract it from the calculated
-            // amountOut. Round up to avoid losses during precision loss.
-            const swapFeeAmountScaled18 = MathSol.mulUpFixed(
-                amountCalculatedScaled18,
-                staticSwapFeePercentage,
-            );
-            amountCalculatedScaled18 -= swapFeeAmountScaled18;
-        } else {
-            amountCalculatedScaled18 = _computeInGivenExactOut(
-                hookState.amp,
-                params.balancesLiveScaled18,
-                params.indexIn,
-                params.indexOut,
-                params.amountGivenScaled18,
-                invariant,
-            );
-
-            // To ensure symmetry with EXACT_IN, the swap fee used by ExactOut is
-            // `amountCalculated * fee% / (100% - fee%)`. Add it to the calculated amountIn. Round up to avoid losses
-            // during precision loss.
-            const swapFeeAmountScaled18 = MathSol.mulDivUpFixed(
-                amountCalculatedScaled18,
-                staticSwapFeePercentage,
-                MathSol.complementFixed(staticSwapFeePercentage),
-            );
-
-            amountCalculatedScaled18 += swapFeeAmountScaled18;
-        }
+        const stablePool = new Stable(hookState);
 
         return {
             success: true,
             dynamicSwapFee: this.getSurgeFeePercentage(
                 params,
-                amountCalculatedScaled18,
+                stablePool,
                 hookState.surgeThresholdPercentage,
+                hookState.maxSurgeFeePercentage,
                 staticSwapFeePercentage,
             ),
         };
@@ -89,31 +43,23 @@ export class StableSurgeHook implements HookBase {
 
     private getSurgeFeePercentage(
         params: SwapParams,
-        amountCalculatedScaled18: bigint,
+        pool: Stable,
         surgeThresholdPercentage: bigint,
+        maxSurgeFeePercentage: bigint,
         staticFeePercentage: bigint,
     ): bigint {
-        const numTokens = params.balancesLiveScaled18.length;
-        const newBalances = new Array(numTokens).fill(0n);
-        for (let i = 0; i < numTokens; ++i) {
-            newBalances[i] = params.balancesLiveScaled18[i];
+        const amountCalculatedScaled18 = pool.onSwap(params);
+        const newBalances = [...params.balancesLiveScaled18];
 
-            if (i === params.indexIn) {
-                if (params.swapKind === SwapKind.GivenIn) {
-                    newBalances[i] += params.amountGivenScaled18;
-                } else {
-                    newBalances[i] += amountCalculatedScaled18;
-                }
-            } else if (i === params.indexOut) {
-                if (params.swapKind === SwapKind.GivenIn) {
-                    newBalances[i] -= amountCalculatedScaled18;
-                } else {
-                    newBalances[i] -= params.amountGivenScaled18;
-                }
-            }
+        if (params.swapKind === SwapKind.GivenIn) {
+            newBalances[params.indexIn] += params.amountGivenScaled18;
+            newBalances[params.indexOut] -= amountCalculatedScaled18;
+        } else {
+            newBalances[params.indexIn] += amountCalculatedScaled18;
+            newBalances[params.indexOut] -= params.amountGivenScaled18;
         }
 
-        const newTotalImbalance = this.calculateImbalance(newBalances);
+        const newTotalImbalance = this.calculateImbalance([...newBalances]);
 
         // If we are balanced, or the balance has improved, do not surge: simply return the regular fee percentage.
         if (newTotalImbalance === 0n) {
@@ -142,7 +88,7 @@ export class StableSurgeHook implements HookBase {
         const dynamicSwapFee =
             staticFeePercentage +
             MathSol.mulDownFixed(
-                this.MAX_SURGE_FEE_PERCENTAGE - staticFeePercentage,
+                maxSurgeFeePercentage - staticFeePercentage,
                 MathSol.divDownFixed(
                     newTotalImbalance - surgeThresholdPercentage,
                     MathSol.complementFixed(surgeThresholdPercentage),
@@ -152,7 +98,7 @@ export class StableSurgeHook implements HookBase {
     }
 
     private calculateImbalance(balances: bigint[]): bigint {
-        const median = this.findMedian(balances.sort());
+        const median = this.findMedian(balances);
 
         let totalBalance = 0n;
         let totalDiff = 0n;
@@ -162,11 +108,16 @@ export class StableSurgeHook implements HookBase {
             totalDiff += this.absSub(balances[i], median);
         }
 
-        return (totalDiff * WAD) / totalBalance;
+        return MathSol.divDownFixed(totalDiff, totalBalance);
     }
 
-    private findMedian(sortedBalances: bigint[]): bigint {
-        const mid = sortedBalances.length / 2;
+    private findMedian(balances: bigint[]): bigint {
+        const sortedBalances = balances.sort((a, b) => {
+            if (a < b) return -1;
+            if (a > b) return 1;
+            return 0;
+        });
+        const mid = Math.floor(sortedBalances.length / 2);
 
         if (sortedBalances.length % 2 == 0) {
             return (sortedBalances[mid - 1] + sortedBalances[mid]) / 2n;

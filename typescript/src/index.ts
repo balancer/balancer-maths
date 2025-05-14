@@ -4,3 +4,5 @@ export * from './vault/types';
 export * from './weighted';
 export * from './buffer';
 export * from './hooks';
+export * from './gyro';
+export * from './reClamm';

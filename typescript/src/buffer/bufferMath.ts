@@ -1,4 +1,4 @@
-import { MathSol } from '../utils/math';
+import { MathSol, MAX_UINT256 } from '../utils/math';
 import { SwapKind } from '../vault/types';
 import { WrappingDirection } from './types';
 
@@ -18,14 +18,28 @@ export function calculateBufferAmounts(
     kind: SwapKind,
     amountRaw: bigint,
     rate: bigint,
+    maxDeposit?: bigint,
+    maxMint?: bigint,
 ): bigint {
     if (direction === WrappingDirection.WRAP) {
         // Amount in is underlying tokens, amount out is wrapped tokens
         if (kind === SwapKind.GivenIn) {
             // previewDeposit
+            const maxAssets = maxDeposit ? maxDeposit : MAX_UINT256;
+            if (amountRaw > maxAssets) {
+                throw new Error(
+                    `ERC4626ExceededMaxDeposit ${amountRaw} ${maxAssets}`,
+                );
+            }
             return _convertToShares(amountRaw, rate, Rounding.DOWN);
         } else {
             // previewMint
+            const maxShares = maxMint ? maxMint : MAX_UINT256;
+            if (amountRaw > maxShares) {
+                throw new Error(
+                    `ERC4626ExceededMaxMint ${amountRaw} ${maxMint}`,
+                );
+            }
             return _convertToAssets(amountRaw, rate, Rounding.UP);
         }
     } else {

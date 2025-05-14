@@ -4,6 +4,9 @@ export const RAY = 1000000000000000000000000000000000000n;
 export const TWO_WAD = 2000000000000000000n;
 export const FOUR_WAD = 4000000000000000000n;
 export const HUNDRED_WAD = 100000000000000000000n;
+export const MAX_UINT256 = BigInt(
+    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+);
 
 export const abs = (n: bigint): bigint => (n < 0n ? -n : n);
 
@@ -13,9 +16,11 @@ export const min = (values: bigint[]): bigint =>
 export const max = (values: bigint[]): bigint =>
     values.reduce((a, b) => (a > b ? a : b));
 
-const _require = (b: boolean, message: string) => {
+export const _require = (b: boolean, message: string) => {
     if (!b) throw new Error(message);
 };
+
+export type FixedPointFunction = (a: bigint, b: bigint) => bigint;
 
 export class MathSol {
     static max(a: bigint, b: bigint): bigint {
@@ -126,7 +131,7 @@ export class MathSol {
     }
 }
 
-class LogExpMath {
+export class LogExpMath {
     // All fixed point multiplications and divisions are inlined. This means we need to divide by ONE when multiplying
     // two numbers, and multiply by ONE when dividing them.
 

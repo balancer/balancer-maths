@@ -8,6 +8,11 @@ import {
 } from './basePoolMath';
 import { Weighted } from '../weighted';
 import { Stable } from '../stable';
+import { GyroECLP } from '../gyro';
+import { ReClamm } from '../reClamm';
+import { QuantAmm } from '../quantAmm';
+import { LiquidityBootstrapping } from '../liquidityBootstrapping';
+
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
 import {
     isSameAddress,
@@ -57,6 +62,10 @@ export class Vault {
         this.poolClasses = {
             WEIGHTED: Weighted,
             STABLE: Stable,
+            GYROE: GyroECLP,
+            RECLAMM: ReClamm,
+            LIQUIDITY_BOOTSTRAPPING: LiquidityBootstrapping,
+            QUANT_AMM_WEIGHTED: QuantAmm,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
         };
