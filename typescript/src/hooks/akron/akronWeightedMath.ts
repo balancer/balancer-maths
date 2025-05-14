@@ -1,4 +1,4 @@
-import { MathSol, WAD } from '../utils/math';
+import { MathSol, WAD } from '../../utils/math';
 
 // A minimum normalized weight imposes a maximum weight ratio. We need this due to limitations in the
 // implementation of the power function, as these ratios are often exponents.
@@ -21,18 +21,30 @@ export const _computeSwapFeePercentageGivenExactIn = (
     // wI = weightIn               \      \       ( bI + aI * 2 )     /              /           //
     // wO = weightOut                                                                            //
     **********************************************************************************************/
-        
+
     // swap fee is equal to outGivenExactIn(grossAmountIn) - outGivenExactInWithFees(grossAmountIn)
-    const powerWithFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceIn + amountIn, balanceIn + amountIn * BigInt(2)),exponent)
-    const powerWithoutFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceIn, balanceIn + amountIn), exponent)
+    const powerWithFees = MathSol.powUpFixed(
+        MathSol.divUpFixed(
+            balanceIn + amountIn,
+            balanceIn + amountIn * BigInt(2),
+        ),
+        exponent,
+    );
+    const powerWithoutFees = MathSol.powUpFixed(
+        MathSol.divUpFixed(balanceIn, balanceIn + amountIn),
+        exponent,
+    );
 
     return MathSol.mulDivUpFixed(
         exponent,
-        MathSol.mulDivUpFixed(balanceIn + amountIn, powerWithFees - powerWithoutFees, powerWithFees),
-        amountIn
-    )
+        MathSol.mulDivUpFixed(
+            balanceIn + amountIn,
+            powerWithFees - powerWithoutFees,
+            powerWithFees,
+        ),
+        amountIn,
+    );
 };
-
 
 export const _computeSwapFeePercentageGivenExactOut = (
     balanceOut: bigint,
@@ -51,10 +63,20 @@ export const _computeSwapFeePercentageGivenExactOut = (
 
     // swap fee is equal to inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
 
-    const powerWithFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceOut - amountOut, balanceOut - amountOut * BigInt(2)), exponent)
-    const powerWithoutFees = MathSol.powUpFixed(MathSol.divUpFixed(balanceOut, balanceOut - amountOut), exponent)
-    
-    return MathSol.divUpFixed(powerWithFees - powerWithoutFees, powerWithFees - WAD)
-}
+    const powerWithFees = MathSol.powUpFixed(
+        MathSol.divUpFixed(
+            balanceOut - amountOut,
+            balanceOut - amountOut * BigInt(2),
+        ),
+        exponent,
+    );
+    const powerWithoutFees = MathSol.powUpFixed(
+        MathSol.divUpFixed(balanceOut, balanceOut - amountOut),
+        exponent,
+    );
 
-
+    return MathSol.divUpFixed(
+        powerWithFees - powerWithoutFees,
+        powerWithFees - WAD,
+    );
+};

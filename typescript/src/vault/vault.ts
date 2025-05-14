@@ -39,7 +39,7 @@ import { defaultHook } from '../hooks/constants';
 import { ExitFeeHook } from '../hooks/exitFeeHook';
 import { DirectionalFeeHook } from '../hooks/directionalFeeHook';
 import { StableSurgeHook } from '../hooks/stableSurgeHook';
-import { AkronWeightedLVRFeeHook } from '../hooks/akronWeightedLVRFeeHookCompex';
+import { AkronHook } from '../hooks/akron/akronHook';
 
 const _MINIMUM_TRADE_AMOUNT = 1e6;
 // const _MINIMUM_WRAP_AMOUNT = 1e3;
@@ -73,7 +73,7 @@ export class Vault {
             ExitFee: ExitFeeHook,
             DirectionalFee: DirectionalFeeHook,
             StableSurge: StableSurgeHook,
-            AkronWPLVRFee: AkronWeightedLVRFeeHook,
+            Akron: AkronHook,
             // custom hooks take precedence over base types
             ...hookClasses,
         };

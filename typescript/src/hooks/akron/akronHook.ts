@@ -1,19 +1,19 @@
-import { HookBase } from './types';
-import { SwapParams, SwapKind } from '@/vault/types';
-import { 
+import { MathSol } from '../../utils/math';
+import { HookBase } from '../types';
+import { SwapParams, SwapKind } from '../../vault/types';
+import {
     _computeSwapFeePercentageGivenExactIn,
-    _computeSwapFeePercentageGivenExactOut 
-} from '@/weighted/AkronWeightedMath';
-import { MathSol } from '../utils/math';
+    _computeSwapFeePercentageGivenExactOut,
+} from './akronWeightedMath';
 
-export type HookStateAkronWeightedLVRFee = {
+export type HookStateAkron = {
     weights: bigint[];
     minimumSwapFeePercentage: bigint;
 };
 
-export class AkronWeightedLVRFeeHook implements HookBase {
+export class AkronHook implements HookBase {
     public shouldCallComputeDynamicSwapFee = true;
-    public shouldCallBeforeSwap = true;
+    public shouldCallBeforeSwap = false;
     public shouldCallAfterSwap = false;
     public shouldCallBeforeAddLiquidity = false;
     public shouldCallAfterAddLiquidity = false;
@@ -25,25 +25,30 @@ export class AkronWeightedLVRFeeHook implements HookBase {
         params: SwapParams,
         pool: string,
         staticSwapFeePercentage: bigint,
-        hookState: HookStateAkronWeightedLVRFee,
+        hookState: HookStateAkron,
     ): { success: boolean; dynamicSwapFee: bigint } {
-
         const calculatedSwapFeePercentage =
             params.swapKind === SwapKind.GivenIn
                 ? _computeSwapFeePercentageGivenExactIn(
-                    params.balancesLiveScaled18[params.indexIn],
-                    MathSol.divDownFixed(hookState.weights[params.indexIn],hookState.weights[params.indexOut]),
-                    params.amountGivenScaled18,
-                )
+                      params.balancesLiveScaled18[params.indexIn],
+                      MathSol.divDownFixed(
+                          hookState.weights[params.indexIn],
+                          hookState.weights[params.indexOut],
+                      ),
+                      params.amountGivenScaled18,
+                  )
                 : _computeSwapFeePercentageGivenExactOut(
-                    params.balancesLiveScaled18[params.indexOut],
-                    MathSol.divUpFixed(hookState.weights[params.indexOut],hookState.weights[params.indexIn]),
-                    params.amountGivenScaled18,
-                );
+                      params.balancesLiveScaled18[params.indexOut],
+                      MathSol.divUpFixed(
+                          hookState.weights[params.indexOut],
+                          hookState.weights[params.indexIn],
+                      ),
+                      params.amountGivenScaled18,
+                  );
 
         // Charge the static or calculated fee, whichever is greater.
         const dynamicSwapFee =
-            hookState.minimumSwapFeePercentage > calculatedSwapFeePercentage 
+            hookState.minimumSwapFeePercentage > calculatedSwapFeePercentage
                 ? hookState.minimumSwapFeePercentage
                 : calculatedSwapFeePercentage;
 
@@ -70,12 +75,12 @@ export class AkronWeightedLVRFeeHook implements HookBase {
     }
 
     onBeforeSwap() {
-        return { success: true, hookAdjustedBalancesScaled18: [] };
+        return { success: false, hookAdjustedBalancesScaled18: [] };
     }
 
     onAfterSwap() {
         return { success: false, hookAdjustedAmountCalculatedRaw: 0n };
-    } 
+    }
 }
 
-export default AkronWeightedLVRFeeHook;
+export default AkronHook;
