@@ -1,12 +1,13 @@
 import { MathSol } from '../../utils/math';
-import { HookBase } from '../types';
+import { HookBase, HookStateBase } from '../types';
 import { SwapParams, SwapKind } from '../../vault/types';
 import {
     _computeSwapFeePercentageGivenExactIn,
     _computeSwapFeePercentageGivenExactOut,
 } from './akronWeightedMath';
 
-export type HookStateAkron = {
+export type HookStateAkron = HookStateBase & {
+    hookType: 'Akron';
     weights: bigint[];
     minimumSwapFeePercentage: bigint;
 };
