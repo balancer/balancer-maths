@@ -254,7 +254,7 @@ export const quantAmmAbi = [
             {
                 indexed: false,
                 internalType: 'int256[]',
-                name: 'weights',
+                name: 'calculatedWeightsAndMultipliers',
                 type: 'int256[]',
             },
             {
@@ -616,14 +616,14 @@ export const quantAmmAbi = [
                         type: 'uint64',
                     },
                     {
-                        internalType: 'uint256',
-                        name: 'maxTradeSizeRatio',
-                        type: 'uint256',
-                    },
-                    {
                         internalType: 'uint64',
                         name: 'updateInterval',
                         type: 'uint64',
+                    },
+                    {
+                        internalType: 'uint256',
+                        name: 'maxTradeSizeRatio',
+                        type: 'uint256',
                     },
                 ],
                 internalType:
@@ -834,9 +834,9 @@ export const quantAmmAbi = [
                                 type: 'address[][]',
                             },
                             {
-                                internalType: 'uint16',
+                                internalType: 'uint40',
                                 name: 'updateInterval',
-                                type: 'uint16',
+                                type: 'uint40',
                             },
                             {
                                 internalType: 'uint64[]',
