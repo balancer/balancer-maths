@@ -28,7 +28,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     output_index = find_case_insensitive_index_in_list(
         pool_state["tokens"], swap_input["token_out"]
     )
-    if input_index == -1:
+    if output_index == -1:
         raise SystemError("Output token not found on pool")
 
     amount_given_scaled18 = _compute_amount_given_scaled18(
