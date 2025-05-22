@@ -7,12 +7,16 @@ import {
 } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
+import { HookStateAkron } from './akron/akronHook';
 
 export type HookStateBase = {
     hookType: string;
 };
 
-export type HookState = HookStateExitFee | HookStateStableSurge;
+export type HookState =
+    | HookStateExitFee
+    | HookStateStableSurge
+    | HookStateAkron;
 
 export type AfterSwapParams = {
     kind: SwapKind;

@@ -7,3 +7,4 @@ export * from './hooks';
 export * from './gyro';
 export * from './reClamm';
 export * from './liquidityBootstrapping';
+export * from './quantAmm';
