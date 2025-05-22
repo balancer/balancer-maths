@@ -48,4 +48,3 @@ def sqrt(a: int) -> int:
 
     # Final adjustment: if xn > sqrt(a), decrement by 1
     return xn - 1 if xn > a // xn else xn
-
