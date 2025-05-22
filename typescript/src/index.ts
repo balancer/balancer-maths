@@ -6,3 +6,4 @@ export * from './buffer';
 export * from './hooks';
 export * from './gyro';
 export * from './reClamm';
+export * from './liquidityBootstrapping';
