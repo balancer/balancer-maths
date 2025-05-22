@@ -9,6 +9,7 @@ from src.pools.stable import Stable
 from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
 from src.hooks.stable_surge_hook import StableSurgeHook
+from src.pools.reclamm.reclamm import ReClamm
 
 
 class Vault:
@@ -18,6 +19,7 @@ class Vault:
             "STABLE": Stable,
             "GYRO": Gyro2CLP,
             "GYROE": GyroECLP,
+            "RECLAMM": ReClamm,
         }
         self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
         if custom_pool_classes is not None:
