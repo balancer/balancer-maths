@@ -2,6 +2,9 @@ from test.utils.read_test_data import read_test_data
 import sys
 import os
 
+from src.vault import Vault
+from src.add_liquidity import AddLiquidityInput, AddLiquidityKind
+
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 # Get the parent directory (one level up)
@@ -9,7 +12,6 @@ parent_dir = os.path.dirname(current_file_dir)
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
 
-from src.vault import Vault
 
 test_data = read_test_data()
 
@@ -21,20 +23,22 @@ def test_add_liquidity():
         if add_test["test"] not in test_data["pools"]:
             raise Exception("Pool not in test data: ", add_test["test"])
         pool = test_data["pools"][add_test["test"]]
-        if pool["poolType"] == 'Buffer':
-            raise ValueError('Buffer pools do not support addLiquidity')
+        if pool["poolType"] == "Buffer":
+            raise ValueError("Buffer pools do not support addLiquidity")
         # note any amounts must be passed as ints not strings
         calculated_amount = vault.add_liquidity(
-            {
-                "pool": pool["poolAddress"],
-                "max_amounts_in_raw": list(map(int, add_test["inputAmountsRaw"])),
-                "min_bpt_amount_out_raw": int(add_test["bptOutRaw"]),
-                "kind": add_test["kind"],
-            },
+            AddLiquidityInput(
+                pool=pool["poolAddress"],
+                max_amounts_in_raw=list(map(int, add_test["inputAmountsRaw"])),
+                min_bpt_amount_out_raw=int(add_test["bptOutRaw"]),
+                kind=AddLiquidityKind(add_test["kind"]),
+            ),
             map_pool(pool),
         )
         assert calculated_amount["bpt_amount_out_raw"] == int(add_test["bptOutRaw"])
-        assert calculated_amount["amounts_in_raw"] == list(map(int, add_test["inputAmountsRaw"]))
+        assert calculated_amount["amounts_in_raw"] == list(
+            map(int, add_test["inputAmountsRaw"])
+        )
 
 
 def map_pool(pool_with_strings):

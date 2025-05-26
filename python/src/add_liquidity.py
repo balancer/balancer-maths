@@ -1,4 +1,5 @@
 from enum import Enum
+from dataclasses import dataclass
 from src.utils import (
     _copy_to_scaled18_apply_rate_round_down_array,
     _to_raw_undo_rate_round_up,
@@ -12,19 +13,40 @@ from src.base_pool_math import (
 )
 
 
-class Kind(Enum):
+class AddLiquidityKind(Enum):
     UNBALANCED = 0
     SINGLE_TOKEN_EXACT_OUT = 1
 
 
-def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_state):
+@dataclass
+class AddLiquidityInput:
+    """Input parameters for an add liquidity operation.
 
+    Attributes:
+        max_amounts_in_raw: List of maximum amounts of each token to add
+        min_bpt_amount_out_raw: Minimum amount of BPT to receive
+        kind: The type of add liquidity operation (UNBALANCED or SINGLE_TOKEN_EXACT_OUT)
+    """
+
+    pool: str
+    max_amounts_in_raw: list[int]
+    min_bpt_amount_out_raw: int
+    kind: AddLiquidityKind
+
+
+def add_liquidity(
+    add_liquidity_input: AddLiquidityInput,
+    pool_state,
+    pool_class,
+    hook_class,
+    hook_state,
+):
     # Amounts are entering pool math, so round down.
     # Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
     # but it avoids the even worse options of mutating amountsIn inside AddLiquidityParams,
     # or cluttering the AddLiquidityParams interface by adding amountsInScaled18.
     max_amounts_in_scaled18 = _copy_to_scaled18_apply_rate_round_down_array(
-        add_liquidity_input["max_amounts_in_raw"],
+        add_liquidity_input.max_amounts_in_raw,
         pool_state["scalingFactors"],
         pool_state["tokenRates"],
     )
@@ -37,9 +59,9 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
         hook_return = hook_class.on_before_add_liquidity(
-            add_liquidity_input["kind"],
-            add_liquidity_input["max_amounts_in_raw"],
-            add_liquidity_input["min_bpt_amount_out_raw"],
+            add_liquidity_input.kind,
+            add_liquidity_input.max_amounts_in_raw,
+            add_liquidity_input.min_bpt_amount_out_raw,
             updated_balances_live_scaled18,
             hook_state,
         )
@@ -48,7 +70,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
-    if add_liquidity_input["kind"] == Kind.UNBALANCED.value:
+    if add_liquidity_input.kind == AddLiquidityKind.UNBALANCED:
         _require_unbalanced_liquidity_enabled(pool_state)
         amounts_in_scaled18 = max_amounts_in_scaled18
         computed = compute_add_liquidity_unbalanced(
@@ -64,11 +86,11 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
         bpt_amount_out = computed["bpt_amount_out"]
         swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
 
-    elif add_liquidity_input["kind"] == Kind.SINGLE_TOKEN_EXACT_OUT.value:
+    elif add_liquidity_input.kind == AddLiquidityKind.SINGLE_TOKEN_EXACT_OUT:
         _require_unbalanced_liquidity_enabled(pool_state)
         token_index = _get_single_input_index(max_amounts_in_scaled18)
         amounts_in_scaled18 = max_amounts_in_scaled18
-        bpt_amount_out = add_liquidity_input["min_bpt_amount_out_raw"]
+        bpt_amount_out = add_liquidity_input.min_bpt_amount_out_raw
         computed = compute_add_liquidity_single_token_exact_out(
             updated_balances_live_scaled18,
             token_index,
@@ -115,7 +137,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
 
     if hook_class.should_call_after_add_liquidity:
         hook_return = hook_class.on_after_add_liquidity(
-            add_liquidity_input["kind"],
+            add_liquidity_input.kind,
             amounts_in_scaled18,
             amounts_in_raw,
             bpt_amount_out,
@@ -127,7 +149,7 @@ def add_liquidity(add_liquidity_input, pool_state, pool_class, hook_class, hook_
             hook_return["hook_adjusted_amounts_in_raw"]
         ) is not len(amounts_in_raw):
             raise SystemError(
-                " AfterAddLiquidityHookFailed",
+                "AfterAddLiquidityHookFailed",
                 pool_state["poolType"],
                 pool_state["hookType"],
             )

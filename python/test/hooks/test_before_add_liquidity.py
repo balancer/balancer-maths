@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.add_liquidity import Kind
+from src.add_liquidity import AddLiquidityInput, AddLiquidityKind
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook
@@ -48,9 +48,9 @@ class CustomHook:
             and "balanceChange" in hook_state
         ):
             raise ValueError("Unexpected hookState")
-        assert kind == add_liquidity_input["kind"]
-        assert max_amounts_in_scaled18 == add_liquidity_input["max_amounts_in_raw"]
-        assert min_bpt_amount_out == add_liquidity_input["min_bpt_amount_out_raw"]
+        assert kind == add_liquidity_input.kind
+        assert max_amounts_in_scaled18 == add_liquidity_input.max_amounts_in_raw
+        assert min_bpt_amount_out == add_liquidity_input.min_bpt_amount_out_raw
         assert balances_scaled18 == pool["balancesLiveScaled18"]
 
         return {
@@ -88,12 +88,12 @@ class CustomHook:
         return {"success": False, "dynamic_swap_fee": 0}
 
 
-add_liquidity_input = {
-    "pool": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
-    "max_amounts_in_raw": [200000000000000000, 100000000000000000],
-    "min_bpt_amount_out_raw": 0,
-    "kind": Kind.UNBALANCED.value,
-}
+add_liquidity_input = AddLiquidityInput(
+    pool="0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
+    max_amounts_in_raw=[200000000000000000, 100000000000000000],
+    min_bpt_amount_out_raw=0,
+    kind=AddLiquidityKind.UNBALANCED,
+)
 
 pool = {
     "poolType": "CustomPool",

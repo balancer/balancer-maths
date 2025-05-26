@@ -59,6 +59,7 @@ calculated_result = vault.swap(
 
 ```python
 from src.vault import Vault
+from src.add_liquidity import AddLiquidityInput, AddLiquidityKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -79,12 +80,12 @@ pool = {
 }
 
 
-add_liquidity_input = {
-    "pool": '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
-    "max_amounts_in_raw": [200000000000000000, 100000000000000000],
-    "min_bpt_amount_out_raw": 0,
-    "kind": Kind.UNBALANCED.value,
-}
+add_liquidity_input = AddLiquidityInput(
+    pool="0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
+    max_amounts_in_raw=[200000000000000000, 100000000000000000],
+    min_bpt_amount_out_raw=0,
+    kind=AddLiquidityKind.UNBALANCED,
+)
 
 vault = Vault()
 
