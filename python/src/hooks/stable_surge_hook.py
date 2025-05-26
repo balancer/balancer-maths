@@ -6,7 +6,7 @@ from src.maths import (
     complement_fixed,
 )
 from src.pools.stable import Stable
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 
 
 # This hook implements the StableSurgeHook found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/main/pkg/pool-hooks/contracts/StableSurgeHook.sol
@@ -41,7 +41,7 @@ class StableSurgeHook:
 
     def on_compute_dynamic_swap_fee(
         self,
-        params: Dict,
+        swap_params: SwapParams,
         static_swap_fee_percentage: int,
         hook_state: Dict,
     ) -> Dict[str, int]:
@@ -50,7 +50,7 @@ class StableSurgeHook:
         return {
             "success": True,
             "dynamic_swap_fee": self.get_surge_fee_percentage(
-                params,
+                swap_params,
                 stable_pool,
                 hook_state["surgeThresholdPercentage"],
                 hook_state["maxSurgeFeePercentage"],
@@ -60,28 +60,30 @@ class StableSurgeHook:
 
     def get_surge_fee_percentage(
         self,
-        params: Dict,
+        swap_params: SwapParams,
         pool: Stable,
         surge_threshold_percentage: int,
         max_surge_fee_percentage: int,
         static_fee_percentage: int,
     ) -> int:
-        amount_calculated_scaled_18 = pool.on_swap(params)
-        new_balances = params["balances_live_scaled18"][:]
+        amount_calculated_scaled_18 = pool.on_swap(swap_params)
+        new_balances = swap_params.balances_live_scaled18[:]
 
-        if params["swap_kind"] == SwapKind.GIVENIN.value:
-            new_balances[params["index_in"]] += params["amount_given_scaled18"]
-            new_balances[params["index_out"]] -= amount_calculated_scaled_18
+        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+            new_balances[swap_params.index_in] += swap_params.amount_given_scaled18
+            new_balances[swap_params.index_out] -= amount_calculated_scaled_18
         else:
-            new_balances[params["index_in"]] += amount_calculated_scaled_18
-            new_balances[params["index_out"]] -= params["amount_given_scaled18"]
+            new_balances[swap_params.index_in] += amount_calculated_scaled_18
+            new_balances[swap_params.index_out] -= swap_params.amount_given_scaled18
 
         new_total_imbalance = self.calculate_imbalance(new_balances)
 
         if new_total_imbalance == 0:
             return static_fee_percentage
 
-        old_total_imbalance = self.calculate_imbalance(params["balances_live_scaled18"])
+        old_total_imbalance = self.calculate_imbalance(
+            swap_params.balances_live_scaled18
+        )
 
         if (
             new_total_imbalance <= old_total_imbalance

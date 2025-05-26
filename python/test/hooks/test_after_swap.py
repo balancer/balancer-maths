@@ -2,17 +2,12 @@ import pytest
 import sys
 import os
 
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
-
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
-
 from src.pools.weighted import Weighted
 from src.swap import SwapKind
 
+from src.vault import Vault
+from src.hooks.default_hook import DefaultHook
+
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 # Get the parent directory (one level up)
@@ -21,8 +16,6 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
 
-from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
 
 pool = {
     "poolType": "CustomPool",
@@ -47,18 +40,19 @@ pool = {
 swap_input = {
     "amount_raw": 1000000000000000000,
     "swap_kind": SwapKind.GIVENIN.value,
-    "token_in": pool['tokens'][0],
-    "token_out": pool['tokens'][1],
+    "token_in": pool["tokens"][0],
+    "token_out": pool["tokens"][1],
 }
 
 expected_calculated = 100000000000
 
-class CustomPool():
+
+class CustomPool:
     def __init__(self, pool_state):
         self.pool_state = pool_state
 
     def on_swap(self, swap_params):
-       return 100000000000
+        return 100000000000
 
     def compute_invariant(self, balances_live_scaled18):
         return 1
@@ -70,6 +64,7 @@ class CustomPool():
         invariant_ratio,
     ):
         return 1
+
 
 class CustomHook:
     def __init__(self):
@@ -83,62 +78,81 @@ class CustomHook:
         self.enable_hook_adjusted_amounts = True
 
     def on_before_add_liquidity(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+        return {"success": False, "hook_adjusted_balances_scaled18": []}
 
-    def on_after_add_liquidity(self, kind, amounts_in_scaled18, amounts_in_raw, bpt_amount_out, balances_scaled18, hook_state):
-        return { 'success': False, 'hook_adjusted_amounts_in_raw': [] };
+    def on_after_add_liquidity(
+        self,
+        kind,
+        amounts_in_scaled18,
+        amounts_in_raw,
+        bpt_amount_out,
+        balances_scaled18,
+        hook_state,
+    ):
+        return {"success": False, "hook_adjusted_amounts_in_raw": []}
 
     def on_before_remove_liquidity(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+        return {"success": False, "hook_adjusted_balances_scaled18": []}
 
-    def on_after_remove_liquidity(self, kind, bpt_amount_in, amounts_out_scaled18, amounts_out_raw, balances_scaled18, hook_state):
-        return {
-            'success': False,
-            'hook_adjusted_amounts_out_raw': []
-        }
+    def on_after_remove_liquidity(
+        self,
+        kind,
+        bpt_amount_in,
+        amounts_out_scaled18,
+        amounts_out_raw,
+        balances_scaled18,
+        hook_state,
+    ):
+        return {"success": False, "hook_adjusted_amounts_out_raw": []}
 
     def on_before_swap(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+        return {"success": False, "hook_adjusted_balances_scaled18": []}
 
     def on_after_swap(self, params):
-        hook_state = params['hook_state']
-        token_in_balanceScaled18 = params['token_in_balance_scaled18']
-        token_out_balance_scaled18 = params['token_out_balance_scaled18']
-        if not (isinstance(hook_state, dict) and hook_state is not None and 'expectedBalancesLiveScaled18' in hook_state):
-            raise ValueError('Unexpected hookState')
-        assert params['kind'] == swap_input['swap_kind']
-        
-        assert params['token_in'] == swap_input['token_in']
-        assert params['token_out'] == swap_input['token_out']
-        assert params['amount_in_scaled18'] == swap_input['amount_raw']
-        assert params['amount_calculated_raw'] == expected_calculated
-        assert params['amount_calculated_scaled18'] == expected_calculated
-        assert params['amount_out_scaled18'] == expected_calculated
-        assert [token_in_balanceScaled18, token_out_balance_scaled18] == hook_state['expectedBalancesLiveScaled18']
-        return {'success': True, 'hook_adjusted_amount_calculated_raw': 1}
+        hook_state = params["hook_state"]
+        token_in_balanceScaled18 = params["token_in_balance_scaled18"]
+        token_out_balance_scaled18 = params["token_out_balance_scaled18"]
+        if not (
+            isinstance(hook_state, dict)
+            and hook_state is not None
+            and "expectedBalancesLiveScaled18" in hook_state
+        ):
+            raise ValueError("Unexpected hookState")
+        assert params["kind"] == swap_input["swap_kind"]
+
+        assert params["token_in"] == swap_input["token_in"]
+        assert params["token_out"] == swap_input["token_out"]
+        assert params["amount_in_scaled18"] == swap_input["amount_raw"]
+        assert params["amount_calculated_raw"] == expected_calculated
+        assert params["amount_calculated_scaled18"] == expected_calculated
+        assert params["amount_out_scaled18"] == expected_calculated
+        assert [token_in_balanceScaled18, token_out_balance_scaled18] == hook_state[
+            "expectedBalancesLiveScaled18"
+        ]
+        return {"success": True, "hook_adjusted_amount_calculated_raw": 1}
 
     def on_compute_dynamic_swap_fee(self):
-        return {'success': False, 'dynamic_swap_fee': 0}
+        return {"success": False, "dynamic_swap_fee": 0}
+
 
 vault = Vault(
     custom_pool_classes={"CustomPool": CustomPool},
     custom_hook_classes={"CustomHook": CustomHook},
 )
 
+
 def test_hook_after_swap_no_fee():
     # aggregateSwapFee of 0 should not take any protocol fees from updated balances
     # hook state is used to pass expected value to tests
-    # with aggregateFee = 0, balance out is just balance - calculated 
+    # with aggregateFee = 0, balance out is just balance - calculated
     input_hook_state = {
-            "expectedBalancesLiveScaled18": [
-                pool['balancesLiveScaled18'][0] + swap_input['amount_raw'],
-                pool['balancesLiveScaled18'][1] - expected_calculated,
-            ],
-        }
+        "expectedBalancesLiveScaled18": [
+            pool["balancesLiveScaled18"][0] + swap_input["amount_raw"],
+            pool["balancesLiveScaled18"][1] - expected_calculated,
+        ],
+    }
     test = vault.swap(
-        swap_input,
-        { **pool, 'aggregateSwapFee': 0 },
-        hook_state=input_hook_state
+        swap_input, {**pool, "aggregateSwapFee": 0}, hook_state=input_hook_state
     )
     assert test == 1
 
@@ -149,14 +163,12 @@ def test_hook_after_swap_with_fee():
     # Aggregate fee amount is 50% of swap fee
     expected_aggregate_swap_fee_amount = 50000000000000000
     input_hook_state = {
-            "expectedBalancesLiveScaled18": [
-                pool['balancesLiveScaled18'][0] + swap_input['amount_raw'] - expected_aggregate_swap_fee_amount,
-                pool['balancesLiveScaled18'][1] - expected_calculated,
-            ],
-        }
-    test = vault.swap(
-        swap_input,
-        pool,
-        hook_state=input_hook_state
-    )
+        "expectedBalancesLiveScaled18": [
+            pool["balancesLiveScaled18"][0]
+            + swap_input["amount_raw"]
+            - expected_aggregate_swap_fee_amount,
+            pool["balancesLiveScaled18"][1] - expected_calculated,
+        ],
+    }
+    test = vault.swap(swap_input, pool, hook_state=input_hook_state)
     assert test == 1

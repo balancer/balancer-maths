@@ -13,7 +13,7 @@ from src.pools.gyro.gyro2CLP_math import (
     calc_in_given_out,
 )
 from src.utils import MAX_UINT256
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 
 
 class Gyro2CLP:
@@ -30,13 +30,13 @@ class Gyro2CLP:
     def get_minimum_invariant_ratio(self) -> int:
         return 0
 
-    def on_swap(self, swap_params):
-        token_in_is_token_0 = swap_params["index_in"] == 0
-        balance_token_in_scaled18 = swap_params["balances_live_scaled18"][
-            swap_params["index_in"]
+    def on_swap(self, swap_params: SwapParams) -> int:
+        token_in_is_token_0 = swap_params.index_in == 0
+        balance_token_in_scaled18 = swap_params.balances_live_scaled18[
+            swap_params.index_in
         ]
-        balance_token_out_scaled18 = swap_params["balances_live_scaled18"][
-            swap_params["index_out"]
+        balance_token_out_scaled18 = swap_params.balances_live_scaled18[
+            swap_params.index_out
         ]
 
         virtual_balance_in, virtual_balance_out = self.get_virtual_offsets(
@@ -47,11 +47,11 @@ class Gyro2CLP:
             self.sqrt_beta,
         )
 
-        if swap_params["swap_kind"] == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN.value:
             return calc_out_given_in(
                 balance_token_in_scaled18,
                 balance_token_out_scaled18,
-                swap_params["amount_given_scaled18"],
+                swap_params.amount_given_scaled18,
                 virtual_balance_in,
                 virtual_balance_out,
             )
@@ -59,7 +59,7 @@ class Gyro2CLP:
         return calc_in_given_out(
             balance_token_in_scaled18,
             balance_token_out_scaled18,
-            swap_params["amount_given_scaled18"],
+            swap_params.amount_given_scaled18,
             virtual_balance_in,
             virtual_balance_out,
         )

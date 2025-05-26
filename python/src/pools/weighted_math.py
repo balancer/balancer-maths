@@ -1,3 +1,4 @@
+from src.constants import WAD
 from src.maths import (
     mul_down_fixed,
     pow_down_fixed,
@@ -7,8 +8,6 @@ from src.maths import (
     complement_fixed,
     mul_up_fixed,
 )
-
-WAD = int(1e18)
 
 # Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
 # ratio).

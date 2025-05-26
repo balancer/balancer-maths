@@ -1,5 +1,5 @@
+from src.constants import WAD
 from src.maths import (
-    WAD,
     mul_down_fixed,
     div_up_fixed,
     div_down_fixed,

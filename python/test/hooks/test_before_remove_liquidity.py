@@ -2,36 +2,30 @@ import pytest
 import sys
 import os
 
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
-
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
-
 from src.pools.weighted import Weighted
 from src.remove_liquidity import RemoveKind
-
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
-
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook
 
+# Get the directory of the current file
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory (one level up)
+parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
+
+# Insert the parent directory at the start of sys.path
+sys.path.insert(0, parent_dir)
+
+
 remove_liquidity_input = {
-    "pool": '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
+    "pool": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
     "min_amounts_out_raw": [0, 1],
     "max_bpt_amount_in_raw": 100000000000000000,
     "kind": RemoveKind.SINGLE_TOKEN_EXACT_IN.value,
 }
 
-class CustomPool():
+
+class CustomPool:
     def __init__(self, pool_state):
         self.pool_state = pool_state
 
@@ -42,7 +36,7 @@ class CustomPool():
         return 1
 
     def on_swap(self, swap_params):
-       return 1
+        return 1
 
     def compute_invariant(self, balances_live_scaled18):
         return 1
@@ -54,6 +48,7 @@ class CustomPool():
         invariant_ratio,
     ):
         return 1
+
 
 class CustomHook:
     def __init__(self):
@@ -67,35 +62,63 @@ class CustomHook:
         self.enable_hook_adjusted_amounts = False
 
     def on_before_add_liquidity(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+        return {"success": False, "hook_adjusted_balances_scaled18": []}
 
-    def on_after_add_liquidity(self, kind, amounts_in_scaled18, amounts_in_raw, bpt_amount_out, balances_scaled18, hook_state):
-        return { 'success': False, 'hook_adjusted_amounts_in_raw': [] };
+    def on_after_add_liquidity(
+        self,
+        kind,
+        amounts_in_scaled18,
+        amounts_in_raw,
+        bpt_amount_out,
+        balances_scaled18,
+        hook_state,
+    ):
+        return {"success": False, "hook_adjusted_amounts_in_raw": []}
 
-    def on_before_remove_liquidity(self, kind, max_bpt_amount_in, min_amounts_out_scaled18, balances_scaled18, hook_state):
-        if not (isinstance(hook_state, dict) and hook_state is not None and 'balanceChange' in hook_state):
-            raise ValueError('Unexpected hookState')
-        assert kind == remove_liquidity_input['kind']
-        assert max_bpt_amount_in == remove_liquidity_input['max_bpt_amount_in_raw']
-        assert min_amounts_out_scaled18 == remove_liquidity_input['min_amounts_out_raw']
-        assert balances_scaled18 == pool['balancesLiveScaled18']
-    
-        return {'success': True, 'hook_adjusted_balances_scaled18': hook_state['balanceChange']}
+    def on_before_remove_liquidity(
+        self,
+        kind,
+        max_bpt_amount_in,
+        min_amounts_out_scaled18,
+        balances_scaled18,
+        hook_state,
+    ):
+        if not (
+            isinstance(hook_state, dict)
+            and hook_state is not None
+            and "balanceChange" in hook_state
+        ):
+            raise ValueError("Unexpected hookState")
+        assert kind == remove_liquidity_input["kind"]
+        assert max_bpt_amount_in == remove_liquidity_input["max_bpt_amount_in_raw"]
+        assert min_amounts_out_scaled18 == remove_liquidity_input["min_amounts_out_raw"]
+        assert balances_scaled18 == pool["balancesLiveScaled18"]
 
-    def on_after_remove_liquidity(self, kind, bpt_amount_in, amounts_out_scaled18, amounts_out_raw, balances_scaled18, hook_state):
         return {
-            'success': False,
-            'hook_adjusted_amounts_out_raw': []
+            "success": True,
+            "hook_adjusted_balances_scaled18": hook_state["balanceChange"],
         }
 
+    def on_after_remove_liquidity(
+        self,
+        kind,
+        bpt_amount_in,
+        amounts_out_scaled18,
+        amounts_out_raw,
+        balances_scaled18,
+        hook_state,
+    ):
+        return {"success": False, "hook_adjusted_amounts_out_raw": []}
+
     def on_before_swap(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+        return {"success": False, "hook_adjusted_balances_scaled18": []}
 
     def on_after_swap(self):
-        return {'success': False, 'hook_adjusted_amount_calculated_raw': 0}
+        return {"success": False, "hook_adjusted_amount_calculated_raw": 0}
 
     def on_compute_dynamic_swap_fee(self):
-        return {'success': False, 'dynamic_swap_fee': 0}
+        return {"success": False, "dynamic_swap_fee": 0}
+
 
 pool = {
     "poolType": "CustomPool",
@@ -121,22 +144,18 @@ vault = Vault(
     custom_hook_classes={"CustomHook": CustomHook},
 )
 
+
 def test_hook_before_remove_liquidity():
     # should alter pool balances
     # hook state is used to pass new balances which give expected result
     input_hook_state = {
-            "balanceChange": [
-                1000000000000000000,
-                1000000000000000000
-            ],
-        }
+        "balanceChange": [1000000000000000000, 1000000000000000000],
+    }
     test = vault.remove_liquidity(
-        remove_liquidity_input,
-        pool,
-        hook_state=input_hook_state
+        remove_liquidity_input, pool, hook_state=input_hook_state
     )
     assert test["bpt_amount_in_raw"] == remove_liquidity_input["max_bpt_amount_in_raw"]
     assert test["amounts_out_raw"] == [
-            0,
-            909999999999999999,
-        ]
+        0,
+        909999999999999999,
+    ]

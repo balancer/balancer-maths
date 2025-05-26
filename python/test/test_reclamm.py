@@ -2,7 +2,7 @@ import sys
 import os
 
 from src.pools.reclamm.reclamm import ReClamm
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -43,25 +43,25 @@ def test_reclamm_swap():
 
     # Test GivenIn swap
     amount_out = pool.on_swap(
-        {
-            "swap_kind": SwapKind.GIVENIN.value,
-            "balances_live_scaled18": pool_state["balancesLiveScaled18"],
-            "index_in": 0,
-            "index_out": 1,
-            "amount_given_scaled18": 1000000000000000000,
-        }
+        SwapParams(
+            swap_kind=SwapKind.GIVENIN.value,
+            balances_live_scaled18=pool_state["balancesLiveScaled18"],
+            index_in=0,
+            index_out=1,
+            amount_given_scaled18=1000000000000000000,
+        )
     )
     assert amount_out > 0
 
     # Test GivenOut swap
     amount_in = pool.on_swap(
-        {
-            "swap_kind": SwapKind.GIVENOUT.value,
-            "balances_live_scaled18": pool_state["balancesLiveScaled18"],
-            "index_in": 0,
-            "index_out": 1,
-            "amount_given_scaled18": 1000000000000000000,
-        }
+        SwapParams(
+            swap_kind=SwapKind.GIVENOUT.value,
+            balances_live_scaled18=pool_state["balancesLiveScaled18"],
+            index_in=0,
+            index_out=1,
+            amount_given_scaled18=1000000000000000000,
+        )
     )
     assert amount_in > 0
 

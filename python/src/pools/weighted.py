@@ -8,7 +8,7 @@ from src.pools.weighted_math import (
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
 )
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 
 
 class Weighted:
@@ -21,22 +21,22 @@ class Weighted:
     def get_minimum_invariant_ratio(self) -> int:
         return _MIN_INVARIANT_RATIO
 
-    def on_swap(self, swap_params):
-        if swap_params["swap_kind"] == SwapKind.GIVENIN.value:
+    def on_swap(self, swap_params: SwapParams) -> int:
+        if swap_params.swap_kind == SwapKind.GIVENIN.value:
             return compute_out_given_exact_in(
-                swap_params["balances_live_scaled18"][swap_params["index_in"]],
-                self.normalized_weights[swap_params["index_in"]],
-                swap_params["balances_live_scaled18"][swap_params["index_out"]],
-                self.normalized_weights[swap_params["index_out"]],
-                swap_params["amount_given_scaled18"],
+                swap_params.balances_live_scaled18[swap_params.index_in],
+                self.normalized_weights[swap_params.index_in],
+                swap_params.balances_live_scaled18[swap_params.index_out],
+                self.normalized_weights[swap_params.index_out],
+                swap_params.amount_given_scaled18,
             )
 
         return compute_in_given_exact_out(
-            swap_params["balances_live_scaled18"][swap_params["index_in"]],
-            self.normalized_weights[swap_params["index_in"]],
-            swap_params["balances_live_scaled18"][swap_params["index_out"]],
-            self.normalized_weights[swap_params["index_out"]],
-            swap_params["amount_given_scaled18"],
+            swap_params.balances_live_scaled18[swap_params.index_in],
+            self.normalized_weights[swap_params.index_in],
+            swap_params.balances_live_scaled18[swap_params.index_out],
+            self.normalized_weights[swap_params.index_out],
+            swap_params.amount_given_scaled18,
         )
 
     def compute_invariant(self, balances_live_scaled18, rounding):

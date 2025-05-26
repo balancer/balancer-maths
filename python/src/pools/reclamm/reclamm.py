@@ -1,5 +1,5 @@
 from typing import List
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 from src.pools.reclamm.reclamm_data import ReClammMutable, PriceRatioState
 from src.pools.reclamm.reclamm_math import (
     compute_current_virtual_balances,
@@ -39,51 +39,50 @@ class ReClamm:
         # only be added or removed proportionally.
         return 0
 
-    # TODO: refactor swapParams as a class
-    def on_swap(self, swap_params: dict) -> int:
+    def on_swap(self, swap_params: SwapParams) -> int:
         compute_result = self._compute_current_virtual_balances(
-            swap_params["balances_live_scaled18"]
+            swap_params.balances_live_scaled18
         )
 
-        if swap_params["swap_kind"] == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN.value:
             amount_calculated_scaled_18 = compute_out_given_in(
-                swap_params["balances_live_scaled18"],
+                swap_params.balances_live_scaled18,
                 compute_result[0],  # current_virtual_balance_a
                 compute_result[1],  # current_virtual_balance_b
-                swap_params["index_in"],
-                swap_params["index_out"],
-                swap_params["amount_given_scaled18"],
+                swap_params.index_in,
+                swap_params.index_out,
+                swap_params.amount_given_scaled18,
             )
 
             self._ensure_valid_pool_state_after_swap(
-                swap_params["balances_live_scaled18"],
+                swap_params.balances_live_scaled18,
                 compute_result[0],  # current_virtual_balance_a
                 compute_result[1],  # current_virtual_balance_b
-                swap_params["amount_given_scaled18"],
+                swap_params.amount_given_scaled18,
                 amount_calculated_scaled_18,
-                swap_params["index_in"],
-                swap_params["index_out"],
+                swap_params.index_in,
+                swap_params.index_out,
             )
 
             return amount_calculated_scaled_18
 
         amount_calculated_scaled_18 = compute_in_given_out(
-            swap_params["balances_live_scaled18"],
+            swap_params.balances_live_scaled18,
             compute_result[0],  # current_virtual_balance_a
             compute_result[1],  # current_virtual_balance_b
-            swap_params["index_in"],
-            swap_params["index_out"],
-            swap_params["amount_given_scaled18"],
+            swap_params.index_in,
+            swap_params.index_out,
+            swap_params.amount_given_scaled18,
         )
 
         self._ensure_valid_pool_state_after_swap(
-            swap_params["balances_live_scaled18"],
+            swap_params.balances_live_scaled18,
             compute_result[0],  # current_virtual_balance_a
             compute_result[1],  # current_virtual_balance_b
             amount_calculated_scaled_18,
-            swap_params["amount_given_scaled18"],
-            swap_params["index_in"],
-            swap_params["index_out"],
+            swap_params.amount_given_scaled18,
+            swap_params.index_in,
+            swap_params.index_out,
         )
 
         return amount_calculated_scaled_18

@@ -1,17 +1,11 @@
 from enum import Enum
+from src.constants import FOUR_WAD, MAX_POW_RELATIVE_ERROR, TWO_WAD, WAD
 from src.log_exp_math import LogExpMath
 
 
 class Rounding(Enum):
     ROUND_UP = 0
     ROUND_DOWN = 1
-
-
-MAX_POW_RELATIVE_ERROR = 10000
-WAD = 1000000000000000000
-TWO_WAD = 2000000000000000000
-FOUR_WAD = 4000000000000000000
-RAY = 1000000000000000000000000000000000000
 
 
 def mul_up_fixed(a: int, b: int) -> int:

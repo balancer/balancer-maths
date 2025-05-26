@@ -3,7 +3,7 @@ from src.maths import (
     Rounding,
     mul_up_fixed,
 )
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapParams
 from src.pools.gyro.gyroECLP_math import (
     EclpParams,
     DerivedEclpParams,
@@ -49,23 +49,23 @@ class GyroECLP:
     def get_minimum_invariant_ratio(self) -> int:
         return GyroECLPMath.MIN_INVARIANT_RATIO
 
-    def on_swap(self, swap_params):
-        token_in_is_token_0 = swap_params["index_in"] == 0
+    def on_swap(self, swap_params: SwapParams) -> int:
+        token_in_is_token_0 = swap_params.index_in == 0
 
         eclp_params = self.pool_params.eclp_params
         derived_eclp_params = self.pool_params.derived_eclp_params
 
         # Tuple unpacking for the returned values from calculateInvariantWithError
         current_invariant, inv_err = GyroECLPMath.calculate_invariant_with_error(
-            swap_params["balances_live_scaled18"], eclp_params, derived_eclp_params
+            swap_params.balances_live_scaled18, eclp_params, derived_eclp_params
         )
 
         invariant = Vector2(x=current_invariant + 2 * inv_err, y=current_invariant)
 
-        if swap_params["swap_kind"] == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN.value:
             return GyroECLPMath.calc_out_given_in(
-                swap_params["balances_live_scaled18"],
-                swap_params["amount_given_scaled18"],
+                swap_params.balances_live_scaled18,
+                swap_params.amount_given_scaled18,
                 token_in_is_token_0,
                 eclp_params,
                 derived_eclp_params,
@@ -73,8 +73,8 @@ class GyroECLP:
             )
 
         return GyroECLPMath.calc_in_given_out(
-            swap_params["balances_live_scaled18"],
-            swap_params["amount_given_scaled18"],
+            swap_params.balances_live_scaled18,
+            swap_params.amount_given_scaled18,
             token_in_is_token_0,
             eclp_params,
             derived_eclp_params,

@@ -1,4 +1,5 @@
 from typing import Tuple, List
+from src.constants import RAY, TWO_WAD, WAD
 from src.oz_math import sqrt
 from src.log_exp_math import LogExpMath
 
@@ -7,9 +8,6 @@ from src.maths import (
     div_up_fixed,
     div_down_fixed,
     mul_up_fixed,
-    RAY,
-    TWO_WAD,
-    WAD,
     Rounding,
 )
 
