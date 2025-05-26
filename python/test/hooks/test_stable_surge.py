@@ -1,5 +1,5 @@
 from src.vault import Vault
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapInput
 
 pool_state = {
     "poolType": "STABLE",
@@ -30,12 +30,12 @@ vault = Vault()
 
 
 def test_below_surge_threshold_static_swap_fee_case1():
-    swap_input = {
-        "swap_kind": SwapKind.GIVENIN.value,
-        "amount_raw": 1000000000000000,
-        "token_in": pool_state["tokens"][0],
-        "token_out": pool_state["tokens"][1],
-    }
+    swap_input = SwapInput(
+        swap_kind=SwapKind.GIVENIN,
+        amount_raw=1000000000000000,
+        token_in=pool_state["tokens"][0],
+        token_out=pool_state["tokens"][1],
+    )
     output_amount = vault.swap(
         swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
     )
@@ -43,12 +43,12 @@ def test_below_surge_threshold_static_swap_fee_case1():
 
 
 def test_below_surge_threshold_static_swap_fee_case2():
-    swap_input = {
-        "swap_kind": SwapKind.GIVENIN.value,
-        "amount_raw": 10000000000000000,
-        "token_in": pool_state["tokens"][0],
-        "token_out": pool_state["tokens"][1],
-    }
+    swap_input = SwapInput(
+        swap_kind=SwapKind.GIVENIN,
+        amount_raw=10000000000000000,
+        token_in=pool_state["tokens"][0],
+        token_out=pool_state["tokens"][1],
+    )
     output_amount = vault.swap(
         swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
     )
@@ -56,12 +56,12 @@ def test_below_surge_threshold_static_swap_fee_case2():
 
 
 def test_above_surge_threshold_uses_surge_fee():
-    swap_input = {
-        "swap_kind": SwapKind.GIVENIN.value,
-        "amount_raw": 8000000000000000000,
-        "token_in": pool_state["tokens"][1],
-        "token_out": pool_state["tokens"][0],
-    }
+    swap_input = SwapInput(
+        swap_kind=SwapKind.GIVENIN,
+        amount_raw=8000000000000000000,
+        token_in=pool_state["tokens"][1],
+        token_out=pool_state["tokens"][0],
+    )
     output_amount = vault.swap(
         swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
     )

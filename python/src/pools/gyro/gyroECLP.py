@@ -62,7 +62,7 @@ class GyroECLP:
 
         invariant = Vector2(x=current_invariant + 2 * inv_err, y=current_invariant)
 
-        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN:
             return GyroECLPMath.calc_out_given_in(
                 swap_params.balances_live_scaled18,
                 swap_params.amount_given_scaled18,

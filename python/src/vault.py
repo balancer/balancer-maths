@@ -10,6 +10,7 @@ from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
 from src.hooks.stable_surge_hook import StableSurgeHook
 from src.pools.reclamm.reclamm import ReClamm
+from src.swap import SwapInput
 
 
 class Vault:
@@ -28,8 +29,8 @@ class Vault:
         if custom_hook_classes is not None:
             self.hook_classes.update(custom_hook_classes)
 
-    def swap(self, swap_input, pool_state, *, hook_state=None):
-        if swap_input["amount_raw"] == 0:
+    def swap(self, swap_input: SwapInput, pool_state, *, hook_state=None):
+        if swap_input.amount_raw == 0:
             return 0
 
         # buffer is handled separately than a "normal" pool

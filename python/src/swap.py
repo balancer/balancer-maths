@@ -15,6 +15,11 @@ from src.maths import mul_up_fixed, mul_div_up, complement_fixed
 _MINIMUM_TRADE_AMOUNT = 1e6
 
 
+class SwapKind(Enum):
+    GIVENIN = 0
+    GIVENOUT = 1
+
+
 @dataclass
 class SwapParams:
     """Parameters for a swap operation in a pool.
@@ -27,35 +32,46 @@ class SwapParams:
         index_out: Index of the output token in the pool's token list
     """
 
-    swap_kind: int  # SwapKind enum value
+    swap_kind: SwapKind
     amount_given_scaled18: int
     balances_live_scaled18: List[int]
     index_in: int
     index_out: int
 
 
-class SwapKind(Enum):
-    GIVENIN = 0
-    GIVENOUT = 1
+@dataclass
+class SwapInput:
+    """Input parameters for a swap operation.
+
+    Attributes:
+        amount_raw: The raw amount being swapped
+        swap_kind: The type of swap (GIVENIN or GIVENOUT)
+        token_in: Address of the input token
+        token_out: Address of the output token
+    """
+
+    amount_raw: int
+    swap_kind: SwapKind
+    token_in: str
+    token_out: str
 
 
-def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
-
+def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
     input_index = find_case_insensitive_index_in_list(
-        pool_state["tokens"], swap_input["token_in"]
+        pool_state["tokens"], swap_input.token_in
     )
     if input_index == -1:
         raise SystemError("Input token not found on pool")
 
     output_index = find_case_insensitive_index_in_list(
-        pool_state["tokens"], swap_input["token_out"]
+        pool_state["tokens"], swap_input.token_out
     )
     if output_index == -1:
         raise SystemError("Output token not found on pool")
 
     amount_given_scaled18 = _compute_amount_given_scaled18(
-        swap_input["amount_raw"],
-        swap_input["swap_kind"],
+        swap_input.amount_raw,
+        swap_input.swap_kind,
         input_index,
         output_index,
         pool_state["scalingFactors"],
@@ -70,7 +86,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
         hook_return = hook_class.on_before_swap(
-            {**swap_input, "hook_state": hook_state}
+            {**swap_input.__dict__, "hook_state": hook_state}
         )
         if hook_return["success"] is False:
             raise SystemError("BeforeSwapHookFailed")
@@ -79,7 +95,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
 
     # _swap()
     swap_params = SwapParams(
-        swap_kind=swap_input["swap_kind"],
+        swap_kind=swap_input.swap_kind,
         amount_given_scaled18=amount_given_scaled18,
         balances_live_scaled18=updated_balances_live_scaled18,
         index_in=input_index,
@@ -97,7 +113,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
             swap_fee = hook_return["dynamic_swap_fee"]
 
     total_swap_fee_amount_scaled18 = 0
-    if swap_params.swap_kind == SwapKind.GIVENIN.value:
+    if swap_params.swap_kind == SwapKind.GIVENIN:
         # Round up to avoid losses during precision loss.
         total_swap_fee_amount_scaled18 = mul_up_fixed(
             swap_params.amount_given_scaled18,
@@ -112,7 +128,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     _ensure_valid_swap_amount(amount_calculated_scaled18)
 
     amount_calculated_raw = 0
-    if swap_input["swap_kind"] == SwapKind.GIVENIN.value:
+    if swap_input.swap_kind == SwapKind.GIVENIN:
         # For `ExactIn` the amount calculated is leaving the Vault, so we round down.
         amount_calculated_raw = _to_raw_undo_rate_round_down(
             amount_calculated_scaled18,
@@ -158,7 +174,7 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
             amount_given_scaled18 - aggregate_swap_fee_amount_scaled18,
             amount_calculated_scaled18,
         )
-        if swap_input["swap_kind"] == SwapKind.GIVENIN.value
+        if swap_input.swap_kind == SwapKind.GIVENIN
         else (
             amount_calculated_scaled18 - aggregate_swap_fee_amount_scaled18,
             amount_given_scaled18,
@@ -171,17 +187,17 @@ def swap(swap_input, pool_state, pool_class, hook_class, hook_state):
     if hook_class.should_call_after_swap:
         hook_return = hook_class.on_after_swap(
             {
-                "kind": swap_input["swap_kind"],
-                "token_in": swap_input["token_in"],
-                "token_out": swap_input["token_out"],
+                "kind": swap_input.swap_kind,
+                "token_in": swap_input.token_in,
+                "token_out": swap_input.token_out,
                 "amount_in_scaled18": (
                     amount_given_scaled18
-                    if swap_input["swap_kind"] == SwapKind.GIVENIN.value
+                    if swap_input.swap_kind == SwapKind.GIVENIN
                     else amount_calculated_scaled18
                 ),
                 "amount_out_scaled18": (
                     amount_calculated_scaled18
-                    if swap_input["swap_kind"] == SwapKind.GIVENIN.value
+                    if swap_input.swap_kind == SwapKind.GIVENIN
                     else amount_given_scaled18
                 ),
                 "token_in_balance_scaled18": updated_balances_live_scaled18[
@@ -217,7 +233,7 @@ def _compute_amount_given_scaled18(
     # If the amountGiven is entering the pool math (ExactIn), round down
     # since a lower apparent amountIn leads
     # to a lower calculated amountOut, favoring the pool.
-    if swap_kind == SwapKind.GIVENIN.value:
+    if swap_kind == SwapKind.GIVENIN:
         amount_given_scaled_18 = _to_scaled_18_apply_rate_round_down(
             amount_given_raw,
             scaling_factors[index_in],

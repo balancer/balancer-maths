@@ -2,6 +2,7 @@ import sys
 import os
 
 from src.vault import Vault
+from src.swap import SwapInput, SwapKind
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,12 +33,12 @@ def test_custom_pool():
     }
     vault = Vault(custom_pool_classes={"CustomPool": CustomPool})
     calculated_amount = vault.swap(
-        {
-            "amount_raw": 1000000000000000000,
-            "token_in": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-            "token_out": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
-            "swap_kind": 0,
-        },
+        SwapInput(
+            amount_raw=1000000000000000000,
+            token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+            token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+            swap_kind=SwapKind.GIVENIN,
+        ),
         pool,
     )
     assert calculated_amount == pool["randoms"][0]

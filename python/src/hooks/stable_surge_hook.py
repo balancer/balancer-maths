@@ -69,7 +69,7 @@ class StableSurgeHook:
         amount_calculated_scaled_18 = pool.on_swap(swap_params)
         new_balances = swap_params.balances_live_scaled18[:]
 
-        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN:
             new_balances[swap_params.index_in] += swap_params.amount_given_scaled18
             new_balances[swap_params.index_out] -= amount_calculated_scaled_18
         else:

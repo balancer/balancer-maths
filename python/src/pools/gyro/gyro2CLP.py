@@ -13,7 +13,7 @@ from src.pools.gyro.gyro2CLP_math import (
     calc_in_given_out,
 )
 from src.utils import MAX_UINT256
-from src.swap import SwapKind, SwapParams
+from src.swap import SwapKind, SwapParams, SwapInput
 
 
 class Gyro2CLP:
@@ -47,7 +47,7 @@ class Gyro2CLP:
             self.sqrt_beta,
         )
 
-        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN:
             return calc_out_given_in(
                 balance_token_in_scaled18,
                 balance_token_out_scaled18,

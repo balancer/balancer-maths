@@ -2,6 +2,10 @@ import pytest
 import sys
 import os
 
+from src.vault import Vault
+from src.hooks.default_hook import DefaultHook
+from src.swap import SwapInput, SwapKind
+
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 # Get the parent directory (one level up)
@@ -10,8 +14,6 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
 
-from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
 
 pool = {
     "poolType": "CustomPool",
@@ -41,12 +43,12 @@ def test_hook_no_state():
     )
     with pytest.raises(SystemError, match=r"\('No state for Hook:', 'CustomHook'\)"):
         vault.swap(
-            {
-                "amount_raw": 1,
-                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
-                "swapKind": 0,
-            },
+            SwapInput(
+                amount_raw=1,
+                token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                swap_kind=SwapKind.GIVENIN,
+            ),
             pool,
         )
 
@@ -60,12 +62,12 @@ def test_unsupported_hook_type():
         SystemError, match=r"\('Unsupported Hook Type:', 'Unsupported'\)"
     ):
         vault.swap(
-            {
-                "amount_raw": 1,
-                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
-                "swapKind": 0,
-            },
+            SwapInput(
+                amount_raw=1,
+                token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                swap_kind=SwapKind.GIVENIN,
+            ),
             {**pool, "hookType": "Unsupported"},
         )
 

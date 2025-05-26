@@ -44,7 +44,7 @@ class ReClamm:
             swap_params.balances_live_scaled18
         )
 
-        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN:
             amount_calculated_scaled_18 = compute_out_given_in(
                 swap_params.balances_live_scaled18,
                 compute_result[0],  # current_virtual_balance_a

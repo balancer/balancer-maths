@@ -44,7 +44,7 @@ def test_reclamm_swap():
     # Test GivenIn swap
     amount_out = pool.on_swap(
         SwapParams(
-            swap_kind=SwapKind.GIVENIN.value,
+            swap_kind=SwapKind.GIVENIN,
             balances_live_scaled18=pool_state["balancesLiveScaled18"],
             index_in=0,
             index_out=1,
@@ -56,7 +56,7 @@ def test_reclamm_swap():
     # Test GivenOut swap
     amount_in = pool.on_swap(
         SwapParams(
-            swap_kind=SwapKind.GIVENOUT.value,
+            swap_kind=SwapKind.GIVENOUT,
             balances_live_scaled18=pool_state["balancesLiveScaled18"],
             index_in=0,
             index_out=1,

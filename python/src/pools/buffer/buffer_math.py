@@ -16,14 +16,14 @@ def calculate_buffer_amounts(
 ):
     if direction == WrappingDirection.WRAP:
         # Amount in is underlying tokens, amount out is wrapped tokens
-        if kind == SwapKind.GIVENIN.value:
+        if kind == SwapKind.GIVENIN:
             # previewDeposit
             return _convert_to_shares(amount_raw, rate, Rounding.DOWN)
         # previewMint
         return _convert_to_assets(amount_raw, rate, Rounding.UP)
 
     # Amount in is wrapped tokens, amount out is underlying tokens
-    if kind == SwapKind.GIVENIN.value:
+    if kind == SwapKind.GIVENIN:
         # previewRedeem
         return _convert_to_assets(amount_raw, rate, Rounding.DOWN)
     # previewWithdraw

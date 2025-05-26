@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.swap import SwapKind
+from src.swap import SwapKind, SwapInput
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook
@@ -37,12 +37,12 @@ pool = {
 }
 
 
-swap_input = {
-    "amount_raw": 1000000000000000000,
-    "swap_kind": SwapKind.GIVENIN.value,
-    "token_in": pool["tokens"][0],
-    "token_out": pool["tokens"][1],
-}
+swap_input = SwapInput(
+    amount_raw=1000000000000000000,
+    swap_kind=SwapKind.GIVENIN,
+    token_in=pool["tokens"][0],
+    token_out=pool["tokens"][1],
+)
 
 expected_calculated = 100000000000
 
@@ -118,11 +118,11 @@ class CustomHook:
             and "expectedBalancesLiveScaled18" in hook_state
         ):
             raise ValueError("Unexpected hookState")
-        assert params["kind"] == swap_input["swap_kind"]
+        assert params["kind"] == swap_input.swap_kind
 
-        assert params["token_in"] == swap_input["token_in"]
-        assert params["token_out"] == swap_input["token_out"]
-        assert params["amount_in_scaled18"] == swap_input["amount_raw"]
+        assert params["token_in"] == swap_input.token_in
+        assert params["token_out"] == swap_input.token_out
+        assert params["amount_in_scaled18"] == swap_input.amount_raw
         assert params["amount_calculated_raw"] == expected_calculated
         assert params["amount_calculated_scaled18"] == expected_calculated
         assert params["amount_out_scaled18"] == expected_calculated
@@ -147,7 +147,7 @@ def test_hook_after_swap_no_fee():
     # with aggregateFee = 0, balance out is just balance - calculated
     input_hook_state = {
         "expectedBalancesLiveScaled18": [
-            pool["balancesLiveScaled18"][0] + swap_input["amount_raw"],
+            pool["balancesLiveScaled18"][0] + swap_input.amount_raw,
             pool["balancesLiveScaled18"][1] - expected_calculated,
         ],
     }
@@ -165,7 +165,7 @@ def test_hook_after_swap_with_fee():
     input_hook_state = {
         "expectedBalancesLiveScaled18": [
             pool["balancesLiveScaled18"][0]
-            + swap_input["amount_raw"]
+            + swap_input.amount_raw
             - expected_aggregate_swap_fee_amount,
             pool["balancesLiveScaled18"][1] - expected_calculated,
         ],

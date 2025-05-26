@@ -7,7 +7,7 @@ from src.pools.stable_math import (
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
 )
-from src.swap import SwapKind, SwapParams
+from src.swap import SwapKind, SwapParams, SwapInput
 
 
 class Stable:
@@ -23,7 +23,7 @@ class Stable:
     def on_swap(self, swap_params: SwapParams) -> int:
         invariant = compute_invariant(self.amp, swap_params.balances_live_scaled18)
 
-        if swap_params.swap_kind == SwapKind.GIVENIN.value:
+        if swap_params.swap_kind == SwapKind.GIVENIN:
             return compute_out_given_exact_in(
                 self.amp,
                 swap_params.balances_live_scaled18,

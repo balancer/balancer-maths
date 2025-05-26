@@ -19,6 +19,7 @@ Currently supported hooks:
 
 ```python
 from src.vault import Vault
+from src.swap import SwapInput, SwapKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -39,12 +40,12 @@ pool = {
 }
 
 
-swap_input = {
-    "amount_raw": 100000000,
-    "swap_kind": SwapKind.GIVENIN.value,
-    "token_in": pool['tokens'][0],
-    "token_out": pool['tokens'][1],
-}
+swap_input = SwapInput(
+    amount_raw=100000000,
+    swap_kind=SwapKind.GIVENIN,
+    token_in=pool['tokens'][0],
+    token_out=pool['tokens'][1],
+)
 
 vault = Vault()
 
