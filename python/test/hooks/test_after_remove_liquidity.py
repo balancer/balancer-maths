@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.remove_liquidity import RemoveKind
+from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook
@@ -85,8 +85,8 @@ class CustomHook:
             and "expectedBalancesLiveScaled18" in hook_state
         ):
             raise ValueError("Unexpected hookState")
-        assert kind == remove_liquidity_input["kind"]
-        assert bpt_amount_in == remove_liquidity_input["max_bpt_amount_in_raw"]
+        assert kind == remove_liquidity_input.kind
+        assert bpt_amount_in == remove_liquidity_input.max_bpt_amount_in_raw
         assert amounts_out_scaled18 == [0, 909999999999999999]
         assert amounts_out_raw == [0, 909999999999999999]
         assert balances_scaled18 == hook_state["expectedBalancesLiveScaled18"]
@@ -105,12 +105,12 @@ class CustomHook:
         return {"success": False, "dynamic_swap_fee": 0}
 
 
-remove_liquidity_input = {
-    "pool": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
-    "min_amounts_out_raw": [0, 1],
-    "max_bpt_amount_in_raw": 100000000000000000,
-    "kind": RemoveKind.SINGLE_TOKEN_EXACT_IN.value,
-}
+remove_liquidity_input = RemoveLiquidityInput(
+    pool="0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
+    min_amounts_out_raw=[0, 1],
+    max_bpt_amount_in_raw=100000000000000000,
+    kind=RemoveLiquidityKind.SINGLE_TOKEN_EXACT_IN,
+)
 
 pool = {
     "poolType": "CustomPool",
@@ -159,10 +159,10 @@ def test_hook_after_remove_liquidity_no_fee():
         0,
         0,
     ]
-    assert test["bpt_amount_in_raw"] == remove_liquidity_input["max_bpt_amount_in_raw"]
+    assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw
 
 
-def test_hook_after_add_liquidity_with_fee():
+def test_hook_after_remove_liquidity_with_fee():
     # aggregateSwapFee of 50% should take half of remaining
     # hook state is used to pass expected value to tests
     # Original balance is 1
@@ -184,4 +184,4 @@ def test_hook_after_add_liquidity_with_fee():
         0,
         0,
     ]
-    assert test["bpt_amount_in_raw"] == remove_liquidity_input["max_bpt_amount_in_raw"]
+    assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw

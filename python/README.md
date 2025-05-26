@@ -101,6 +101,7 @@ This example shows how to calculate the result of a remove liqudity operation wh
 
 ```python
 from src.vault import Vault
+from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -121,12 +122,12 @@ pool = {
     "aggregateSwapFee": 0,
 }
 
-remove_liquidity_input = {
-    "pool": '0x03722034317d8fb16845213bd3ce15439f9ce136',
-    "min_amounts_out_raw": [1, 1],
-    "max_bpt_amount_in_raw": 10000000000000,
-    "kind": RemoveKind.PROPORTIONAL.value,
-}
+remove_liquidity_input = RemoveLiquidityInput(
+    pool="0x03722034317d8fb16845213bd3ce15439f9ce136",
+    min_amounts_out_raw=[1, 1],
+    max_bpt_amount_in_raw=10000000000000,
+    kind=RemoveLiquidityKind.PROPORTIONAL,
+)
 
 input_hook_state = {
     'removeLiquidityHookFeePercentage': 0,
@@ -136,7 +137,7 @@ input_hook_state = {
 vault = Vault()
 
 calculated_result = vault.remove_liquidity(
-    add_liquidity_input,
+    remove_liquidity_input,
     pool,
     hook_state=input_hook_state
 )

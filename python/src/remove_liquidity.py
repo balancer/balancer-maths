@@ -1,4 +1,5 @@
 from enum import Enum
+from dataclasses import dataclass
 from src.utils import (
     _copy_to_scaled18_apply_rate_round_up_array,
     _get_single_input_index,
@@ -13,14 +14,34 @@ from src.base_pool_math import (
 )
 
 
-class RemoveKind(Enum):
+class RemoveLiquidityKind(Enum):
     PROPORTIONAL = 0
     SINGLE_TOKEN_EXACT_IN = 1
     SINGLE_TOKEN_EXACT_OUT = 2
 
 
+@dataclass
+class RemoveLiquidityInput:
+    """Input parameters for a remove liquidity operation.
+
+    Attributes:
+        min_amounts_out_raw: List of minimum amounts of each token to receive
+        max_bpt_amount_in_raw: Maximum amount of BPT to burn
+        kind: The type of remove liquidity operation (PROPORTIONAL, SINGLE_TOKEN_EXACT_IN, or SINGLE_TOKEN_EXACT_OUT)
+    """
+
+    pool: str
+    min_amounts_out_raw: list[int]
+    max_bpt_amount_in_raw: int
+    kind: RemoveLiquidityKind
+
+
 def remove_liquidity(
-    remove_liquidity_input, pool_state, pool_class, hook_class, hook_state
+    remove_liquidity_input: RemoveLiquidityInput,
+    pool_state,
+    pool_class,
+    hook_class,
+    hook_state,
 ):
     # Round down when removing liquidity:
     # If proportional, lower balances = lower proportional amountsOut, favoring the pool.
@@ -31,7 +52,7 @@ def remove_liquidity(
     # Do not mutate minAmountsOut, so that we can directly compare the raw limits later, without potentially
     # losing precision by scaling up and then down.
     min_amounts_out_scaled18 = _copy_to_scaled18_apply_rate_round_up_array(
-        remove_liquidity_input["min_amounts_out_raw"],
+        remove_liquidity_input.min_amounts_out_raw,
         pool_state["scalingFactors"],
         pool_state["tokenRates"],
     )
@@ -44,9 +65,9 @@ def remove_liquidity(
         # We do take into account and balance changes due
         # to hook using hookAdjustedBalancesScaled18.
         hook_return = hook_class.on_before_remove_liquidity(
-            remove_liquidity_input["kind"],
-            remove_liquidity_input["max_bpt_amount_in_raw"],
-            remove_liquidity_input["min_amounts_out_raw"],
+            remove_liquidity_input.kind,
+            remove_liquidity_input.max_bpt_amount_in_raw,
+            remove_liquidity_input.min_amounts_out_raw,
             updated_balances_live_scaled18,
             hook_state,
         )
@@ -56,25 +77,25 @@ def remove_liquidity(
         for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
             updated_balances_live_scaled18[i] = a
 
-    if remove_liquidity_input["kind"] == RemoveKind.PROPORTIONAL.value:
-        bpt_amount_in = remove_liquidity_input["max_bpt_amount_in_raw"]
+    if remove_liquidity_input.kind == RemoveLiquidityKind.PROPORTIONAL:
+        bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw
         swap_fee_amounts_scaled18 = [0] * len(pool_state["tokens"])
         amounts_out_scaled18 = compute_proportional_amounts_out(
             updated_balances_live_scaled18,
             pool_state["totalSupply"],
-            remove_liquidity_input["max_bpt_amount_in_raw"],
+            remove_liquidity_input.max_bpt_amount_in_raw,
         )
-    elif remove_liquidity_input["kind"] == RemoveKind.SINGLE_TOKEN_EXACT_IN.value:
+    elif remove_liquidity_input.kind == RemoveLiquidityKind.SINGLE_TOKEN_EXACT_IN:
         _require_unbalanced_liquidity_enabled(pool_state)
-        bpt_amount_in = remove_liquidity_input["max_bpt_amount_in_raw"]
+        bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw
         amounts_out_scaled18 = min_amounts_out_scaled18
         token_out_index = _get_single_input_index(
-            remove_liquidity_input["min_amounts_out_raw"]
+            remove_liquidity_input.min_amounts_out_raw
         )
         computed = compute_remove_liquidity_single_token_exact_in(
             updated_balances_live_scaled18,
             token_out_index,
-            remove_liquidity_input["max_bpt_amount_in_raw"],
+            remove_liquidity_input.max_bpt_amount_in_raw,
             pool_state["totalSupply"],
             pool_state["swapFee"],
             pool_class.get_minimum_invariant_ratio(),
@@ -84,11 +105,11 @@ def remove_liquidity(
         )
         amounts_out_scaled18[token_out_index] = computed["amount_out_with_fee"]
         swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
-    elif remove_liquidity_input["kind"] == RemoveKind.SINGLE_TOKEN_EXACT_OUT.value:
+    elif remove_liquidity_input.kind == RemoveLiquidityKind.SINGLE_TOKEN_EXACT_OUT:
         _require_unbalanced_liquidity_enabled(pool_state)
         amounts_out_scaled18 = min_amounts_out_scaled18
         token_out_index = _get_single_input_index(
-            remove_liquidity_input["min_amounts_out_raw"]
+            remove_liquidity_input.min_amounts_out_raw
         )
         computed = compute_remove_liquidity_single_token_exact_out(
             updated_balances_live_scaled18,
@@ -105,7 +126,7 @@ def remove_liquidity(
         swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
     else:
         raise ValueError(
-            "Unsupported RemoveLiquidity Kind", remove_liquidity_input["kind"]
+            "Unsupported RemoveLiquidity Kind", remove_liquidity_input.kind
         )
 
     amounts_out_raw = [0] * len(pool_state["tokens"])
@@ -134,7 +155,7 @@ def remove_liquidity(
 
     if hook_class.should_call_after_remove_liquidity:
         hook_return = hook_class.on_after_remove_liquidity(
-            remove_liquidity_input["kind"],
+            remove_liquidity_input.kind,
             bpt_amount_in,
             amounts_out_scaled18,
             amounts_out_raw,

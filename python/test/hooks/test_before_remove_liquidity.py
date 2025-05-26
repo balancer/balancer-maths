@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.remove_liquidity import RemoveKind
+from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook
@@ -17,12 +17,12 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 sys.path.insert(0, parent_dir)
 
 
-remove_liquidity_input = {
-    "pool": "0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
-    "min_amounts_out_raw": [0, 1],
-    "max_bpt_amount_in_raw": 100000000000000000,
-    "kind": RemoveKind.SINGLE_TOKEN_EXACT_IN.value,
-}
+remove_liquidity_input = RemoveLiquidityInput(
+    pool="0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
+    min_amounts_out_raw=[0, 1],
+    max_bpt_amount_in_raw=100000000000000000,
+    kind=RemoveLiquidityKind.SINGLE_TOKEN_EXACT_IN,
+)
 
 
 class CustomPool:
@@ -89,9 +89,9 @@ class CustomHook:
             and "balanceChange" in hook_state
         ):
             raise ValueError("Unexpected hookState")
-        assert kind == remove_liquidity_input["kind"]
-        assert max_bpt_amount_in == remove_liquidity_input["max_bpt_amount_in_raw"]
-        assert min_amounts_out_scaled18 == remove_liquidity_input["min_amounts_out_raw"]
+        assert kind == remove_liquidity_input.kind
+        assert max_bpt_amount_in == remove_liquidity_input.max_bpt_amount_in_raw
+        assert min_amounts_out_scaled18 == remove_liquidity_input.min_amounts_out_raw
         assert balances_scaled18 == pool["balancesLiveScaled18"]
 
         return {
@@ -154,7 +154,7 @@ def test_hook_before_remove_liquidity():
     test = vault.remove_liquidity(
         remove_liquidity_input, pool, hook_state=input_hook_state
     )
-    assert test["bpt_amount_in_raw"] == remove_liquidity_input["max_bpt_amount_in_raw"]
+    assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw
     assert test["amounts_out_raw"] == [
         0,
         909999999999999999,

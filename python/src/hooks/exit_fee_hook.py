@@ -1,4 +1,4 @@
-from src.remove_liquidity import RemoveKind
+from src.remove_liquidity import RemoveLiquidityKind
 from src.maths import mul_down_fixed
 
 
@@ -45,8 +45,8 @@ class ExitFeeHook:
         # // Our current architecture only supports fees on tokens. Since we must always respect exact `amountsOut`, and
         # // non-proportional remove liquidity operations would require taking fees in BPT, we only support proportional
         # // removeLiquidity.
-        if kind != RemoveKind.PROPORTIONAL.value:
-            raise ValueError("ExitFeeHook: Unsupported RemoveKind: ", kind)
+        if kind != RemoveLiquidityKind.PROPORTIONAL:
+            raise ValueError("ExitFeeHook: Unsupported RemoveLiquidityKind: ", kind)
 
         accrued_fees = [0] * len(hook_state["tokens"])
         hook_adjusted_amounts_out_raw = amounts_out_raw[:]
