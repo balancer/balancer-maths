@@ -65,19 +65,6 @@ def test_reclamm_swap():
     )
     assert amount_in > 0
 
-    # Test max swap amount
-    max_amount = pool.get_max_swap_amount(
-        balances_live_scaled_18=pool_state["balancesLiveScaled18"],
-        index_in=0,
-        index_out=1,
-        swap_kind=SwapKind.GIVENIN.value,
-    )
-    assert max_amount > 0
-
     # Test invariant ratio bounds
     assert pool.get_maximum_invariant_ratio() == 0
     assert pool.get_minimum_invariant_ratio() == 0
-
-    # Test single token add/remove bounds
-    assert pool.get_max_single_token_add_amount() == 0
-    assert pool.get_max_single_token_remove_amount() == 0

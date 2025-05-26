@@ -47,15 +47,6 @@ class CustomPool:
     def __init__(self, pool_state: dict):
         self.randoms = pool_state["randoms"]
 
-    def get_max_swap_amount(self) -> int:
-        return 1
-
-    def get_max_single_token_remove_amount(self) -> int:
-        return 1
-
-    def get_max_single_token_add_amount(self) -> int:
-        return 1
-
     def on_swap(self, swap_params) -> int:
         return self.randoms[0]
 

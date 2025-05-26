@@ -39,43 +39,6 @@ class ReClamm:
         # only be added or removed proportionally.
         return 0
 
-    # TODO: this is not yet implemented in the vault (use TS as reference)
-    def get_max_swap_amount(
-        self,
-        balances_live_scaled_18: List[int],
-        index_in: int,
-        index_out: int,
-        swap_kind: str,
-    ) -> int:
-        max_amount_out = (
-            balances_live_scaled_18[index_out] - self.MIN_TOKEN_BALANCE_SCALED18
-        )
-
-        if swap_kind == SwapKind.GIVENIN.value:
-            # ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool).
-            # This would give the maximum amount in.
-            compute_result = self._compute_current_virtual_balances(
-                balances_live_scaled_18
-            )
-            amount_calculated_scaled_18 = compute_in_given_out(
-                balances_live_scaled_18,
-                compute_result[0],  # current_virtual_balance_a
-                compute_result[1],  # current_virtual_balance_b
-                index_in,
-                index_out,
-                max_amount_out,
-            )
-            return amount_calculated_scaled_18 - 1
-        return max_amount_out
-
-    def get_max_single_token_add_amount(self) -> int:
-        # liquidity can only be added or removed proportionally.
-        return 0
-
-    def get_max_single_token_remove_amount(self) -> int:
-        # liquidity can only be added or removed proportionally.
-        return 0
-
     # TODO: refactor swapParams as a class
     def on_swap(self, swap_params: dict) -> int:
         compute_result = self._compute_current_virtual_balances(
