@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List
 
-from src.common.types import SwapKind, SwapParams
-from src.add_liquidity import AddLiquidityKind
+from src.common.types import SwapKind, SwapParams, AddLiquidityKind
 from src.common.types import RemoveLiquidityKind
 
 

@@ -9,7 +9,7 @@ from hooks.types import (
     BeforeRemoveLiquidityResult,
     AfterRemoveLiquidityResult,
 )
-from src.common.types import SwapParams
+from src.common.types import SwapParams, AddLiquidityKind
 from src.add_liquidity import AddLiquidityKind
 from src.common.types import RemoveLiquidityKind
 from src.maths import mul_down_fixed

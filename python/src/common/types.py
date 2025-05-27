@@ -14,6 +14,11 @@ class SwapKind(Enum):
     GIVENOUT = 1
 
 
+class AddLiquidityKind(Enum):
+    UNBALANCED = 0
+    SINGLE_TOKEN_EXACT_OUT = 1
+
+
 @dataclass
 class RemoveLiquidityInput:
     """Input parameters for a remove liquidity operation.
@@ -64,3 +69,19 @@ class SwapParams:
     balances_live_scaled18: List[int]
     index_in: int
     index_out: int
+
+
+@dataclass
+class AddLiquidityInput:
+    """Input parameters for an add liquidity operation.
+
+    Attributes:
+        max_amounts_in_raw: List of maximum amounts of each token to add
+        min_bpt_amount_out_raw: Minimum amount of BPT to receive
+        kind: The type of add liquidity operation (UNBALANCED or SINGLE_TOKEN_EXACT_OUT)
+    """
+
+    pool: str
+    max_amounts_in_raw: list[int]
+    min_bpt_amount_out_raw: int
+    kind: AddLiquidityKind

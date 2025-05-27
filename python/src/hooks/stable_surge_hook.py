@@ -17,8 +17,7 @@ from src.maths import (
     complement_fixed,
 )
 from src.pools.stable import Stable
-from src.common.types import SwapKind, SwapParams
-from src.add_liquidity import AddLiquidityKind
+from src.common.types import SwapKind, SwapParams, AddLiquidityKind
 from src.common.types import RemoveLiquidityKind
 
 

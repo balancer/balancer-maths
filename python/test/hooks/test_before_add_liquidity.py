@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.add_liquidity import AddLiquidityInput, AddLiquidityKind
+from src.common.types import AddLiquidityInput, AddLiquidityKind
 
 from src.vault import Vault
 from src.hooks.default_hook import DefaultHook

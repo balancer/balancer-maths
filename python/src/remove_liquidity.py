@@ -1,5 +1,3 @@
-from enum import Enum
-from dataclasses import dataclass
 from src.utils import (
     _copy_to_scaled18_apply_rate_round_up_array,
     _get_single_input_index,
@@ -12,8 +10,8 @@ from src.base_pool_math import (
     compute_remove_liquidity_single_token_exact_in,
     compute_remove_liquidity_single_token_exact_out,
 )
-from hooks.types import HookBase
 from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
+from hooks.types import HookBase
 
 
 def remove_liquidity(

@@ -1,5 +1,3 @@
-from enum import Enum
-from dataclasses import dataclass
 from src.utils import (
     _copy_to_scaled18_apply_rate_round_down_array,
     _to_raw_undo_rate_round_up,
@@ -11,27 +9,7 @@ from src.base_pool_math import (
     compute_add_liquidity_unbalanced,
     compute_add_liquidity_single_token_exact_out,
 )
-
-
-class AddLiquidityKind(Enum):
-    UNBALANCED = 0
-    SINGLE_TOKEN_EXACT_OUT = 1
-
-
-@dataclass
-class AddLiquidityInput:
-    """Input parameters for an add liquidity operation.
-
-    Attributes:
-        max_amounts_in_raw: List of maximum amounts of each token to add
-        min_bpt_amount_out_raw: Minimum amount of BPT to receive
-        kind: The type of add liquidity operation (UNBALANCED or SINGLE_TOKEN_EXACT_OUT)
-    """
-
-    pool: str
-    max_amounts_in_raw: list[int]
-    min_bpt_amount_out_raw: int
-    kind: AddLiquidityKind
+from src.common.types import AddLiquidityKind, AddLiquidityInput
 
 
 def add_liquidity(

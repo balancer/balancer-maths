@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 
-from src.common.types import SwapKind, SwapInput, SwapParams
+from src.common.types import SwapKind, SwapInput, SwapParams, AddLiquidityKind
 from src.add_liquidity import AddLiquidityKind
 from src.common.types import RemoveLiquidityKind
 

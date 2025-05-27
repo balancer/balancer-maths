@@ -3,9 +3,13 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.add_liquidity import AddLiquidityKind
-from src.common.types import RemoveLiquidityKind, SwapKind, SwapInput, SwapParams
-
+from src.common.types import (
+    RemoveLiquidityKind,
+    SwapKind,
+    SwapInput,
+    SwapParams,
+    AddLiquidityKind,
+)
 from src.vault import Vault
 from hooks.types import (
     HookBase,
