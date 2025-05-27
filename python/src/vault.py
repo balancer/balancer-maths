@@ -10,7 +10,7 @@ from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
 from src.hooks.stable_surge_hook import StableSurgeHook
 from src.pools.reclamm.reclamm import ReClamm
-from src.swap import SwapInput
+from src.common.types import SwapInput
 
 
 class Vault:

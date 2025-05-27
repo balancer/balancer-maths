@@ -7,7 +7,7 @@ from src.pools.stable_math import (
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
 )
-from src.swap import SwapKind, SwapParams, SwapInput
+from src.common.types import SwapKind, SwapParams, SwapInput
 
 
 class Stable:

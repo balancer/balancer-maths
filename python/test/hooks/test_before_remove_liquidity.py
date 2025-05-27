@@ -2,11 +2,21 @@ import pytest
 import sys
 import os
 
-from src.pools.weighted import Weighted
-from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
-
+from src.add_liquidity import AddLiquidityKind
+from src.swap import SwapParams
+from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
+from hooks.types import (
+    HookBase,
+    AfterSwapParams,
+    DynamicSwapFeeResult,
+    BeforeSwapResult,
+    AfterSwapResult,
+    BeforeAddLiquidityResult,
+    AfterAddLiquidityResult,
+    BeforeRemoveLiquidityResult,
+    AfterRemoveLiquidityResult,
+)
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +60,7 @@ class CustomPool:
         return 1
 
 
-class CustomHook:
+class CustomHook(HookBase):
     def __init__(self):
         self.should_call_compute_dynamic_swap_fee = False
         self.should_call_before_swap = False
@@ -61,8 +71,17 @@ class CustomHook:
         self.should_call_after_remove_liquidity = False
         self.enable_hook_adjusted_amounts = False
 
-    def on_before_add_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_before_add_liquidity(
+        self,
+        kind: AddLiquidityKind,
+        max_amounts_in_scaled18: list[int],
+        min_bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeAddLiquidityResult:
+        return BeforeAddLiquidityResult(
+            success=False, hook_adjusted_balances_scaled18=[]
+        )
 
     def on_after_add_liquidity(
         self,
@@ -72,8 +91,8 @@ class CustomHook:
         bpt_amount_out,
         balances_scaled18,
         hook_state,
-    ):
-        return {"success": False, "hook_adjusted_amounts_in_raw": []}
+    ) -> AfterAddLiquidityResult:
+        return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
 
     def on_before_remove_liquidity(
         self,
@@ -82,7 +101,7 @@ class CustomHook:
         min_amounts_out_scaled18,
         balances_scaled18,
         hook_state,
-    ):
+    ) -> BeforeRemoveLiquidityResult:
         if not (
             isinstance(hook_state, dict)
             and hook_state is not None
@@ -94,10 +113,10 @@ class CustomHook:
         assert min_amounts_out_scaled18 == remove_liquidity_input.min_amounts_out_raw
         assert balances_scaled18 == pool["balancesLiveScaled18"]
 
-        return {
-            "success": True,
-            "hook_adjusted_balances_scaled18": hook_state["balanceChange"],
-        }
+        return BeforeRemoveLiquidityResult(
+            success=True,
+            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+        )
 
     def on_after_remove_liquidity(
         self,
@@ -107,17 +126,28 @@ class CustomHook:
         amounts_out_raw,
         balances_scaled18,
         hook_state,
-    ):
-        return {"success": False, "hook_adjusted_amounts_out_raw": []}
+    ) -> AfterRemoveLiquidityResult:
+        return AfterRemoveLiquidityResult(
+            success=False, hook_adjusted_amounts_out_raw=[]
+        )
 
-    def on_before_swap(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_before_swap(
+        self, swap_params: SwapParams, hook_state: dict
+    ) -> BeforeSwapResult:
+        return BeforeSwapResult(success=False, hook_adjusted_balances_scaled18=[])
 
-    def on_after_swap(self):
-        return {"success": False, "hook_adjusted_amount_calculated_raw": 0}
+    def on_after_swap(
+        self, after_swap_params: AfterSwapParams, hook_state: dict
+    ) -> AfterSwapResult:
+        return AfterSwapResult(success=False, hook_adjusted_amount_calculated_raw=0)
 
-    def on_compute_dynamic_swap_fee(self):
-        return {"success": False, "dynamic_swap_fee": 0}
+    def on_compute_dynamic_swap_fee(
+        self,
+        swap_params: SwapParams,
+        static_swap_fee_percentage: int,
+        hook_state: dict,
+    ) -> DynamicSwapFeeResult:
+        return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
 
 
 pool = {

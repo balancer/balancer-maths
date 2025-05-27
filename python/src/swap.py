@@ -1,7 +1,5 @@
-from enum import Enum
-from dataclasses import dataclass
-from typing import List
 from src.constants import WAD
+from src.maths import mul_up_fixed, mul_div_up, complement_fixed
 from src.utils import (
     find_case_insensitive_index_in_list,
     _to_scaled_18_apply_rate_round_down,
@@ -10,53 +8,19 @@ from src.utils import (
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
 )
-from src.maths import mul_up_fixed, mul_div_up, complement_fixed
+from src.common.types import SwapKind, SwapInput, SwapParams
+from hooks.types import AfterSwapParams, HookBase
 
 _MINIMUM_TRADE_AMOUNT = 1e6
 
 
-class SwapKind(Enum):
-    GIVENIN = 0
-    GIVENOUT = 1
-
-
-@dataclass
-class SwapParams:
-    """Parameters for a swap operation in a pool.
-
-    Attributes:
-        swap_kind: The type of swap (GIVENIN or GIVENOUT)
-        amount_given_scaled18: The amount being swapped, scaled to 18 decimals
-        balances_live_scaled18: Current pool balances scaled to 18 decimals
-        index_in: Index of the input token in the pool's token list
-        index_out: Index of the output token in the pool's token list
-    """
-
-    swap_kind: SwapKind
-    amount_given_scaled18: int
-    balances_live_scaled18: List[int]
-    index_in: int
-    index_out: int
-
-
-@dataclass
-class SwapInput:
-    """Input parameters for a swap operation.
-
-    Attributes:
-        amount_raw: The raw amount being swapped
-        swap_kind: The type of swap (GIVENIN or GIVENOUT)
-        token_in: Address of the input token
-        token_out: Address of the output token
-    """
-
-    amount_raw: int
-    swap_kind: SwapKind
-    token_in: str
-    token_out: str
-
-
-def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
+def swap(
+    swap_input: SwapInput,
+    pool_state,
+    pool_class,
+    hook_class: HookBase,
+    hook_state,
+):
     input_index = find_case_insensitive_index_in_list(
         pool_state["tokens"], swap_input.token_in
     )
@@ -79,19 +43,6 @@ def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
     )
 
     updated_balances_live_scaled18 = pool_state["balancesLiveScaled18"][:]
-    if hook_class.should_call_before_swap:
-        # Note - in SC balances and amounts are updated to reflect any rate change.
-        # Daniel said we should not worry about this as any large rate changes
-        # will mean something has gone wrong.
-        # We do take into account and balance changes due
-        # to hook using hookAdjustedBalancesScaled18.
-        hook_return = hook_class.on_before_swap(
-            {**swap_input.__dict__, "hook_state": hook_state}
-        )
-        if hook_return["success"] is False:
-            raise SystemError("BeforeSwapHookFailed")
-        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
-            updated_balances_live_scaled18[i] = a
 
     # _swap()
     swap_params = SwapParams(
@@ -102,6 +53,21 @@ def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
         index_out=output_index,
     )
 
+    if hook_class.should_call_before_swap:
+        # Note - in SC balances and amounts are updated to reflect any rate change.
+        # Daniel said we should not worry about this as any large rate changes
+        # will mean something has gone wrong.
+        # We do take into account and balance changes due
+        # to hook using hookAdjustedBalancesScaled18.
+        hook_return = hook_class.on_before_swap(
+            swap_params,
+            hook_state,
+        )
+        if hook_return.success is False:
+            raise SystemError("BeforeSwapHookFailed")
+        for i, a in enumerate(hook_return.hook_adjusted_balances_scaled18):
+            updated_balances_live_scaled18[i] = a
+
     swap_fee = pool_state["swapFee"]
     if hook_class.should_call_compute_dynamic_swap_fee:
         hook_return = hook_class.on_compute_dynamic_swap_fee(
@@ -109,8 +75,8 @@ def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
             pool_state["swapFee"],
             hook_state,
         )
-        if hook_return["success"] is True:
-            swap_fee = hook_return["dynamic_swap_fee"]
+        if hook_return.success is True:
+            swap_fee = hook_return.dynamic_swap_fee
 
     total_swap_fee_amount_scaled18 = 0
     if swap_params.swap_kind == SwapKind.GIVENIN:
@@ -186,38 +152,34 @@ def swap(swap_input: SwapInput, pool_state, pool_class, hook_class, hook_state):
 
     if hook_class.should_call_after_swap:
         hook_return = hook_class.on_after_swap(
-            {
-                "kind": swap_input.swap_kind,
-                "token_in": swap_input.token_in,
-                "token_out": swap_input.token_out,
-                "amount_in_scaled18": (
+            AfterSwapParams(
+                kind=swap_input.swap_kind,
+                token_in=swap_input.token_in,
+                token_out=swap_input.token_out,
+                amount_in_scaled18=(
                     amount_given_scaled18
-                    if swap_input.swap_kind == SwapKind.GIVENIN
+                    if swap_params.swap_kind == SwapKind.GIVENIN
                     else amount_calculated_scaled18
                 ),
-                "amount_out_scaled18": (
+                amount_out_scaled18=(
                     amount_calculated_scaled18
-                    if swap_input.swap_kind == SwapKind.GIVENIN
+                    if swap_params.swap_kind == SwapKind.GIVENIN
                     else amount_given_scaled18
                 ),
-                "token_in_balance_scaled18": updated_balances_live_scaled18[
-                    input_index
-                ],
-                "token_out_balance_scaled18": updated_balances_live_scaled18[
-                    output_index
-                ],
-                "amount_calculated_scaled18": amount_calculated_scaled18,
-                "amount_calculated_raw": amount_calculated_raw,
-                "hook_state": hook_state,
-            }
+                token_in_balance_scaled18=updated_balances_live_scaled18[input_index],
+                token_out_balance_scaled18=updated_balances_live_scaled18[output_index],
+                amount_calculated_scaled18=amount_calculated_scaled18,
+                amount_calculated_raw=amount_calculated_raw,
+            ),
+            hook_state,
         )
-        if hook_return["success"] is False:
+        if hook_return.success is False:
             raise SystemError(
                 "AfterAddSwapHookFailed", pool_state["poolType"], pool_state["hookType"]
             )
         # If hook adjusted amounts is not enabled, ignore amount returned by the hook
         if hook_class.enable_hook_adjusted_amounts:
-            amount_calculated_raw = hook_return["hook_adjusted_amount_calculated_raw"]
+            amount_calculated_raw = hook_return.hook_adjusted_amount_calculated_raw
 
     return amount_calculated_raw
 

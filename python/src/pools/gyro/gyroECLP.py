@@ -3,7 +3,7 @@ from src.maths import (
     Rounding,
     mul_up_fixed,
 )
-from src.swap import SwapKind, SwapParams
+from src.common.types import SwapKind, SwapParams
 from src.pools.gyro.gyroECLP_math import (
     EclpParams,
     DerivedEclpParams,

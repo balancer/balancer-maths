@@ -3,10 +3,21 @@ import sys
 import os
 
 from src.pools.weighted import Weighted
-from src.swap import SwapKind, SwapInput
+from src.add_liquidity import AddLiquidityKind
+from src.common.types import RemoveLiquidityKind, SwapKind, SwapInput, SwapParams
 
 from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
+from hooks.types import (
+    HookBase,
+    AfterSwapParams,
+    DynamicSwapFeeResult,
+    BeforeSwapResult,
+    AfterSwapResult,
+    BeforeAddLiquidityResult,
+    AfterAddLiquidityResult,
+    BeforeRemoveLiquidityResult,
+    AfterRemoveLiquidityResult,
+)
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +60,7 @@ class CustomPool(Weighted):
         super().__init__(pool_state)
 
 
-class CustomHook:
+class CustomHook(HookBase):
     def __init__(self):
         self.should_call_compute_dynamic_swap_fee = False
         self.should_call_before_swap = True
@@ -60,56 +71,83 @@ class CustomHook:
         self.should_call_after_remove_liquidity = False
         self.enable_hook_adjusted_amounts = False
 
-    def on_before_add_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_before_add_liquidity(
+        self,
+        kind: AddLiquidityKind,
+        max_amounts_in_scaled18: list[int],
+        min_bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeAddLiquidityResult:
+        return BeforeAddLiquidityResult(
+            success=False, hook_adjusted_balances_scaled18=[]
+        )
 
     def on_after_add_liquidity(
         self,
-        kind,
-        amounts_in_scaled18,
-        amounts_in_raw,
-        bpt_amount_out,
-        balances_scaled18,
-        hook_state,
-    ):
-        return {"success": False, "hook_adjusted_amounts_in_raw": []}
+        kind: AddLiquidityKind,
+        amounts_in_scaled18: list[int],
+        amounts_in_raw: list[int],
+        bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> AfterAddLiquidityResult:
+        return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
 
-    def on_before_remove_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_before_remove_liquidity(
+        self,
+        kind: RemoveLiquidityKind,
+        max_bpt_amount_in: int,
+        min_amounts_out_scaled18: list[int],
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeRemoveLiquidityResult:
+        return BeforeRemoveLiquidityResult(
+            success=False, hook_adjusted_balances_scaled18=[]
+        )
 
     def on_after_remove_liquidity(
         self,
-        kind,
-        bpt_amount_in,
-        amounts_out_scaled18,
-        amounts_out_raw,
-        balances_scaled18,
-        hook_state,
-    ):
-        return {"success": False, "hook_adjusted_amounts_out_raw": []}
+        kind: RemoveLiquidityKind,
+        bpt_amount_in: int,
+        amounts_out_scaled18: list[int],
+        amounts_out_raw: list[int],
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> AfterRemoveLiquidityResult:
+        return AfterRemoveLiquidityResult(
+            success=False, hook_adjusted_amounts_out_raw=[]
+        )
 
-    def on_before_swap(self, params):
-        hook_state = params["hook_state"]
+    def on_before_swap(self, swap_params: SwapParams, hook_state):
         if not (
             isinstance(hook_state, dict)
             and hook_state is not None
             and "balanceChange" in hook_state
         ):
             raise ValueError("Unexpected hookState")
-        assert params["swap_kind"] == swap_input.swap_kind
-        assert params["token_in"] == swap_input.token_in
-        assert params["token_out"] == swap_input.token_out
-        assert params["amount_raw"] == swap_input.amount_raw
-        return {
-            "success": True,
-            "hook_adjusted_balances_scaled18": hook_state["balanceChange"],
-        }
+        assert swap_params.swap_kind == swap_input.swap_kind
+        assert swap_params.index_in == 0
+        assert swap_params.index_out == 1
+        return BeforeSwapResult(
+            success=True,
+            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+        )
 
-    def on_after_swap(self, params):
-        return {"success": True, "hook_adjusted_amount_calculated_raw": 0}
+    def on_after_swap(
+        self,
+        after_swap_params: AfterSwapParams,
+        hook_state: dict,
+    ) -> AfterSwapResult:
+        return AfterSwapResult(success=False, hook_adjusted_amount_calculated_raw=0)
 
-    def on_compute_dynamic_swap_fee(self):
-        return {"success": False, "dynamic_swap_fee": 0}
+    def on_compute_dynamic_swap_fee(
+        self,
+        swap_params: SwapParams,
+        static_swap_fee_percentage: int,
+        hook_state: dict,
+    ) -> DynamicSwapFeeResult:
+        return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
 
 
 vault = Vault(

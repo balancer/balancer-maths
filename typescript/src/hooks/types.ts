@@ -71,7 +71,7 @@ export interface HookBase {
         balancesScaled18: bigint[],
         hookState: HookState | unknown,
     ): { success: boolean; hookAdjustedAmountsOutRaw: bigint[] };
-    onBeforeSwap(params: SwapInput & { hookState: HookState | unknown }): {
+    onBeforeSwap(params: SwapParams & { hookState: HookState | unknown }): {
         success: boolean;
         hookAdjustedBalancesScaled18: bigint[];
     };

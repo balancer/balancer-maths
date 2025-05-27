@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from unpackable import Unpackable
+
 from src.maths import (
     Rounding,
     mul_down_fixed,
@@ -12,8 +15,16 @@ from src.pools.gyro.gyro2CLP_math import (
     calc_out_given_in,
     calc_in_given_out,
 )
+from src.common.types import SwapKind, SwapParams
 from src.utils import MAX_UINT256
-from src.swap import SwapKind, SwapParams, SwapInput
+
+
+@dataclass
+class VirtualBalances(Unpackable):
+    """Represents the virtual balances for a pool."""
+
+    virtual_balance_in: int
+    virtual_balance_out: int
 
 
 class Gyro2CLP:
@@ -136,7 +147,7 @@ class Gyro2CLP:
         token_in_is_token0: bool,
         _sqrt_alpha: int,
         _sqrt_beta: int,
-    ) -> dict[str, int]:
+    ) -> VirtualBalances:
         """
         Calculate virtual offsets for token balances.
 
@@ -156,7 +167,7 @@ class Gyro2CLP:
             _sqrt_beta: Square root of beta parameter
 
         Returns:
-            Dictionary containing virtualBalanceIn and virtualBalanceOut
+            VirtualBalances object containing virtualBalanceIn and virtualBalanceOut
         """
         # Initialize balances array
         balances = [0, 0]
@@ -173,26 +184,26 @@ class Gyro2CLP:
 
         # Calculate current invariant
         current_invariant = calculate_invariant(
-            balances, _sqrt_alpha, _sqrt_beta, "ROUND_DOWN"
+            balances, _sqrt_alpha, _sqrt_beta, Rounding.ROUND_DOWN
         )
 
         # Calculate virtual balances based on token position
         if token_in_is_token0:
             virtual_balance_in = calculate_virtual_parameter0(
-                current_invariant, _sqrt_beta, "ROUND_UP"
+                current_invariant, _sqrt_beta, Rounding.ROUND_UP
             )
             virtual_balance_out = calculate_virtual_parameter1(
-                current_invariant, _sqrt_alpha, "ROUND_DOWN"
+                current_invariant, _sqrt_alpha, Rounding.ROUND_DOWN
             )
         else:
             virtual_balance_in = calculate_virtual_parameter1(
-                current_invariant, _sqrt_alpha, "ROUND_UP"
+                current_invariant, _sqrt_alpha, Rounding.ROUND_UP
             )
             virtual_balance_out = calculate_virtual_parameter0(
-                current_invariant, _sqrt_beta, "ROUND_DOWN"
+                current_invariant, _sqrt_beta, Rounding.ROUND_DOWN
             )
 
-        return {
-            "virtual_balance_in": virtual_balance_in,
-            "virtual_balance_out": virtual_balance_out,
-        }
+        return VirtualBalances(
+            virtual_balance_in=virtual_balance_in,
+            virtual_balance_out=virtual_balance_out,
+        )

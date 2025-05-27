@@ -2,11 +2,9 @@ import pytest
 import sys
 import os
 
-from src.pools.weighted import Weighted
-from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
-
+from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
+
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

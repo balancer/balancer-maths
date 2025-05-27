@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.vault import Vault
-from src.swap import SwapInput, SwapKind
+from src.common.types import SwapInput, SwapKind
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

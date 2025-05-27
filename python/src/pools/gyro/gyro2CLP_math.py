@@ -1,15 +1,29 @@
-from src.constants import WAD
+from dataclasses import dataclass
+from unpackable import Unpackable
+
 from src.maths import (
+    WAD,
     mul_down_fixed,
     div_up_fixed,
     div_down_fixed,
     mul_up_fixed,
+    Rounding,
 )
-from src.pools.gyro.gyro_pool_math import sqrt
+from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
+
+
+@dataclass
+class QuadraticTerms(Unpackable):
+    """Represents the terms needed for quadratic formula solution."""
+
+    a: int
+    mb: int
+    b_square: int
+    mc: int
 
 
 def calculate_invariant(
-    balances: list[int], sqrt_alpha: int, sqrt_beta: int, rounding: str
+    balances: list[int], sqrt_alpha: int, sqrt_beta: int, rounding: Rounding
 ) -> int:
     """
     Calculate invariant using quadratic formula.
@@ -40,8 +54,8 @@ def calculate_invariant(
 
 
 def calculate_quadratic_terms(
-    balances: list[int], sqrt_alpha: int, sqrt_beta: int, rounding: str
-) -> dict[str, int]:
+    balances: list[int], sqrt_alpha: int, sqrt_beta: int, rounding: Rounding
+) -> QuadraticTerms:
     """
     Calculate the terms needed for quadratic formula solution.
 
@@ -52,14 +66,14 @@ def calculate_quadratic_terms(
         rounding: Rounding direction ("ROUND_DOWN" or "ROUND_UP")
 
     Returns:
-        Dictionary containing a, mb, b_square, and mc terms
+        QuadraticTerms containing a, mb, b_square, and mc terms
     """
     # Define rounding functions based on rounding direction
-    div_up_or_down = div_down_fixed if rounding == "ROUND_DOWN" else div_up_fixed
+    div_up_or_down = div_down_fixed if rounding == Rounding.ROUND_DOWN else div_up_fixed
 
-    mul_up_or_down = mul_down_fixed if rounding == "ROUND_DOWN" else mul_up_fixed
+    mul_up_or_down = mul_down_fixed if rounding == Rounding.ROUND_DOWN else mul_up_fixed
 
-    mul_down_or_up = mul_up_fixed if rounding == "ROUND_DOWN" else mul_down_fixed
+    mul_down_or_up = mul_up_fixed if rounding == Rounding.ROUND_DOWN else mul_down_fixed
 
     # Calculate 'a' term
     # Note: 'a' follows opposite rounding than 'b' and 'c' since it's in denominator
@@ -90,7 +104,7 @@ def calculate_quadratic_terms(
 
     b_square = b_square + b_sq2 + b_sq3
 
-    return {"a": a, "mb": mb, "b_square": b_square, "mc": mc}
+    return QuadraticTerms(a=a, mb=mb, b_square=b_square, mc=mc)
 
 
 def calculate_quadratic(
@@ -121,7 +135,7 @@ def calculate_quadratic(
     radicand = b_square + add_term
 
     # Calculate square root
-    sqr_result = sqrt(radicand, 5)
+    sqr_result = gyro_pool_math_sqrt(radicand, 5)
 
     # The minus sign in the numerator cancels out in this special case
     numerator = mb + sqr_result
@@ -244,7 +258,9 @@ def calc_in_given_out(
     return amount_in
 
 
-def calculate_virtual_parameter0(invariant: int, _sqrt_beta: int, rounding: str) -> int:
+def calculate_virtual_parameter0(
+    invariant: int, _sqrt_beta: int, rounding: Rounding
+) -> int:
     """
     Calculate the virtual offset 'a' for reserves 'x', as in (x+a)*(y+b)=L^2.
 
@@ -258,13 +274,13 @@ def calculate_virtual_parameter0(invariant: int, _sqrt_beta: int, rounding: str)
     """
     return (
         div_down_fixed(invariant, _sqrt_beta)
-        if rounding == "ROUND_DOWN"
+        if rounding == Rounding.ROUND_DOWN
         else div_up_fixed(invariant, _sqrt_beta)
     )
 
 
 def calculate_virtual_parameter1(
-    invariant: int, _sqrt_alpha: int, rounding: str
+    invariant: int, _sqrt_alpha: int, rounding: Rounding
 ) -> int:
     """
     Calculate the virtual offset 'b' for reserves 'y', as in (x+a)*(y+b)=L^2.
@@ -279,6 +295,6 @@ def calculate_virtual_parameter1(
     """
     return (
         mul_down_fixed(invariant, _sqrt_alpha)
-        if rounding == "ROUND_DOWN"
+        if rounding == Rounding.ROUND_DOWN
         else mul_up_fixed(invariant, _sqrt_alpha)
     )

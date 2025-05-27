@@ -17,7 +17,7 @@ _SQRT_1E_NEG_17 = 3162277660
 
 
 @staticmethod
-def sqrt(x: int, tolerance: int) -> int:
+def gyro_pool_math_sqrt(x: int, tolerance: int) -> int:
     if x == 0:
         return 0
 

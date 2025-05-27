@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.vault import Vault
-from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
+from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

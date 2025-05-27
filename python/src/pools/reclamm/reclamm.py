@@ -1,5 +1,5 @@
 from typing import List
-from src.swap import SwapKind, SwapParams
+from src.common.types import SwapKind, SwapParams
 from src.pools.reclamm.reclamm_data import ReClammMutable, PriceRatioState
 from src.pools.reclamm.reclamm_math import (
     compute_current_virtual_balances,

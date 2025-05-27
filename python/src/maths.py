@@ -57,7 +57,7 @@ def mul_div_up(a: int, b: int, c: int) -> int:
     return (product - 1) // c + 1
 
 
-def pow_down_fixed(x: int, y: int, version: int = None) -> int:
+def pow_down_fixed(x: int, y: int, version: int = 0) -> int:
     if y == WAD and version != 1:
         return x
     if y == TWO_WAD and version != 1:
@@ -75,7 +75,7 @@ def pow_down_fixed(x: int, y: int, version: int = None) -> int:
     return raw - max_error
 
 
-def pow_up_fixed(x: int, y: int, version: int = None) -> int:
+def pow_up_fixed(x: int, y: int, version: int = 0) -> int:
     if y == WAD and version != 1:
         return x
     if y == TWO_WAD and version != 1:

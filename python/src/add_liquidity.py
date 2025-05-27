@@ -145,8 +145,8 @@ def add_liquidity(
             hook_state,
         )
 
-        if hook_return["success"] is False or len(
-            hook_return["hook_adjusted_amounts_in_raw"]
+        if hook_return.success is False or len(
+            hook_return.hook_adjusted_amounts_in_raw
         ) is not len(amounts_in_raw):
             raise SystemError(
                 "AfterAddLiquidityHookFailed",
@@ -156,7 +156,7 @@ def add_liquidity(
 
         # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
         if hook_class.enable_hook_adjusted_amounts:
-            for i, a in enumerate(hook_return["hook_adjusted_amounts_in_raw"]):
+            for i, a in enumerate(hook_return.hook_adjusted_amounts_in_raw):
                 amounts_in_raw[i] = a
 
     return {

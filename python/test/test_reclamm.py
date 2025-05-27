@@ -2,7 +2,7 @@ import sys
 import os
 
 from src.pools.reclamm.reclamm import ReClamm
-from src.swap import SwapKind, SwapParams
+from src.common.types import SwapKind, SwapParams
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

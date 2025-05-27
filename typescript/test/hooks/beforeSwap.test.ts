@@ -1,6 +1,6 @@
 // pnpm test -- beforeSwap.test.ts
 import { describe, expect, test } from 'vitest';
-import { SwapInput, SwapKind, Vault, Weighted } from '../../src';
+import { SwapInput, SwapKind, SwapParams, Vault, Weighted } from '../../src';
 import { HookBase, HookState } from '@/hooks/types';
 
 const pool = {
@@ -79,8 +79,8 @@ class CustomHook implements HookBase {
             hookAdjustedAmountsOutRaw: [],
         };
     }
-    onBeforeSwap(params: SwapInput & { hookState: HookState | unknown }) {
-        const { hookState, swapKind, tokenIn, tokenOut, amountRaw } = params;
+    onBeforeSwap(params: SwapParams & { hookState: HookState | unknown }) {
+        const { hookState, swapKind, indexIn, indexOut } = params;
         if (
             !(
                 typeof hookState === 'object' &&
@@ -90,9 +90,8 @@ class CustomHook implements HookBase {
         )
             throw new Error('Unexpected hookState');
         expect(swapKind).to.eq(swapInput.swapKind);
-        expect(tokenIn).to.eq(swapInput.tokenIn);
-        expect(tokenOut).to.eq(swapInput.tokenOut);
-        expect(amountRaw).to.eq(swapInput.amountRaw);
+        expect(indexIn).to.eq(0);
+        expect(indexOut).to.eq(1);
         return {
             success: true,
             hookAdjustedBalancesScaled18: hookState.balanceChange as bigint[],

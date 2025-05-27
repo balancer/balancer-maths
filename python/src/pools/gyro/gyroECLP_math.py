@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 from src.pools.gyro.signed_fixed_point import SignedFixedPoint
-from src.pools.gyro.gyro_pool_math import sqrt
+from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
 
 
 @dataclass
@@ -283,7 +283,7 @@ class GyroECLPMath:
             # In the false case here, the extra precision error does not magnify, and so the error inside the sqrt is
             # O(1e-18)
             # somedayTODO: The true case will almost surely never happen (can it be removed)
-            err = sqrt(err, 5) if err > 0 else int(1e9)
+            err = gyro_pool_math_sqrt(err, 5) if err > 0 else int(1e9)
 
         # Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
         err = (
@@ -352,7 +352,7 @@ class GyroECLPMath:
             SignedFixedPoint.mul_up_mag_u(x, x) + SignedFixedPoint.mul_up_mag_u(y, y)
         ) // int(1e38)
 
-        val = sqrt(val, 5) if val > 0 else 0
+        val = gyro_pool_math_sqrt(val, 5) if val > 0 else 0
 
         return val, err
 
@@ -672,7 +672,7 @@ class GyroECLPMath:
             SignedFixedPoint.mul_down_mag_u(r.y, r.y), s_term.y
         )
 
-        q["c"] = sqrt(q["c"], 5) if q["c"] > 0 else 0
+        q["c"] = gyro_pool_math_sqrt(q["c"], 5) if q["c"] > 0 else 0
 
         if q["b"] - q["c"] > 0:
             q["a"] = SignedFixedPoint.mul_up_xp_to_np_u(

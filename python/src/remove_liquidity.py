@@ -12,35 +12,15 @@ from src.base_pool_math import (
     compute_remove_liquidity_single_token_exact_in,
     compute_remove_liquidity_single_token_exact_out,
 )
-
-
-class RemoveLiquidityKind(Enum):
-    PROPORTIONAL = 0
-    SINGLE_TOKEN_EXACT_IN = 1
-    SINGLE_TOKEN_EXACT_OUT = 2
-
-
-@dataclass
-class RemoveLiquidityInput:
-    """Input parameters for a remove liquidity operation.
-
-    Attributes:
-        min_amounts_out_raw: List of minimum amounts of each token to receive
-        max_bpt_amount_in_raw: Maximum amount of BPT to burn
-        kind: The type of remove liquidity operation (PROPORTIONAL, SINGLE_TOKEN_EXACT_IN, or SINGLE_TOKEN_EXACT_OUT)
-    """
-
-    pool: str
-    min_amounts_out_raw: list[int]
-    max_bpt_amount_in_raw: int
-    kind: RemoveLiquidityKind
+from hooks.types import HookBase
+from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
 
 
 def remove_liquidity(
     remove_liquidity_input: RemoveLiquidityInput,
     pool_state,
     pool_class,
-    hook_class,
+    hook_class: HookBase,
     hook_state,
 ):
     # Round down when removing liquidity:
@@ -71,10 +51,10 @@ def remove_liquidity(
             updated_balances_live_scaled18,
             hook_state,
         )
-        if hook_return["success"] is False:
+        if hook_return.success is False:
             raise SystemError("BeforeRemoveLiquidityHookFailed")
 
-        for i, a in enumerate(hook_return["hook_adjusted_balances_scaled18"]):
+        for i, a in enumerate(hook_return.hook_adjusted_balances_scaled18):
             updated_balances_live_scaled18[i] = a
 
     if remove_liquidity_input.kind == RemoveLiquidityKind.PROPORTIONAL:
@@ -163,8 +143,8 @@ def remove_liquidity(
             hook_state,
         )
 
-        if hook_return["success"] is False or len(
-            hook_return["hook_adjusted_amounts_out_raw"]
+        if hook_return.success is False or len(
+            hook_return.hook_adjusted_amounts_out_raw
         ) is not len(amounts_out_raw):
             raise SystemError(
                 "AfterRemoveLiquidityHookFailed",
@@ -174,7 +154,7 @@ def remove_liquidity(
 
         # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
         if hook_class.enable_hook_adjusted_amounts:
-            for i, a in enumerate(hook_return["hook_adjusted_amounts_out_raw"]):
+            for i, a in enumerate(hook_return.hook_adjusted_amounts_out_raw):
                 amounts_out_raw[i] = a
 
     return {

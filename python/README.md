@@ -2,6 +2,21 @@
 
 Python implementation of maths for Balancer pools.
 
+## Development Setup
+
+1. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+```
+
+2. Install dependencies:
+```bash
+pip install -e .
+```
+
+This will install all required dependencies including the `unpackable` package.
+
 ## Hooks Support
 
 Hooks are supported on a case by case basis.

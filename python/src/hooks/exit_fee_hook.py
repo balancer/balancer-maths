@@ -1,39 +1,97 @@
-from src.remove_liquidity import RemoveLiquidityKind
+from hooks.types import (
+    HookBase,
+    AfterSwapParams,
+    DynamicSwapFeeResult,
+    BeforeSwapResult,
+    AfterSwapResult,
+    BeforeAddLiquidityResult,
+    AfterAddLiquidityResult,
+    BeforeRemoveLiquidityResult,
+    AfterRemoveLiquidityResult,
+)
+from src.common.types import SwapParams
+from src.add_liquidity import AddLiquidityKind
+from src.common.types import RemoveLiquidityKind
 from src.maths import mul_down_fixed
 
 
 # This hook implements the ExitFeeHookExample found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/c848c849cb44dc35f05d15858e4fba9f17e92d5e/pkg/pool-hooks/contracts/ExitFeeHookExample.sol
-class ExitFeeHook:
-    def __init__(self):
-        self.should_call_compute_dynamic_swap_fee = False
-        self.should_call_before_swap = False
-        self.should_call_after_swap = False
-        self.should_call_before_add_liquidity = False
-        self.should_call_after_add_liquidity = False
-        self.should_call_before_remove_liquidity = False
-        self.should_call_after_remove_liquidity = True
-        self.enable_hook_adjusted_amounts = True
+class ExitFeeHook(HookBase):
+    should_call_compute_dynamic_swap_fee = False
+    should_call_before_swap = False
+    should_call_after_swap = False
+    should_call_before_add_liquidity = False
+    should_call_after_add_liquidity = False
+    should_call_before_remove_liquidity = False
+    should_call_after_remove_liquidity = True
+    enable_hook_adjusted_amounts = True
 
-    def on_before_add_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_compute_dynamic_swap_fee(
+        self,
+        swap_params: SwapParams,
+        static_swap_fee_percentage: int,
+        hook_state: dict,
+    ) -> DynamicSwapFeeResult:
+        return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
+
+    def on_before_swap(
+        self,
+        swap_params: SwapParams,
+        hook_state: dict,
+    ) -> BeforeSwapResult:
+        return BeforeSwapResult(success=False, hook_adjusted_balances_scaled18=[])
+
+    def on_after_swap(
+        self,
+        after_swap_params: AfterSwapParams,
+        hook_state: dict,
+    ) -> AfterSwapResult:
+        return AfterSwapResult(success=False, hook_adjusted_amount_calculated_raw=0)
+
+    def on_before_add_liquidity(
+        self,
+        kind: AddLiquidityKind,
+        max_amounts_in_scaled18: list[int],
+        min_bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeAddLiquidityResult:
+        return BeforeAddLiquidityResult(
+            success=False, hook_adjusted_balances_scaled18=[]
+        )
 
     def on_after_add_liquidity(
         self,
-    ):
-        return {"success": False, "hook_adjusted_amounts_in_raw": []}
+        kind: AddLiquidityKind,
+        amounts_in_scaled18: list[int],
+        amounts_in_raw: list[int],
+        bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> AfterAddLiquidityResult:
+        return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
 
-    def on_before_remove_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
+    def on_before_remove_liquidity(
+        self,
+        kind: RemoveLiquidityKind,
+        max_bpt_amount_in: int,
+        min_amounts_out_scaled18: list[int],
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeRemoveLiquidityResult:
+        return BeforeRemoveLiquidityResult(
+            success=False, hook_adjusted_balances_scaled18=[]
+        )
 
     def on_after_remove_liquidity(
         self,
-        kind,
-        _bpt_amount_in,
-        _amounts_out_scaled18,
-        amounts_out_raw,
-        _balances_scaled18,
-        hook_state,
-    ):
+        kind: RemoveLiquidityKind,
+        bpt_amount_in: int,
+        amounts_out_scaled18: list[int],
+        amounts_out_raw: list[int],
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> AfterRemoveLiquidityResult:
         if not (
             isinstance(hook_state, dict)
             and hook_state is not None
@@ -74,16 +132,7 @@ class ExitFeeHook:
             # //     }),
             # // );
 
-        return {
-            "success": True,
-            "hook_adjusted_amounts_out_raw": hook_adjusted_amounts_out_raw,
-        }
-
-    def on_before_swap(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
-
-    def on_after_swap(self):
-        return {"success": False, "hook_adjusted_amount_calculated_raw": 0}
-
-    def on_compute_dynamic_swap_fee(self):
-        return {"success": False, "dynamic_swap_fee": 0}
+        return AfterRemoveLiquidityResult(
+            success=True,
+            hook_adjusted_amounts_out_raw=hook_adjusted_amounts_out_raw,
+        )
