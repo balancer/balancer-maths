@@ -2,8 +2,7 @@ import pytest
 import sys
 import os
 
-from src.pools.weighted import Weighted
-from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
+from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind, SwapParams
 
 from src.vault import Vault
 
@@ -127,11 +126,16 @@ class CustomHook(HookBase):
     def on_before_swap(self, swap_params, hook_state) -> BeforeSwapResult:
         return BeforeSwapResult(success=False, hook_adjusted_balances_scaled18=[])
 
-    def on_after_swap(self, after_swap_params, hook_state) -> AfterSwapResult:
+    def on_after_swap(
+        self, after_swap_params: AfterSwapParams, hook_state: dict
+    ) -> AfterSwapResult:
         return AfterSwapResult(success=False, hook_adjusted_amount_calculated_raw=0)
 
     def on_compute_dynamic_swap_fee(
-        self, swap_params, static_swap_fee_percentage, hook_state
+        self,
+        swap_params: SwapParams,
+        static_swap_fee_percentage: int,
+        hook_state: dict,
     ) -> DynamicSwapFeeResult:
         return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
 

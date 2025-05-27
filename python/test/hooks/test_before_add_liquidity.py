@@ -2,11 +2,10 @@ import pytest
 import sys
 import os
 
-from src.pools.weighted import Weighted
+from src.pools.weighted.weighted import Weighted
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 
 from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
 
 
 # Get the directory of the current file

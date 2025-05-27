@@ -4,7 +4,7 @@ from src.remove_liquidity import remove_liquidity
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
-from src.pools.weighted import Weighted
+from src.pools.weighted.weighted import Weighted
 from src.pools.stable.stable import Stable
 from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP

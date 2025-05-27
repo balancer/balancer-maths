@@ -1,5 +1,5 @@
 from src.maths import Rounding
-from src.pools.weighted_math import (
+from src.pools.weighted.weighted_math import (
     compute_out_given_exact_in,
     compute_in_given_exact_out,
     compute_invariant_up,

@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 
-from src.pools.weighted import Weighted
+from src.pools.weighted.weighted import Weighted
 from src.common.types import (
     RemoveLiquidityKind,
     SwapKind,
