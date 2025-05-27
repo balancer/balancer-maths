@@ -1,5 +1,5 @@
 from src.maths import mul_down_fixed, Rounding
-from src.pools.stable_math import (
+from src.pools.stable.stable_math import (
     compute_invariant,
     compute_out_given_exact_in,
     compute_in_given_exact_out,
