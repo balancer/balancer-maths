@@ -497,6 +497,54 @@
                     "decimals": 6
                 }
             ]
+        },
+        {
+            "testName": "StableSurge",
+            "chainId": "1",
+            "blockNumber": "22576466",
+            "poolAddress": "0x6b49054c350b47ca9aa1331ab156a1eedbe94e79",
+            "poolType": "STABLE",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "4000000000000000",
+                    "tokenIn": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "tokenOut": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "tokenOut": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+                }
+            ],
+            "adds": [
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": ["10000000"],
+                    "tokenIn": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                    "decimals": 18
+                },
+                {
+                    "kind": "SingleToken",
+                    "bptOutRaw": ["10000000"],
+                    "tokenIn": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                    "decimals": 6
+                }
+            ],
+            "removes": [
+                {
+                    "kind": "Proportional",
+                    "bpt": "0x6b49054c350b47ca9aa1331ab156a1eedbe94e79",
+                    "bptInRaw": "100000000000000000"
+                },
+                {
+                    "kind": "SingleTokenExactIn",
+                    "bpt": "0x6b49054c350b47ca9aa1331ab156a1eedbe94e79",
+                    "bptInRaw": "100000000000000000",
+                    "token": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+                }
+            ]
         }
     ]
 }
