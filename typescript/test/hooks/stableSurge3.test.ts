@@ -44,21 +44,22 @@ describe('hook - stableSurge', () => {
         // https://www.tdly.co/shared/simulation/350f9500-0ad1-4396-98d3-18a7f7576246
         const swapInput: SwapInput = {
             swapKind: SwapKind.GivenIn,
-            amountRaw: 4000000000000000n,
+            amountRaw: 20000000000000000n,
             tokenIn: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
             tokenOut: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         };
         const outPutAmount = vault.swap(swapInput, poolState, hookState);
-        expect(outPutAmount).to.deep.eq(10647472n);
+        expect(outPutAmount).to.deep.eq(37594448n);
     });
     test('should match simulation', () => {
         const swapInput: SwapInput = {
             swapKind: SwapKind.GivenOut,
-            amountRaw: 10000000n,
+            amountRaw: 37690905n,
             tokenIn: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
             tokenOut: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         };
-        const outPutAmount = vault.swap(swapInput, poolState, hookState);
-        expect(outPutAmount).to.deep.eq(3755338585791174n);
+        expect(() => vault.swap(swapInput, poolState, hookState)).to.throw(
+            'tokenAmountOut is greater than the balance available in the pool',
+        );
     });
 });

@@ -146,6 +146,13 @@ export function _computeInGivenExactOut(
         // P = product of final balances but x                                                                       //
         **************************************************************************************************************/
 
+    // this guard is only needed on balancer-maths because SC relies on uint256 and implicitly fails due to overflow/underflow
+    if (balances[tokenIndexOut] <= tokenAmountOut) {
+        throw new Error(
+            'tokenAmountOut is greater than the balance available in the pool',
+        );
+    }
+
     // Amount in, so we round up overall.
     balances[tokenIndexOut] -= tokenAmountOut;
 
