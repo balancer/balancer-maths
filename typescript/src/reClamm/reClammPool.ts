@@ -12,7 +12,6 @@ import {
 } from './reClammMath';
 
 export class ReClamm implements PoolBase {
-    private readonly MIN_TOKEN_BALANCE_SCALED18 = 1000000000000n;
     public reClammState: ReClammMutable;
     constructor(reClammState: ReClammMutable) {
         this.reClammState = reClammState;
@@ -38,25 +37,25 @@ export class ReClamm implements PoolBase {
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
         const { balancesLiveScaled18, indexIn, indexOut, swapKind } =
             maxSwapParams;
-        const maxAmountOut =
-            balancesLiveScaled18[indexOut] - this.MIN_TOKEN_BALANCE_SCALED18;
 
         if (swapKind === SwapKind.GivenIn) {
-            // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool).
-            // This would give the maximum amount in.
             const computeResult =
                 this._computeCurrentVirtualBalances(balancesLiveScaled18);
-            const amountCalculatedScaled18 = computeInGivenOut(
+            const maxAmountIn = computeInGivenOut(
                 balancesLiveScaled18,
                 computeResult.currentVirtualBalanceA,
                 computeResult.currentVirtualBalanceB,
                 indexIn,
                 indexOut,
-                maxAmountOut,
+                balancesLiveScaled18[indexOut],
             );
-            return amountCalculatedScaled18 - 1n;
+            const maxAmountInWithTolerance = maxAmountIn - 10n; // 10 is a tolerance for rounding
+            return maxAmountInWithTolerance < 0n
+                ? 0n
+                : maxAmountInWithTolerance;
         }
-        return maxAmountOut;
+        const maxAmountOutWithTolerance = balancesLiveScaled18[indexOut] - 10n; // 10 is a tolerance for rounding
+        return maxAmountOutWithTolerance < 0n ? 0n : maxAmountOutWithTolerance;
     }
 
     getMaxSingleTokenAddAmount(): bigint {
