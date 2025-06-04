@@ -7,7 +7,7 @@ const testData = readTestData('../../../testData/testData');
 
 describe('swap tests', () => {
     test.each(testData.swaps)(
-        '$test $swapKind $amount',
+        '$test $swapKind $amountRaw',
         async ({ test, amountRaw, tokenIn, tokenOut, outputRaw, swapKind }) => {
             const pool = testData.pools.get(test);
             if (!pool) throw new Error('No pool data');
