@@ -9,11 +9,6 @@ describe('swap tests', () => {
     test.each(testData.swaps)(
         '$test $swapKind $amountRaw',
         async ({ test, amountRaw, tokenIn, tokenOut, outputRaw, swapKind }) => {
-            // if (test !== '8453-31094200-ReClamm-WETH-USDC-In-Range.json') {
-            //     // console.log('Skipping test: ', test);
-            //     return;
-            // }
-            console.log('Running test: ', test);
             const pool = testData.pools.get(test);
             if (!pool) throw new Error('No pool data');
             // console.log("Amount: ", amountRaw);
