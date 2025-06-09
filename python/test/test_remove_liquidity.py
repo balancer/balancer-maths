@@ -2,7 +2,7 @@ from test.utils.read_test_data import read_test_data
 import sys
 import os
 
-from src.vault import Vault
+from vault.vault import Vault
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 
 # Get the directory of the current file

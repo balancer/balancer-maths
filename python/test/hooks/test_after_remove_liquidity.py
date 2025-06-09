@@ -4,7 +4,7 @@ import os
 
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind, SwapParams
 
-from src.vault import Vault
+from vault.vault import Vault
 
 from hooks.types import (
     HookBase,

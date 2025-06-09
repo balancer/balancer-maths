@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 
-from src.vault import Vault
+from vault.vault import Vault
 from src.hooks.default_hook import DefaultHook
 from src.common.types import SwapInput, SwapKind
 

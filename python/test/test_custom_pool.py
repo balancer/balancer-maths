@@ -1,7 +1,7 @@
 import sys
 import os
 
-from src.vault import Vault
+from vault.vault import Vault
 from src.common.types import SwapInput, SwapKind
 
 # Get the directory of the current file

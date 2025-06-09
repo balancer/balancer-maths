@@ -9,7 +9,7 @@ from src.common.types import (
     SwapParams,
     AddLiquidityKind,
 )
-from src.vault import Vault
+from vault.vault import Vault
 from hooks.types import (
     HookBase,
     AfterSwapParams,

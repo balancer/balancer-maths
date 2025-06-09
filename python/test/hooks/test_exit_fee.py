@@ -3,7 +3,7 @@ import sys
 import os
 
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
-from src.vault import Vault
+from vault.vault import Vault
 
 
 # Get the directory of the current file

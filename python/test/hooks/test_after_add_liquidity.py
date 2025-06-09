@@ -4,7 +4,7 @@ import os
 from src.pools.weighted.weighted import Weighted
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 
-from src.vault import Vault
+from vault.vault import Vault
 from src.hooks.types import (
     HookBase,
     BeforeAddLiquidityResult,

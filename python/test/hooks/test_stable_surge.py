@@ -1,5 +1,5 @@
-from src.vault import Vault
-from src.swap import SwapKind, SwapInput
+from vault.vault import Vault
+from vault.swap import SwapKind, SwapInput
 
 pool_state = {
     "poolType": "STABLE",
