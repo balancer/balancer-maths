@@ -1,4 +1,4 @@
-from src.utils import is_same_address
+from common.utils import is_same_address
 from src.pools.buffer.buffer_math import calculate_buffer_amounts
 from src.pools.buffer.enums import WrappingDirection
 from src.common.types import SwapInput

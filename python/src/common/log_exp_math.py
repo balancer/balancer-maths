@@ -1,4 +1,4 @@
-from src.constants import RAY, WAD
+from common.constants import RAY, WAD
 
 HUNDRED_WAD = 100000000000000000000
 

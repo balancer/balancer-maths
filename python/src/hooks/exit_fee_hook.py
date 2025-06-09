@@ -12,7 +12,7 @@ from hooks.types import (
 from src.common.types import SwapParams, AddLiquidityKind
 from src.add_liquidity import AddLiquidityKind
 from src.common.types import RemoveLiquidityKind
-from src.maths import mul_down_fixed
+from common.maths import mul_down_fixed
 
 
 # This hook implements the ExitFeeHookExample found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/c848c849cb44dc35f05d15858e4fba9f17e92d5e/pkg/pool-hooks/contracts/ExitFeeHookExample.sol

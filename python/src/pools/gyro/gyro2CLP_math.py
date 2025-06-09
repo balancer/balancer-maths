@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from unpackable import Unpackable
 
-from src.maths import (
+from common.maths import (
     WAD,
     mul_down_fixed,
     div_up_fixed,

@@ -1,4 +1,4 @@
-from src.maths import div_up
+from common.maths import div_up
 
 # For security reasons, to help ensure that for all possible "round trip" paths
 # the caller always receives the same or fewer tokens than supplied,

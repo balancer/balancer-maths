@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from unpackable import Unpackable
 
-from src.maths import (
+from common.maths import (
     Rounding,
     mul_down_fixed,
     div_down_fixed,
@@ -16,7 +16,7 @@ from src.pools.gyro.gyro2CLP_math import (
     calc_in_given_out,
 )
 from src.common.types import SwapKind, SwapParams
-from src.utils import MAX_UINT256
+from common.utils import MAX_UINT256
 
 
 @dataclass

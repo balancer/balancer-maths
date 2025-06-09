@@ -1,6 +1,6 @@
 from src.common.types import SwapKind
 from src.pools.buffer.enums import WrappingDirection
-from src.maths import (
+from common.maths import (
     div_down_fixed,
     div_up_fixed,
     mul_down_fixed,

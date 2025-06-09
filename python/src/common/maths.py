@@ -1,6 +1,6 @@
 from enum import Enum
-from src.constants import FOUR_WAD, MAX_POW_RELATIVE_ERROR, TWO_WAD, WAD
-from src.log_exp_math import LogExpMath
+from common.constants import FOUR_WAD, MAX_POW_RELATIVE_ERROR, TWO_WAD, WAD
+from common.log_exp_math import LogExpMath
 
 
 class Rounding(Enum):
