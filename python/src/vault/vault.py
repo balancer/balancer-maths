@@ -1,16 +1,18 @@
-from vault.swap import swap
-from vault.add_liquidity import add_liquidity
-from vault.remove_liquidity import remove_liquidity
-from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
+from src.common.types import SwapInput
+from src.common.pool_base import PoolBase
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
-from src.pools.weighted.weighted import Weighted
-from src.pools.stable.stable import Stable
+from src.hooks.stable_surge_hook import StableSurgeHook
+from src.hooks.types import HookBase
+from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
-from src.hooks.stable_surge_hook import StableSurgeHook
 from src.pools.reclamm.reclamm import ReClamm
-from src.common.types import SwapInput
+from src.pools.stable.stable import Stable
+from src.pools.weighted.weighted import Weighted
+from src.vault.swap import swap
+from src.vault.add_liquidity import add_liquidity
+from src.vault.remove_liquidity import remove_liquidity
 
 
 class Vault:
@@ -60,14 +62,14 @@ class Vault:
             remove_liquidity_input, pool_state, pool_class, hook_class, hook_state
         )
 
-    def _get_pool(self, pool_state):
+    def _get_pool(self, pool_state) -> PoolBase:
         pool_class = self.pool_classes[pool_state["poolType"]]
         if pool_class is None:
             raise SystemError("Unsupported Pool Type: ", pool_state["poolType"])
 
         return pool_class(pool_state)
 
-    def _get_hook(self, hook_name, hook_state):
+    def _get_hook(self, hook_name, hook_state) -> HookBase:
         if hook_name is None:
             return DefaultHook()
         hook_class = self.hook_classes.get(hook_name, None)

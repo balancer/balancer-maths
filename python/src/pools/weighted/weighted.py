@@ -1,4 +1,8 @@
-from common.maths import Rounding
+from typing import List
+
+from src.common.maths import Rounding
+from src.common.pool_base import PoolBase
+from src.common.types import SwapKind, SwapParams
 from src.pools.weighted.weighted_math import (
     compute_out_given_exact_in,
     compute_in_given_exact_out,
@@ -8,10 +12,9 @@ from src.pools.weighted.weighted_math import (
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
 )
-from src.common.types import SwapKind, SwapParams
 
 
-class Weighted:
+class Weighted(PoolBase):
     def __init__(self, pool_state):
         self.normalized_weights = pool_state["weights"]
 
@@ -39,20 +42,20 @@ class Weighted:
             swap_params.amount_given_scaled18,
         )
 
-    def compute_invariant(self, balances_live_scaled18, rounding):
+    def compute_invariant(
+        self, balances_live_scaled18: List[int], rounding: Rounding
+    ) -> int:
         if rounding == Rounding.ROUND_UP:
             return compute_invariant_up(self.normalized_weights, balances_live_scaled18)
-        else:
-            return compute_invariant_down(
-                self.normalized_weights, balances_live_scaled18
-            )
+
+        return compute_invariant_down(self.normalized_weights, balances_live_scaled18)
 
     def compute_balance(
         self,
-        balances_live_scaled18,
-        token_in_index,
-        invariant_ratio,
-    ):
+        balances_live_scaled18: List[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
         return compute_balance_out_given_invariant(
             balances_live_scaled18[token_in_index],
             self.normalized_weights[token_in_index],

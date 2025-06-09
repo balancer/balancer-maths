@@ -1,8 +1,11 @@
 from dataclasses import dataclass
-from common.maths import (
+from typing import List
+
+from src.common.maths import (
     Rounding,
     mul_up_fixed,
 )
+from src.common.pool_base import PoolBase
 from src.common.types import SwapKind, SwapParams
 from src.pools.gyro.gyroECLP_math import (
     EclpParams,
@@ -18,7 +21,7 @@ class PoolParams:
     derived_eclp_params: DerivedEclpParams
 
 
-class GyroECLP:
+class GyroECLP(PoolBase):
     def __init__(self, pool_state):
         self.pool_params = PoolParams(
             eclp_params=EclpParams(
@@ -81,7 +84,9 @@ class GyroECLP:
             invariant,
         )
 
-    def compute_invariant(self, balances_live_scaled18, rounding):
+    def compute_invariant(
+        self, balances_live_scaled18: List[int], rounding: Rounding
+    ) -> int:
         eclp_params = self.pool_params.eclp_params
         derived_eclp_params = self.pool_params.derived_eclp_params
 
@@ -95,10 +100,10 @@ class GyroECLP:
 
     def compute_balance(
         self,
-        balances_live_scaled18,
-        token_in_index,
-        invariant_ratio,
-    ):
+        balances_live_scaled18: List[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
         eclp_params = self.pool_params.eclp_params
         derived_eclp_params = self.pool_params.derived_eclp_params
 

@@ -1,6 +1,8 @@
-from common.constants import WAD
-from common.maths import mul_up_fixed, mul_div_up, complement_fixed
-from common.utils import (
+from src.common.constants import WAD
+from src.common.maths import mul_up_fixed, mul_div_up, complement_fixed
+from src.common.pool_base import PoolBase
+from src.common.types import SwapKind, SwapInput, SwapParams
+from src.common.utils import (
     find_case_insensitive_index_in_list,
     _to_scaled_18_apply_rate_round_down,
     _to_scaled_18_apply_rate_round_up,
@@ -8,8 +10,7 @@ from common.utils import (
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
 )
-from src.common.types import SwapKind, SwapInput, SwapParams
-from hooks.types import AfterSwapParams, HookBase
+from src.hooks.types import AfterSwapParams, HookBase
 
 _MINIMUM_TRADE_AMOUNT = 1e6
 
@@ -17,10 +18,10 @@ _MINIMUM_TRADE_AMOUNT = 1e6
 def swap(
     swap_input: SwapInput,
     pool_state,
-    pool_class,
+    pool_class: PoolBase,
     hook_class: HookBase,
     hook_state,
-):
+) -> int:
     input_index = find_case_insensitive_index_in_list(
         pool_state["tokens"], swap_input.token_in
     )

@@ -1,13 +1,18 @@
 from dataclasses import dataclass
+from typing import List
+
 from unpackable import Unpackable
 
-from common.maths import (
+from src.common.maths import (
     Rounding,
     mul_down_fixed,
     div_down_fixed,
     mul_up_fixed,
     div_up,
 )
+from src.common.pool_base import PoolBase
+from src.common.types import SwapKind, SwapParams
+from src.common.utils import MAX_UINT256
 from src.pools.gyro.gyro2CLP_math import (
     calculate_invariant,
     calculate_virtual_parameter0,
@@ -15,8 +20,6 @@ from src.pools.gyro.gyro2CLP_math import (
     calc_out_given_in,
     calc_in_given_out,
 )
-from src.common.types import SwapKind, SwapParams
-from common.utils import MAX_UINT256
 
 
 @dataclass
@@ -27,7 +30,7 @@ class VirtualBalances(Unpackable):
     virtual_balance_out: int
 
 
-class Gyro2CLP:
+class Gyro2CLP(PoolBase):
     def __init__(self, pool_state):
         self.normalized_weights = pool_state["weights"]
         if pool_state["sqrtAlpha"] >= pool_state["sqrtBeta"]:
@@ -75,7 +78,9 @@ class Gyro2CLP:
             virtual_balance_out,
         )
 
-    def compute_invariant(self, balances_live_scaled18, rounding):
+    def compute_invariant(
+        self, balances_live_scaled18: List[int], rounding: Rounding
+    ) -> int:
         return calculate_invariant(
             balances_live_scaled18,
             self.sqrt_alpha,
@@ -85,10 +90,10 @@ class Gyro2CLP:
 
     def compute_balance(
         self,
-        balances_live_scaled18,
-        token_in_index,
-        invariant_ratio,
-    ):
+        balances_live_scaled18: List[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
         """
         /**********************************************************************************************
         // Gyro invariant formula is:

@@ -1,23 +1,24 @@
-from common.utils import (
+from src.common.base_pool_math import (
+    compute_proportional_amounts_out,
+    compute_remove_liquidity_single_token_exact_in,
+    compute_remove_liquidity_single_token_exact_out,
+)
+from src.common.pool_base import PoolBase
+from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
+from src.common.utils import (
     _copy_to_scaled18_apply_rate_round_up_array,
     _get_single_input_index,
     _to_raw_undo_rate_round_down,
     _compute_and_charge_aggregate_swap_fees,
     _require_unbalanced_liquidity_enabled,
 )
-from common.base_pool_math import (
-    compute_proportional_amounts_out,
-    compute_remove_liquidity_single_token_exact_in,
-    compute_remove_liquidity_single_token_exact_out,
-)
-from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
 from hooks.types import HookBase
 
 
 def remove_liquidity(
     remove_liquidity_input: RemoveLiquidityInput,
     pool_state,
-    pool_class,
+    pool_class: PoolBase,
     hook_class: HookBase,
     hook_state,
 ):

@@ -1,4 +1,7 @@
 from typing import List
+
+from src.common.maths import Rounding
+from src.common.pool_base import PoolBase
 from src.common.types import SwapKind, SwapParams
 from src.pools.reclamm.reclamm_data import ReClammMutable, PriceRatioState
 from src.pools.reclamm.reclamm_math import (
@@ -9,7 +12,7 @@ from src.pools.reclamm.reclamm_math import (
 )
 
 
-class ReClamm:
+class ReClamm(PoolBase):
     MIN_TOKEN_BALANCE_SCALED18 = 1_000_000_000_000
     MIN_POOL_CENTEREDNESS = 1_000
 
@@ -87,11 +90,18 @@ class ReClamm:
 
         return amount_calculated_scaled_18
 
-    def compute_invariant(self) -> int:
+    def compute_invariant(
+        self, balances_live_scaled18: List[int], rounding: Rounding
+    ) -> int:
         # Only needed for unbalanced liquidity and thats not possible in this pool
         return 0
 
-    def compute_balance(self) -> int:
+    def compute_balance(
+        self,
+        balances_live_scaled18: List[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
         # Only needed for unbalanced liquidity and thats not possible in this pool
         return 0
 

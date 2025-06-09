@@ -1,4 +1,8 @@
-from common.maths import mul_down_fixed, Rounding
+from typing import List
+
+from src.common.maths import mul_down_fixed, Rounding
+from src.common.pool_base import PoolBase
+from src.common.types import SwapKind, SwapParams
 from src.pools.stable.stable_math import (
     compute_invariant,
     compute_out_given_exact_in,
@@ -7,10 +11,9 @@ from src.pools.stable.stable_math import (
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
 )
-from src.common.types import SwapKind, SwapParams
 
 
-class Stable:
+class Stable(PoolBase):
     def __init__(self, pool_state):
         self.amp = pool_state["amp"]
 
@@ -41,7 +44,9 @@ class Stable:
             invariant,
         )
 
-    def compute_invariant(self, balances_live_scaled18, rounding):
+    def compute_invariant(
+        self, balances_live_scaled18: List[int], rounding: Rounding
+    ) -> int:
         invariant = compute_invariant(self.amp, balances_live_scaled18)
         if invariant > 0:
             invariant = invariant if rounding == Rounding.ROUND_DOWN else invariant + 1
@@ -49,10 +54,10 @@ class Stable:
 
     def compute_balance(
         self,
-        balances_live_scaled18,
-        token_in_index,
-        invariant_ratio,
-    ):
+        balances_live_scaled18: List[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
         return compute_balance(
             self.amp,
             balances_live_scaled18,
