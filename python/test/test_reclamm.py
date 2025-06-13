@@ -1,8 +1,10 @@
 import sys
 import os
 
+from src.pools.reclamm.reclamm_data import map_re_clamm_state
 from src.pools.reclamm.reclamm import ReClamm
-from src.common.types import SwapKind, SwapParams
+from src.common.types import SwapKind
+from src.common.swap_params import SwapParams
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,15 +39,18 @@ def test_reclamm_swap():
         "endFourthRootPriceRatio": 1000000000000000000,
         "priceRatioUpdateStartTime": 1700000000,
         "priceRatioUpdateEndTime": 1700000000,
+        "aggregateSwapFee": 500000000000000000,
     }
 
-    pool = ReClamm(pool_state)
+    re_clamm_state = map_re_clamm_state(pool_state)
+
+    pool = ReClamm(re_clamm_state)
 
     # Test GivenIn swap
     amount_out = pool.on_swap(
         SwapParams(
             swap_kind=SwapKind.GIVENIN,
-            balances_live_scaled18=pool_state["balancesLiveScaled18"],
+            balances_live_scaled18=re_clamm_state.balances_live_scaled18,
             index_in=0,
             index_out=1,
             amount_given_scaled18=1000000000000000000,
@@ -57,7 +62,7 @@ def test_reclamm_swap():
     amount_in = pool.on_swap(
         SwapParams(
             swap_kind=SwapKind.GIVENOUT,
-            balances_live_scaled18=pool_state["balancesLiveScaled18"],
+            balances_live_scaled18=re_clamm_state.balances_live_scaled18,
             index_in=0,
             index_out=1,
             amount_given_scaled18=1000000000000000000,

@@ -9,10 +9,9 @@ from hooks.types import (
     BeforeRemoveLiquidityResult,
     AfterRemoveLiquidityResult,
 )
-from src.common.types import SwapParams, AddLiquidityKind
-from vault.add_liquidity import AddLiquidityKind
-from src.common.types import RemoveLiquidityKind
-from common.maths import mul_down_fixed
+from src.common.maths import mul_down_fixed
+from src.common.swap_params import SwapParams
+from src.common.types import AddLiquidityKind, RemoveLiquidityKind
 
 
 # This hook implements the ExitFeeHookExample found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/c848c849cb44dc35f05d15858e4fba9f17e92d5e/pkg/pool-hooks/contracts/ExitFeeHookExample.sol

@@ -1,4 +1,5 @@
-from src.common.types import SwapInput
+from pools.buffer.buffer_data import BufferState
+from src.common.types import PoolState, SwapInput
 from src.common.pool_base import PoolBase
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee_hook import ExitFeeHook
@@ -31,41 +32,45 @@ class Vault:
         if custom_hook_classes is not None:
             self.hook_classes.update(custom_hook_classes)
 
-    def swap(self, swap_input: SwapInput, pool_state, *, hook_state=None):
+    def swap(
+        self,
+        swap_input: SwapInput,
+        pool_state: PoolState | BufferState,
+        *,
+        hook_state=None
+    ):
         if swap_input.amount_raw == 0:
             return 0
 
         # buffer is handled separately than a "normal" pool
-        if pool_state.get("totalSupply") is None:
+        if isinstance(pool_state, BufferState):
             return erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
         pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
+        hook_class = self._get_hook(pool_state.hook_type, hook_state)
         return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
 
-    def add_liquidity(self, add_liquidity_input, pool_state, *, hook_state=None):
-        if pool_state["poolType"] == "Buffer":
-            raise ValueError("Buffer pools do not support addLiquidity")
-
+    def add_liquidity(
+        self, add_liquidity_input, pool_state: PoolState, *, hook_state=None
+    ):
         pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
+        hook_class = self._get_hook(pool_state.hook_type, hook_state)
         return add_liquidity(
             add_liquidity_input, pool_state, pool_class, hook_class, hook_state
         )
 
-    def remove_liquidity(self, remove_liquidity_input, pool_state, *, hook_state=None):
-        if pool_state["poolType"] == "Buffer":
-            raise ValueError("Buffer pools do not support removeLiquidity")
-
+    def remove_liquidity(
+        self, remove_liquidity_input, pool_state: PoolState, *, hook_state=None
+    ):
         pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.get("hookType", None), hook_state)
+        hook_class = self._get_hook(pool_state.hook_type, hook_state)
         return remove_liquidity(
             remove_liquidity_input, pool_state, pool_class, hook_class, hook_state
         )
 
-    def _get_pool(self, pool_state) -> PoolBase:
-        pool_class = self.pool_classes[pool_state["poolType"]]
+    def _get_pool(self, pool_state: PoolState) -> PoolBase:
+        pool_class = self.pool_classes[pool_state.pool_type]
         if pool_class is None:
-            raise SystemError("Unsupported Pool Type: ", pool_state["poolType"])
+            raise SystemError("Unsupported Pool Type: ", pool_state.pool_type)
 
         return pool_class(pool_state)
 

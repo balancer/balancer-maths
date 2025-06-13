@@ -1,4 +1,4 @@
-from hooks.types import (
+from src.hooks.types import (
     HookBase,
     AfterSwapParams,
     DynamicSwapFeeResult,
@@ -9,8 +9,8 @@ from hooks.types import (
     BeforeRemoveLiquidityResult,
     AfterRemoveLiquidityResult,
 )
-from src.common.types import SwapParams, AddLiquidityKind
-from src.common.types import RemoveLiquidityKind
+from src.common.swap_params import SwapParams
+from src.common.types import AddLiquidityKind, RemoveLiquidityKind
 
 
 class DefaultHook(HookBase):

@@ -2,8 +2,9 @@ from typing import List
 
 from src.common.maths import Rounding
 from src.common.pool_base import PoolBase
-from src.common.types import SwapKind, SwapParams
-from src.pools.reclamm.reclamm_data import ReClammMutable, PriceRatioState
+from src.common.swap_params import SwapParams
+from src.common.types import SwapKind
+from src.pools.reclamm.reclamm_data import ReClammState
 from src.pools.reclamm.reclamm_math import (
     compute_current_virtual_balances,
     compute_out_given_in,
@@ -16,21 +17,8 @@ class ReClamm(PoolBase):
     MIN_TOKEN_BALANCE_SCALED18 = 1_000_000_000_000
     MIN_POOL_CENTEREDNESS = 1_000
 
-    def __init__(self, pool_state):
-        re_clamm_state = ReClammMutable(
-            lastVirtualBalances=pool_state["lastVirtualBalances"],
-            dailyPriceShiftBase=pool_state["dailyPriceShiftBase"],
-            lastTimestamp=pool_state["lastTimestamp"],
-            currentTimestamp=pool_state["currentTimestamp"],
-            centerednessMargin=pool_state["centerednessMargin"],
-            priceRatioState=PriceRatioState(
-                startFourthRootPriceRatio=pool_state["startFourthRootPriceRatio"],
-                endFourthRootPriceRatio=pool_state["endFourthRootPriceRatio"],
-                priceRatioUpdateStartTime=pool_state["priceRatioUpdateStartTime"],
-                priceRatioUpdateEndTime=pool_state["priceRatioUpdateEndTime"],
-            ),
-        )
-        self.re_clamm_state = re_clamm_state
+    def __init__(self, pool_state: ReClammState):
+        self.re_clamm_state = pool_state
 
     def get_maximum_invariant_ratio(self) -> int:
         # The invariant ratio bounds are required by `IBasePool`, but are unused in this pool type, as liquidity can
@@ -47,7 +35,7 @@ class ReClamm(PoolBase):
             swap_params.balances_live_scaled18
         )
 
-        if swap_params.swap_kind == SwapKind.GIVENIN:
+        if swap_params.swap_kind.value == SwapKind.GIVENIN.value:
             amount_calculated_scaled_18 = compute_out_given_in(
                 swap_params.balances_live_scaled18,
                 compute_result[0],  # current_virtual_balance_a
@@ -109,14 +97,17 @@ class ReClamm(PoolBase):
         self, balances_scaled_18: List[int]
     ) -> tuple[int, int, bool]:
         return compute_current_virtual_balances(
-            self.re_clamm_state.currentTimestamp,
+            self.re_clamm_state.current_timestamp,
             balances_scaled_18,
-            self.re_clamm_state.lastVirtualBalances[0],
-            self.re_clamm_state.lastVirtualBalances[1],
-            self.re_clamm_state.dailyPriceShiftBase,
-            self.re_clamm_state.lastTimestamp,
-            self.re_clamm_state.centerednessMargin,
-            self.re_clamm_state.priceRatioState,
+            self.re_clamm_state.last_virtual_balances[0],
+            self.re_clamm_state.last_virtual_balances[1],
+            self.re_clamm_state.daily_price_shift_base,
+            self.re_clamm_state.last_timestamp,
+            self.re_clamm_state.centeredness_margin,
+            self.re_clamm_state.start_fourth_root_price_ratio,
+            self.re_clamm_state.end_fourth_root_price_ratio,
+            self.re_clamm_state.price_ratio_update_start_time,
+            self.re_clamm_state.price_ratio_update_end_time,
         )
 
     def _ensure_valid_pool_state_after_swap(

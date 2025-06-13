@@ -11,8 +11,10 @@ from src.common.maths import (
     div_up,
 )
 from src.common.pool_base import PoolBase
-from src.common.types import SwapKind, SwapParams
+from src.common.swap_params import SwapParams
+from src.common.types import SwapKind
 from src.common.utils import MAX_UINT256
+from src.pools.gyro.gyro2CLP_data import Gyro2CLPState
 from src.pools.gyro.gyro2CLP_math import (
     calculate_invariant,
     calculate_virtual_parameter0,
@@ -31,12 +33,11 @@ class VirtualBalances(Unpackable):
 
 
 class Gyro2CLP(PoolBase):
-    def __init__(self, pool_state):
-        self.normalized_weights = pool_state["weights"]
-        if pool_state["sqrtAlpha"] >= pool_state["sqrtBeta"]:
+    def __init__(self, pool_state: Gyro2CLPState):
+        if pool_state.sqrt_alpha >= pool_state.sqrt_beta:
             raise ValueError("SqrtParamsWrong")
-        self.sqrt_alpha = pool_state["sqrtAlpha"]
-        self.sqrt_beta = pool_state["sqrtBeta"]
+        self.sqrt_alpha = pool_state.sqrt_alpha
+        self.sqrt_beta = pool_state.sqrt_beta
 
     def get_maximum_invariant_ratio(self) -> int:
         return MAX_UINT256
@@ -61,7 +62,7 @@ class Gyro2CLP(PoolBase):
             self.sqrt_beta,
         )
 
-        if swap_params.swap_kind == SwapKind.GIVENIN:
+        if swap_params.swap_kind.value == SwapKind.GIVENIN.value:
             return calc_out_given_in(
                 balance_token_in_scaled18,
                 balance_token_out_scaled18,

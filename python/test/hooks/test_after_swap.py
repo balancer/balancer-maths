@@ -1,21 +1,18 @@
-import sys
 import os
+import sys
+from test.test_custom_pool import CustomPoolState, map_custom_pool_state
 
-from src.common.types import SwapKind, SwapInput, SwapParams, AddLiquidityKind
-from src.common.types import RemoveLiquidityKind
+from src.common.maths import Rounding
+from src.common.pool_base import PoolBase
+from src.common.types import SwapInput, SwapKind
+from src.common.swap_params import SwapParams
 
-from vault.vault import Vault
+from src.hooks.default_hook import DefaultHook
 from src.hooks.types import (
-    HookBase,
     AfterSwapParams,
-    DynamicSwapFeeResult,
-    BeforeSwapResult,
     AfterSwapResult,
-    BeforeAddLiquidityResult,
-    AfterAddLiquidityResult,
-    BeforeRemoveLiquidityResult,
-    AfterRemoveLiquidityResult,
 )
+from src.vault.vault import Vault
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,7 +39,7 @@ pool = {
     "balancesLiveScaled18": [1000000000000000000, 1000000000000000000],
     "tokenRates": [1000000000000000000, 1000000000000000000],
     "totalSupply": 1000000000000000000,
-    "aggregateSwapFee": 500000000000000000,
+    "randoms": [7000000000000000000, 8000000000000000000],
 }
 
 
@@ -56,90 +53,38 @@ swap_input = SwapInput(
 expected_calculated = 100000000000
 
 
-class CustomPool:
-    def __init__(self, pool_state):
+class CustomPool(PoolBase):
+    def __init__(self, pool_state: CustomPoolState):
         self.pool_state = pool_state
 
-    def on_swap(self, swap_params):
+    def on_swap(self, swap_params: SwapParams) -> int:
         return 100000000000
 
-    def compute_invariant(self, balances_live_scaled18):
+    def compute_invariant(
+        self, balances_live_scaled18: list[int], rounding: Rounding
+    ) -> int:
         return 1
 
     def compute_balance(
         self,
-        balances_live_scaled18,
-        token_in_index,
-        invariant_ratio,
-    ):
+        balances_live_scaled18: list[int],
+        token_in_index: int,
+        invariant_ratio: int,
+    ) -> int:
+        return 1
+
+    def get_maximum_invariant_ratio(self) -> int:
+        return 1
+
+    def get_minimum_invariant_ratio(self) -> int:
         return 1
 
 
-class CustomHook(HookBase):
+class CustomHook(DefaultHook):
     def __init__(self):
-        self.should_call_compute_dynamic_swap_fee = False
-        self.should_call_before_swap = False
+        super().__init__()
         self.should_call_after_swap = True
-        self.should_call_before_add_liquidity = False
-        self.should_call_after_add_liquidity = False
-        self.should_call_before_remove_liquidity = False
-        self.should_call_after_remove_liquidity = False
         self.enable_hook_adjusted_amounts = True
-
-    def on_before_add_liquidity(
-        self,
-        kind: AddLiquidityKind,
-        max_amounts_in_scaled18: list[int],
-        min_bpt_amount_out: int,
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> BeforeAddLiquidityResult:
-        return BeforeAddLiquidityResult(
-            success=False, hook_adjusted_balances_scaled18=[]
-        )
-
-    def on_after_add_liquidity(
-        self,
-        kind: AddLiquidityKind,
-        amounts_in_scaled18: list[int],
-        amounts_in_raw: list[int],
-        bpt_amount_out: int,
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> AfterAddLiquidityResult:
-        return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
-
-    def on_before_remove_liquidity(
-        self,
-        kind: RemoveLiquidityKind,
-        max_bpt_amount_in: int,
-        min_amounts_out_scaled18: list[int],
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> BeforeRemoveLiquidityResult:
-        return BeforeRemoveLiquidityResult(
-            success=False, hook_adjusted_balances_scaled18=[]
-        )
-
-    def on_after_remove_liquidity(
-        self,
-        kind: RemoveLiquidityKind,
-        bpt_amount_in: int,
-        amounts_out_scaled18: list[int],
-        amounts_out_raw: list[int],
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> AfterRemoveLiquidityResult:
-        return AfterRemoveLiquidityResult(
-            success=False, hook_adjusted_amounts_out_raw=[]
-        )
-
-    def on_before_swap(
-        self,
-        swap_params: SwapParams,
-        hook_state: dict,
-    ) -> BeforeSwapResult:
-        return BeforeSwapResult(success=False, hook_adjusted_balances_scaled18=[])
 
     def on_after_swap(
         self,
@@ -167,14 +112,6 @@ class CustomHook(HookBase):
         ]
         return AfterSwapResult(success=True, hook_adjusted_amount_calculated_raw=1)
 
-    def on_compute_dynamic_swap_fee(
-        self,
-        swap_params: SwapParams,
-        static_swap_fee_percentage: int,
-        hook_state: dict,
-    ) -> DynamicSwapFeeResult:
-        return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
-
 
 vault = Vault(
     custom_pool_classes={"CustomPool": CustomPool},
@@ -192,9 +129,8 @@ def test_hook_after_swap_no_fee():
             pool["balancesLiveScaled18"][1] - expected_calculated,
         ],
     }
-    test = vault.swap(
-        swap_input, {**pool, "aggregateSwapFee": 0}, hook_state=input_hook_state
-    )
+    custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
+    test = vault.swap(swap_input, custom_state_no_fee, hook_state=input_hook_state)
     assert test == 1
 
 
@@ -211,5 +147,8 @@ def test_hook_after_swap_with_fee():
             pool["balancesLiveScaled18"][1] - expected_calculated,
         ],
     }
-    test = vault.swap(swap_input, pool, hook_state=input_hook_state)
+    custom_state_with_fee = map_custom_pool_state(
+        {**pool, "aggregateSwapFee": 500000000000000000}
+    )
+    test = vault.swap(swap_input, custom_state_with_fee, hook_state=input_hook_state)
     assert test == 1

@@ -1,4 +1,5 @@
 from common.maths import div_down_fixed, mul_up_fixed, mul_down_fixed, div_up_fixed
+from common.types import PoolState
 
 MAX_UINT256 = 2**256 - 1
 
@@ -118,6 +119,6 @@ def _get_single_input_index(max_amounts_in):
     return input_index
 
 
-def _require_unbalanced_liquidity_enabled(pool_state):
-    if not pool_state.get("supportsUnbalancedLiquidity", True):
+def _require_unbalanced_liquidity_enabled(pool_state: PoolState):
+    if not pool_state.supports_unbalanced_liquidity:
         raise ValueError("DoesNotSupportUnbalancedLiquidity")

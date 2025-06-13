@@ -1,5 +1,6 @@
-from vault.vault import Vault
-from vault.swap import SwapKind, SwapInput
+from src.common.types import SwapInput, SwapKind
+from src.pools.stable.stable_data import map_stable_state
+from src.vault.vault import Vault
 
 pool_state = {
     "poolType": "STABLE",
@@ -27,6 +28,7 @@ hook_state = {
 }
 
 vault = Vault()
+stable_state = map_stable_state(pool_state)
 
 
 def test_below_surge_threshold_static_swap_fee_case1():
@@ -37,7 +39,7 @@ def test_below_surge_threshold_static_swap_fee_case1():
         token_out=pool_state["tokens"][1],
     )
     output_amount = vault.swap(
-        swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
+        swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
     assert output_amount == 78522716365403684
 
@@ -50,7 +52,7 @@ def test_below_surge_threshold_static_swap_fee_case2():
         token_out=pool_state["tokens"][1],
     )
     output_amount = vault.swap(
-        swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
+        swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
     assert output_amount == 452983383563178802
 
@@ -63,6 +65,6 @@ def test_above_surge_threshold_uses_surge_fee():
         token_out=pool_state["tokens"][0],
     )
     output_amount = vault.swap(
-        swap_input=swap_input, pool_state=pool_state, hook_state=hook_state
+        swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
     assert output_amount == 3252130027531260

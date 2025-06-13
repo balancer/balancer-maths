@@ -69,11 +69,17 @@ def calculate_quadratic_terms(
         QuadraticTerms containing a, mb, b_square, and mc terms
     """
     # Define rounding functions based on rounding direction
-    div_up_or_down = div_down_fixed if rounding == Rounding.ROUND_DOWN else div_up_fixed
+    div_up_or_down = (
+        div_down_fixed if rounding.value == Rounding.ROUND_DOWN.value else div_up_fixed
+    )
 
-    mul_up_or_down = mul_down_fixed if rounding == Rounding.ROUND_DOWN else mul_up_fixed
+    mul_up_or_down = (
+        mul_down_fixed if rounding.value == Rounding.ROUND_DOWN.value else mul_up_fixed
+    )
 
-    mul_down_or_up = mul_up_fixed if rounding == Rounding.ROUND_DOWN else mul_down_fixed
+    mul_down_or_up = (
+        mul_up_fixed if rounding.value == Rounding.ROUND_DOWN.value else mul_down_fixed
+    )
 
     # Calculate 'a' term
     # Note: 'a' follows opposite rounding than 'b' and 'c' since it's in denominator
@@ -274,7 +280,7 @@ def calculate_virtual_parameter0(
     """
     return (
         div_down_fixed(invariant, _sqrt_beta)
-        if rounding == Rounding.ROUND_DOWN
+        if rounding.value == Rounding.ROUND_DOWN.value
         else div_up_fixed(invariant, _sqrt_beta)
     )
 
@@ -295,6 +301,6 @@ def calculate_virtual_parameter1(
     """
     return (
         mul_down_fixed(invariant, _sqrt_alpha)
-        if rounding == Rounding.ROUND_DOWN
+        if rounding.value == Rounding.ROUND_DOWN.value
         else mul_up_fixed(invariant, _sqrt_alpha)
     )

@@ -1,9 +1,9 @@
-import pytest
 import sys
 import os
 
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
-from vault.vault import Vault
+from src.pools.weighted.weighted_data import map_weighted_state
+from src.vault.vault import Vault
 
 
 # Get the directory of the current file
@@ -49,8 +49,9 @@ def test_hook_exit_fee_no_fee():
         "removeLiquidityHookFeePercentage": 0,
         "tokens": pool["tokens"],
     }
+    weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
-        remove_liquidity_input, pool, hook_state=input_hook_state
+        remove_liquidity_input, weighted_state, hook_state=input_hook_state
     )
     assert test["amounts_out_raw"] == [316227766016, 316227766016844]
 
@@ -61,7 +62,8 @@ def test_hook_exit_fee_with_fee():
         "removeLiquidityHookFeePercentage": 50000000000000000,
         "tokens": pool["tokens"],
     }
+    weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
-        remove_liquidity_input, pool, hook_state=input_hook_state
+        remove_liquidity_input, weighted_state, hook_state=input_hook_state
     )
     assert test["amounts_out_raw"] == [300416377716, 300416377716002]

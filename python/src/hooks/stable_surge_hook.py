@@ -1,98 +1,17 @@
 from typing import Dict, List
 
-from hooks.types import (
-    HookBase,
-    AfterSwapParams,
-    DynamicSwapFeeResult,
-    BeforeSwapResult,
-    AfterSwapResult,
-    BeforeAddLiquidityResult,
-    AfterAddLiquidityResult,
-    BeforeRemoveLiquidityResult,
-    AfterRemoveLiquidityResult,
-)
-from common.maths import (
-    div_down_fixed,
-    mul_down_fixed,
-    complement_fixed,
-)
+from src.hooks.default_hook import DefaultHook
+from src.common.maths import div_down_fixed, mul_down_fixed, complement_fixed
+from src.common.swap_params import SwapParams
+from src.common.types import SwapKind
+from src.hooks.types import DynamicSwapFeeResult
 from src.pools.stable.stable import Stable
-from src.common.types import SwapKind, SwapParams, AddLiquidityKind
-from src.common.types import RemoveLiquidityKind
+from src.pools.stable.stable_data import StableMutable
 
 
 # This hook implements the StableSurgeHook found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/main/pkg/pool-hooks/contracts/StableSurgeHook.sol
-class StableSurgeHook(HookBase):
+class StableSurgeHook(DefaultHook):
     should_call_compute_dynamic_swap_fee = True
-    should_call_before_swap = False
-    should_call_after_swap = False
-    should_call_before_add_liquidity = False
-    should_call_after_add_liquidity = False
-    should_call_before_remove_liquidity = False
-    should_call_after_remove_liquidity = False
-    enable_hook_adjusted_amounts = False
-
-    def on_before_add_liquidity(
-        self,
-        kind: AddLiquidityKind,
-        max_amounts_in_scaled18: list[int],
-        min_bpt_amount_out: int,
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> BeforeAddLiquidityResult:
-        return BeforeAddLiquidityResult(
-            success=False, hook_adjusted_balances_scaled18=[]
-        )
-
-    def on_after_add_liquidity(
-        self,
-        kind: AddLiquidityKind,
-        amounts_in_scaled18: list[int],
-        amounts_in_raw: list[int],
-        bpt_amount_out: int,
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> AfterAddLiquidityResult:
-        return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
-
-    def on_before_remove_liquidity(
-        self,
-        kind: RemoveLiquidityKind,
-        max_bpt_amount_in: int,
-        min_amounts_out_scaled18: list[int],
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> BeforeRemoveLiquidityResult:
-        return BeforeRemoveLiquidityResult(
-            success=False, hook_adjusted_balances_scaled18=[]
-        )
-
-    def on_after_remove_liquidity(
-        self,
-        kind: RemoveLiquidityKind,
-        bpt_amount_in: int,
-        amounts_out_scaled18: list[int],
-        amounts_out_raw: list[int],
-        balances_scaled18: list[int],
-        hook_state: dict,
-    ) -> AfterRemoveLiquidityResult:
-        return AfterRemoveLiquidityResult(
-            success=False, hook_adjusted_amounts_out_raw=[]
-        )
-
-    def on_before_swap(
-        self,
-        swap_params: SwapParams,
-        hook_state: dict,
-    ) -> BeforeSwapResult:
-        return BeforeSwapResult(success=False, hook_adjusted_balances_scaled18=[])
-
-    def on_after_swap(
-        self,
-        after_swap_params: AfterSwapParams,
-        hook_state: dict,
-    ) -> AfterSwapResult:
-        return AfterSwapResult(success=False, hook_adjusted_amount_calculated_raw=0)
 
     def on_compute_dynamic_swap_fee(
         self,
@@ -100,7 +19,8 @@ class StableSurgeHook(HookBase):
         static_swap_fee_percentage: int,
         hook_state: Dict,
     ) -> DynamicSwapFeeResult:
-        stable_pool = Stable(hook_state)
+        stable_state = StableMutable(amp=hook_state["amp"])
+        stable_pool = Stable(stable_state)
 
         return DynamicSwapFeeResult(
             success=True,
@@ -124,7 +44,7 @@ class StableSurgeHook(HookBase):
         amount_calculated_scaled_18 = pool.on_swap(swap_params)
         new_balances = swap_params.balances_live_scaled18[:]
 
-        if swap_params.swap_kind == SwapKind.GIVENIN:
+        if swap_params.swap_kind.value == SwapKind.GIVENIN.value:
             new_balances[swap_params.index_in] += swap_params.amount_given_scaled18
             new_balances[swap_params.index_out] -= amount_calculated_scaled_18
         else:

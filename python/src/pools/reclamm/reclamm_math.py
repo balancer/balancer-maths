@@ -11,8 +11,6 @@ from common.maths import (
     Rounding,
 )
 
-from .reclamm_data import PriceRatioState
-
 
 # Constants
 A = 0
@@ -28,7 +26,10 @@ def compute_current_virtual_balances(
     daily_price_shift_base: int,
     last_timestamp: int,
     centeredness_margin: int,
-    price_ratio_state: PriceRatioState,
+    start_fourth_root_price_ratio: int,
+    end_fourth_root_price_ratio: int,
+    price_ratio_update_start_time: int,
+    price_ratio_update_end_time: int,
 ) -> Tuple[int, int, bool]:
     if last_timestamp == current_timestamp:
         return last_virtual_balance_a, last_virtual_balance_b, False
@@ -38,10 +39,10 @@ def compute_current_virtual_balances(
 
     current_fourth_root_price_ratio = compute_fourth_root_price_ratio(
         current_timestamp,
-        price_ratio_state.startFourthRootPriceRatio,
-        price_ratio_state.endFourthRootPriceRatio,
-        price_ratio_state.priceRatioUpdateStartTime,
-        price_ratio_state.priceRatioUpdateEndTime,
+        start_fourth_root_price_ratio,
+        end_fourth_root_price_ratio,
+        price_ratio_update_start_time,
+        price_ratio_update_end_time,
     )
 
     is_pool_above_center = is_above_center(
@@ -53,8 +54,8 @@ def compute_current_virtual_balances(
     changed = False
 
     if (
-        current_timestamp > price_ratio_state.priceRatioUpdateStartTime
-        and last_timestamp < price_ratio_state.priceRatioUpdateEndTime
+        current_timestamp > price_ratio_update_start_time
+        and last_timestamp < price_ratio_update_end_time
     ):
         current_virtual_balance_a, current_virtual_balance_b = (
             calculate_virtual_balances_updating_price_ratio(
@@ -301,7 +302,9 @@ def compute_invariant(
     virtual_balance_b: int,
     rounding: Rounding,
 ) -> int:
-    mul_up_or_down = mul_down_fixed if rounding == Rounding.ROUND_DOWN else mul_up_fixed
+    mul_up_or_down = (
+        mul_down_fixed if rounding.value == Rounding.ROUND_DOWN.value else mul_up_fixed
+    )
 
     return mul_up_or_down(
         balances_scaled_18[0] + virtual_balance_a,

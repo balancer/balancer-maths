@@ -1,10 +1,12 @@
-import pytest
 import sys
 import os
 
-from vault.vault import Vault
-from src.hooks.default_hook import DefaultHook
+from test.test_custom_pool import CustomPool, map_custom_pool_state
+import pytest
+
 from src.common.types import SwapInput, SwapKind
+from src.hooks.default_hook import DefaultHook
+from src.vault.vault import Vault
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -41,6 +43,7 @@ def test_hook_no_state():
         custom_pool_classes={"CustomPool": CustomPool},
         custom_hook_classes={"CustomHook": DefaultHook},
     )
+    custom_pool_state = map_custom_pool_state(pool)
     with pytest.raises(SystemError, match=r"\('No state for Hook:', 'CustomHook'\)"):
         vault.swap(
             SwapInput(
@@ -49,7 +52,7 @@ def test_hook_no_state():
                 token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                 swap_kind=SwapKind.GIVENIN,
             ),
-            pool,
+            custom_pool_state,
         )
 
 
@@ -58,6 +61,7 @@ def test_unsupported_hook_type():
         custom_pool_classes={"CustomPool": CustomPool},
         custom_hook_classes={"CustomHook": DefaultHook},
     )
+    custom_pool_state = map_custom_pool_state({**pool, "hookType": "Unsupported"})
     with pytest.raises(
         SystemError, match=r"\('Unsupported Hook Type:', 'Unsupported'\)"
     ):
@@ -68,19 +72,5 @@ def test_unsupported_hook_type():
                 token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
                 swap_kind=SwapKind.GIVENIN,
             ),
-            {**pool, "hookType": "Unsupported"},
+            custom_pool_state,
         )
-
-
-class CustomPool:
-    def __init__(self, pool_state: dict):
-        self.randoms = pool_state["randoms"]
-
-    def on_swap(self) -> int:
-        return self.randoms[0]
-
-    def compute_invariant(self) -> int:
-        return 1
-
-    def compute_balance(self) -> int:
-        return 1

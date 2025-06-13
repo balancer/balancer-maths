@@ -1,10 +1,11 @@
 import sys
 import os
 
-from src.pools.weighted.weighted import Weighted
 from src.common.types import AddLiquidityInput, AddLiquidityKind
-
-from vault.vault import Vault
+from src.hooks.default_hook import DefaultHook
+from src.hooks.types import BeforeAddLiquidityResult
+from src.pools.weighted.weighted_data import map_weighted_state
+from src.vault.vault import Vault
 
 
 # Get the directory of the current file
@@ -16,30 +17,20 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 sys.path.insert(0, parent_dir)
 
 
-class CustomPool(Weighted):
-    def __init__(self, pool_state):
-        super().__init__(pool_state)
-
-
-class CustomHook:
+class CustomHook(DefaultHook):
     def __init__(self):
-        self.should_call_compute_dynamic_swap_fee = False
-        self.should_call_before_swap = False
-        self.should_call_after_swap = False
+        super().__init__()
         self.should_call_before_add_liquidity = True
-        self.should_call_after_add_liquidity = False
-        self.should_call_before_remove_liquidity = False
-        self.should_call_after_remove_liquidity = False
         self.enable_hook_adjusted_amounts = False
 
     def on_before_add_liquidity(
         self,
-        kind,
-        max_amounts_in_scaled18,
-        min_bpt_amount_out,
-        balances_scaled18,
-        hook_state,
-    ):
+        kind: AddLiquidityKind,
+        max_amounts_in_scaled18: list[int],
+        min_bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: dict,
+    ) -> BeforeAddLiquidityResult:
         if not (
             isinstance(hook_state, dict)
             and hook_state is not None
@@ -51,39 +42,10 @@ class CustomHook:
         assert min_bpt_amount_out == add_liquidity_input.min_bpt_amount_out_raw
         assert balances_scaled18 == pool["balancesLiveScaled18"]
 
-        return {
-            "success": True,
-            "hook_adjusted_balances_scaled18": hook_state["balanceChange"],
-        }
-
-    def on_after_add_liquidity(
-        self,
-        kind,
-        amounts_in_scaled18,
-        amounts_in_raw,
-        bpt_amount_out,
-        balances_scaled18,
-        hook_state,
-    ):
-        return {
-            "success": True,
-            "hook_adjusted_amounts_in_raw": [],
-        }
-
-    def on_before_remove_liquidity(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
-
-    def on_after_remove_liquidity(self):
-        return {"success": False, "hook_adjusted_amounts_out_raw": []}
-
-    def on_before_swap(self):
-        return {"success": False, "hook_adjusted_balances_scaled18": []}
-
-    def on_after_swap(self):
-        return {"success": False, "hook_adjusted_amount_calculated_raw": 0}
-
-    def on_compute_dynamic_swap_fee(self):
-        return {"success": False, "dynamic_swap_fee": 0}
+        return BeforeAddLiquidityResult(
+            success=True,
+            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+        )
 
 
 add_liquidity_input = AddLiquidityInput(
@@ -94,7 +56,6 @@ add_liquidity_input = AddLiquidityInput(
 )
 
 pool = {
-    "poolType": "CustomPool",
     "hookType": "CustomHook",
     "chainId": "11155111",
     "blockNumber": "5955145",
@@ -109,11 +70,11 @@ pool = {
     "balancesLiveScaled18": [2000000000000000000, 2000000000000000000],
     "tokenRates": [1000000000000000000, 1000000000000000000],
     "totalSupply": 1000000000000000000,
-    "aggregateSwapFee": 500000000000000000,
+    "aggregateSwapFee": 0,
+    "randoms": [1000000000000000000, 1000000000000000000],
 }
 
 vault = Vault(
-    custom_pool_classes={"CustomPool": CustomPool},
     custom_hook_classes={"CustomHook": CustomHook},
 )
 
@@ -124,7 +85,10 @@ def test_hook_before_add_liquidity_no_fee():
     input_hook_state = {
         "balanceChange": [1000000000000000000, 1000000000000000000],
     }
-    test = vault.add_liquidity(add_liquidity_input, pool, hook_state=input_hook_state)
+    weighted_state = map_weighted_state(pool)
+    test = vault.add_liquidity(
+        add_liquidity_input, weighted_state, hook_state=input_hook_state
+    )
     # Hook adds 1n to amountsIn
     assert test["amounts_in_raw"] == [
         200000000000000000,

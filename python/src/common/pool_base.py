@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.common.types import SwapParams
 from src.common.maths import Rounding
+from src.common.swap_params import SwapParams
 
 
 class PoolBase(ABC):

@@ -6,13 +6,15 @@ from src.common.maths import (
     mul_up_fixed,
 )
 from src.common.pool_base import PoolBase
-from src.common.types import SwapKind, SwapParams
+from src.common.swap_params import SwapParams
+from src.common.types import SwapKind
 from src.pools.gyro.gyroECLP_math import (
     EclpParams,
     DerivedEclpParams,
     Vector2,
     GyroECLPMath,
 )
+from src.pools.gyro.gyroECLP_data import GyroECLPState
 
 
 @dataclass
@@ -22,27 +24,23 @@ class PoolParams:
 
 
 class GyroECLP(PoolBase):
-    def __init__(self, pool_state):
+    def __init__(self, pool_state: GyroECLPState):
         self.pool_params = PoolParams(
             eclp_params=EclpParams(
-                alpha=pool_state.get("paramsAlpha"),
-                beta=pool_state.get("paramsBeta"),
-                c=pool_state.get("paramsC"),
-                s=pool_state.get("paramsS"),
-                lambda_=pool_state.get("paramsLambda"),
+                alpha=pool_state.alpha,
+                beta=pool_state.beta,
+                c=pool_state.c,
+                s=pool_state.s,
+                lambda_=pool_state.lambda_,
             ),
             derived_eclp_params=DerivedEclpParams(
-                tauAlpha=Vector2(
-                    x=pool_state.get("tauAlphaX"), y=pool_state.get("tauAlphaY")
-                ),
-                tauBeta=Vector2(
-                    x=pool_state.get("tauBetaX"), y=pool_state.get("tauBetaY")
-                ),
-                u=pool_state.get("u"),
-                v=pool_state.get("v"),
-                w=pool_state.get("w"),
-                z=pool_state.get("z"),
-                dSq=pool_state.get("dSq"),
+                tauAlpha=Vector2(x=pool_state.tau_alpha_x, y=pool_state.tau_alpha_y),
+                tauBeta=Vector2(x=pool_state.tau_beta_x, y=pool_state.tau_beta_y),
+                u=pool_state.u,
+                v=pool_state.v,
+                w=pool_state.w,
+                z=pool_state.z,
+                dSq=pool_state.d_sq,
             ),
         )
 
@@ -65,7 +63,7 @@ class GyroECLP(PoolBase):
 
         invariant = Vector2(x=current_invariant + 2 * inv_err, y=current_invariant)
 
-        if swap_params.swap_kind == SwapKind.GIVENIN:
+        if swap_params.swap_kind.value == SwapKind.GIVENIN.value:
             return GyroECLPMath.calc_out_given_in(
                 swap_params.balances_live_scaled18,
                 swap_params.amount_given_scaled18,
@@ -94,7 +92,7 @@ class GyroECLP(PoolBase):
             balances_live_scaled18, eclp_params, derived_eclp_params
         )
 
-        if rounding == Rounding.ROUND_DOWN:
+        if rounding.value == Rounding.ROUND_DOWN.value:
             return current_invariant - inv_err
         return current_invariant + inv_err
 

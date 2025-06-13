@@ -1,6 +1,12 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+
+from src.common.base_pool_state import BasePoolState
+from src.pools.gyro.gyro2CLP_data import Gyro2CLPState
+from src.pools.gyro.gyroECLP_data import GyroECLPState
+from src.pools.reclamm.reclamm_data import ReClammState
+from src.pools.stable.stable_data import StableState
+from src.pools.weighted.weighted_data import WeightedState
 
 
 class RemoveLiquidityKind(Enum):
@@ -53,25 +59,6 @@ class SwapInput:
 
 
 @dataclass
-class SwapParams:
-    """Parameters for a swap operation in a pool.
-
-    Attributes:
-        swap_kind: The type of swap (GIVENIN or GIVENOUT)
-        amount_given_scaled18: The amount being swapped, scaled to 18 decimals
-        balances_live_scaled18: Current pool balances scaled to 18 decimals
-        index_in: Index of the input token in the pool's token list
-        index_out: Index of the output token in the pool's token list
-    """
-
-    swap_kind: SwapKind
-    amount_given_scaled18: int
-    balances_live_scaled18: List[int]
-    index_in: int
-    index_out: int
-
-
-@dataclass
 class AddLiquidityInput:
     """Input parameters for an add liquidity operation.
 
@@ -85,3 +72,13 @@ class AddLiquidityInput:
     max_amounts_in_raw: list[int]
     min_bpt_amount_out_raw: int
     kind: AddLiquidityKind
+
+
+PoolState = (
+    BasePoolState
+    | WeightedState
+    | StableState
+    | Gyro2CLPState
+    | GyroECLPState
+    | ReClammState
+)

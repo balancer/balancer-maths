@@ -1,3 +1,4 @@
+from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
 from test.utils.read_test_data import read_test_data
 import sys
 import os
@@ -24,6 +25,7 @@ def test_swaps():
             raise Exception("Pool not in test data: ", swap_test["test"])
         pool = test_data["pools"][swap_test["test"]]
         # note any amounts must be passed as ints not strings
+        pool_with_ints = transform_strings_to_ints(pool)
         calculated_amount = vault.swap(
             SwapInput(
                 amount_raw=int(swap_test["amountRaw"]),
@@ -31,7 +33,7 @@ def test_swaps():
                 token_out=swap_test["tokenOut"],
                 swap_kind=SwapKind(swap_test["swapKind"]),
             ),
-            map_pool(pool),
+            map_pool_state(pool_with_ints),
         )
         if pool["poolType"] == "Buffer":
             assert are_big_ints_within_percent(
