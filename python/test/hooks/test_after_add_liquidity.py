@@ -106,11 +106,11 @@ def test_hook_after_add_liquidity_no_fee():
         hook_state=input_hook_state,
     )
     # Hook adds 1n to amountsIn
-    assert test["amounts_in_raw"] == [
+    assert test.amounts_in_raw == [
         200000000000000001,
         100000000000000001,
     ]
-    assert test["bpt_amount_out_raw"] == 146464294351867896
+    assert test.bpt_amount_out_raw == 146464294351867896
 
 
 def test_hook_after_add_liquidity_with_fee():
@@ -132,8 +132,8 @@ def test_hook_after_add_liquidity_with_fee():
         hook_state=input_hook_state,
     )
     # Hook adds 1n to amountsIn
-    assert test["amounts_in_raw"] == [
+    assert test.amounts_in_raw == [
         200000000000000001,
         100000000000000001,
     ]
-    assert test["bpt_amount_out_raw"] == 146464294351867896
+    assert test.bpt_amount_out_raw == 146464294351867896

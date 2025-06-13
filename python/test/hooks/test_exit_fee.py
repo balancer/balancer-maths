@@ -56,7 +56,7 @@ def test_hook_exit_fee_no_fee():
         pool_state=weighted_state,
         hook_state=input_hook_state,
     )
-    assert test["amounts_out_raw"] == [316227766016, 316227766016844]
+    assert test.amounts_out_raw == [316227766016, 316227766016844]
 
 
 def test_hook_exit_fee_with_fee():
@@ -71,4 +71,4 @@ def test_hook_exit_fee_with_fee():
         pool_state=weighted_state,
         hook_state=input_hook_state,
     )
-    assert test["amounts_out_raw"] == [300416377716, 300416377716002]
+    assert test.amounts_out_raw == [300416377716, 300416377716002]

@@ -37,7 +37,7 @@ def test_remove_liquidity():
             ),
             pool_state=cast(PoolState, map_pool_state(pool_with_ints)),
         )
-        assert calculated_amount["bpt_amount_in_raw"] == int(remove_test["bptInRaw"])
-        assert calculated_amount["amounts_out_raw"] == list(
+        assert calculated_amount.bpt_amount_in_raw == int(remove_test["bptInRaw"])
+        assert calculated_amount.amounts_out_raw == list(
             map(int, remove_test["amountsOutRaw"])
         )

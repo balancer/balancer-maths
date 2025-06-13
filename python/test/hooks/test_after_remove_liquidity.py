@@ -138,11 +138,11 @@ def test_hook_after_remove_liquidity_no_fee():
         pool_state=custom_state_no_fee,
         hook_state=input_hook_state,
     )
-    assert test["amounts_out_raw"] == [
+    assert test.amounts_out_raw == [
         0,
         0,
     ]
-    assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw
+    assert test.bpt_amount_in_raw == remove_liquidity_input.max_bpt_amount_in_raw
 
 
 def test_hook_after_remove_liquidity_with_fee():
@@ -168,8 +168,8 @@ def test_hook_after_remove_liquidity_with_fee():
         pool_state=custom_state_with_fee,
         hook_state=input_hook_state,
     )
-    assert test["amounts_out_raw"] == [
+    assert test.amounts_out_raw == [
         0,
         0,
     ]
-    assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw
+    assert test.bpt_amount_in_raw == remove_liquidity_input.max_bpt_amount_in_raw

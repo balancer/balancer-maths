@@ -1,8 +1,10 @@
 from pools.buffer.buffer_data import BufferState
 from src.common.types import (
     AddLiquidityInput,
+    AddLiquidityResult,
     PoolState,
     RemoveLiquidityInput,
+    RemoveLiquidityResult,
     SwapInput,
 )
 from src.common.pool_base import PoolBase
@@ -43,7 +45,7 @@ class Vault:
         swap_input: SwapInput,
         pool_state: PoolState | BufferState,
         hook_state: HookState | object | None = None,
-    ):
+    ) -> int:
         if swap_input.amount_raw == 0:
             return 0
 
@@ -62,7 +64,7 @@ class Vault:
         add_liquidity_input: AddLiquidityInput,
         pool_state: PoolState,
         hook_state: HookState | object | None = None,
-    ):
+    ) -> AddLiquidityResult:
         pool_class = self._get_pool(pool_state=pool_state)
         hook_class = self._get_hook(
             hook_name=pool_state.hook_type, hook_state=hook_state
@@ -77,7 +79,7 @@ class Vault:
         remove_liquidity_input: RemoveLiquidityInput,
         pool_state: PoolState,
         hook_state: HookState | object | None = None,
-    ):
+    ) -> RemoveLiquidityResult:
         pool_class = self._get_pool(pool_state=pool_state)
         hook_class = self._get_hook(
             hook_name=pool_state.hook_type, hook_state=hook_state

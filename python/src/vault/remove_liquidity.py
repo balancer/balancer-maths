@@ -4,7 +4,12 @@ from src.common.base_pool_math import (
     compute_remove_liquidity_single_token_exact_out,
 )
 from src.common.pool_base import PoolBase
-from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput, PoolState
+from src.common.types import (
+    RemoveLiquidityKind,
+    RemoveLiquidityInput,
+    RemoveLiquidityResult,
+    PoolState,
+)
 from src.common.utils import (
     _copy_to_scaled18_apply_rate_round_up_array,
     _get_single_input_index,
@@ -21,7 +26,7 @@ def remove_liquidity(
     pool_class: PoolBase,
     hook_class: HookBase,
     hook_state: HookState | object | None,
-):
+) -> RemoveLiquidityResult:
     # Round down when removing liquidity:
     # If proportional, lower balances = lower proportional amountsOut, favoring the pool.
     # If unbalanced, lower balances = lower invariant ratio without fees.
@@ -162,7 +167,7 @@ def remove_liquidity(
             for i, a in enumerate(hook_return.hook_adjusted_amounts_out_raw):
                 amounts_out_raw[i] = a
 
-    return {
-        "bpt_amount_in_raw": bpt_amount_in,
-        "amounts_out_raw": amounts_out_raw,
-    }
+    return RemoveLiquidityResult(
+        bpt_amount_in_raw=bpt_amount_in,
+        amounts_out_raw=amounts_out_raw,
+    )

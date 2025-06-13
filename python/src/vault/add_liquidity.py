@@ -3,7 +3,12 @@ from src.common.base_pool_math import (
     compute_add_liquidity_single_token_exact_out,
 )
 from src.common.pool_base import PoolBase
-from src.common.types import AddLiquidityKind, AddLiquidityInput, PoolState
+from src.common.types import (
+    AddLiquidityKind,
+    AddLiquidityInput,
+    AddLiquidityResult,
+    PoolState,
+)
 from src.common.utils import (
     _copy_to_scaled18_apply_rate_round_down_array,
     _to_raw_undo_rate_round_up,
@@ -20,7 +25,7 @@ def add_liquidity(
     pool_class: PoolBase,
     hook_class: HookBase,
     hook_state: HookState | object | None,
-):
+) -> AddLiquidityResult:
     # Amounts are entering pool math, so round down.
     # Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,
     # but it avoids the even worse options of mutating amountsIn inside AddLiquidityParams,
@@ -141,7 +146,7 @@ def add_liquidity(
             for i, a in enumerate(hook_return.hook_adjusted_amounts_in_raw):
                 amounts_in_raw[i] = a
 
-    return {
-        "bpt_amount_out_raw": bpt_amount_out,
-        "amounts_in_raw": amounts_in_raw,
-    }
+    return AddLiquidityResult(
+        bpt_amount_out_raw=bpt_amount_out,
+        amounts_in_raw=amounts_in_raw,
+    )
