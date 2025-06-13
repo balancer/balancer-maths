@@ -13,8 +13,8 @@ from src.hooks.exit_fee.exit_fee_hook import ExitFeeHook
 from src.hooks.stable_surge.stable_surge_hook import StableSurgeHook
 from src.hooks.types import HookBase, HookState
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
-from src.pools.gyro.gyro2CLP import Gyro2CLP
-from src.pools.gyro.gyroECLP import GyroECLP
+from src.pools.gyro.gyro_2clp import Gyro2CLP
+from src.pools.gyro.gyro_eclp import GyroECLP
 from src.pools.reclamm.reclamm import ReClamm
 from src.pools.stable.stable import Stable
 from src.pools.weighted.weighted import Weighted

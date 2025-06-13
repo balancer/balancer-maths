@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from common.maths import (
+from src.common.maths import (
     WAD,
     mul_down_fixed,
     div_up_fixed,

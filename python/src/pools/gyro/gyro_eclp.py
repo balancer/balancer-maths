@@ -8,13 +8,13 @@ from src.common.maths import (
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
-from src.pools.gyro.gyroECLP_math import (
+from src.pools.gyro.gyro_eclp_data import GyroECLPState
+from src.pools.gyro.gyro_eclp_math import (
     EclpParams,
     DerivedEclpParams,
     Vector2,
     GyroECLPMath,
 )
-from src.pools.gyro.gyroECLP_data import GyroECLPState
 
 
 @dataclass

@@ -1,7 +1,7 @@
 from common.types import PoolState
 from pools.buffer.buffer_data import BufferState, map_buffer_state
-from pools.gyro.gyro2CLP_data import map_gyro_2clp_state
-from pools.gyro.gyroECLP_data import map_gyro_eclp_state
+from pools.gyro.gyro_2clp_data import map_gyro_2clp_state
+from pools.gyro.gyro_eclp_data import map_gyro_eclp_state
 from pools.reclamm.reclamm_data import map_re_clamm_state
 from pools.stable.stable_data import map_stable_state
 from pools.weighted.weighted_data import map_weighted_state

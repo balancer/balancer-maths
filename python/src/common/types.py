@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 from src.common.base_pool_state import BasePoolState
-from src.pools.gyro.gyro2CLP_data import Gyro2CLPState
-from src.pools.gyro.gyroECLP_data import GyroECLPState
+from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
+from src.pools.gyro.gyro_eclp_data import GyroECLPState
 from src.pools.reclamm.reclamm_data import ReClammState
 from src.pools.stable.stable_data import StableState
 from src.pools.weighted.weighted_data import WeightedState

@@ -12,8 +12,8 @@ from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
 from src.common.utils import MAX_UINT256
-from src.pools.gyro.gyro2CLP_data import Gyro2CLPState
-from src.pools.gyro.gyro2CLP_math import (
+from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
+from src.pools.gyro.gyro_2clp_math import (
     calculate_invariant,
     calculate_virtual_parameter0,
     calculate_virtual_parameter1,
