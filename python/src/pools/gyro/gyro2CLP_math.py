@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from unpackable import Unpackable
 
 from common.maths import (
     WAD,
@@ -13,7 +12,7 @@ from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
 
 
 @dataclass
-class QuadraticTerms(Unpackable):
+class QuadraticTerms:
     """Represents the terms needed for quadratic formula solution."""
 
     a: int
@@ -45,12 +44,17 @@ def calculate_invariant(
         Calculated invariant as integer
     """
     # Get quadratic terms from helper function
-    a, mb, b_square, mc = calculate_quadratic_terms(
+    quadratic_terms = calculate_quadratic_terms(
         balances, sqrt_alpha, sqrt_beta, rounding
     )
 
     # Calculate final result using quadratic formula
-    return calculate_quadratic(a, mb, b_square, mc)
+    return calculate_quadratic(
+        quadratic_terms.a,
+        quadratic_terms.mb,
+        quadratic_terms.b_square,
+        quadratic_terms.mc,
+    )
 
 
 def calculate_quadratic_terms(

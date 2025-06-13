@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from typing import List
 
-from unpackable import Unpackable
-
 from src.common.maths import (
     Rounding,
     mul_down_fixed,
@@ -25,7 +23,7 @@ from src.pools.gyro.gyro2CLP_math import (
 
 
 @dataclass
-class VirtualBalances(Unpackable):
+class VirtualBalances:
     """Represents the virtual balances for a pool."""
 
     virtual_balance_in: int
@@ -54,7 +52,7 @@ class Gyro2CLP(PoolBase):
             swap_params.index_out
         ]
 
-        virtual_balance_in, virtual_balance_out = self.get_virtual_offsets(
+        virtual_balances = self.get_virtual_offsets(
             balance_token_in_scaled18,
             balance_token_out_scaled18,
             token_in_is_token_0,
@@ -67,16 +65,16 @@ class Gyro2CLP(PoolBase):
                 balance_token_in_scaled18,
                 balance_token_out_scaled18,
                 swap_params.amount_given_scaled18,
-                virtual_balance_in,
-                virtual_balance_out,
+                virtual_balances.virtual_balance_in,
+                virtual_balances.virtual_balance_out,
             )
 
         return calc_in_given_out(
             balance_token_in_scaled18,
             balance_token_out_scaled18,
             swap_params.amount_given_scaled18,
-            virtual_balance_in,
-            virtual_balance_out,
+            virtual_balances.virtual_balance_in,
+            virtual_balances.virtual_balance_out,
         )
 
     def compute_invariant(

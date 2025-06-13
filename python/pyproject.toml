@@ -3,9 +3,6 @@ name = "balancer-maths"
 version = "0.1.0"
 description = "Balancer mathematics library"
 requires-python = ">=3.10"
-dependencies = [
-    "unpackable",
-]
 
 [build-system]
 requires = ["hatchling"]
