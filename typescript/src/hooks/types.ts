@@ -1,10 +1,4 @@
-import {
-    AddKind,
-    RemoveKind,
-    SwapInput,
-    SwapKind,
-    SwapParams,
-} from '@/vault/types';
+import { AddKind, RemoveKind, SwapKind, SwapParams } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
 import { HookStateAkron } from './akron/akronHook';

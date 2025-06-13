@@ -4,6 +4,10 @@ from typing import List
 
 from src.common.swap_params import SwapParams
 from src.common.types import AddLiquidityKind, RemoveLiquidityKind, SwapKind
+from src.hooks.exit_fee.types import ExitFeeHookState
+from src.hooks.stable_surge.types import StableSurgeHookState
+
+HookState = StableSurgeHookState | ExitFeeHookState
 
 
 @dataclass
@@ -84,7 +88,7 @@ class HookBase(ABC):
         max_amounts_in_scaled18: list[int],
         min_bpt_amount_out: int,
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> BeforeAddLiquidityResult:
         pass
 
@@ -96,7 +100,7 @@ class HookBase(ABC):
         amounts_in_raw: list[int],
         bpt_amount_out: int,
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> AfterAddLiquidityResult:
         pass
 
@@ -107,7 +111,7 @@ class HookBase(ABC):
         max_bpt_amount_in: int,
         min_amounts_out_scaled18: list[int],
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> BeforeRemoveLiquidityResult:
         pass
 
@@ -119,7 +123,7 @@ class HookBase(ABC):
         amounts_out_scaled18: list[int],
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> AfterRemoveLiquidityResult:
         pass
 
@@ -127,7 +131,7 @@ class HookBase(ABC):
     def on_before_swap(
         self,
         swap_params: SwapParams,
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> BeforeSwapResult:
         pass
 
@@ -135,7 +139,7 @@ class HookBase(ABC):
     def on_after_swap(
         self,
         after_swap_params: AfterSwapParams,
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> AfterSwapResult:
         pass
 
@@ -144,6 +148,6 @@ class HookBase(ABC):
         self,
         swap_params: SwapParams,
         static_swap_fee_percentage: int,
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> DynamicSwapFeeResult:
         pass

@@ -1,9 +1,11 @@
 import sys
 import os
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import AfterAddLiquidityResult
+from src.hooks.types import AfterAddLiquidityResult, HookState
 from src.pools.weighted.weighted_data import map_weighted_state
 from src.vault.vault import Vault
 
@@ -14,6 +16,17 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
+
+
+class HasExpectedBalancesLiveScaled18(Protocol):
+    expected_balances_live_scaled18: list
+
+
+def has_expected_balances_live_scaled18(
+    obj: object,
+) -> TypeGuard[HasExpectedBalancesLiveScaled18]:
+    """Type guard to check if an object has a expected_balances_live_scaled18 attribute."""
+    return hasattr(obj, "expected_balances_live_scaled18")
 
 
 class CustomHook(DefaultHook):
@@ -29,19 +42,15 @@ class CustomHook(DefaultHook):
         amounts_in_raw: list[int],
         bpt_amount_out: int,
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object,
     ) -> AfterAddLiquidityResult:
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "expected_balances_live_scaled18" in hook_state
-        ):
+        if not has_expected_balances_live_scaled18(hook_state):
             raise ValueError("Unexpected hookState")
         assert kind == add_liquidity_input.kind
         assert bpt_amount_out == 146464294351867896
         assert amounts_in_scaled18 == add_liquidity_input.max_amounts_in_raw
         assert amounts_in_raw == add_liquidity_input.max_amounts_in_raw
-        assert balances_scaled18 == hook_state["expected_balances_live_scaled18"]
+        assert balances_scaled18 == hook_state.expected_balances_live_scaled18
         return AfterAddLiquidityResult(
             success=True,
             hook_adjusted_amounts_in_raw=[
@@ -84,12 +93,12 @@ vault = Vault(
 def test_hook_after_add_liquidity_no_fee():
     # aggregateSwapFee of 0 should not take any protocol fees from updated balances
     # hook state is used to pass expected value to tests
-    input_hook_state = {
-        "expected_balances_live_scaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             1200000000000000000,
             1100000000000000000,
-        ],
-    }
+        ]
+    )
     weighted_state_no_fee = map_weighted_state({**pool, "aggregateSwapFee": 0})
     test = vault.add_liquidity(
         add_liquidity_input,
@@ -108,12 +117,12 @@ def test_hook_after_add_liquidity_with_fee():
     # aggregateSwapFee of 50% should take half of remaining
     # hook state is used to pass expected value to tests
     # aggregate fee amount is 2554373534622012 which is deducted from amount in
-    input_hook_state = {
-        "expected_balances_live_scaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             1200000000000000000 - 2554373534622012,
             1100000000000000000,
-        ],
-    }
+        ]
+    )
     weighted_state_with_fee = map_weighted_state(
         {**pool, "aggregateSwapFee": 500000000000000000}
     )

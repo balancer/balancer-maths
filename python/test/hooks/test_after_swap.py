@@ -1,6 +1,8 @@
 import os
 import sys
 from test.test_custom_pool import CustomPoolState, map_custom_pool_state
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from src.common.maths import Rounding
 from src.common.pool_base import PoolBase
@@ -11,6 +13,7 @@ from src.hooks.default_hook import DefaultHook
 from src.hooks.types import (
     AfterSwapParams,
     AfterSwapResult,
+    HookState,
 )
 from src.vault.vault import Vault
 
@@ -80,6 +83,17 @@ class CustomPool(PoolBase):
         return 1
 
 
+class HasExpectedBalancesLiveScaled18(Protocol):
+    expected_balances_live_scaled18: list
+
+
+def has_expected_balances_live_scaled18(
+    obj: object,
+) -> TypeGuard[HasExpectedBalancesLiveScaled18]:
+    """Type guard to check if an object has a expected_balances_live_scaled18 attribute."""
+    return hasattr(obj, "expected_balances_live_scaled18")
+
+
 class CustomHook(DefaultHook):
     def __init__(self):
         super().__init__()
@@ -89,15 +103,11 @@ class CustomHook(DefaultHook):
     def on_after_swap(
         self,
         after_swap_params: AfterSwapParams,
-        hook_state: dict,
+        hook_state: HookState | object,
     ) -> AfterSwapResult:
         token_in_balance_scaled18 = after_swap_params.token_in_balance_scaled18
         token_out_balance_scaled18 = after_swap_params.token_out_balance_scaled18
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "expectedBalancesLiveScaled18" in hook_state
-        ):
+        if not has_expected_balances_live_scaled18(hook_state):
             raise ValueError("Unexpected hookState")
         assert after_swap_params.kind == swap_input.swap_kind
 
@@ -107,9 +117,10 @@ class CustomHook(DefaultHook):
         assert after_swap_params.amount_calculated_raw == expected_calculated
         assert after_swap_params.amount_calculated_scaled18 == expected_calculated
         assert after_swap_params.amount_out_scaled18 == expected_calculated
-        assert [token_in_balance_scaled18, token_out_balance_scaled18] == hook_state[
-            "expectedBalancesLiveScaled18"
-        ]
+        assert [
+            token_in_balance_scaled18,
+            token_out_balance_scaled18,
+        ] == hook_state.expected_balances_live_scaled18
         return AfterSwapResult(success=True, hook_adjusted_amount_calculated_raw=1)
 
 
@@ -123,12 +134,12 @@ def test_hook_after_swap_no_fee():
     # aggregateSwapFee of 0 should not take any protocol fees from updated balances
     # hook state is used to pass expected value to tests
     # with aggregateFee = 0, balance out is just balance - calculated
-    input_hook_state = {
-        "expectedBalancesLiveScaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             pool["balancesLiveScaled18"][0] + swap_input.amount_raw,
             pool["balancesLiveScaled18"][1] - expected_calculated,
-        ],
-    }
+        ]
+    )
     custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
     test = vault.swap(swap_input, custom_state_no_fee, hook_state=input_hook_state)
     assert test == 1
@@ -139,14 +150,14 @@ def test_hook_after_swap_with_fee():
     # hook state is used to pass expected value to tests
     # Aggregate fee amount is 50% of swap fee
     expected_aggregate_swap_fee_amount = 50000000000000000
-    input_hook_state = {
-        "expectedBalancesLiveScaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             pool["balancesLiveScaled18"][0]
             + swap_input.amount_raw
             - expected_aggregate_swap_fee_amount,
             pool["balancesLiveScaled18"][1] - expected_calculated,
-        ],
-    }
+        ]
+    )
     custom_state_with_fee = map_custom_pool_state(
         {**pool, "aggregateSwapFee": 500000000000000000}
     )

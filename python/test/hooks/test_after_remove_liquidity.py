@@ -2,13 +2,14 @@ from test.test_custom_pool import map_custom_pool_state, CustomPoolState
 
 import sys
 import os
-
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from src.common.pool_base import PoolBase
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 from src.common.maths import Rounding
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import AfterRemoveLiquidityResult
+from src.hooks.types import AfterRemoveLiquidityResult, HookState
 from src.vault.vault import Vault
 
 # Get the directory of the current file
@@ -47,6 +48,17 @@ class CustomPool(PoolBase):
         return 1
 
 
+class HasExpectedBalancesLiveScaled18(Protocol):
+    expected_balances_live_scaled18: list
+
+
+def has_expected_balances_live_scaled18(
+    obj: object,
+) -> TypeGuard[HasExpectedBalancesLiveScaled18]:
+    """Type guard to check if an object has a expected_balances_live_scaled18 attribute."""
+    return hasattr(obj, "expected_balances_live_scaled18")
+
+
 class CustomHook(DefaultHook):
     def __init__(self):
         super().__init__()
@@ -60,19 +72,15 @@ class CustomHook(DefaultHook):
         amounts_out_scaled18: list[int],
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object,
     ) -> AfterRemoveLiquidityResult:
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "expected_balances_live_scaled18" in hook_state
-        ):
+        if not has_expected_balances_live_scaled18(hook_state):
             raise ValueError("Unexpected hookState")
         assert kind == remove_liquidity_input.kind
         assert bpt_amount_in == remove_liquidity_input.max_bpt_amount_in_raw
         assert amounts_out_scaled18 == [0, 909999999999999999]
         assert amounts_out_raw == [0, 909999999999999999]
-        assert balances_scaled18 == hook_state["expected_balances_live_scaled18"]
+        assert balances_scaled18 == hook_state.expected_balances_live_scaled18
         return AfterRemoveLiquidityResult(
             success=True,
             hook_adjusted_amounts_out_raw=[0] * len(amounts_out_scaled18),
@@ -118,12 +126,12 @@ def test_hook_after_remove_liquidity_no_fee():
     # Amount out is 0.9099...
     # Leaves 0.090000000000000001
     # Swap fee amount is: 0.09 which is all left in pool because aggregateFee is 0
-    input_hook_state = {
-        "expected_balances_live_scaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             1000000000000000000,
             90000000000000001,
-        ],
-    }
+        ]
+    )
     custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
     test = vault.remove_liquidity(
         remove_liquidity_input,
@@ -146,12 +154,12 @@ def test_hook_after_remove_liquidity_with_fee():
     # Swap fee amount is: 0.09
     # Aggregate fee amount is 50% of swap fee: 0.045
     # Leaves 0.045000000000000001 in pool
-    input_hook_state = {
-        "expected_balances_live_scaled18": [
+    input_hook_state = SimpleNamespace(
+        expected_balances_live_scaled18=[
             1000000000000000000,
             45000000000000001,
-        ],
-    }
+        ]
+    )
     custom_state_with_fee = map_custom_pool_state(
         {**pool, "aggregateSwapFee": 500000000000000000}
     )

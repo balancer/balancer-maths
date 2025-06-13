@@ -1,9 +1,10 @@
-from typing import Dict, List
+from typing import List
 
-from src.hooks.default_hook import DefaultHook
 from src.common.maths import div_down_fixed, mul_down_fixed, complement_fixed
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
+from src.hooks.default_hook import DefaultHook
+from src.hooks.stable_surge.types import StableSurgeHookState
 from src.hooks.types import DynamicSwapFeeResult
 from src.pools.stable.stable import Stable
 from src.pools.stable.stable_data import StableMutable
@@ -17,9 +18,9 @@ class StableSurgeHook(DefaultHook):
         self,
         swap_params: SwapParams,
         static_swap_fee_percentage: int,
-        hook_state: Dict,
+        hook_state: StableSurgeHookState,
     ) -> DynamicSwapFeeResult:
-        stable_state = StableMutable(amp=hook_state["amp"])
+        stable_state = StableMutable(amp=hook_state.amp)
         stable_pool = Stable(stable_state)
 
         return DynamicSwapFeeResult(
@@ -27,8 +28,8 @@ class StableSurgeHook(DefaultHook):
             dynamic_swap_fee=self.get_surge_fee_percentage(
                 swap_params,
                 stable_pool,
-                hook_state["surgeThresholdPercentage"],
-                hook_state["maxSurgeFeePercentage"],
+                hook_state.surge_threshold_percentage,
+                hook_state.max_surge_fee_percentage,
                 static_swap_fee_percentage,
             ),
         )

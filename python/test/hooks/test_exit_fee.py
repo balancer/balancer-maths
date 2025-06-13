@@ -2,6 +2,7 @@ import sys
 import os
 
 from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
+from src.hooks.exit_fee.types import ExitFeeHookState
 from src.pools.weighted.weighted_data import map_weighted_state
 from src.vault.vault import Vault
 
@@ -45,10 +46,10 @@ vault = Vault()
 
 
 def test_hook_exit_fee_no_fee():
-    input_hook_state = {
-        "removeLiquidityHookFeePercentage": 0,
-        "tokens": pool["tokens"],
-    }
+    input_hook_state = ExitFeeHookState(
+        remove_liquidity_hook_fee_percentage=0,
+        tokens=pool["tokens"],
+    )
     weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
         remove_liquidity_input, weighted_state, hook_state=input_hook_state
@@ -58,10 +59,10 @@ def test_hook_exit_fee_no_fee():
 
 def test_hook_exit_fee_with_fee():
     # 5% fee
-    input_hook_state = {
-        "removeLiquidityHookFeePercentage": 50000000000000000,
-        "tokens": pool["tokens"],
-    }
+    input_hook_state = ExitFeeHookState(
+        remove_liquidity_hook_fee_percentage=50000000000000000,
+        tokens=pool["tokens"],
+    )
     weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
         remove_liquidity_input, weighted_state, hook_state=input_hook_state

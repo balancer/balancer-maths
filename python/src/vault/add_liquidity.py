@@ -11,14 +11,15 @@ from src.common.utils import (
     _get_single_input_index,
     _require_unbalanced_liquidity_enabled,
 )
+from src.hooks.types import HookBase, HookState
 
 
 def add_liquidity(
     add_liquidity_input: AddLiquidityInput,
     pool_state: PoolState,
     pool_class: PoolBase,
-    hook_class,
-    hook_state,
+    hook_class: HookBase,
+    hook_state: HookState | object | None,
 ):
     # Amounts are entering pool math, so round down.
     # Introducing amountsInScaled18 here and passing it through to _addLiquidity is not ideal,

@@ -12,7 +12,7 @@ from src.common.utils import (
     _compute_and_charge_aggregate_swap_fees,
     _require_unbalanced_liquidity_enabled,
 )
-from hooks.types import HookBase
+from src.hooks.types import HookBase, HookState
 
 
 def remove_liquidity(
@@ -20,7 +20,7 @@ def remove_liquidity(
     pool_state: PoolState,
     pool_class: PoolBase,
     hook_class: HookBase,
-    hook_state,
+    hook_state: HookState | object | None,
 ):
     # Round down when removing liquidity:
     # If proportional, lower balances = lower proportional amountsOut, favoring the pool.

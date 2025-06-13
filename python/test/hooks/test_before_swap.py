@@ -1,10 +1,12 @@
 import sys
 import os
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from src.common.types import SwapKind, SwapInput
 from src.common.swap_params import SwapParams
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import BeforeSwapResult
+from src.hooks.types import BeforeSwapResult, HookState
 from src.pools.weighted.weighted_data import map_weighted_state
 from src.vault.vault import Vault
 
@@ -44,24 +46,32 @@ swap_input = SwapInput(
 )
 
 
+class HasBalanceChange(Protocol):
+    balance_change: list
+
+
+def has_balance_change(obj: object) -> TypeGuard[HasBalanceChange]:
+    """Type guard to check if an object has a balance_change attribute."""
+    return hasattr(obj, "balance_change")
+
+
 class CustomHook(DefaultHook):
     def __init__(self):
         super().__init__()
         self.should_call_before_swap = True
 
-    def on_before_swap(self, swap_params: SwapParams, hook_state):
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "balanceChange" in hook_state
-        ):
-            raise ValueError("Unexpected hookState")
+    def on_before_swap(self, swap_params: SwapParams, hook_state: HookState | object):
+        if not has_balance_change(hook_state):
+            raise ValueError("hook_state must have a balance_change attribute")
+
+        # Now the type checker knows hook_state has balance_change
+        balance_change = hook_state.balance_change
         assert swap_params.swap_kind == swap_input.swap_kind
         assert swap_params.index_in == 0
         assert swap_params.index_out == 1
         return BeforeSwapResult(
             success=True,
-            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+            hook_adjusted_balances_scaled18=balance_change,
         )
 
 
@@ -73,9 +83,9 @@ vault = Vault(
 def test_before_swap():
     # should alter pool balances
     # hook state is used to pass new balances which give expected swap result
-    input_hook_state = {
-        "balanceChange": [1000000000000000000, 1000000000000000000],
-    }
+    input_hook_state = SimpleNamespace(
+        balance_change=[1000000000000000000, 1000000000000000000]
+    )
     weighted_state = map_weighted_state(pool)
     test = vault.swap(swap_input, weighted_state, hook_state=input_hook_state)
     assert test == 89999999

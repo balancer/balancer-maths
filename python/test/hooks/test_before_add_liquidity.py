@@ -1,9 +1,11 @@
 import sys
 import os
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import BeforeAddLiquidityResult
+from src.hooks.types import BeforeAddLiquidityResult, HookState
 from src.pools.weighted.weighted_data import map_weighted_state
 from src.vault.vault import Vault
 
@@ -15,6 +17,15 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
+
+
+class HasBalanceChange(Protocol):
+    balance_change: list
+
+
+def has_balance_change(obj: object) -> TypeGuard[HasBalanceChange]:
+    """Type guard to check if an object has a balance_change attribute."""
+    return hasattr(obj, "balance_change")
 
 
 class CustomHook(DefaultHook):
@@ -29,13 +40,9 @@ class CustomHook(DefaultHook):
         max_amounts_in_scaled18: list[int],
         min_bpt_amount_out: int,
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object,
     ) -> BeforeAddLiquidityResult:
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "balanceChange" in hook_state
-        ):
+        if not has_balance_change(hook_state):
             raise ValueError("Unexpected hookState")
         assert kind == add_liquidity_input.kind
         assert max_amounts_in_scaled18 == add_liquidity_input.max_amounts_in_raw
@@ -44,7 +51,7 @@ class CustomHook(DefaultHook):
 
         return BeforeAddLiquidityResult(
             success=True,
-            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+            hook_adjusted_balances_scaled18=hook_state.balance_change,
         )
 
 
@@ -82,9 +89,9 @@ vault = Vault(
 def test_hook_before_add_liquidity_no_fee():
     # should alter pool balances
     # hook state is used to pass new balances which give expected bptAmount out
-    input_hook_state = {
-        "balanceChange": [1000000000000000000, 1000000000000000000],
-    }
+    input_hook_state = SimpleNamespace(
+        balance_change=[1000000000000000000, 1000000000000000000]
+    )
     weighted_state = map_weighted_state(pool)
     test = vault.add_liquidity(
         add_liquidity_input, weighted_state, hook_state=input_hook_state

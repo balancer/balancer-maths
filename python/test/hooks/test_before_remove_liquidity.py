@@ -1,10 +1,12 @@
 import sys
 import os
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
 from test.test_custom_pool import map_custom_pool_state
 from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import BeforeRemoveLiquidityResult
+from src.hooks.types import BeforeRemoveLiquidityResult, HookState
 from src.vault.vault import Vault
 
 # Get the directory of the current file
@@ -49,6 +51,15 @@ class CustomPool:
         return 1
 
 
+class HasBalanceChange(Protocol):
+    balance_change: list
+
+
+def has_balance_change(obj: object) -> TypeGuard[HasBalanceChange]:
+    """Type guard to check if an object has a balance_change attribute."""
+    return hasattr(obj, "balance_change")
+
+
 class CustomHook(DefaultHook):
     def __init__(self):
         super().__init__()
@@ -60,13 +71,9 @@ class CustomHook(DefaultHook):
         max_bpt_amount_in: int,
         min_amounts_out_scaled18: list[int],
         balances_scaled18: list[int],
-        hook_state: dict,
+        hook_state: HookState | object | None,
     ) -> BeforeRemoveLiquidityResult:
-        if not (
-            isinstance(hook_state, dict)
-            and hook_state is not None
-            and "balanceChange" in hook_state
-        ):
+        if not has_balance_change(hook_state):
             raise ValueError("Unexpected hookState")
         assert kind == remove_liquidity_input.kind
         assert max_bpt_amount_in == remove_liquidity_input.max_bpt_amount_in_raw
@@ -75,7 +82,7 @@ class CustomHook(DefaultHook):
 
         return BeforeRemoveLiquidityResult(
             success=True,
-            hook_adjusted_balances_scaled18=hook_state["balanceChange"],
+            hook_adjusted_balances_scaled18=hook_state.balance_change,
         )
 
 
@@ -108,9 +115,9 @@ vault = Vault(
 def test_hook_before_remove_liquidity():
     # should alter pool balances
     # hook state is used to pass new balances which give expected result
-    input_hook_state = {
-        "balanceChange": [1000000000000000000, 1000000000000000000],
-    }
+    input_hook_state = SimpleNamespace(
+        balance_change=[1000000000000000000, 1000000000000000000]
+    )
 
     custom_pool_state = map_custom_pool_state(pool)
     test = vault.remove_liquidity(

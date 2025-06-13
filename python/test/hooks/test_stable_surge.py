@@ -1,6 +1,7 @@
 from src.common.types import SwapInput, SwapKind
 from src.pools.stable.stable_data import map_stable_state
 from src.vault.vault import Vault
+from src.hooks.stable_surge.types import map_stable_surge_hook_state
 
 pool_state = {
     "poolType": "STABLE",
@@ -20,12 +21,14 @@ pool_state = {
     "supportsUnbalancedLiquidity": True,
 }
 
-hook_state = {
-    "hookType": "StableSurge",
-    "surgeThresholdPercentage": 300000000000000000,
-    "maxSurgeFeePercentage": 950000000000000000,
-    "amp": pool_state["amp"],
-}
+hook_state = map_stable_surge_hook_state(
+    {
+        "hookType": "StableSurge",
+        "surgeThresholdPercentage": 300000000000000000,
+        "maxSurgeFeePercentage": 950000000000000000,
+        "amp": pool_state["amp"],
+    }
+)
 
 vault = Vault()
 stable_state = map_stable_state(pool_state)

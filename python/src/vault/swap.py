@@ -11,7 +11,7 @@ from src.common.utils import (
     _to_raw_undo_rate_round_up,
     _compute_and_charge_aggregate_swap_fees,
 )
-from src.hooks.types import AfterSwapParams, HookBase
+from src.hooks.types import AfterSwapParams, HookBase, HookState
 
 _MINIMUM_TRADE_AMOUNT = 1e6
 
@@ -21,7 +21,7 @@ def swap(
     pool_state: PoolState,
     pool_class: PoolBase,
     hook_class: HookBase,
-    hook_state,
+    hook_state: HookState | object | None,
 ) -> int:
     input_index = find_case_insensitive_index_in_list(
         pool_state.tokens, swap_input.token_in

@@ -1,10 +1,15 @@
 from pools.buffer.buffer_data import BufferState
-from src.common.types import PoolState, SwapInput
+from src.common.types import (
+    AddLiquidityInput,
+    PoolState,
+    RemoveLiquidityInput,
+    SwapInput,
+)
 from src.common.pool_base import PoolBase
 from src.hooks.default_hook import DefaultHook
-from src.hooks.exit_fee_hook import ExitFeeHook
-from src.hooks.stable_surge_hook import StableSurgeHook
-from src.hooks.types import HookBase
+from src.hooks.exit_fee.exit_fee_hook import ExitFeeHook
+from src.hooks.stable_surge.stable_surge_hook import StableSurgeHook
+from src.hooks.types import HookBase, HookState
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from src.pools.gyro.gyro2CLP import Gyro2CLP
 from src.pools.gyro.gyroECLP import GyroECLP
@@ -37,7 +42,7 @@ class Vault:
         swap_input: SwapInput,
         pool_state: PoolState | BufferState,
         *,
-        hook_state=None
+        hook_state: HookState | object | None = None,
     ):
         if swap_input.amount_raw == 0:
             return 0
@@ -50,7 +55,11 @@ class Vault:
         return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
 
     def add_liquidity(
-        self, add_liquidity_input, pool_state: PoolState, *, hook_state=None
+        self,
+        add_liquidity_input: AddLiquidityInput,
+        pool_state: PoolState,
+        *,
+        hook_state: HookState | object | None = None,
     ):
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.hook_type, hook_state)
@@ -59,7 +68,11 @@ class Vault:
         )
 
     def remove_liquidity(
-        self, remove_liquidity_input, pool_state: PoolState, *, hook_state=None
+        self,
+        remove_liquidity_input: RemoveLiquidityInput,
+        pool_state: PoolState,
+        *,
+        hook_state: HookState | object | None = None,
     ):
         pool_class = self._get_pool(pool_state)
         hook_class = self._get_hook(pool_state.hook_type, hook_state)
@@ -74,7 +87,9 @@ class Vault:
 
         return pool_class(pool_state)
 
-    def _get_hook(self, hook_name, hook_state) -> HookBase:
+    def _get_hook(
+        self, hook_name: str | None, hook_state: HookState | object | None
+    ) -> HookBase:
         if hook_name is None:
             return DefaultHook()
         hook_class = self.hook_classes.get(hook_name, None)
