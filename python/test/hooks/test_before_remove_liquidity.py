@@ -121,7 +121,9 @@ def test_hook_before_remove_liquidity():
 
     custom_pool_state = map_custom_pool_state(pool)
     test = vault.remove_liquidity(
-        remove_liquidity_input, custom_pool_state, hook_state=input_hook_state
+        remove_liquidity_input=remove_liquidity_input,
+        pool_state=custom_pool_state,
+        hook_state=input_hook_state,
     )
     assert test["bpt_amount_in_raw"] == remove_liquidity_input.max_bpt_amount_in_raw
     assert test["amounts_out_raw"] == [

@@ -134,8 +134,8 @@ def test_hook_after_remove_liquidity_no_fee():
     )
     custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
     test = vault.remove_liquidity(
-        remove_liquidity_input,
-        custom_state_no_fee,
+        remove_liquidity_input=remove_liquidity_input,
+        pool_state=custom_state_no_fee,
         hook_state=input_hook_state,
     )
     assert test["amounts_out_raw"] == [
@@ -164,7 +164,9 @@ def test_hook_after_remove_liquidity_with_fee():
         {**pool, "aggregateSwapFee": 500000000000000000}
     )
     test = vault.remove_liquidity(
-        remove_liquidity_input, custom_state_with_fee, hook_state=input_hook_state
+        remove_liquidity_input=remove_liquidity_input,
+        pool_state=custom_state_with_fee,
+        hook_state=input_hook_state,
     )
     assert test["amounts_out_raw"] == [
         0,

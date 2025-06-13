@@ -101,8 +101,8 @@ def test_hook_after_add_liquidity_no_fee():
     )
     weighted_state_no_fee = map_weighted_state({**pool, "aggregateSwapFee": 0})
     test = vault.add_liquidity(
-        add_liquidity_input,
-        weighted_state_no_fee,
+        add_liquidity_input=add_liquidity_input,
+        pool_state=weighted_state_no_fee,
         hook_state=input_hook_state,
     )
     # Hook adds 1n to amountsIn
@@ -127,7 +127,9 @@ def test_hook_after_add_liquidity_with_fee():
         {**pool, "aggregateSwapFee": 500000000000000000}
     )
     test = vault.add_liquidity(
-        add_liquidity_input, weighted_state_with_fee, hook_state=input_hook_state
+        add_liquidity_input=add_liquidity_input,
+        pool_state=weighted_state_with_fee,
+        hook_state=input_hook_state,
     )
     # Hook adds 1n to amountsIn
     assert test["amounts_in_raw"] == [

@@ -30,13 +30,13 @@ def test_add_liquidity():
         # note any amounts must be passed as ints not strings
         pool_with_ints = transform_strings_to_ints(pool)
         calculated_amount = vault.add_liquidity(
-            AddLiquidityInput(
+            add_liquidity_input=AddLiquidityInput(
                 pool=pool["poolAddress"],
                 max_amounts_in_raw=list(map(int, add_test["inputAmountsRaw"])),
                 min_bpt_amount_out_raw=int(add_test["bptOutRaw"]),
                 kind=AddLiquidityKind(add_test["kind"]),
             ),
-            cast(PoolState, map_pool_state(pool_with_ints)),
+            pool_state=cast(PoolState, map_pool_state(pool_with_ints)),
         )
         assert calculated_amount["bpt_amount_out_raw"] == int(add_test["bptOutRaw"])
         assert calculated_amount["amounts_in_raw"] == list(

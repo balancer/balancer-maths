@@ -52,7 +52,9 @@ def test_hook_exit_fee_no_fee():
     )
     weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
-        remove_liquidity_input, weighted_state, hook_state=input_hook_state
+        remove_liquidity_input=remove_liquidity_input,
+        pool_state=weighted_state,
+        hook_state=input_hook_state,
     )
     assert test["amounts_out_raw"] == [316227766016, 316227766016844]
 
@@ -65,6 +67,8 @@ def test_hook_exit_fee_with_fee():
     )
     weighted_state = map_weighted_state(pool)
     test = vault.remove_liquidity(
-        remove_liquidity_input, weighted_state, hook_state=input_hook_state
+        remove_liquidity_input=remove_liquidity_input,
+        pool_state=weighted_state,
+        hook_state=input_hook_state,
     )
     assert test["amounts_out_raw"] == [300416377716, 300416377716002]

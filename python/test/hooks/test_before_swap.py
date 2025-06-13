@@ -87,5 +87,9 @@ def test_before_swap():
         balance_change=[1000000000000000000, 1000000000000000000]
     )
     weighted_state = map_weighted_state(pool)
-    test = vault.swap(swap_input, weighted_state, hook_state=input_hook_state)
+    test = vault.swap(
+        swap_input=swap_input,
+        pool_state=weighted_state,
+        hook_state=input_hook_state,
+    )
     assert test == 89999999

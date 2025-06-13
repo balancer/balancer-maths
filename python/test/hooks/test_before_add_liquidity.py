@@ -94,7 +94,9 @@ def test_hook_before_add_liquidity_no_fee():
     )
     weighted_state = map_weighted_state(pool)
     test = vault.add_liquidity(
-        add_liquidity_input, weighted_state, hook_state=input_hook_state
+        add_liquidity_input=add_liquidity_input,
+        pool_state=weighted_state,
+        hook_state=input_hook_state,
     )
     # Hook adds 1n to amountsIn
     assert test["amounts_in_raw"] == [

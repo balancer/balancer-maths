@@ -39,9 +39,9 @@ class Vault:
 
     def swap(
         self,
+        *,
         swap_input: SwapInput,
         pool_state: PoolState | BufferState,
-        *,
         hook_state: HookState | object | None = None,
     ):
         if swap_input.amount_raw == 0:
@@ -50,37 +50,43 @@ class Vault:
         # buffer is handled separately than a "normal" pool
         if isinstance(pool_state, BufferState):
             return erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
-        pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.hook_type, hook_state)
+        pool_class = self._get_pool(pool_state=pool_state)
+        hook_class = self._get_hook(
+            hook_name=pool_state.hook_type, hook_state=hook_state
+        )
         return swap(swap_input, pool_state, pool_class, hook_class, hook_state)
 
     def add_liquidity(
         self,
+        *,
         add_liquidity_input: AddLiquidityInput,
         pool_state: PoolState,
-        *,
         hook_state: HookState | object | None = None,
     ):
-        pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.hook_type, hook_state)
+        pool_class = self._get_pool(pool_state=pool_state)
+        hook_class = self._get_hook(
+            hook_name=pool_state.hook_type, hook_state=hook_state
+        )
         return add_liquidity(
             add_liquidity_input, pool_state, pool_class, hook_class, hook_state
         )
 
     def remove_liquidity(
         self,
+        *,
         remove_liquidity_input: RemoveLiquidityInput,
         pool_state: PoolState,
-        *,
         hook_state: HookState | object | None = None,
     ):
-        pool_class = self._get_pool(pool_state)
-        hook_class = self._get_hook(pool_state.hook_type, hook_state)
+        pool_class = self._get_pool(pool_state=pool_state)
+        hook_class = self._get_hook(
+            hook_name=pool_state.hook_type, hook_state=hook_state
+        )
         return remove_liquidity(
             remove_liquidity_input, pool_state, pool_class, hook_class, hook_state
         )
 
-    def _get_pool(self, pool_state: PoolState) -> PoolBase:
+    def _get_pool(self, *, pool_state: PoolState) -> PoolBase:
         pool_class = self.pool_classes[pool_state.pool_type]
         if pool_class is None:
             raise SystemError("Unsupported Pool Type: ", pool_state.pool_type)
@@ -88,7 +94,7 @@ class Vault:
         return pool_class(pool_state)
 
     def _get_hook(
-        self, hook_name: str | None, hook_state: HookState | object | None
+        self, *, hook_name: str | None, hook_state: HookState | object | None
     ) -> HookBase:
         if hook_name is None:
             return DefaultHook()
