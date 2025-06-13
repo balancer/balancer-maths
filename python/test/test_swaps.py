@@ -22,7 +22,7 @@ def test_swaps():
     for swap_test in test_data["swaps"]:
         print(swap_test["test"])
         if swap_test["test"] not in test_data["pools"]:
-            raise Exception("Pool not in test data: ", swap_test["test"])
+            raise ValueError(f"Pool not in test data: {swap_test['test']}")
         pool = test_data["pools"][swap_test["test"]]
         # note any amounts must be passed as ints not strings
         pool_with_ints = transform_strings_to_ints(pool)

@@ -22,7 +22,7 @@ def test_remove_liquidity():
     for remove_test in test_data["removes"]:
         print("Remove Liquidity Test: ", remove_test["test"])
         if remove_test["test"] not in test_data["pools"]:
-            raise Exception("Pool not in test data: ", remove_test["test"])
+            raise ValueError(f"Pool not in test data: {remove_test['test']}")
         pool = test_data["pools"][remove_test["test"]]
         if pool["poolType"] == "Buffer":
             raise ValueError("Buffer pools do not support addLiquidity")

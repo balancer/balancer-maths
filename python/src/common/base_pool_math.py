@@ -1,3 +1,4 @@
+from typing import Callable
 from common.maths import (
     mul_down_fixed,
     div_down_fixed,
@@ -10,12 +11,12 @@ from common.maths import (
 
 
 def compute_add_liquidity_unbalanced(
-    current_balances,
-    exact_amounts,
-    total_supply,
-    swap_fee_percentage,
-    max_invariant_ratio,
-    compute_invariant,
+    current_balances: list[int],
+    exact_amounts: list[int],
+    total_supply: int,
+    swap_fee_percentage: int,
+    max_invariant_ratio: int,
+    compute_invariant: Callable[[list[int], Rounding], int],
 ):
     # /***********************************************************************
     # //                                                                    //
@@ -36,8 +37,8 @@ def compute_add_liquidity_unbalanced(
     swap_fee_amounts = [0] * num_tokens
 
     # Loop through each token, updating the balance with the added amount.
-    for index in range(len(current_balances)):
-        new_balances[index] = current_balances[index] + exact_amounts[index] - 1
+    for index, balance in enumerate(current_balances):
+        new_balances[index] = balance + exact_amounts[index] - 1
 
     # Calculate the invariant using the current balances (before the addition).
     current_invariant = compute_invariant(current_balances, Rounding.ROUND_UP)
@@ -55,15 +56,13 @@ def compute_add_liquidity_unbalanced(
         )
 
     # Loop through each token to apply fees if necessary.
-    for index in range(len(current_balances)):
+    for index, current_balance in enumerate(current_balances):
         # // Check if the new balance is greater than the equivalent proportional balance.
         # // If so, calculate the taxable amount, rounding in favor of the protocol.
         # // We round the second term down to subtract less and get a higher `taxableAmount`,
         # // which charges higher swap fees. This will lower `newBalances`, which in turn lowers
         # // `invariantWithFeesApplied` below.
-        proportional_token_balance = mul_down_fixed(
-            invariant_ratio, current_balances[index]
-        )
+        proportional_token_balance = mul_down_fixed(invariant_ratio, current_balance)
 
         if new_balances[index] > proportional_token_balance:
             taxable_amount = new_balances[index] - proportional_token_balance
@@ -106,13 +105,13 @@ def compute_add_liquidity_unbalanced(
 #  * @return swap_fee_amounts The amount of swap fees charged for each token
 #  */
 def compute_add_liquidity_single_token_exact_out(
-    current_balances,
-    token_in_index,
-    exact_bpt_amount_out,
-    total_supply,
-    swap_fee_percentage,
-    max_invariant_ratio,
-    compute_balance,
+    current_balances: list[int],
+    token_in_index: int,
+    exact_bpt_amount_out: int,
+    total_supply: int,
+    swap_fee_percentage: int,
+    max_invariant_ratio: int,
+    compute_balance: Callable[[list[int], int, int], int],
 ):
     # Calculate new supply after minting exactBptamount_out
     new_supply = exact_bpt_amount_out + total_supply
@@ -171,9 +170,9 @@ def compute_add_liquidity_single_token_exact_out(
 #  * @return amountsOut Array of amounts for each token to be withdrawn.
 #  */
 def compute_proportional_amounts_out(
-    balances,
-    bpt_total_supply,
-    bpt_amount_in,
+    balances: list[int],
+    bpt_total_supply: int,
+    bpt_amount_in: int,
 ):
     # /**********************************************************************************************
     # // computeProportionalAmountsOut                                                             //
@@ -186,10 +185,10 @@ def compute_proportional_amounts_out(
 
     # // Create a new array to hold the amounts of each token to be withdrawn.
     amounts_out = [0] * len(balances)
-    for index in range(len(balances)):
+    for index, balance in enumerate(balances):
         # // Since we multiply and divide we don't need to use FP math.
         # // Round down since we're calculating amounts out.
-        amounts_out[index] = (balances[index] * bpt_amount_in) // bpt_total_supply
+        amounts_out[index] = (balance * bpt_amount_in) // bpt_total_supply
     return amounts_out
 
 
@@ -207,13 +206,13 @@ def compute_proportional_amounts_out(
 #  * @return amount_out_with_fee The amount of the output token the user receives, accounting for swap fees.
 #  */
 def compute_remove_liquidity_single_token_exact_in(
-    current_balances,
-    token_out_index,
-    exact_bpt_amount_in,
-    total_supply,
-    swap_fee_percentage,
-    min_invariant_ratio,
-    compute_balance,
+    current_balances: list[int],
+    token_out_index: int,
+    exact_bpt_amount_in: int,
+    total_supply: int,
+    swap_fee_percentage: int,
+    min_invariant_ratio: int,
+    compute_balance: Callable[[list[int], int, int], int],
 ):
     # // Calculate new supply accounting for burning exactBptAmountIn
     new_supply = total_supply - exact_bpt_amount_in
@@ -270,13 +269,13 @@ def compute_remove_liquidity_single_token_exact_in(
 #  * @return swap_fee_amounts The amount of swap fees charged for each token
 #  */
 def compute_remove_liquidity_single_token_exact_out(
-    current_balances,
-    token_out_index,
-    exact_amount_out,
-    total_supply,
-    swap_fee_percentage,
-    min_invariant_ratio,
-    compute_invariant,
+    current_balances: list[int],
+    token_out_index: int,
+    exact_amount_out: int,
+    total_supply: int,
+    swap_fee_percentage: int,
+    min_invariant_ratio: int,
+    compute_invariant: Callable[[list[int], Rounding], int],
 ):
     # // Determine the number of tokens in the pool.
     num_tokens = len(current_balances)
@@ -285,8 +284,8 @@ def compute_remove_liquidity_single_token_exact_out(
     new_balances = [0] * num_tokens
 
     # // Copy current_balances to new_balances
-    for index in range(len(current_balances)):
-        new_balances[index] = current_balances[index] - 1
+    for index, current_balance in enumerate(current_balances):
+        new_balances[index] = current_balance - 1
 
     # // Update the balance of token_out_index with exact_amount_out.
     new_balances[token_out_index] = new_balances[token_out_index] - exact_amount_out

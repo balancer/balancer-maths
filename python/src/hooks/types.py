@@ -66,12 +66,6 @@ class AfterRemoveLiquidityResult:
 
 
 class HookBase(ABC):
-    """Base class for all hooks in the system.
-
-    This abstract base class defines the interface that all hooks must implement.
-    Each method is marked as abstract, meaning concrete hook classes must implement them.
-    """
-
     should_call_compute_dynamic_swap_fee: bool
     should_call_before_swap: bool
     should_call_after_swap: bool
@@ -89,8 +83,7 @@ class HookBase(ABC):
         min_bpt_amount_out: int,
         balances_scaled18: list[int],
         hook_state: HookState | object | None,
-    ) -> BeforeAddLiquidityResult:
-        pass
+    ) -> BeforeAddLiquidityResult: ...
 
     @abstractmethod
     def on_after_add_liquidity(
@@ -101,8 +94,7 @@ class HookBase(ABC):
         bpt_amount_out: int,
         balances_scaled18: list[int],
         hook_state: HookState | object | None,
-    ) -> AfterAddLiquidityResult:
-        pass
+    ) -> AfterAddLiquidityResult: ...
 
     @abstractmethod
     def on_before_remove_liquidity(
@@ -112,8 +104,7 @@ class HookBase(ABC):
         min_amounts_out_scaled18: list[int],
         balances_scaled18: list[int],
         hook_state: HookState | object | None,
-    ) -> BeforeRemoveLiquidityResult:
-        pass
+    ) -> BeforeRemoveLiquidityResult: ...
 
     @abstractmethod
     def on_after_remove_liquidity(
@@ -124,24 +115,21 @@ class HookBase(ABC):
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
         hook_state: HookState | object | None,
-    ) -> AfterRemoveLiquidityResult:
-        pass
+    ) -> AfterRemoveLiquidityResult: ...
 
     @abstractmethod
     def on_before_swap(
         self,
         swap_params: SwapParams,
         hook_state: HookState | object | None,
-    ) -> BeforeSwapResult:
-        pass
+    ) -> BeforeSwapResult: ...
 
     @abstractmethod
     def on_after_swap(
         self,
         after_swap_params: AfterSwapParams,
         hook_state: HookState | object | None,
-    ) -> AfterSwapResult:
-        pass
+    ) -> AfterSwapResult: ...
 
     @abstractmethod
     def on_compute_dynamic_swap_fee(
@@ -149,5 +137,4 @@ class HookBase(ABC):
         swap_params: SwapParams,
         static_swap_fee_percentage: int,
         hook_state: HookState | object | None,
-    ) -> DynamicSwapFeeResult:
-        pass
+    ) -> DynamicSwapFeeResult: ...

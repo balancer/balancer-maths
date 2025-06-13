@@ -23,7 +23,7 @@ def test_add_liquidity():
     for add_test in test_data["adds"]:
         print("Add Liquidity Test: ", add_test["test"])
         if add_test["test"] not in test_data["pools"]:
-            raise Exception("Pool not in test data: ", add_test["test"])
+            raise ValueError(f"Pool not in test data: {add_test['test']}")
         pool = test_data["pools"][add_test["test"]]
         if pool["poolType"] == "Buffer":
             raise ValueError("Buffer pools do not support addLiquidity")
