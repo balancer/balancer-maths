@@ -1,4 +1,3 @@
-# noqa: F401
 from typing import Tuple, List
 from src.common.constants import RAY, TWO_WAD, WAD
 from src.common.log_exp_math import LogExpMath
@@ -152,8 +151,7 @@ def calculate_virtual_balances_updating_price_ratio(
             WAD
             + pool_centeredness
             + sqrt(
-                pool_centeredness
-                * (pool_centeredness + 4 * sqrt_price_ratio - TWO_WAD)
+                pool_centeredness * (pool_centeredness + 4 * sqrt_price_ratio - TWO_WAD)
                 + RAY
             )
         )
@@ -172,6 +170,7 @@ def calculate_virtual_balances_updating_price_ratio(
 
     return virtual_balance_a, virtual_balance_b
 
+
 def compute_virtual_balances_updating_price_range(
     balances_scaled_18: List[int],
     virtual_balance_a: int,
@@ -186,7 +185,8 @@ def compute_virtual_balances_updating_price_range(
     @dev This function updates the virtual balances to track the market price by moving the price interval.
     """
     sqrt_price_ratio = sqrt(
-        compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b) * WAD
+        compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b)
+        * WAD
     )
 
     # The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
@@ -225,6 +225,7 @@ def compute_virtual_balances_updating_price_range(
         if is_pool_above_center
         else (virtual_balance_overvalued, virtual_balance_undervalued)
     )
+
 
 def compute_price_ratio(
     balances_scaled_18: List[int],
@@ -285,6 +286,7 @@ def compute_price_range(
 
     return min_price, max_price
 
+
 def compute_fourth_root_price_ratio(
     current_time: int,
     start_fourth_root_price_ratio: int,
@@ -326,6 +328,7 @@ def compute_fourth_root_price_ratio(
         minimum_fourth_root_price_ratio,
         current_fourth_root_price_ratio,
     )
+
 
 def compute_centeredness(
     balances_scaled_18: List[int],
