@@ -1,10 +1,11 @@
-from common.types import PoolState
-from pools.buffer.buffer_data import BufferState, map_buffer_state
-from pools.gyro.gyro_2clp_data import map_gyro_2clp_state
-from pools.gyro.gyro_eclp_data import map_gyro_eclp_state
-from pools.reclamm.reclamm_data import map_re_clamm_state
-from pools.stable.stable_data import map_stable_state
-from pools.weighted.weighted_data import map_weighted_state
+from src.common.types import PoolState
+from src.pools.buffer.buffer_data import BufferState, map_buffer_state
+from src.pools.gyro.gyro_2clp_data import map_gyro_2clp_state
+from src.pools.gyro.gyro_eclp_data import map_gyro_eclp_state
+from src.pools.quantamm.quantamm_data import map_quant_amm_state
+from src.pools.reclamm.reclamm_data import map_re_clamm_state
+from src.pools.stable.stable_data import map_stable_state
+from src.pools.weighted.weighted_data import map_weighted_state
 
 
 def map_pool_state(pool_state: dict) -> PoolState | BufferState:
@@ -14,6 +15,8 @@ def map_pool_state(pool_state: dict) -> PoolState | BufferState:
         return map_gyro_2clp_state(pool_state)
     elif pool_state["poolType"] == "GYROE":
         return map_gyro_eclp_state(pool_state)
+    elif pool_state["poolType"] == "QUANT_AMM_WEIGHTED":
+        return map_quant_amm_state(pool_state)
     elif pool_state["poolType"] == "RECLAMM":
         return map_re_clamm_state(pool_state)
     elif pool_state["poolType"] == "STABLE":

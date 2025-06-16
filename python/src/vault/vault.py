@@ -1,4 +1,3 @@
-from pools.buffer.buffer_data import BufferState
 from src.common.types import (
     AddLiquidityInput,
     AddLiquidityResult,
@@ -12,9 +11,11 @@ from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee.exit_fee_hook import ExitFeeHook
 from src.hooks.stable_surge.stable_surge_hook import StableSurgeHook
 from src.hooks.types import HookBase, HookState
+from src.pools.buffer.buffer_data import BufferState
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
 from src.pools.gyro.gyro_2clp import Gyro2CLP
 from src.pools.gyro.gyro_eclp import GyroECLP
+from src.pools.quantamm.quantamm import QuantAmm
 from src.pools.reclamm.reclamm import ReClamm
 from src.pools.stable.stable import Stable
 from src.pools.weighted.weighted import Weighted
@@ -31,6 +32,7 @@ class Vault:
             "GYRO": Gyro2CLP,
             "GYROE": GyroECLP,
             "RECLAMM": ReClamm,
+            "QUANT_AMM_WEIGHTED": QuantAmm,
         }
         self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
         if custom_pool_classes is not None:

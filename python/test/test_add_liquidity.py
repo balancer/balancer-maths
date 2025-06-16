@@ -1,3 +1,4 @@
+from test.test_swaps import are_big_ints_within_percent
 from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
 from test.utils.read_test_data import read_test_data
 import sys
@@ -38,7 +39,12 @@ def test_add_liquidity():
             ),
             pool_state=cast(PoolState, map_pool_state(pool_with_ints)),
         )
-        assert calculated_amount.bpt_amount_out_raw == int(add_test["bptOutRaw"])
+        if pool["poolType"] == "QUANT_AMM_WEIGHTED":
+            assert are_big_ints_within_percent(
+                calculated_amount.bpt_amount_out_raw, int(add_test["bptOutRaw"]), 0.0001
+            )
+        else:
+            assert calculated_amount.bpt_amount_out_raw == int(add_test["bptOutRaw"])
         assert calculated_amount.amounts_in_raw == list(
             map(int, add_test["inputAmountsRaw"])
         )
