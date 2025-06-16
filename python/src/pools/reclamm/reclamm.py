@@ -9,13 +9,10 @@ from src.pools.reclamm.reclamm_math import (
     compute_current_virtual_balances,
     compute_out_given_in,
     compute_in_given_out,
-    compute_centeredness,
 )
 
 
 class ReClamm(PoolBase):
-    MIN_TOKEN_BALANCE_SCALED18 = 1_000_000_000_000
-    MIN_POOL_CENTEREDNESS = 1_000
 
     def __init__(self, pool_state: ReClammState):
         self.re_clamm_state = pool_state
@@ -45,16 +42,6 @@ class ReClamm(PoolBase):
                 swap_params.amount_given_scaled18,
             )
 
-            self._ensure_valid_pool_state_after_swap(
-                swap_params.balances_live_scaled18,
-                compute_result[0],  # current_virtual_balance_a
-                compute_result[1],  # current_virtual_balance_b
-                swap_params.amount_given_scaled18,
-                amount_calculated_scaled_18,
-                swap_params.index_in,
-                swap_params.index_out,
-            )
-
             return amount_calculated_scaled_18
 
         amount_calculated_scaled_18 = compute_in_given_out(
@@ -64,16 +51,6 @@ class ReClamm(PoolBase):
             swap_params.index_in,
             swap_params.index_out,
             swap_params.amount_given_scaled18,
-        )
-
-        self._ensure_valid_pool_state_after_swap(
-            swap_params.balances_live_scaled18,
-            compute_result[0],  # current_virtual_balance_a
-            compute_result[1],  # current_virtual_balance_b
-            amount_calculated_scaled_18,
-            swap_params.amount_given_scaled18,
-            swap_params.index_in,
-            swap_params.index_out,
         )
 
         return amount_calculated_scaled_18
@@ -109,37 +86,3 @@ class ReClamm(PoolBase):
             self.re_clamm_state.price_ratio_update_start_time,
             self.re_clamm_state.price_ratio_update_end_time,
         )
-
-    def _ensure_valid_pool_state_after_swap(
-        self,
-        current_balances_scaled_18: List[int],
-        current_virtual_balance_a: int,
-        current_virtual_balance_b: int,
-        amount_in_scaled_18: int,
-        amount_out_scaled_18: int,
-        index_in: int,
-        index_out: int,
-    ) -> None:
-        # Create a copy of the balances array
-        updated_balances = current_balances_scaled_18.copy()
-        updated_balances[index_in] += amount_in_scaled_18
-        # The swap functions `computeOutGivenIn` and `computeInGivenOut` ensure that the amountOutScaled18 is
-        # never greater than the balance of the token being swapped out. Therefore, the math below will never
-        # underflow. Nevertheless, since these considerations involve code outside this function, it is safest
-        # to still use checked math here.
-        updated_balances[index_out] -= amount_out_scaled_18
-
-        if updated_balances[index_out] < self.MIN_TOKEN_BALANCE_SCALED18:
-            # If one of the token balances is below the minimum, the price ratio update is unreliable.
-            raise ValueError("reClammPool: TokenBalanceTooLow")
-
-        if (
-            compute_centeredness(
-                updated_balances,
-                current_virtual_balance_a,
-                current_virtual_balance_b,
-            )
-            < self.MIN_POOL_CENTEREDNESS
-        ):
-            # If the pool centeredness is below the minimum, the price ratio update is unreliable.
-            raise ValueError("reClammPool: PoolCenterednessTooLow")

@@ -1,15 +1,15 @@
+# noqa: F401
 from typing import Tuple, List
-from common.constants import RAY, TWO_WAD, WAD
-from common.oz_math import sqrt
-from common.log_exp_math import LogExpMath
-
-from common.maths import (
+from src.common.constants import RAY, TWO_WAD, WAD
+from src.common.log_exp_math import LogExpMath
+from src.common.maths import (
     mul_down_fixed,
     div_up_fixed,
     div_down_fixed,
     mul_up_fixed,
     Rounding,
 )
+from src.common.oz_math import sqrt
 
 
 # Constants
@@ -45,14 +45,9 @@ def compute_current_virtual_balances(
         price_ratio_update_end_time,
     )
 
-    is_pool_above_center = is_above_center(
-        balances_scaled_18,
-        last_virtual_balance_a,
-        last_virtual_balance_b,
-    )
-
     changed = False
 
+    # If the price ratio is updating, shrink/expand the price interval by recalculating the virtual balances.
     if (
         current_timestamp > price_ratio_update_start_time
         and last_timestamp < price_ratio_update_end_time
@@ -63,20 +58,21 @@ def compute_current_virtual_balances(
                 balances_scaled_18,
                 last_virtual_balance_a,
                 last_virtual_balance_b,
-                is_pool_above_center,
             )
         )
+
         changed = True
 
-    if not is_pool_within_target_range(
+    centeredness, is_pool_above_center = compute_centeredness(
         balances_scaled_18,
         current_virtual_balance_a,
         current_virtual_balance_b,
-        centeredness_margin,
-    ):
+    )
+
+    # If the pool is outside the target range, track the market price by moving the price interval.
+    if centeredness < centeredness_margin:
         current_virtual_balance_a, current_virtual_balance_b = (
             compute_virtual_balances_updating_price_range(
-                current_fourth_root_price_ratio,
                 balances_scaled_18,
                 current_virtual_balance_a,
                 current_virtual_balance_b,
@@ -86,13 +82,97 @@ def compute_current_virtual_balances(
                 last_timestamp,
             )
         )
+
         changed = True
 
     return current_virtual_balance_a, current_virtual_balance_b, changed
 
 
-def compute_virtual_balances_updating_price_range(
+def calculate_virtual_balances_updating_price_ratio(
     current_fourth_root_price_ratio: int,
+    balances_scaled_18: List[int],
+    last_virtual_balance_a: int,
+    last_virtual_balance_b: int,
+) -> Tuple[int, int]:
+    """
+    @notice Compute the virtual balances of the pool when the price ratio is updating.
+    @dev This function uses a Bhaskara formula to shrink/expand the price interval by recalculating the virtual
+    balances. It'll keep the pool centeredness constant, and track the desired price ratio. To derive this formula,
+    we need to solve the following simultaneous equations:
+
+    1. centeredness = (Ra * Vb) / (Rb * Va)
+    2. PriceRatio = invariant^2/(Va * Vb)^2 (maxPrice / minPrice)
+    3. invariant = (Va + Ra) * (Vb + Rb)
+
+    Substitute [3] in [2]. Then, isolate one of the V's. Finally, replace the isolated V in [1]. We get a quadratic
+    equation that will be solved in this function.
+
+    @param current_fourth_root_price_ratio The current fourth root of the price ratio of the pool
+    @param balances_scaled_18 Current pool balances, sorted in token registration order
+    @param last_virtual_balance_a The last virtual balance of token A
+    @param last_virtual_balance_b The last virtual balance of token B
+    @return virtual_balance_a The virtual balance of token A
+    @return virtual_balance_b The virtual balance of token B
+    """
+    # Compute the current pool centeredness, which will remain constant.
+    pool_centeredness, is_pool_above_center = compute_centeredness(
+        balances_scaled_18,
+        last_virtual_balance_a,
+        last_virtual_balance_b,
+    )
+
+    # The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
+    if is_pool_above_center:
+        balance_token_undervalued = balances_scaled_18[0]
+        last_virtual_balance_undervalued = last_virtual_balance_a
+        last_virtual_balance_overvalued = last_virtual_balance_b
+    else:
+        balance_token_undervalued = balances_scaled_18[1]
+        last_virtual_balance_undervalued = last_virtual_balance_b
+        last_virtual_balance_overvalued = last_virtual_balance_a
+
+    # The original formula was a quadratic equation, with terms:
+    # a = Q0 - 1
+    # b = - Ru (1 + C)
+    # c = - Ru^2 C
+    # where Q0 is the square root of the price ratio, Ru is the undervalued token balance, and C is the
+    # centeredness. Applying Bhaskara, we'd have: Vu = (-b + sqrt(b^2 - 4ac)) / 2a.
+    # The Bhaskara above can be simplified by replacing a, b and c with the terms above, which leads to:
+    # Vu = Ru(1 + C + sqrt(1 + C (C + 4 Q0 - 2))) / 2(Q0 - 1)
+    sqrt_price_ratio = mul_down_fixed(
+        current_fourth_root_price_ratio,
+        current_fourth_root_price_ratio,
+    )
+
+    # Using FixedPoint math as little as possible to improve the precision of the result.
+    # Note: The input of sqrt must be a 36-decimal number, so that the final result is 18 decimals.
+    virtual_balance_undervalued = (
+        balance_token_undervalued
+        * (
+            WAD
+            + pool_centeredness
+            + sqrt(
+                pool_centeredness
+                * (pool_centeredness + 4 * sqrt_price_ratio - TWO_WAD)
+                + RAY
+            )
+        )
+    ) // (2 * (sqrt_price_ratio - WAD))
+
+    virtual_balance_overvalued = (
+        virtual_balance_undervalued * last_virtual_balance_overvalued
+    ) // last_virtual_balance_undervalued
+
+    if is_pool_above_center:
+        virtual_balance_a = virtual_balance_undervalued
+        virtual_balance_b = virtual_balance_overvalued
+    else:
+        virtual_balance_a = virtual_balance_overvalued
+        virtual_balance_b = virtual_balance_undervalued
+
+    return virtual_balance_a, virtual_balance_b
+
+def compute_virtual_balances_updating_price_range(
     balances_scaled_18: List[int],
     virtual_balance_a: int,
     virtual_balance_b: int,
@@ -101,31 +181,25 @@ def compute_virtual_balances_updating_price_range(
     current_timestamp: int,
     last_timestamp: int,
 ) -> Tuple[int, int]:
-    # Round up price ratio, to round virtual balances down
-    price_ratio = mul_up_fixed(
-        current_fourth_root_price_ratio,
-        current_fourth_root_price_ratio,
+    """
+    @notice Compute the virtual balances of the pool when updating the price range.
+    @dev This function updates the virtual balances to track the market price by moving the price interval.
+    """
+    sqrt_price_ratio = sqrt(
+        compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b) * WAD
     )
 
-    # The overvalued token is the one with a lower token balance (therefore, rarer and more valuable)
-    if is_pool_above_center:
-        balances_scaled_undervalued, balances_scaled_overvalued = (
-            balances_scaled_18[0],
-            balances_scaled_18[1],
-        )
-        virtual_balance_undervalued, virtual_balance_overvalued = (
-            virtual_balance_a,
-            virtual_balance_b,
-        )
-    else:
-        balances_scaled_undervalued, balances_scaled_overvalued = (
-            balances_scaled_18[1],
-            balances_scaled_18[0],
-        )
-        virtual_balance_undervalued, virtual_balance_overvalued = (
-            virtual_balance_b,
-            virtual_balance_a,
-        )
+    # The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
+    balances_scaled_undervalued, balances_scaled_overvalued = (
+        (balances_scaled_18[0], balances_scaled_18[1])
+        if is_pool_above_center
+        else (balances_scaled_18[1], balances_scaled_18[0])
+    )
+    virtual_balance_undervalued, virtual_balance_overvalued = (
+        (virtual_balance_a, virtual_balance_b)
+        if is_pool_above_center
+        else (virtual_balance_b, virtual_balance_a)
+    )
 
     # Vb = Vb * (1 - tau)^(T_curr - T_last)
     # Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
@@ -142,29 +216,74 @@ def compute_virtual_balances_updating_price_range(
         balances_scaled_undervalued
         * (virtual_balance_overvalued + balances_scaled_overvalued)
     ) // (
-        mul_down_fixed(price_ratio - WAD, virtual_balance_overvalued)
+        mul_down_fixed(sqrt_price_ratio - WAD, virtual_balance_overvalued)
         - balances_scaled_overvalued
     )
 
-    if is_pool_above_center:
-        return virtual_balance_undervalued, virtual_balance_overvalued
-    else:
-        return virtual_balance_overvalued, virtual_balance_undervalued
+    return (
+        (virtual_balance_undervalued, virtual_balance_overvalued)
+        if is_pool_above_center
+        else (virtual_balance_overvalued, virtual_balance_undervalued)
+    )
 
-
-def is_pool_within_target_range(
+def compute_price_ratio(
     balances_scaled_18: List[int],
     virtual_balance_a: int,
     virtual_balance_b: int,
-    centeredness_margin: int,
-) -> bool:
-    centeredness = compute_centeredness(
+) -> int:
+    """
+    @notice Compute the price ratio of the pool by dividing the maximum price by the minimum price.
+    @dev The price ratio is calculated as maxPrice/minPrice, where maxPrice and minPrice are obtained
+    from computePriceRange.
+
+    @param balances_scaled_18 Current pool balances, sorted in token registration order
+    @param virtual_balance_a Virtual balance of token A
+    @param virtual_balance_b Virtual balance of token B
+    @return price_ratio The ratio between the maximum and minimum prices of the pool
+    """
+    min_price, max_price = compute_price_range(
         balances_scaled_18,
         virtual_balance_a,
         virtual_balance_b,
     )
-    return centeredness >= centeredness_margin
 
+    return div_up_fixed(max_price, min_price)
+
+
+def compute_price_range(
+    balances_scaled_18: List[int],
+    virtual_balance_a: int,
+    virtual_balance_b: int,
+) -> Tuple[int, int]:
+    """
+    @notice Compute the minimum and maximum prices for the pool based on virtual balances and current invariant.
+    @dev The prices are calculated using the invariant and virtual balances to determine the price range.
+    P_min(a) = Vb^2 / invariant
+    P_max(a) = invariant / Va^2
+
+    @param balances_scaled_18 Current pool balances, sorted in token registration order
+    @param virtual_balance_a Virtual balance of token A
+    @param virtual_balance_b Virtual balance of token B
+    @return min_price The minimum price of the pool
+    @return max_price The maximum price of the pool
+    """
+    invariant = compute_invariant(
+        balances_scaled_18,
+        virtual_balance_a,
+        virtual_balance_b,
+        Rounding.ROUND_DOWN,
+    )
+
+    # P_min(a) = Vb^2 / invariant
+    min_price = (virtual_balance_b * virtual_balance_b) // invariant
+
+    # P_max(a) = invariant / Va^2
+    max_price = div_down_fixed(
+        invariant,
+        mul_down_fixed(virtual_balance_a, virtual_balance_a),
+    )
+
+    return min_price, max_price
 
 def compute_fourth_root_price_ratio(
     current_time: int,
@@ -173,6 +292,10 @@ def compute_fourth_root_price_ratio(
     price_ratio_update_start_time: int,
     price_ratio_update_end_time: int,
 ) -> int:
+    """
+    @notice Compute the fourth root of the price ratio at the current time.
+    @dev If start and end time are the same, return end value.
+    """
     if current_time >= price_ratio_update_end_time:
         return end_fourth_root_price_ratio
     elif current_time <= price_ratio_update_start_time:
@@ -183,117 +306,56 @@ def compute_fourth_root_price_ratio(
         price_ratio_update_end_time - price_ratio_update_start_time,
     )
 
-    return (
-        start_fourth_root_price_ratio
-        * LogExpMath.pow(end_fourth_root_price_ratio, exponent)
-    ) // LogExpMath.pow(start_fourth_root_price_ratio, exponent)
-
-
-def is_above_center(
-    balances_scaled_18: List[int],
-    virtual_balances_a: int,
-    virtual_balances_b: int,
-) -> bool:
-    if balances_scaled_18[1] == 0:
-        return True
-    else:
-        return div_down_fixed(
-            balances_scaled_18[0], balances_scaled_18[1]
-        ) > div_down_fixed(virtual_balances_a, virtual_balances_b)
-
-
-def calculate_virtual_balances_updating_price_ratio(
-    current_fourth_root_price_ratio: int,
-    balances_scaled_18: List[int],
-    last_virtual_balance_a: int,
-    last_virtual_balance_b: int,
-    is_pool_above_center: bool,
-) -> Tuple[int, int]:
-    # The overvalued token is the one with a lower token balance
-    if is_pool_above_center:
-        index_token_undervalued, index_token_overvalued = 0, 1
-    else:
-        index_token_undervalued, index_token_overvalued = 1, 0
-
-    balance_token_undervalued = balances_scaled_18[index_token_undervalued]
-    balance_token_overvalued = balances_scaled_18[index_token_overvalued]
-
-    # Compute the current pool centeredness
-    pool_centeredness = compute_centeredness(
-        balances_scaled_18,
-        last_virtual_balance_a,
-        last_virtual_balance_b,
+    current_fourth_root_price_ratio = mul_down_fixed(
+        start_fourth_root_price_ratio,
+        LogExpMath.pow(
+            div_down_fixed(
+                end_fourth_root_price_ratio,
+                start_fourth_root_price_ratio,
+            ),
+            exponent,
+        ),
     )
 
-    sqrt_price_ratio = mul_up_fixed(
-        current_fourth_root_price_ratio,
+    # Since we're rounding current fourth root price ratio down, we only need to check the lower boundary.
+    minimum_fourth_root_price_ratio = min(
+        start_fourth_root_price_ratio,
+        end_fourth_root_price_ratio,
+    )
+    return max(
+        minimum_fourth_root_price_ratio,
         current_fourth_root_price_ratio,
     )
-
-    # Using FixedPoint math as little as possible to improve precision
-    virtual_balance_undervalued = (
-        balance_token_overvalued
-        * (
-            WAD
-            + pool_centeredness
-            + sqrt(
-                pool_centeredness * (pool_centeredness + 4 * sqrt_price_ratio - TWO_WAD)
-                + RAY
-            )
-        )
-    ) // (2 * (sqrt_price_ratio - WAD))
-
-    virtual_balance_overvalued = div_down_fixed(
-        (balance_token_overvalued * virtual_balance_undervalued)
-        // balance_token_undervalued,
-        pool_centeredness,
-    )
-
-    if is_pool_above_center:
-        return virtual_balance_undervalued, virtual_balance_overvalued
-    else:
-        return virtual_balance_overvalued, virtual_balance_undervalued
-
 
 def compute_centeredness(
     balances_scaled_18: List[int],
     virtual_balance_a: int,
     virtual_balance_b: int,
-) -> int:
-    if balances_scaled_18[0] == 0 or balances_scaled_18[1] == 0:
-        return 0
+) -> Tuple[int, bool]:
+    """
+    @notice Compute the centeredness of the pool and whether it's above center.
+    @dev The centeredness is defined between 0 and 1. If the numerator is greater than the denominator,
+    we compute the inverse ratio.
+    """
+    if balances_scaled_18[0] == 0:
+        # Also return false if both are 0 to be consistent with the logic below.
+        return 0, False
+    elif balances_scaled_18[1] == 0:
+        return 0, True
 
-    is_pool_above_center = is_above_center(
-        balances_scaled_18,
-        virtual_balance_a,
-        virtual_balance_b,
-    )
+    numerator = balances_scaled_18[0] * virtual_balance_b
+    denominator = virtual_balance_a * balances_scaled_18[1]
 
-    if is_pool_above_center:
-        virtual_balance_undervalued, virtual_balance_overvalued = (
-            virtual_balance_a,
-            virtual_balance_b,
-        )
-        balances_scaled_undervalued, balances_scaled_overvalued = (
-            balances_scaled_18[0],
-            balances_scaled_18[1],
-        )
+    # The centeredness is defined between 0 and 1. If the numerator is greater than the denominator,
+    # we compute the inverse ratio.
+    if numerator <= denominator:
+        pool_centeredness = div_down_fixed(numerator, denominator)
+        is_pool_above_center = False
     else:
-        virtual_balance_undervalued, virtual_balance_overvalued = (
-            virtual_balance_b,
-            virtual_balance_a,
-        )
-        balances_scaled_undervalued, balances_scaled_overvalued = (
-            balances_scaled_18[1],
-            balances_scaled_18[0],
-        )
+        pool_centeredness = div_down_fixed(denominator, numerator)
+        is_pool_above_center = True
 
-    # Round up the centeredness, so the virtual balances are rounded down when the pool prices are moving
-    return div_up_fixed(
-        (balances_scaled_overvalued * virtual_balance_undervalued)
-        // balances_scaled_undervalued,
-        virtual_balance_overvalued,
-    )
+    return pool_centeredness, is_pool_above_center
 
 
 def compute_invariant(
@@ -396,65 +458,3 @@ def compute_in_given_out(
     )
 
     return amount_in_scaled_18
-
-
-def compute_theoretical_price_ratio_and_balances(
-    min_price: int,
-    max_price: int,
-    target_price: int,
-) -> Tuple[List[int], List[int], int]:
-    # In the formulas below, Ra_max is a random number that defines the maximum real balance of token A, and
-    # consequently a random initial liquidity. We will scale all balances according to the actual amount of
-    # liquidity provided during initialization.
-    sqrt_price_ratio = sqrt_scaled_18(div_down_fixed(max_price, min_price))
-    fourth_root_price_ratio = sqrt_scaled_18(sqrt_price_ratio)
-
-    virtual_balances = [0, 0]
-    # Va = Ra_max / (sqrtPriceRatio - 1)
-    virtual_balances[A] = div_down_fixed(
-        INITIALIZATION_MAX_BALANCE_A,
-        sqrt_price_ratio - WAD,
-    )
-    # Vb = minPrice * (Va + Ra_max)
-    virtual_balances[B] = mul_down_fixed(
-        min_price,
-        virtual_balances[A] + INITIALIZATION_MAX_BALANCE_A,
-    )
-
-    real_balances = [0, 0]
-    # Rb = sqrt(targetPrice * Vb * (Ra_max + Va)) - Vb
-    real_balances[B] = (
-        sqrt_scaled_18(
-            mul_up_fixed(
-                mul_up_fixed(target_price, virtual_balances[B]),
-                INITIALIZATION_MAX_BALANCE_A + virtual_balances[A],
-            )
-        )
-        - virtual_balances[B]
-    )
-    # Ra = (Rb + Vb - (Va * targetPrice)) / targetPrice
-    real_balances[A] = div_down_fixed(
-        real_balances[B]
-        + virtual_balances[B]
-        - mul_down_fixed(virtual_balances[A], target_price),
-        target_price,
-    )
-
-    return real_balances, virtual_balances, fourth_root_price_ratio
-
-
-def compute_initial_balance_ratio(
-    min_price: int,
-    max_price: int,
-    target_price: int,
-) -> int:
-    real_balances, _, _ = compute_theoretical_price_ratio_and_balances(
-        min_price,
-        max_price,
-        target_price,
-    )
-    return div_down_fixed(real_balances[B], real_balances[A])
-
-
-def sqrt_scaled_18(value_scaled_18: int) -> int:
-    return sqrt(value_scaled_18 * WAD)
