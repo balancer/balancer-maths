@@ -1,11 +1,4 @@
-import {
-    FixedPointFunction,
-    LogExpMath,
-    MathSol,
-    RAY,
-    TWO_WAD,
-    WAD,
-} from '../utils/math';
+import { FixedPointFunction, MathSol, WAD } from '../utils/math';
 import { sqrt } from '../utils/ozMath';
 import { Rounding } from '../vault/types';
 
@@ -18,7 +11,6 @@ type PriceRatioState = {
 
 const a = 0;
 const b = 1;
-const INITIALIZATION_MAX_BALANCE_A = 1_000_000n * WAD;
 
 export function computeCurrentVirtualBalances(
     currentTimestamp: bigint,
@@ -34,7 +26,7 @@ export function computeCurrentVirtualBalances(
     currentVirtualBalanceB: bigint;
     changed: boolean;
 } {
-    if (lastTimestamp == currentTimestamp) {
+    if (lastTimestamp === currentTimestamp) {
         return {
             currentVirtualBalanceA: lastVirtualBalanceA,
             currentVirtualBalanceB: lastVirtualBalanceB,
@@ -53,40 +45,37 @@ export function computeCurrentVirtualBalances(
         priceRatioState.priceRatioUpdateEndTime,
     );
 
-    const isPoolAboveCenter = isAboveCenter(
-        balancesScaled18,
-        lastVirtualBalanceA,
-        lastVirtualBalanceB,
-    );
-
     let changed = false;
 
+    // If the price ratio is updating, shrink/expand the price interval by recalculating the virtual balances.
     if (
         currentTimestamp > priceRatioState.priceRatioUpdateStartTime &&
         lastTimestamp < priceRatioState.priceRatioUpdateEndTime
     ) {
-        [currentVirtualBalanceA, currentVirtualBalanceB] =
-            calculateVirtualBalancesUpdatingPriceRatio(
-                currentFourthRootPriceRatio,
-                balancesScaled18,
-                lastVirtualBalanceA,
-                lastVirtualBalanceB,
-                isPoolAboveCenter,
-            );
+        ({
+            virtualBalanceA: currentVirtualBalanceA,
+            virtualBalanceB: currentVirtualBalanceB,
+        } = computeVirtualBalancesUpdatingPriceRatio(
+            currentFourthRootPriceRatio,
+            balancesScaled18,
+            lastVirtualBalanceA,
+            lastVirtualBalanceB,
+        ));
+
         changed = true;
     }
 
-    if (
-        !isPoolWithinTargetRange(
+    const { poolCenteredness: centeredness, isPoolAboveCenter } =
+        computeCenteredness(
             balancesScaled18,
             currentVirtualBalanceA,
             currentVirtualBalanceB,
-            centerednessMargin,
-        )
-    ) {
+        );
+
+    // If the pool is outside the target range, track the market price by moving the price interval.
+    if (centeredness < centerednessMargin) {
         [currentVirtualBalanceA, currentVirtualBalanceB] =
             computeVirtualBalancesUpdatingPriceRange(
-                currentFourthRootPriceRatio,
                 balancesScaled18,
                 currentVirtualBalanceA,
                 currentVirtualBalanceB,
@@ -106,8 +95,102 @@ export function computeCurrentVirtualBalances(
     };
 }
 
-function computeVirtualBalancesUpdatingPriceRange(
+/**
+ * @notice Compute the virtual balances of the pool when the price ratio is updating.
+ * @dev This function uses a Bhaskara formula to shrink/expand the price interval by recalculating the virtual
+ * balances. It'll keep the pool centeredness constant, and track the desired price ratio. To derive this formula,
+ * we need to solve the following simultaneous equations:
+ *
+ * 1. centeredness = (Ra * Vb) / (Rb * Va)
+ * 2. PriceRatio = invariant^2/(Va * Vb)^2 (maxPrice / minPrice)
+ * 3. invariant = (Va + Ra) * (Vb + Rb)
+ *
+ * Substitute [3] in [2]. Then, isolate one of the V's. Finally, replace the isolated V in [1]. We get a quadratic
+ * equation that will be solved in this function.
+ *
+ * @param currentFourthRootPriceRatio The current fourth root of the price ratio of the pool
+ * @param balancesScaled18 Current pool balances, sorted in token registration order
+ * @param lastVirtualBalanceA The last virtual balance of token A
+ * @param lastVirtualBalanceB The last virtual balance of token B
+ * @return virtualBalanceA The virtual balance of token A
+ * @return virtualBalanceB The virtual balance of token B
+ */
+function computeVirtualBalancesUpdatingPriceRatio(
     currentFourthRootPriceRatio: bigint,
+    balancesScaled18: bigint[],
+    lastVirtualBalanceA: bigint,
+    lastVirtualBalanceB: bigint,
+): { virtualBalanceA: bigint; virtualBalanceB: bigint } {
+    // Compute the current pool centeredness, which will remain constant.
+    const { poolCenteredness, isPoolAboveCenter } = computeCenteredness(
+        balancesScaled18,
+        lastVirtualBalanceA,
+        lastVirtualBalanceB,
+    );
+
+    // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
+    const {
+        balanceTokenUndervalued,
+        lastVirtualBalanceUndervalued,
+        lastVirtualBalanceOvervalued,
+    } = isPoolAboveCenter
+        ? {
+              balanceTokenUndervalued: balancesScaled18[a],
+              lastVirtualBalanceUndervalued: lastVirtualBalanceA,
+              lastVirtualBalanceOvervalued: lastVirtualBalanceB,
+          }
+        : {
+              balanceTokenUndervalued: balancesScaled18[b],
+              lastVirtualBalanceUndervalued: lastVirtualBalanceB,
+              lastVirtualBalanceOvervalued: lastVirtualBalanceA,
+          };
+
+    // The original formula was a quadratic equation, with terms:
+    // a = Q0 - 1
+    // b = - Ru (1 + C)
+    // c = - Ru^2 C
+    // where Q0 is the square root of the price ratio, Ru is the undervalued token balance, and C is the
+    // centeredness. Applying Bhaskara, we'd have: Vu = (-b + sqrt(b^2 - 4ac)) / 2a.
+    // The Bhaskara above can be simplified by replacing a, b and c with the terms above, which leads to:
+    // Vu = Ru(1 + C + sqrt(1 + C (C + 4 Q0 - 2))) / 2(Q0 - 1)
+    const sqrtPriceRatio = MathSol.mulDownFixed(
+        currentFourthRootPriceRatio,
+        currentFourthRootPriceRatio,
+    );
+
+    // Using FixedPoint math as little as possible to improve the precision of the result.
+    // Note: The input of Math.sqrt must be a 36-decimal number, so that the final result is 18 decimals.
+    const virtualBalanceUndervalued =
+        (balanceTokenUndervalued *
+            (WAD +
+                poolCenteredness +
+                sqrt(
+                    poolCenteredness *
+                        (poolCenteredness +
+                            4n * sqrtPriceRatio -
+                            2000000000000000000n) +
+                        1000000000000000000000000000000000000n,
+                ))) /
+        (2n * (sqrtPriceRatio - WAD));
+
+    const virtualBalanceOvervalued =
+        (virtualBalanceUndervalued * lastVirtualBalanceOvervalued) /
+        lastVirtualBalanceUndervalued;
+
+    const { virtualBalanceA, virtualBalanceB } = isPoolAboveCenter
+        ? {
+              virtualBalanceA: virtualBalanceUndervalued,
+              virtualBalanceB: virtualBalanceOvervalued,
+          }
+        : {
+              virtualBalanceA: virtualBalanceOvervalued,
+              virtualBalanceB: virtualBalanceUndervalued,
+          };
+
+    return { virtualBalanceA, virtualBalanceB };
+}
+
+function computeVirtualBalancesUpdatingPriceRange(
     balancesScaled18: bigint[],
     virtualBalanceA: bigint,
     virtualBalanceB: bigint,
@@ -116,10 +199,9 @@ function computeVirtualBalancesUpdatingPriceRange(
     currentTimestamp: bigint,
     lastTimestamp: bigint,
 ): [bigint, bigint] {
-    // // Round up price ratio, to round virtual balances down.
-    const priceRatio = MathSol.mulUpFixed(
-        currentFourthRootPriceRatio,
-        currentFourthRootPriceRatio,
+    const sqrtPriceRatio = sqrt(
+        computePriceRatio(balancesScaled18, virtualBalanceA, virtualBalanceB) *
+            WAD,
     );
 
     // // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
@@ -136,7 +218,7 @@ function computeVirtualBalancesUpdatingPriceRange(
     // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
     virtualBalanceOvervalued = MathSol.mulDownFixed(
         virtualBalanceOvervalued,
-        LogExpMath.pow(
+        MathSol.powDownFixed(
             dailyPriceShiftBase,
             (currentTimestamp - lastTimestamp) * WAD,
         ),
@@ -145,7 +227,7 @@ function computeVirtualBalancesUpdatingPriceRange(
     virtualBalanceUndervalued =
         (balancesScaledUndervalued *
             (virtualBalanceOvervalued + balancesScaledOvervalued)) /
-        (MathSol.mulDownFixed(priceRatio - WAD, virtualBalanceOvervalued) -
+        (MathSol.mulDownFixed(sqrtPriceRatio - WAD, virtualBalanceOvervalued) -
             balancesScaledOvervalued);
 
     return isPoolAboveCenter
@@ -153,18 +235,71 @@ function computeVirtualBalancesUpdatingPriceRange(
         : [virtualBalanceOvervalued, virtualBalanceUndervalued];
 }
 
-function isPoolWithinTargetRange(
+/**
+ * @notice Compute the price ratio of the pool by dividing the maximum price by the minimum price.
+ * @dev The price ratio is calculated as maxPrice/minPrice, where maxPrice and minPrice are obtained
+ * from computePriceRange.
+ *
+ * @param balancesScaled18 Current pool balances, sorted in token registration order
+ * @param virtualBalanceA Virtual balance of token A
+ * @param virtualBalanceB Virtual balance of token B
+ * @return priceRatio The ratio between the maximum and minimum prices of the pool
+ */
+function computePriceRatio(
     balancesScaled18: bigint[],
     virtualBalanceA: bigint,
     virtualBalanceB: bigint,
-    centerednessMargin: bigint,
-): boolean {
-    const centeredness = computeCenteredness(
+): bigint {
+    const { minPrice, maxPrice } = computePriceRange(
         balancesScaled18,
         virtualBalanceA,
         virtualBalanceB,
     );
-    return centeredness >= centerednessMargin;
+
+    return MathSol.divUpFixed(maxPrice, minPrice);
+}
+
+/**
+ * @notice Compute the minimum and maximum prices for the pool based on virtual balances and current invariant.
+ * @dev The minimum price is calculated as Vb^2/invariant, where Vb is the virtual balance of token B.
+ * The maximum price is calculated as invariant/Va^2, where Va is the virtual balance of token A.
+ * These calculations are derived from the invariant equation: invariant = (Ra + Va)(Rb + Vb),
+ * where Ra and Rb are the real balances of tokens A and B respectively.
+ *
+ * @param balancesScaled18 Current pool balances, sorted in token registration order
+ * @param virtualBalanceA Virtual balance of token A
+ * @param virtualBalanceB Virtual balance of token B
+ * @return minPrice The minimum price of token A in terms of token B
+ * @return maxPrice The maximum price of token A in terms of token B
+ */
+function computePriceRange(
+    balancesScaled18: bigint[],
+    virtualBalanceA: bigint,
+    virtualBalanceB: bigint,
+): { minPrice: bigint; maxPrice: bigint } {
+    const currentInvariant = computeInvariant(
+        balancesScaled18,
+        virtualBalanceA,
+        virtualBalanceB,
+        Rounding.ROUND_DOWN,
+    );
+
+    // P_min(a) = Vb / (Va + Ra_max)
+    // We don't have Ra_max, but: invariant=(Ra_max + Va)(Vb)
+    // Then, (Va + Ra_max) = invariant/Vb, and:
+    // P_min(a) = Vb^2 / invariant
+    const minPrice = (virtualBalanceB * virtualBalanceB) / currentInvariant;
+
+    // Similarly, P_max(a) = (Rb_max + Vb)/Va
+    // We don't have Rb_max, but: invariant=(Rb_max + Vb)(Va)
+    // Then, (Rb_max + Vb) = invariant/Va, and:
+    // P_max(a) = invariant / Va^2
+    const maxPrice = MathSol.divDownFixed(
+        currentInvariant,
+        MathSol.mulDownFixed(virtualBalanceA, virtualBalanceA),
+    );
+
+    return { minPrice, maxPrice };
 }
 
 function computeFourthRootPriceRatio(
@@ -186,118 +321,56 @@ function computeFourthRootPriceRatio(
         priceRatioUpdateEndTime - priceRatioUpdateStartTime,
     );
 
-    return (
-        (startFourthRootPriceRatio *
-            LogExpMath.pow(endFourthRootPriceRatio, exponent)) /
-        LogExpMath.pow(startFourthRootPriceRatio, exponent)
-    );
-}
-
-function isAboveCenter(
-    balancesScaled18: bigint[],
-    virtualBalancesA: bigint,
-    virtualBalancesB: bigint,
-): boolean {
-    if (balancesScaled18[1] === 0n) {
-        return true;
-    } else {
-        return (
-            MathSol.divDownFixed(balancesScaled18[0], balancesScaled18[1]) >
-            MathSol.divDownFixed(virtualBalancesA, virtualBalancesB)
-        );
-    }
-}
-
-function calculateVirtualBalancesUpdatingPriceRatio(
-    currentFourthRootPriceRatio: bigint,
-    balancesScaled18: bigint[],
-    lastVirtualBalanceA: bigint,
-    lastVirtualBalanceB: bigint,
-    isPoolAboveCenter: boolean,
-): [bigint, bigint] {
-    // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
-    const [indexTokenUndervalued, indexTokenOvervalued] = isPoolAboveCenter
-        ? [0, 1]
-        : [1, 0];
-    const balanceTokenUndervalued = balancesScaled18[indexTokenUndervalued];
-    const balanceTokenOvervalued = balancesScaled18[indexTokenOvervalued];
-
-    // Compute the current pool centeredness, which will remain constant.
-    const poolCenteredness = computeCenteredness(
-        balancesScaled18,
-        lastVirtualBalanceA,
-        lastVirtualBalanceB,
+    const currentFourthRootPriceRatio = MathSol.mulDownFixed(
+        startFourthRootPriceRatio,
+        MathSol.powDownFixed(
+            MathSol.divDownFixed(
+                endFourthRootPriceRatio,
+                startFourthRootPriceRatio,
+            ),
+            exponent,
+        ),
     );
 
-    // The original formula was a quadratic equation, with terms:
-    // a = Q0 - 1
-    // b = - Ru (1 + C)
-    // c = - Ru^2 C
-    // where Q0 is the square root of the price ratio, Ru is the undervalued token balance, and C is the
-    // centeredness. Applying Bhaskara, we'd have: Vu = (-b + sqrt(b^2 - 4ac)) / 2a.
-    // The Bhaskara above can be simplified by replacing a, b and c with the terms above, which leads to:
-    // Vu = Ru(1 + C + sqrt(1 + C (C + 4 Q0 - 2))) / 2(Q0 - 1)
-    const sqrtPriceRatio = MathSol.mulUpFixed(
-        currentFourthRootPriceRatio,
+    // Since we're rounding current fourth root price ratio down, we only need to check the lower boundary.
+    const minimumFourthRootPriceRatio = MathSol.min(
+        startFourthRootPriceRatio,
+        endFourthRootPriceRatio,
+    );
+    return MathSol.max(
+        minimumFourthRootPriceRatio,
         currentFourthRootPriceRatio,
     );
-
-    // Using FixedPoint math as little as possible to improve the precision of the result.
-    // Note: The input of Math.sqrt must be a 36-decimal number, so that the final result is 18 decimals.
-    const virtualBalanceUndervalued =
-        (balanceTokenOvervalued *
-            (WAD +
-                poolCenteredness +
-                sqrt(
-                    poolCenteredness *
-                        (poolCenteredness + 4n * sqrtPriceRatio - TWO_WAD) +
-                        RAY,
-                ))) /
-        (2n * (sqrtPriceRatio - WAD));
-
-    const virtualBalanceOvervalued = MathSol.divDownFixed(
-        (balanceTokenOvervalued * virtualBalanceUndervalued) /
-            balanceTokenUndervalued,
-        poolCenteredness,
-    );
-
-    return isPoolAboveCenter
-        ? [virtualBalanceUndervalued, virtualBalanceOvervalued]
-        : [virtualBalanceOvervalued, virtualBalanceUndervalued];
 }
 
 export function computeCenteredness(
     balancesScaled18: bigint[],
     virtualBalanceA: bigint,
     virtualBalanceB: bigint,
-): bigint {
-    if (balancesScaled18[0] == 0n || balancesScaled18[1] == 0n) {
-        return 0n;
+): { poolCenteredness: bigint; isPoolAboveCenter: boolean } {
+    if (balancesScaled18[a] === 0n) {
+        // Also return false if both are 0 to be consistent with the logic below.
+        return { poolCenteredness: 0n, isPoolAboveCenter: false };
+    } else if (balancesScaled18[b] === 0n) {
+        return { poolCenteredness: 0n, isPoolAboveCenter: true };
     }
 
-    const isPoolAboveCenter = isAboveCenter(
-        balancesScaled18,
-        virtualBalanceA,
-        virtualBalanceB,
-    );
+    const numerator = balancesScaled18[a] * virtualBalanceB;
+    const denominator = virtualBalanceA * balancesScaled18[b];
 
-    // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
-    const [virtualBalanceUndervalued, virtualBalanceOvervalued] =
-        isPoolAboveCenter
-            ? [virtualBalanceA, virtualBalanceB]
-            : [virtualBalanceB, virtualBalanceA];
+    let poolCenteredness: bigint;
+    let isPoolAboveCenter: boolean;
+    // The centeredness is defined between 0 and 1. If the numerator is greater than the denominator, we compute
+    // the inverse ratio.
+    if (numerator <= denominator) {
+        poolCenteredness = MathSol.divDownFixed(numerator, denominator);
+        isPoolAboveCenter = false;
+    } else {
+        poolCenteredness = MathSol.divDownFixed(denominator, numerator);
+        isPoolAboveCenter = true;
+    }
 
-    const [balancesScaledUndervalued, balancesScaledOvervalued] =
-        isPoolAboveCenter
-            ? [balancesScaled18[0], balancesScaled18[1]]
-            : [balancesScaled18[1], balancesScaled18[0]];
-
-    // Round up the centeredness, so the virtual balances are rounded down when the pool prices are moving.
-    return MathSol.divUpFixed(
-        (balancesScaledOvervalued * virtualBalanceUndervalued) /
-            balancesScaledUndervalued,
-        virtualBalanceOvervalued,
-    );
+    return { poolCenteredness, isPoolAboveCenter };
 }
 
 function computeInvariant(
@@ -317,53 +390,85 @@ function computeInvariant(
     );
 }
 
+/**
+ * @notice Compute the `amountOut` of tokenOut in a swap, given the current balances and virtual balances.
+ * @param balancesScaled18 Current pool balances, sorted in token registration order
+ * @param virtualBalanceA The last virtual balance of token A
+ * @param virtualBalanceB The last virtual balance of token B
+ * @param tokenInIndex Index of the token being swapped in
+ * @param tokenOutIndex Index of the token being swapped out
+ * @param amountInScaled18 The exact amount of `tokenIn` (i.e., the amount given in an ExactIn swap)
+ * @return amountOutScaled18 The calculated amount of `tokenOut` returned in an ExactIn swap
+ */
 export function computeOutGivenIn(
     balancesScaled18: bigint[],
     virtualBalanceA: bigint,
     virtualBalanceB: bigint,
     tokenInIndex: number,
     tokenOutIndex: number,
-    amountGivenScaled18: bigint,
+    amountInScaled18: bigint,
 ): bigint {
-    const [virtualBalanceTokenIn, virtualBalanceTokenOut] =
+    // `amountOutScaled18 = currentTotalTokenOutPoolBalance - newTotalTokenOutPoolBalance`,
+    // where `currentTotalTokenOutPoolBalance = balancesScaled18[tokenOutIndex] + virtualBalanceTokenOut`
+    // and `newTotalTokenOutPoolBalance = invariant / (currentTotalTokenInPoolBalance + amountInScaled18)`.
+    // In other words,
+    // +--------------------------------------------------+
+    // |                         L                        |
+    // | Ao = Bo + Vo - ---------------------             |
+    // |                   (Bi + Vi + Ai)                 |
+    // +--------------------------------------------------+
+    // Simplify by:
+    // - replacing `L = (Bo + Vo) (Bi + Vi)`, and
+    // - multiplying `(Bo + Vo)` by `(Bi + Vi + Ai) / (Bi + Vi + Ai)`:
+    // +--------------------------------------------------+
+    // |              (Bo + Vo) Ai                        |
+    // | Ao = ------------------------------              |
+    // |             (Bi + Vi + Ai)                       |
+    // +--------------------------------------------------+
+    // | Where:                                           |
+    // |   Ao = Amount out                                |
+    // |   Bo = Balance token out                         |
+    // |   Vo = Virtual balance token out                 |
+    // |   Ai = Amount in                                 |
+    // |   Bi = Balance token in                          |
+    // |   Vi = Virtual balance token in                  |
+    // +--------------------------------------------------+
+    const { virtualBalanceTokenIn, virtualBalanceTokenOut } =
         tokenInIndex === 0
-            ? [virtualBalanceA, virtualBalanceB]
-            : [virtualBalanceB, virtualBalanceA];
-
-    // Round up, so the swapper absorbs rounding imprecisions (rounds in favor of the Vault).
-    const invariant = computeInvariant(
-        balancesScaled18,
-        virtualBalanceA,
-        virtualBalanceB,
-        Rounding.ROUND_UP,
-    );
-    // Total (virtual + real) token out amount that should stay in the pool after the swap. Rounding division up,
-    // which will round the token out amount down, favoring the Vault.
-    const newTotalTokenOutPoolBalance = MathSol.divUpFixed(
-        invariant,
-        balancesScaled18[tokenInIndex] +
-            virtualBalanceTokenIn +
-            amountGivenScaled18,
-    );
-
-    const currentTotalTokenOutPoolBalance =
-        balancesScaled18[tokenOutIndex] + virtualBalanceTokenOut;
-
-    if (newTotalTokenOutPoolBalance > currentTotalTokenOutPoolBalance) {
-        // If the amount of `tokenOut` remaining in the pool post-swap is greater than the total balance of
-        // `tokenOut`, that means the swap result is negative due to a rounding issue.
-        throw new Error(`reClammMath: NegativeAmountOut`);
-    }
+            ? {
+                  virtualBalanceTokenIn: virtualBalanceA,
+                  virtualBalanceTokenOut: virtualBalanceB,
+              }
+            : {
+                  virtualBalanceTokenIn: virtualBalanceB,
+                  virtualBalanceTokenOut: virtualBalanceA,
+              };
 
     const amountOutScaled18 =
-        currentTotalTokenOutPoolBalance - newTotalTokenOutPoolBalance;
+        ((balancesScaled18[tokenOutIndex] + virtualBalanceTokenOut) *
+            amountInScaled18) /
+        (balancesScaled18[tokenInIndex] +
+            virtualBalanceTokenIn +
+            amountInScaled18);
+
     if (amountOutScaled18 > balancesScaled18[tokenOutIndex]) {
-        // Amount out cannot be greater than the real balance of the token.
-        throw new Error(`reClammMath: AmountOutGreaterThanBalance`);
+        // Amount out cannot be greater than the real balance of the token in the pool.
+        throw new Error('reClammMath: AmountOutGreaterThanBalance');
     }
+
     return amountOutScaled18;
 }
 
+/**
+ * @notice Compute the `amountIn` of tokenIn in a swap, given the current balances and virtual balances.
+ * @param balancesScaled18 Current pool balances, sorted in token registration order
+ * @param virtualBalanceA The last virtual balances of token A
+ * @param virtualBalanceB The last virtual balances of token B
+ * @param tokenInIndex Index of the token being swapped in
+ * @param tokenOutIndex Index of the token being swapped out
+ * @param amountOutScaled18 The exact amount of `tokenOut` (i.e., the amount given in an ExactOut swap)
+ * @return amountInScaled18 The calculated amount of `tokenIn` returned in an ExactOut swap
+ */
 export function computeInGivenOut(
     balancesScaled18: bigint[],
     virtualBalanceA: bigint,
@@ -372,104 +477,56 @@ export function computeInGivenOut(
     tokenOutIndex: number,
     amountOutScaled18: bigint,
 ): bigint {
+    // `amountInScaled18 = newTotalTokenOutPoolBalance - currentTotalTokenInPoolBalance`,
+    // where `newTotalTokenOutPoolBalance = invariant / (currentTotalTokenOutPoolBalance - amountOutScaled18)`
+    // and `currentTotalTokenInPoolBalance = balancesScaled18[tokenInIndex] + virtualBalanceTokenIn`.
+    // In other words,
+    // +--------------------------------------------------+
+    // |               L                                  |
+    // | Ai = --------------------- - (Bi + Vi)           |
+    // |         (Bo + Vo - Ao)                           |
+    // +--------------------------------------------------+
+    // Simplify by:
+    // - replacing `L = (Bo + Vo) (Bi + Vi)`, and
+    // - multiplying `(Bi + Vi)` by `(Bo + Vo - Ao) / (Bo + Vo - Ao)`:
+    // +--------------------------------------------------+
+    // |              (Bi + Vi) Ao                        |
+    // | Ai = ------------------------------              |
+    // |             (Bo + Vo - Ao)                       |
+    // +--------------------------------------------------+
+    // | Where:                                           |
+    // |   Ao = Amount out                                |
+    // |   Bo = Balance token out                         |
+    // |   Vo = Virtual balance token out                 |
+    // |   Ai = Amount in                                 |
+    // |   Bi = Balance token in                          |
+    // |   Vi = Virtual balance token in                  |
+    // +--------------------------------------------------+
+
     if (amountOutScaled18 > balancesScaled18[tokenOutIndex]) {
         // Amount out cannot be greater than the real balance of the token in the pool.
-        throw new Error(`reClammMath: AmountOutGreaterThanBalance`);
+        throw new Error('reClammMath: AmountOutGreaterThanBalance');
     }
 
-    // Round up, so the swapper absorbs any imprecision due to rounding (i.e., it rounds in favor of the Vault).
-    const invariant = computeInvariant(
-        balancesScaled18,
-        virtualBalanceA,
-        virtualBalanceB,
-        Rounding.ROUND_UP,
-    );
-
-    const [virtualBalanceTokenIn, virtualBalanceTokenOut] =
+    const { virtualBalanceTokenIn, virtualBalanceTokenOut } =
         tokenInIndex === 0
-            ? [virtualBalanceA, virtualBalanceB]
-            : [virtualBalanceB, virtualBalanceA];
+            ? {
+                  virtualBalanceTokenIn: virtualBalanceA,
+                  virtualBalanceTokenOut: virtualBalanceB,
+              }
+            : {
+                  virtualBalanceTokenIn: virtualBalanceB,
+                  virtualBalanceTokenOut: virtualBalanceA,
+              };
 
-    // Rounding division up, which will round the `tokenIn` amount up, favoring the Vault.
-    const amountInScaled18 =
-        MathSol.divUpFixed(
-            invariant,
-            balancesScaled18[tokenOutIndex] +
-                virtualBalanceTokenOut -
-                amountOutScaled18,
-        ) -
-        balancesScaled18[tokenInIndex] -
-        virtualBalanceTokenIn;
+    // Round up to favor the vault (i.e. request larger amount in from the user).
+    const amountInScaled18 = MathSol.mulDivUpFixed(
+        balancesScaled18[tokenInIndex] + virtualBalanceTokenIn,
+        amountOutScaled18,
+        balancesScaled18[tokenOutIndex] +
+            virtualBalanceTokenOut -
+            amountOutScaled18,
+    );
 
     return amountInScaled18;
-}
-
-export function computeTheoreticalPriceRatioAndBalances(
-    minPrice: bigint,
-    maxPrice: bigint,
-    targetPrice: bigint,
-): {
-    realBalances: bigint[];
-    virtualBalances: bigint[];
-    fourthRootPriceRatio: bigint;
-} {
-    // In the formulas below, Ra_max is a random number that defines the maximum real balance of token A, and
-    // consequently a random initial liquidity. We will scale all balances according to the actual amount of
-    // liquidity provided during initialization.
-    const sqrtPriceRatio = sqrtScaled18(
-        MathSol.divDownFixed(maxPrice, minPrice),
-    );
-    const fourthRootPriceRatio = sqrtScaled18(sqrtPriceRatio);
-
-    const virtualBalances: bigint[] = [];
-    // Va = Ra_max / (sqrtPriceRatio - 1)
-    virtualBalances[a] = MathSol.divDownFixed(
-        INITIALIZATION_MAX_BALANCE_A,
-        sqrtPriceRatio - WAD,
-    );
-    // Vb = minPrice * (Va + Ra_max)
-    virtualBalances[b] = MathSol.mulDownFixed(
-        minPrice,
-        virtualBalances[a] + INITIALIZATION_MAX_BALANCE_A,
-    );
-
-    const realBalances: bigint[] = [];
-    // Rb = sqrt(targetPrice * Vb * (Ra_max + Va)) - Vb
-    realBalances[b] =
-        sqrtScaled18(
-            MathSol.mulUpFixed(
-                MathSol.mulUpFixed(targetPrice, virtualBalances[b]),
-                INITIALIZATION_MAX_BALANCE_A + virtualBalances[a],
-            ),
-        ) - virtualBalances[b];
-    // Ra = (Rb + Vb - (Va * targetPrice)) / targetPrice
-    realBalances[a] = MathSol.divDownFixed(
-        realBalances[b] +
-            virtualBalances[b] -
-            MathSol.mulDownFixed(virtualBalances[a], targetPrice),
-        targetPrice,
-    );
-
-    return { realBalances, virtualBalances, fourthRootPriceRatio };
-}
-
-/**
- * Modified version of ReClammPool.computeInitialBalanceRatio
- * Useful for computing "proportion" value used to calculate token amounts needed to init pool
- */
-export function computeInitialBalanceRatio(
-    minPrice: bigint,
-    maxPrice: bigint,
-    targetPrice: bigint,
-): bigint {
-    const { realBalances } = computeTheoreticalPriceRatioAndBalances(
-        minPrice,
-        maxPrice,
-        targetPrice,
-    );
-    return MathSol.divDownFixed(realBalances[b], realBalances[a]);
-}
-
-function sqrtScaled18(valueScaled18: bigint): bigint {
-    return sqrt(valueScaled18 * WAD);
 }

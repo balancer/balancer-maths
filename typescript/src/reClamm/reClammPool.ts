@@ -6,15 +6,12 @@ import {
 } from '../vault/types';
 import { ReClammMutable } from './reClammData';
 import {
-    computeCenteredness,
     computeCurrentVirtualBalances,
     computeInGivenOut,
     computeOutGivenIn,
 } from './reClammMath';
 
 export class ReClamm implements PoolBase {
-    private readonly MIN_TOKEN_BALANCE_SCALED18 = 1000000000000n;
-    private readonly MIN_POOL_CENTEREDNESS = 1000n;
     public reClammState: ReClammMutable;
     constructor(reClammState: ReClammMutable) {
         this.reClammState = reClammState;
@@ -40,25 +37,25 @@ export class ReClamm implements PoolBase {
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
         const { balancesLiveScaled18, indexIn, indexOut, swapKind } =
             maxSwapParams;
-        const maxAmountOut =
-            balancesLiveScaled18[indexOut] - this.MIN_TOKEN_BALANCE_SCALED18;
 
         if (swapKind === SwapKind.GivenIn) {
-            // ComputeInGivenOut, where the amount out is the real balance of the token out - 1e12 (1e12 is the minimum amount of token in this pool).
-            // This would give the maximum amount in.
             const computeResult =
                 this._computeCurrentVirtualBalances(balancesLiveScaled18);
-            const amountCalculatedScaled18 = computeInGivenOut(
+            const maxAmountIn = computeInGivenOut(
                 balancesLiveScaled18,
                 computeResult.currentVirtualBalanceA,
                 computeResult.currentVirtualBalanceB,
                 indexIn,
                 indexOut,
-                maxAmountOut,
+                balancesLiveScaled18[indexOut],
             );
-            return amountCalculatedScaled18 - 1n;
+            const maxAmountInWithTolerance = maxAmountIn - 10n; // 10 is a tolerance for rounding
+            return maxAmountInWithTolerance < 0n
+                ? 0n
+                : maxAmountInWithTolerance;
         }
-        return maxAmountOut;
+        const maxAmountOutWithTolerance = balancesLiveScaled18[indexOut] - 10n; // 10 is a tolerance for rounding
+        return maxAmountOutWithTolerance < 0n ? 0n : maxAmountOutWithTolerance;
     }
 
     getMaxSingleTokenAddAmount(): bigint {
@@ -80,27 +77,19 @@ export class ReClamm implements PoolBase {
             amountGivenScaled18,
         } = swapParams;
 
-        const computeResult =
+        const { currentVirtualBalanceA, currentVirtualBalanceB } =
             this._computeCurrentVirtualBalances(balancesLiveScaled18);
+
+        // In SC it does: if (changed) _setLastVirtualBalances, but we don't need that as lastVirtualBalances isn't relevant going forward
 
         if (swapKind === SwapKind.GivenIn) {
             const amountCalculatedScaled18 = computeOutGivenIn(
                 balancesLiveScaled18,
-                computeResult.currentVirtualBalanceA,
-                computeResult.currentVirtualBalanceB,
+                currentVirtualBalanceA,
+                currentVirtualBalanceB,
                 indexIn,
                 indexOut,
                 amountGivenScaled18,
-            );
-
-            this._ensureValidPoolStateAfterSwap(
-                balancesLiveScaled18,
-                computeResult.currentVirtualBalanceA,
-                computeResult.currentVirtualBalanceB,
-                amountGivenScaled18,
-                amountCalculatedScaled18,
-                indexIn,
-                indexOut,
             );
 
             return amountCalculatedScaled18;
@@ -108,21 +97,11 @@ export class ReClamm implements PoolBase {
 
         const amountCalculatedScaled18 = computeInGivenOut(
             balancesLiveScaled18,
-            computeResult.currentVirtualBalanceA,
-            computeResult.currentVirtualBalanceB,
+            currentVirtualBalanceA,
+            currentVirtualBalanceB,
             indexIn,
             indexOut,
             amountGivenScaled18,
-        );
-
-        this._ensureValidPoolStateAfterSwap(
-            balancesLiveScaled18,
-            computeResult.currentVirtualBalanceA,
-            computeResult.currentVirtualBalanceB,
-            amountCalculatedScaled18,
-            amountGivenScaled18,
-            indexIn,
-            indexOut,
         );
 
         return amountCalculatedScaled18;
@@ -162,40 +141,5 @@ export class ReClamm implements PoolBase {
                     this.reClammState.endFourthRootPriceRatio,
             },
         );
-    }
-
-    _ensureValidPoolStateAfterSwap(
-        currentBalancesScaled18: bigint[],
-        currentVirtualBalanceA: bigint,
-        currentVirtualBalanceB: bigint,
-        amountInScaled18: bigint,
-        amountOutScaled18: bigint,
-        indexIn: number,
-        indexOut: number,
-    ) {
-        // Create a copy of the balances array
-        const updatedBalances = [...currentBalancesScaled18];
-        updatedBalances[indexIn] += amountInScaled18;
-        // The swap functions `computeOutGivenIn` and `computeInGivenOut` ensure that the amountOutScaled18 is
-        // never greater than the balance of the token being swapped out. Therefore, the math below will never
-        // underflow. Nevertheless, since these considerations involve code outside this function, it is safest
-        // to still use checked math here.
-        updatedBalances[indexOut] -= amountOutScaled18;
-
-        if (updatedBalances[indexOut] < this.MIN_TOKEN_BALANCE_SCALED18) {
-            // If one of the token balances is below the minimum, the price ratio update is unreliable.
-            throw new Error(`reClammPool: TokenBalanceTooLow`);
-        }
-
-        if (
-            computeCenteredness(
-                updatedBalances,
-                currentVirtualBalanceA,
-                currentVirtualBalanceB,
-            ) < this.MIN_POOL_CENTEREDNESS
-        ) {
-            // If the pool centeredness is below the minimum, the price ratio update is unreliable.
-            throw new Error(`reClammPool: PoolCenterednessTooLow`);
-        }
     }
 }
