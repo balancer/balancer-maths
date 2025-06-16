@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable
 from common.maths import (
     mul_down_fixed,
@@ -10,6 +11,30 @@ from common.maths import (
 )
 
 
+@dataclass
+class AddLiquidityUnbalancedResult:
+    bpt_amount_out: int
+    swap_fee_amounts: list[int]
+
+
+@dataclass
+class AddLiquiditySingleTokenExactOutResult:
+    amount_in_with_fee: int
+    swap_fee_amounts: list[int]
+
+
+@dataclass
+class RemoveLiquiditySingleTokenExactInResult:
+    amount_out_with_fee: int
+    swap_fee_amounts: list[int]
+
+
+@dataclass
+class RemoveLiquiditySingleTokenExactOutResult:
+    bpt_amount_in: int
+    swap_fee_amounts: list[int]
+
+
 def compute_add_liquidity_unbalanced(
     current_balances: list[int],
     exact_amounts: list[int],
@@ -17,7 +42,7 @@ def compute_add_liquidity_unbalanced(
     swap_fee_percentage: int,
     max_invariant_ratio: int,
     compute_invariant: Callable[[list[int], Rounding], int],
-):
+) -> AddLiquidityUnbalancedResult:
     # /***********************************************************************
     # //                                                                    //
     # // s = total_supply                                 (iFees - iCur)     //
@@ -91,7 +116,9 @@ def compute_add_liquidity_unbalanced(
         total_supply * (invariant_with_fees_applied - current_invariant)
     ) // current_invariant
 
-    return {"bpt_amount_out": bpt_amount_out, "swap_fee_amounts": swap_fee_amounts}
+    return AddLiquidityUnbalancedResult(
+        bpt_amount_out=bpt_amount_out, swap_fee_amounts=swap_fee_amounts
+    )
 
 
 # /**
@@ -112,7 +139,7 @@ def compute_add_liquidity_single_token_exact_out(
     swap_fee_percentage: int,
     max_invariant_ratio: int,
     compute_balance: Callable[[list[int], int, int], int],
-):
+) -> AddLiquiditySingleTokenExactOutResult:
     # Calculate new supply after minting exactBptamount_out
     new_supply = exact_bpt_amount_out + total_supply
 
@@ -149,10 +176,10 @@ def compute_add_liquidity_single_token_exact_out(
 
     # Return the total amount of input token needed, including the swap fee
     amount_in_with_fee = amount_in + fee
-    return {
-        "amount_in_with_fee": amount_in_with_fee,
-        "swap_fee_amounts": swap_fee_amounts,
-    }
+    return AddLiquiditySingleTokenExactOutResult(
+        amount_in_with_fee=amount_in_with_fee,
+        swap_fee_amounts=swap_fee_amounts,
+    )
 
 
 # /**
@@ -173,7 +200,7 @@ def compute_proportional_amounts_out(
     balances: list[int],
     bpt_total_supply: int,
     bpt_amount_in: int,
-):
+) -> list[int]:
     # /**********************************************************************************************
     # // computeProportionalAmountsOut                                                             //
     # // (per token)                                                                               //
@@ -213,7 +240,7 @@ def compute_remove_liquidity_single_token_exact_in(
     swap_fee_percentage: int,
     min_invariant_ratio: int,
     compute_balance: Callable[[list[int], int, int], int],
-):
+) -> RemoveLiquiditySingleTokenExactInResult:
     # // Calculate new supply accounting for burning exactBptAmountIn
     new_supply = total_supply - exact_bpt_amount_in
 
@@ -252,10 +279,10 @@ def compute_remove_liquidity_single_token_exact_in(
 
     # // Return the net amount after subtracting the fee.
     amount_out_with_fee = amount_out - fee
-    return {
-        "amount_out_with_fee": amount_out_with_fee,
-        "swap_fee_amounts": swap_fee_amounts,
-    }
+    return RemoveLiquiditySingleTokenExactInResult(
+        amount_out_with_fee=amount_out_with_fee,
+        swap_fee_amounts=swap_fee_amounts,
+    )
 
 
 # /**
@@ -276,7 +303,7 @@ def compute_remove_liquidity_single_token_exact_out(
     swap_fee_percentage: int,
     min_invariant_ratio: int,
     compute_invariant: Callable[[list[int], Rounding], int],
-):
+) -> RemoveLiquiditySingleTokenExactOutResult:
     # // Determine the number of tokens in the pool.
     num_tokens = len(current_balances)
 
@@ -343,7 +370,7 @@ def compute_remove_liquidity_single_token_exact_out(
         total_supply, current_invariant - invariant_with_fees_applied, current_invariant
     )
 
-    return {
-        "bptAmountIn": bpt_amount_in,
-        "swap_fee_amounts": swap_fee_amounts,
-    }
+    return RemoveLiquiditySingleTokenExactOutResult(
+        bpt_amount_in=bpt_amount_in,
+        swap_fee_amounts=swap_fee_amounts,
+    )

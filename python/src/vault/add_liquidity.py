@@ -66,8 +66,8 @@ def add_liquidity(
             pool_class.get_maximum_invariant_ratio(),
             pool_class.compute_invariant,
         )
-        bpt_amount_out = computed["bpt_amount_out"]
-        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+        bpt_amount_out = computed.bpt_amount_out
+        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
 
     elif (
         add_liquidity_input.kind.value == AddLiquidityKind.SINGLE_TOKEN_EXACT_OUT.value
@@ -85,8 +85,8 @@ def add_liquidity(
             pool_class.get_maximum_invariant_ratio(),
             pool_class.compute_balance,
         )
-        amounts_in_scaled18[token_index] = computed["amount_in_with_fee"]
-        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+        amounts_in_scaled18[token_index] = computed.amount_in_with_fee
+        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
     else:
         raise ValueError("Unsupported AddLiquidity Kind")
 

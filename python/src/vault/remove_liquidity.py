@@ -88,8 +88,8 @@ def remove_liquidity(
             pool_class.get_minimum_invariant_ratio(),
             pool_class.compute_balance,
         )
-        amounts_out_scaled18[token_out_index] = computed["amount_out_with_fee"]
-        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+        amounts_out_scaled18[token_out_index] = computed.amount_out_with_fee
+        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
     elif (
         remove_liquidity_input.kind.value
         == RemoveLiquidityKind.SINGLE_TOKEN_EXACT_OUT.value
@@ -108,8 +108,8 @@ def remove_liquidity(
             pool_class.get_minimum_invariant_ratio(),
             pool_class.compute_invariant,
         )
-        bpt_amount_in = computed["bptAmountIn"]
-        swap_fee_amounts_scaled18 = computed["swap_fee_amounts"]
+        bpt_amount_in = computed.bpt_amount_in
+        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
     else:
         raise ValueError(
             "Unsupported RemoveLiquidity Kind", remove_liquidity_input.kind
