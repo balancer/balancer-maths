@@ -1,3 +1,3 @@
 """
 QuantAMM pool implementation.
-""" 
+"""

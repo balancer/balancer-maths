@@ -1,4 +1,3 @@
-from test.test_swaps import are_big_ints_within_percent
 from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
 from test.utils.read_test_data import read_test_data
 import os

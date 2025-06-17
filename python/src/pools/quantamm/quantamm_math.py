@@ -45,7 +45,9 @@ def get_first_four_weights_and_multipliers(
 
     for i in range(less_than_4_tokens_offset):
         weights[i] = first_four_weights_and_multipliers[i]
-        multipliers[i] = first_four_weights_and_multipliers[i + less_than_4_tokens_offset]
+        multipliers[i] = first_four_weights_and_multipliers[
+            i + less_than_4_tokens_offset
+        ]
 
     return weights, multipliers
 
@@ -72,6 +74,8 @@ def get_second_four_weights_and_multipliers(
 
     for i in range(more_than_4_tokens_offset):
         weights[i] = second_four_weights_and_multipliers[i]
-        multipliers[i] = second_four_weights_and_multipliers[i + more_than_4_tokens_offset]
+        multipliers[i] = second_four_weights_and_multipliers[
+            i + more_than_4_tokens_offset
+        ]
 
-    return weights, multipliers 
+    return weights, multipliers
