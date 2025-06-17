@@ -39,10 +39,6 @@ def test_swaps():
             assert are_big_ints_within_percent(
                 calculated_amount, int(swap_test["outputRaw"]), 0.01
             )
-        elif pool["poolType"] == "QUANT_AMM_WEIGHTED":
-            assert are_big_ints_within_percent(
-                calculated_amount, int(swap_test["outputRaw"]), 0.0001
-            )
         else:
             assert calculated_amount == int(swap_test["outputRaw"])
 

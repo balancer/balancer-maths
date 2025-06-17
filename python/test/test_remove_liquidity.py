@@ -38,14 +38,7 @@ def test_remove_liquidity():
             ),
             pool_state=cast(PoolState, map_pool_state(pool_with_ints)),
         )
-        if pool["poolType"] == "QUANT_AMM_WEIGHTED":
-            assert are_big_ints_within_percent(
-                calculated_amount.bpt_amount_in_raw,
-                int(remove_test["bptInRaw"]),
-                0.0001,
-            )
-        else:
-            assert calculated_amount.bpt_amount_in_raw == int(remove_test["bptInRaw"])
+        assert calculated_amount.bpt_amount_in_raw == int(remove_test["bptInRaw"])
         assert calculated_amount.amounts_out_raw == list(
             map(int, remove_test["amountsOutRaw"])
         )

@@ -133,7 +133,7 @@ class QuantAmm(PoolBase):
             self.multipliers,
         )
 
-        if rounding == Rounding.ROUND_UP:
+        if rounding.value == Rounding.ROUND_UP.value:
             return compute_invariant_up(normalized_weights, balances_live_scaled18)
         return compute_invariant_down(normalized_weights, balances_live_scaled18)
 

@@ -1,4 +1,5 @@
 from common.constants import RAY, WAD
+from common.bigint import BigInt
 
 HUNDRED_WAD = 100000000000000000000
 
@@ -91,13 +92,13 @@ class LogExpMath:
             # bring y_int256 to 36 decimal places, as it might overflow. Instead, we perform two 18 decimal
             # multiplications and add the results: one with the first 18 decimals of ln_36_x, and one with the
             # (downscaled) last 18 decimals.
-            logx_times_y = (ln_36_x // WAD) * y_int256 + (
-                (ln_36_x % WAD) * y_int256
-            ) // WAD
+            logx_times_y = int(BigInt(ln_36_x) // BigInt(WAD)) * y_int256 + int(
+                BigInt((BigInt(ln_36_x) % BigInt(WAD)) * y_int256) // BigInt(WAD)
+            )
         else:
             logx_times_y = LogExpMath._ln(x_int256) * y_int256
 
-        logx_times_y //= WAD
+        logx_times_y = BigInt(logx_times_y) // BigInt(WAD)
 
         # Finally, we compute exp(y * ln(x)) to arrive at x^y
         assert (
@@ -119,7 +120,7 @@ class LogExpMath:
             # We only handle positive exponents: e^(-x) is computed as 1 / e^x. We can safely make x positive since it
             # fits in the signed 256 bit range (as it is larger than MIN_NATURAL_EXPONENT).
             # Fixed point division requires multiplying by ONE_18.
-            return (WAD * WAD) // LogExpMath.exp(-x)
+            return int(BigInt(WAD * WAD) // BigInt(LogExpMath.exp(-x)))
 
         # First, we use the fact that e^(x+y) = e^x * e^y to decompose x into a sum of powers of two, which we call x_n,
         # where x_n == 2^(7 - n), and e^x_n = a_n has been precomputed. We choose the first x_n, x0, to equal 2^7
@@ -157,35 +158,35 @@ class LogExpMath:
 
         if x >= LogExpMath.x2:
             x -= LogExpMath.x2
-            product = (product * LogExpMath.a2) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a2) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x3:
             x -= LogExpMath.x3
-            product = (product * LogExpMath.a3) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a3) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x4:
             x -= LogExpMath.x4
-            product = (product * LogExpMath.a4) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a4) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x5:
             x -= LogExpMath.x5
-            product = (product * LogExpMath.a5) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a5) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x6:
             x -= LogExpMath.x6
-            product = (product * LogExpMath.a6) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a6) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x7:
             x -= LogExpMath.x7
-            product = (product * LogExpMath.a7) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a7) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x8:
             x -= LogExpMath.x8
-            product = (product * LogExpMath.a8) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a8) // BigInt(HUNDRED_WAD))
 
         if x >= LogExpMath.x9:
             x -= LogExpMath.x9
-            product = (product * LogExpMath.a9) // HUNDRED_WAD
+            product = int(BigInt(product * LogExpMath.a9) // BigInt(HUNDRED_WAD))
 
         # x10 and x11 are unnecessary here since we have high enough precision already.
 
@@ -201,215 +202,224 @@ class LogExpMath:
 
         # Each term (x^n / n!) equals the previous one times x, divided by n. Since x is a fixed point number,
         # multiplying by it requires dividing by HUNDRED_WAD, but dividing by the non-fixed point n values does not.
-        term = (term * x) // HUNDRED_WAD // 2
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(2))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 3
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(3))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 4
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(4))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 5
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(5))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 6
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(6))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 7
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(7))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 8
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(8))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 9
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(9))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 10
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(10))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 11
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(11))
         series_sum += term
 
-        term = (term * x) // HUNDRED_WAD // 12
+        term = int(BigInt(term * x) // BigInt(HUNDRED_WAD) // BigInt(12))
         series_sum += term
 
-        # // 12 Taylor terms are sufficient for 18 decimal precision.
+        # 12 Taylor terms are sufficient for 18 decimal precision.
 
-        # // We now have the first a_n (with no decimals), and the product of all other a_n present, and the Taylor
-        # // approximation of the exponentiation of the remainder (both with 20 decimals). All that remains is to multiply
-        # // all three (one 20 decimal fixed point multiplication, dividing by HUNDRED_WAD, and one integer multiplication),
-        # // and then drop two digits to return an 18 decimal value.
-        return (((product * series_sum) // HUNDRED_WAD) * first_an) // 100
+        # We now have the first a_n (with no decimals), and the product of all other a_n present, and the Taylor
+        # approximation of the exponentiation of the remainder (both with 20 decimals). All that remains is to multiply
+        # all three (one 20 decimal fixed point multiplication, dividing by HUNDRED_WAD, and one integer multiplication),
+        # and then drop two digits to return an 18 decimal value.
+        return int(
+            BigInt(product * series_sum)
+            // BigInt(HUNDRED_WAD)
+            * BigInt(first_an)
+            // BigInt(100)
+        )
 
     @staticmethod
     def _ln_36(x_: int) -> int:
         x = x_
-        # // Since ln(1) = 0, a value of x close to one will yield a very small result, which makes using 36 digits
-        # // worthwhile.
+        # Since ln(1) = 0, a value of x close to one will yield a very small result, which makes using 36 digits
+        # worthwhile.
 
-        # // First, we transform x to a 36 digit fixed point value.
+        # First, we transform x to a 36 digit fixed point value.
         x *= WAD
 
-        # // We will use the following Taylor expansion, which converges very rapidly. z = (x - 1) / (x + 1).
-        # // ln(x) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
+        # We will use the following Taylor expansion, which converges very rapidly. z = (x - 1) / (x + 1).
+        # ln(x) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
 
-        # // Recall that 36 digit fixed point division requires multiplying by ONE_36, and multiplication requires
-        # // division by ONE_36.
-        z = ((x - RAY) * RAY) // (x + RAY)
-        z_squared = (z * z) // RAY
+        # Recall that 36 digit fixed point division requires multiplying by ONE_36, and multiplication requires
+        # division by ONE_36.
+        z = int(BigInt((x - RAY) * RAY) // BigInt(x + RAY))
+        z_squared = int(BigInt(z * z) // BigInt(RAY))
 
-        # // num is the numerator of the series: the z^(2 * n + 1) term
+        # num is the numerator of the series: the z^(2 * n + 1) term
         num = z
 
-        # // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
+        # seriesSum holds the accumulated sum of each term in the series, starting with the initial z
         series_sum = num
 
-        # // In each step, the numerator is multiplied by z^2
-        num = (num * z_squared) // RAY
-        series_sum += num // 3
+        # In each step, the numerator is multiplied by z^2
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(3)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 5
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(5)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 7
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(7)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 9
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(9)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 11
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(11)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 13
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(13)
 
-        num = (num * z_squared) // RAY
-        series_sum += num // 15
+        num = int(BigInt(num * z_squared) // BigInt(RAY))
+        series_sum += num // BigInt(15)
 
-        # // 8 Taylor terms are sufficient for 36 decimal precision.
+        # 8 Taylor terms are sufficient for 36 decimal precision.
 
-        # // All that remains is multiplying by 2 (non fixed point).
+        # All that remains is multiplying by 2 (non fixed point).
         return series_sum * 2
 
     @staticmethod
     def _ln(a_: int) -> int:
         a = a_
         if a < WAD:
-            # // Since ln(a^k) = k * ln(a), we can compute ln(a) as ln(a) = ln((1/a)^(-1)) = - ln((1/a)). If a is less
-            # // than one, 1/a will be greater than one, and MathSol if statement will not be entered in the recursive call.
-            # // Fixed point division requires multiplying by MathSol.ONE_18.
-            return -1 * LogExpMath._ln((WAD * WAD) // a)
+            # Since ln(a^k) = k * ln(a), we can compute ln(a) as ln(a) = ln((1/a)^(-1)) = - ln((1/a)). If a is less
+            # than one, 1/a will be greater than one, and MathSol if statement will not be entered in the recursive call.
+            # Fixed point division requires multiplying by MathSol.ONE_18.
+            return -1 * LogExpMath._ln(int(BigInt(WAD * WAD) // BigInt(a)))
 
-        # // First, we use the fact that ln^(a * b) = ln(a) + ln(b) to decompose ln(a) into a sum of powers of two, which
-        # // we call x_n, where x_n == 2^(7 - n), which are the natural logarithm of precomputed quantities a_n (that is,
-        # // ln(a_n) = x_n). We choose the first x_n, x0, to equal 2^7 because the exponential of all larger powers cannot
-        # // be represented as 18 fixed point decimal numbers in 256 bits, and are therefore larger than a.
-        # // At the end of MathSol process we will have the sum of all x_n = ln(a_n) that apply, and the remainder of MathSol
-        # // decomposition, which will be lower than the smallest a_n.
-        # // ln(a) = k_0 * x_0 + k_1 * x_1 + ... + k_n * x_n + ln(remainder), where each k_n equals either 0 or 1.
-        # // We mutate a by subtracting a_n, making it the remainder of the decomposition.
+        # First, we use the fact that ln^(a * b) = ln(a) + ln(b) to decompose ln(a) into a sum of powers of two, which
+        # we call x_n, where x_n == 2^(7 - n), which are the natural logarithm of precomputed quantities a_n (that is,
+        # ln(a_n) = x_n). We choose the first x_n, x0, to equal 2^7 because the exponential of all larger powers cannot
+        # be represented as 18 fixed point decimal numbers in 256 bits, and are therefore larger than a.
+        # At the end of MathSol process we will have the sum of all x_n = ln(a_n) that apply, and the remainder of MathSol
+        # decomposition, which will be lower than the smallest a_n.
+        # ln(a) = k_0 * x_0 + k_1 * x_1 + ... + k_n * x_n + ln(remainder), where each k_n equals either 0 or 1.
+        # We mutate a by subtracting a_n, making it the remainder of the decomposition.
 
-        # // For reasons related to how `exp` works, the first two a_n (e^(2^7) and e^(2^6)) are not stored as fixed point
-        # // numbers with 18 decimals, but instead as plain integers with 0 decimals, so we need to multiply them by
-        # // MathSol.ONE_18 to convert them to fixed point.
-        # // For each a_n, we test if that term is present in the decomposition (if a is larger than it), and if so divide
-        # // by it and compute the accumulated sum.
+        # For reasons related to how `exp` works, the first two a_n (e^(2^7) and e^(2^6)) are not stored as fixed point
+        # numbers with 18 decimals, but instead as plain integers with 0 decimals, so we need to multiply them by
+        # MathSol.ONE_18 to convert them to fixed point.
+        # For each a_n, we test if that term is present in the decomposition (if a is larger than it), and if so divide
+        # by it and compute the accumulated sum.
 
         sum_var = 0
         if a >= LogExpMath.a0 * WAD:
-            a //= LogExpMath.a0  # Integer, not fixed point division
+            a = int(
+                BigInt(a) // BigInt(LogExpMath.a0)
+            )  # Integer, not fixed point division
             sum_var += LogExpMath.x0
 
         if a >= LogExpMath.a1 * WAD:
-            a //= LogExpMath.a1  # // Integer, not fixed point division
+            a = int(
+                BigInt(a) // BigInt(LogExpMath.a1)
+            )  # Integer, not fixed point division
             sum_var += LogExpMath.x1
 
-        # // All other a_n and x_n are stored as 20 digit fixed point numbers, so we convert the sum and a to MathSol format.
+        # All other a_n and x_n are stored as 20 digit fixed point numbers, so we convert the sum and a to MathSol format.
         sum_var *= 100
         a *= 100
 
-        # // Because further a_n are  20 digit fixed point numbers, we multiply by ONE_20 when dividing by them.
+        # Because further a_n are  20 digit fixed point numbers, we multiply by ONE_20 when dividing by them.
 
         if a >= LogExpMath.a2:
-            a = (a * HUNDRED_WAD) // LogExpMath.a2
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a2))
             sum_var += LogExpMath.x2
 
         if a >= LogExpMath.a3:
-            a = (a * HUNDRED_WAD) // LogExpMath.a3
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a3))
             sum_var += LogExpMath.x3
 
         if a >= LogExpMath.a4:
-            a = (a * HUNDRED_WAD) // LogExpMath.a4
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a4))
             sum_var += LogExpMath.x4
 
         if a >= LogExpMath.a5:
-            a = (a * HUNDRED_WAD) // LogExpMath.a5
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a5))
             sum_var += LogExpMath.x5
 
         if a >= LogExpMath.a6:
-            a = (a * HUNDRED_WAD) // LogExpMath.a6
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a6))
             sum_var += LogExpMath.x6
 
         if a >= LogExpMath.a7:
-            a = (a * HUNDRED_WAD) // LogExpMath.a7
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a7))
             sum_var += LogExpMath.x7
 
         if a >= LogExpMath.a8:
-            a = (a * HUNDRED_WAD) // LogExpMath.a8
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a8))
             sum_var += LogExpMath.x8
 
         if a >= LogExpMath.a9:
-            a = (a * HUNDRED_WAD) // LogExpMath.a9
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a9))
             sum_var += LogExpMath.x9
 
         if a >= LogExpMath.a10:
-            a = (a * HUNDRED_WAD) // LogExpMath.a10
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a10))
             sum_var += LogExpMath.x10
 
         if a >= LogExpMath.a11:
-            a = (a * HUNDRED_WAD) // LogExpMath.a11
+            a = int(BigInt(a * HUNDRED_WAD) // BigInt(LogExpMath.a11))
             sum_var += LogExpMath.x11
 
-        # // a is now a small number (smaller than a_11, which roughly equals 1.06). This means we can use a Taylor series
-        # // that converges rapidly for values of `a` close to one - the same one used in ln_36.
-        # // z = (a - 1) / (a + 1).
-        # // ln(a) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
+        # a is now a small number (smaller than a_11, which roughly equals 1.06). This means we can use a Taylor series
+        # that converges rapidly for values of `a` close to one - the same one used in ln_36.
+        # z = (a - 1) / (a + 1).
+        # ln(a) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
 
-        # // Recall that 20 digit fixed point division requires multiplying by ONE_20, and multiplication requires
-        # // division by ONE_20.
-        z = ((a - HUNDRED_WAD) * HUNDRED_WAD) // (a + HUNDRED_WAD)
-        z_squared = (z * z) // HUNDRED_WAD
+        # Recall that 20 digit fixed point division requires multiplying by ONE_20, and multiplication requires
+        # division by ONE_20.
+        z = int(BigInt((a - HUNDRED_WAD) * HUNDRED_WAD) // BigInt(a + HUNDRED_WAD))
+        z_squared = int(BigInt(z * z) // BigInt(HUNDRED_WAD))
 
-        # // num is the numerator of the series: the z^(2 * n + 1) term
+        # num is the numerator of the series: the z^(2 * n + 1) term
         num = z
 
-        # // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
+        # seriesSum holds the accumulated sum of each term in the series, starting with the initial z
         series_sum = num
 
-        # // In each step, the numerator is multiplied by z^2
-        num = (num * z_squared) // HUNDRED_WAD
-        series_sum += num // 3
+        # In each step, the numerator is multiplied by z^2
+        num = int(BigInt(num * z_squared) // BigInt(HUNDRED_WAD))
+        series_sum += num // BigInt(3)
 
-        num = (num * z_squared) // HUNDRED_WAD
-        series_sum += num // 5
+        num = int(BigInt(num * z_squared) // BigInt(HUNDRED_WAD))
+        series_sum += num // BigInt(5)
 
-        num = (num * z_squared) // HUNDRED_WAD
-        series_sum += num // 7
+        num = int(BigInt(num * z_squared) // BigInt(HUNDRED_WAD))
+        series_sum += num // BigInt(7)
 
-        num = (num * z_squared) // HUNDRED_WAD
-        series_sum += num // 9
+        num = int(BigInt(num * z_squared) // BigInt(HUNDRED_WAD))
+        series_sum += num // BigInt(9)
 
-        num = (num * z_squared) // HUNDRED_WAD
-        series_sum += num // 11
+        num = int(BigInt(num * z_squared) // BigInt(HUNDRED_WAD))
+        series_sum += num // BigInt(11)
 
-        # // 6 Taylor terms are sufficient for 36 decimal precision.
+        # 6 Taylor terms are sufficient for 36 decimal precision.
 
-        # // Finally, we multiply by 2 (non fixed point) to compute ln(remainder)
+        # Finally, we multiply by 2 (non fixed point) to compute ln(remainder)
         series_sum *= 2
 
-        # // We now have the sum of all x_n present, and the Taylor approximation of the logarithm of the remainder (both
-        # // with 20 decimals). All that remains is to sum these two, and then drop two digits to return a 18 decimal
-        # // value.
+        # We now have the sum of all x_n present, and the Taylor approximation of the logarithm of the remainder (both
+        # with 20 decimals). All that remains is to sum these two, and then drop two digits to return a 18 decimal
+        # value.
 
-        return (sum_var + series_sum) // 100
+        return int(BigInt(sum_var + series_sum) // BigInt(100))
