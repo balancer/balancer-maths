@@ -22,6 +22,7 @@ from src.pools.weighted.weighted import Weighted
 from src.vault.swap import swap
 from src.vault.add_liquidity import add_liquidity
 from src.vault.remove_liquidity import remove_liquidity
+from src.pools.liquidity_bootstrapping.liquidity_bootstrapping import LiquidityBootstrapping
 
 
 class Vault:
@@ -33,6 +34,7 @@ class Vault:
             "GYROE": GyroECLP,
             "RECLAMM": ReClamm,
             "QUANT_AMM_WEIGHTED": QuantAmm,
+            "LIQUIDITY_BOOTSTRAPPING": LiquidityBootstrapping,
         }
         self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
         if custom_pool_classes is not None:
