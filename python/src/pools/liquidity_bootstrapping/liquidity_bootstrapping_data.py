@@ -49,12 +49,10 @@ def map_liquidity_bootstrapping_state(pool_state: dict) -> LiquidityBootstrappin
         token_rates=pool_state["tokenRates"],
         balances_live_scaled18=pool_state["balancesLiveScaled18"],
         swap_fee=pool_state["swapFee"],
-        aggregate_swap_fee=pool_state.get(
-            "aggregateSwapFee", 0
-        ),  # TODO: check why this is not a problem
+        aggregate_swap_fee=pool_state.get("aggregateSwapFee", 0),
         total_supply=pool_state["totalSupply"],
         supports_unbalanced_liquidity=pool_state.get(
-            "supportsUnbalancedLiquidity", True
+            "supportsUnbalancedLiquidity", False
         ),
         hook_type=pool_state.get("hookType", None),
         project_token_index=pool_state["projectTokenIndex"],
