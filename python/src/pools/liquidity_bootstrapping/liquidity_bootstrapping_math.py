@@ -2,6 +2,7 @@ from src.common.constants import WAD
 from src.common.maths import mul_down_fixed, div_down_fixed
 from typing import List
 
+
 def get_normalized_weights(
     project_token_index: int,
     current_time: int,
@@ -19,8 +20,11 @@ def get_normalized_weights(
         project_token_start_weight,
         project_token_end_weight,
     )
-    normalized_weights[reserve_token_index] = WAD - normalized_weights[project_token_index]
+    normalized_weights[reserve_token_index] = (
+        WAD - normalized_weights[project_token_index]
+    )
     return normalized_weights
+
 
 def get_project_token_normalized_weight(
     current_time: int,
@@ -31,6 +35,7 @@ def get_project_token_normalized_weight(
 ) -> int:
     pct_progress = calculate_value_change_progress(current_time, start_time, end_time)
     return interpolate_value(start_weight, end_weight, pct_progress)
+
 
 def calculate_value_change_progress(
     current_time: int, start_time: int, end_time: int
@@ -44,6 +49,7 @@ def calculate_value_change_progress(
     progress = div_down_fixed(seconds_elapsed, total_seconds)
     return progress
 
+
 def interpolate_value(start_value: int, end_value: int, pct_progress: int) -> int:
     if pct_progress >= WAD or start_value == end_value:
         return end_value
@@ -54,4 +60,4 @@ def interpolate_value(start_value: int, end_value: int, pct_progress: int) -> in
         return start_value - delta
     else:
         delta = mul_down_fixed(pct_progress, end_value - start_value)
-        return start_value + delta 
+        return start_value + delta
