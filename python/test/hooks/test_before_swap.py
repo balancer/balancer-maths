@@ -1,28 +1,22 @@
-import pytest
 import sys
 import os
+from types import SimpleNamespace
+from typing import TypeGuard, Protocol
 
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
-
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
-
-from src.pools.weighted import Weighted
-from src.swap import SwapKind
-
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
-
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
-
-from src.vault import Vault
+from src.common.types import SwapKind, SwapInput
+from src.common.swap_params import SwapParams
 from src.hooks.default_hook import DefaultHook
+from src.hooks.types import BeforeSwapResult, HookState
+from src.pools.weighted.weighted_data import map_weighted_state
+from src.vault.vault import Vault
+
+# Get the directory of the current file
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory (one level up)
+parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
+
+# Insert the parent directory at the start of sys.path
+sys.path.insert(0, parent_dir)
 
 pool = {
     "poolType": "CustomPool",
@@ -44,75 +38,58 @@ pool = {
 }
 
 
-swap_input = {
-    "amount_raw": 100000000,
-    "swap_kind": SwapKind.GIVENIN.value,
-    "token_in": pool['tokens'][0],
-    "token_out": pool['tokens'][1],
-}
+swap_input = SwapInput(
+    amount_raw=100000000,
+    swap_kind=SwapKind.GIVENIN,
+    token_in=pool["tokens"][0],
+    token_out=pool["tokens"][1],
+)
 
-class CustomPool(Weighted):
-    def __init__(self, pool_state):
-        super().__init__(pool_state)
 
-class CustomHook:
+class HasBalanceChange(Protocol):
+    balance_change: list
+
+
+def has_balance_change(obj: object) -> TypeGuard[HasBalanceChange]:
+    """Type guard to check if an object has a balance_change attribute."""
+    return hasattr(obj, "balance_change")
+
+
+class CustomHook(DefaultHook):
     def __init__(self):
-        self.should_call_compute_dynamic_swap_fee = False
+        super().__init__()
         self.should_call_before_swap = True
-        self.should_call_after_swap = False
-        self.should_call_before_add_liquidity = False
-        self.should_call_after_add_liquidity = False
-        self.should_call_before_remove_liquidity = False
-        self.should_call_after_remove_liquidity = False
-        self.enable_hook_adjusted_amounts = False
 
-    def on_before_add_liquidity(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
+    def on_before_swap(self, swap_params: SwapParams, hook_state: HookState | object):
+        if not has_balance_change(hook_state):
+            raise ValueError("hook_state must have a balance_change attribute")
 
-    def on_after_add_liquidity(self, kind, amounts_in_scaled18, amounts_in_raw, bpt_amount_out, balances_scaled18, hook_state):
-        return { 'success': False, 'hook_adjusted_amounts_in_raw': [] };
+        # Now the type checker knows hook_state has balance_change
+        balance_change = hook_state.balance_change
+        assert swap_params.swap_kind == swap_input.swap_kind
+        assert swap_params.index_in == 0
+        assert swap_params.index_out == 1
+        return BeforeSwapResult(
+            success=True,
+            hook_adjusted_balances_scaled18=balance_change,
+        )
 
-    def on_before_remove_liquidity(self):
-        return {'success': False, 'hook_adjusted_balances_scaled18': []}
-
-    def on_after_remove_liquidity(self, kind, bpt_amount_in, amounts_out_scaled18, amounts_out_raw, balances_scaled18, hook_state):
-        return {
-            'success': False,
-            'hook_adjusted_amounts_out_raw': []
-        }
-
-    def on_before_swap(self, params):
-        hook_state = params['hook_state']
-        if not (isinstance(hook_state, dict) and hook_state is not None and 'balanceChange' in hook_state):
-            raise ValueError('Unexpected hookState')
-        assert params['swap_kind'] == swap_input['swap_kind']
-        assert params['token_in'] == swap_input['token_in']
-        assert params['token_out'] == swap_input['token_out']
-        assert params['amount_raw'] == swap_input['amount_raw']
-        return {'success': True, 'hook_adjusted_balances_scaled18': hook_state['balanceChange']}
-
-    def on_after_swap(self, params):
-        return {'success': True, 'hook_adjusted_amount_calculated_raw': 0}
-
-    def on_compute_dynamic_swap_fee(self):
-        return {'success': False, 'dynamic_swap_fee': 0}
 
 vault = Vault(
-    custom_pool_classes={"CustomPool": CustomPool},
     custom_hook_classes={"CustomHook": CustomHook},
 )
 
+
 def test_before_swap():
     # should alter pool balances
-    # hook state is used to pass new balances which give expected swap result 
-    input_hook_state = {
-            "balanceChange": [
-               1000000000000000000, 1000000000000000000
-            ],
-        }
+    # hook state is used to pass new balances which give expected swap result
+    input_hook_state = SimpleNamespace(
+        balance_change=[1000000000000000000, 1000000000000000000]
+    )
+    weighted_state = map_weighted_state(pool)
     test = vault.swap(
-        swap_input,
-        pool,
-        hook_state=input_hook_state
+        swap_input=swap_input,
+        pool_state=weighted_state,
+        hook_state=input_hook_state,
     )
     assert test == 89999999

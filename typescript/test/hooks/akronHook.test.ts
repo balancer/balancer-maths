@@ -28,6 +28,7 @@ describe('hook - akron', () => {
     const hookState: HookStateAkron = {
         weights: poolState.weights,
         minimumSwapFeePercentage: poolState.swapFee,
+        hookType: 'Akron',
     };
 
     describe('should use minimum swap fee percentage', () => {

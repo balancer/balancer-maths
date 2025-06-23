@@ -1,6 +1,12 @@
-import pytest
 import sys
 import os
+
+from test.test_custom_pool import CustomPool, map_custom_pool_state
+import pytest
+
+from src.common.types import SwapInput, SwapKind
+from src.hooks.default_hook import DefaultHook
+from src.vault.vault import Vault
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -10,8 +16,6 @@ parent_dir = os.path.dirname(os.path.dirname(current_file_dir))
 # Insert the parent directory at the start of sys.path
 sys.path.insert(0, parent_dir)
 
-from src.vault import Vault
-from src.hooks.default_hook import DefaultHook
 
 pool = {
     "poolType": "CustomPool",
@@ -39,15 +43,16 @@ def test_hook_no_state():
         custom_pool_classes={"CustomPool": CustomPool},
         custom_hook_classes={"CustomHook": DefaultHook},
     )
+    custom_pool_state = map_custom_pool_state(pool)
     with pytest.raises(SystemError, match=r"\('No state for Hook:', 'CustomHook'\)"):
         vault.swap(
-            {
-                "amount_raw": 1,
-                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
-                "swapKind": 0,
-            },
-            pool,
+            swap_input=SwapInput(
+                amount_raw=1,
+                token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                swap_kind=SwapKind.GIVENIN,
+            ),
+            pool_state=custom_pool_state,
         )
 
 
@@ -56,38 +61,16 @@ def test_unsupported_hook_type():
         custom_pool_classes={"CustomPool": CustomPool},
         custom_hook_classes={"CustomHook": DefaultHook},
     )
+    custom_pool_state = map_custom_pool_state({**pool, "hookType": "Unsupported"})
     with pytest.raises(
         SystemError, match=r"\('Unsupported Hook Type:', 'Unsupported'\)"
     ):
         vault.swap(
-            {
-                "amount_raw": 1,
-                "tokenIn": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
-                "tokenOut": "0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
-                "swapKind": 0,
-            },
-            {**pool, "hookType": "Unsupported"},
+            swap_input=SwapInput(
+                amount_raw=1,
+                token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+                token_out="0xb19382073c7A0aDdbb56Ac6AF1808Fa49e377B75",
+                swap_kind=SwapKind.GIVENIN,
+            ),
+            pool_state=custom_pool_state,
         )
-
-
-class CustomPool:
-    def __init__(self, pool_state: dict):
-        self.randoms = pool_state["randoms"]
-
-    def get_max_swap_amount(self) -> int:
-        return 1
-
-    def get_max_single_token_remove_amount(self) -> int:
-        return 1
-
-    def get_max_single_token_add_amount(self) -> int:
-        return 1
-
-    def on_swap(self) -> int:
-        return self.randoms[0]
-
-    def compute_invariant(self) -> int:
-        return 1
-
-    def compute_balance(self) -> int:
-        return 1

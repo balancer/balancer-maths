@@ -2,6 +2,14 @@
 
 Python implementation of maths for Balancer pools.
 
+## Development Setup
+
+1. Create and activate a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+```
+
 ## Hooks Support
 
 Hooks are supported on a case by case basis.
@@ -19,6 +27,7 @@ Currently supported hooks:
 
 ```python
 from src.vault import Vault
+from src.swap import SwapInput, SwapKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -39,12 +48,12 @@ pool = {
 }
 
 
-swap_input = {
-    "amount_raw": 100000000,
-    "swap_kind": SwapKind.GIVENIN.value,
-    "token_in": pool['tokens'][0],
-    "token_out": pool['tokens'][1],
-}
+swap_input = SwapInput(
+    amount_raw=100000000,
+    swap_kind=SwapKind.GIVENIN,
+    token_in=pool['tokens'][0],
+    token_out=pool['tokens'][1],
+)
 
 vault = Vault()
 
@@ -58,6 +67,7 @@ calculated_result = vault.swap(
 
 ```python
 from src.vault import Vault
+from src.add_liquidity import AddLiquidityInput, AddLiquidityKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -78,12 +88,12 @@ pool = {
 }
 
 
-add_liquidity_input = {
-    "pool": '0xb2456a6f51530053bc41b0ee700fe6a2c37282e8',
-    "max_amounts_in_raw": [200000000000000000, 100000000000000000],
-    "min_bpt_amount_out_raw": 0,
-    "kind": Kind.UNBALANCED.value,
-}
+add_liquidity_input = AddLiquidityInput(
+    pool="0xb2456a6f51530053bc41b0ee700fe6a2c37282e8",
+    max_amounts_in_raw=[200000000000000000, 100000000000000000],
+    min_bpt_amount_out_raw=0,
+    kind=AddLiquidityKind.UNBALANCED,
+)
 
 vault = Vault()
 
@@ -99,6 +109,7 @@ This example shows how to calculate the result of a remove liqudity operation wh
 
 ```python
 from src.vault import Vault
+from src.remove_liquidity import RemoveLiquidityInput, RemoveLiquidityKind
 
 pool = {
     "poolType": "WEIGHTED",
@@ -119,12 +130,12 @@ pool = {
     "aggregateSwapFee": 0,
 }
 
-remove_liquidity_input = {
-    "pool": '0x03722034317d8fb16845213bd3ce15439f9ce136',
-    "min_amounts_out_raw": [1, 1],
-    "max_bpt_amount_in_raw": 10000000000000,
-    "kind": RemoveKind.PROPORTIONAL.value,
-}
+remove_liquidity_input = RemoveLiquidityInput(
+    pool="0x03722034317d8fb16845213bd3ce15439f9ce136",
+    min_amounts_out_raw=[1, 1],
+    max_bpt_amount_in_raw=10000000000000,
+    kind=RemoveLiquidityKind.PROPORTIONAL,
+)
 
 input_hook_state = {
     'removeLiquidityHookFeePercentage': 0,
@@ -134,7 +145,7 @@ input_hook_state = {
 vault = Vault()
 
 calculated_result = vault.remove_liquidity(
-    add_liquidity_input,
+    remove_liquidity_input,
     pool,
     hook_state=input_hook_state
 )

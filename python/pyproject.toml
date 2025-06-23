@@ -1,3 +1,13 @@
+[project]
+name = "balancer-maths"
+version = "0.1.0"
+description = "Balancer mathematics library"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.pytest.ini_options]
 pythonpath = [
   ".", "src"

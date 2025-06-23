@@ -1,10 +1,4 @@
-import {
-    AddKind,
-    RemoveKind,
-    SwapInput,
-    SwapKind,
-    SwapParams,
-} from '@/vault/types';
+import { AddKind, RemoveKind, SwapKind, SwapParams } from '@/vault/types';
 import { HookStateExitFee } from './exitFeeHook';
 import { HookStateStableSurge } from './stableSurgeHook';
 import { HookStateAkron } from './akron/akronHook';
@@ -71,7 +65,7 @@ export interface HookBase {
         balancesScaled18: bigint[],
         hookState: HookState | unknown,
     ): { success: boolean; hookAdjustedAmountsOutRaw: bigint[] };
-    onBeforeSwap(params: SwapInput & { hookState: HookState | unknown }): {
+    onBeforeSwap(params: SwapParams & { hookState: HookState | unknown }): {
         success: boolean;
         hookAdjustedBalancesScaled18: bigint[];
     };

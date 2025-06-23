@@ -180,23 +180,6 @@ export class Vault {
         );
 
         const updatedBalancesLiveScaled18 = [...poolState.balancesLiveScaled18];
-        if (hook.shouldCallBeforeSwap) {
-            /* 
-            Note - in SC balances and amounts are updated to reflect any rate change.
-            Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
-            We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
-            */
-            const { success, hookAdjustedBalancesScaled18 } = hook.onBeforeSwap(
-                {
-                    ...swapInput,
-                    hookState,
-                },
-            );
-            if (!success) throw new Error('BeforeSwapHookFailed');
-            hookAdjustedBalancesScaled18.forEach(
-                (a, i) => (updatedBalancesLiveScaled18[i] = a),
-            );
-        }
 
         const swapParams: SwapParams = {
             swapKind: swapInput.swapKind,
@@ -205,6 +188,24 @@ export class Vault {
             indexIn: inputIndex,
             indexOut: outputIndex,
         };
+
+        if (hook.shouldCallBeforeSwap) {
+            /* 
+            Note - in SC balances and amounts are updated to reflect any rate change.
+            Daniel said we should not worry about this as any large rate changes will mean something has gone wrong.
+            We do take into account and balance changes due to hook using hookAdjustedBalancesScaled18.
+            */
+            const { success, hookAdjustedBalancesScaled18 } = hook.onBeforeSwap(
+                {
+                    ...swapParams,
+                    hookState,
+                },
+            );
+            if (!success) throw new Error('BeforeSwapHookFailed');
+            hookAdjustedBalancesScaled18.forEach(
+                (a, i) => (updatedBalancesLiveScaled18[i] = a),
+            );
+        }
 
         let swapFee = poolState.swapFee;
         if (hook.shouldCallComputeDynamicSwapFee) {
