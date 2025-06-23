@@ -3,9 +3,12 @@ from typing import List
 
 from src.common.maths import Rounding
 from src.common.swap_params import SwapParams
+from src.common.base_pool_state import BasePoolState
 
 
 class PoolBase(ABC):
+    @abstractmethod
+    def __init__(self, pool_state: BasePoolState): ...
 
     @abstractmethod
     def on_swap(self, swap_params: SwapParams) -> int: ...

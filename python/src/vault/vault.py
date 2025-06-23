@@ -1,3 +1,5 @@
+from typing import Dict, Type, Optional
+
 from src.common.types import (
     AddLiquidityInput,
     AddLiquidityResult,
@@ -22,24 +24,33 @@ from src.pools.weighted.weighted import Weighted
 from src.vault.swap import swap
 from src.vault.add_liquidity import add_liquidity
 from src.vault.remove_liquidity import remove_liquidity
+from src.pools.liquidity_bootstrapping.liquidity_bootstrapping import (
+    LiquidityBootstrapping,
+)
 
 
 class Vault:
-    def __init__(self, *, custom_pool_classes=None, custom_hook_classes=None):
-        self.pool_classes = {
+    def __init__(
+        self,
+        custom_pool_classes: Optional[Dict[str, Type[PoolBase]]] = None,
+        custom_hook_classes: Optional[Dict[str, Type[HookBase]]] = None,
+    ):
+        default_pool_classes: Dict[str, Type[PoolBase]] = {
             "WEIGHTED": Weighted,
             "STABLE": Stable,
             "GYRO": Gyro2CLP,
             "GYROE": GyroECLP,
             "RECLAMM": ReClamm,
             "QUANT_AMM_WEIGHTED": QuantAmm,
+            "LIQUIDITY_BOOTSTRAPPING": LiquidityBootstrapping,
         }
-        self.hook_classes = {"ExitFee": ExitFeeHook, "StableSurge": StableSurgeHook}
-        if custom_pool_classes is not None:
-            self.pool_classes.update(custom_pool_classes)
-
-        if custom_hook_classes is not None:
-            self.hook_classes.update(custom_hook_classes)
+        default_hook_classes: Dict[str, Type[HookBase]] = {
+            "ExitFee": ExitFeeHook,
+            "StableSurge": StableSurgeHook,
+            # Add other default hooks here
+        }
+        self.pool_classes = {**default_pool_classes, **(custom_pool_classes or {})}
+        self.hook_classes = {**default_hook_classes, **(custom_hook_classes or {})}
 
     def swap(
         self,
