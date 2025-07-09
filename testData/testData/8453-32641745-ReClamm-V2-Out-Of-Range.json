@@ -1,0 +1,70 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amountRaw": "100000",
+            "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "tokenOut": "0x4200000000000000000000000000000000000006",
+            "outputRaw": "39217048938964"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "10000000000",
+            "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "tokenOut": "0x4200000000000000000000000000000000000006",
+            "outputRaw": "26"
+        },
+        {
+            "swapKind": 0,
+            "amountRaw": "2000000000000",
+            "tokenIn": "0x4200000000000000000000000000000000000006",
+            "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "outputRaw": "5002"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "70000",
+            "tokenIn": "0x4200000000000000000000000000000000000006",
+            "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "outputRaw": "28320548837365"
+        }
+    ],
+    "pool": {
+        "chainId": "8453",
+        "blockNumber": "32641745",
+        "poolType": "RECLAMM_V2",
+        "poolAddress": "0x3De1E230193F39DF0c122A345a928d909034c1a1",
+        "tokens": [
+            "0x4200000000000000000000000000000000000006",
+            "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        ],
+        "scalingFactors": [
+            "1",
+            "1000000000000"
+        ],
+        "aggregateSwapFee": "500000000000000000",
+        "swapFee": "250000000000000",
+        "totalSupply": "12217002897520695",
+        "balancesLiveScaled18": [
+            "119997500000000",
+            "116125000000000000"
+        ],
+        "tokenRates": [
+            "1000000000000000000",
+            "1000000000000000000"
+        ],
+        "lastTimestamp": "1752072827",
+        "lastVirtualBalances": [
+            "2088831129392021",
+            "5414869164940852258"
+        ],
+        "dailyPriceShiftBase": "999999197747274347",
+        "centerednessMargin": "500000000000000000",
+        "startFourthRootPriceRatio": "1039289877625411769",
+        "endFourthRootPriceRatio": "1039289877625411769",
+        "priceRatioUpdateStartTime": "1752072483",
+        "priceRatioUpdateEndTime": "1752072483",
+        "currentTimestamp": "1752072837",
+        "isPoolWithinTargetRange": false
+    }
+}
