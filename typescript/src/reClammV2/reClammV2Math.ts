@@ -12,6 +12,8 @@ type PriceRatioState = {
 const a = 0;
 const b = 1;
 
+const thirtyDaysSeconds = 30n * 24n * 60n * 60n; // 2,592,000n seconds
+
 export function computeCurrentVirtualBalances(
     currentTimestamp: bigint,
     balancesScaled18: bigint[],
@@ -199,9 +201,8 @@ function computeVirtualBalancesUpdatingPriceRange(
     currentTimestamp: bigint,
     lastTimestamp: bigint,
 ): [bigint, bigint] {
-    const sqrtPriceRatio = sqrt(
-        computePriceRatio(balancesScaled18, virtualBalanceA, virtualBalanceB) *
-            WAD,
+    const sqrtPriceRatio = sqrtScaled18(
+        computePriceRatio(balancesScaled18, virtualBalanceA, virtualBalanceB),
     );
 
     // // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
@@ -214,16 +215,48 @@ function computeVirtualBalancesUpdatingPriceRange(
             ? [virtualBalanceA, virtualBalanceB]
             : [virtualBalanceB, virtualBalanceA];
 
-    // Vb = Vb * (1 - tau)^(T_curr - T_last)
-    // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
+    // +-----------------------------------------+
+    // |                      (Tc - Tl)          |
+    // |      Vo = Vo * (Psb)^                   |
+    // +-----------------------------------------+
+    // |  Where:                                 |
+    // |    Vo = Virtual balance overvalued      |
+    // |    Psb = Price shift daily rate base    |
+    // |    Tc = Current timestamp               |
+    // |    Tl = Last timestamp                  |
+    // +-----------------------------------------+
+    // |               Ru * (Vo + Ro)            |
+    // |      Vu = ----------------------        |
+    // |             (Qo - 1) * Vo - Ro          |
+    // +-----------------------------------------+
+    // |  Where:                                 |
+    // |    Vu = Virtual balance undervalued     |
+    // |    Vo = Virtual balance overvalued      |
+    // |    Ru = Real balance undervalued        |
+    // |    Ro = Real balance overvalued         |
+    // |    Qo = Square root of price ratio      |
+    // +-----------------------------------------+
+
+    // Cap the duration (time between operations) at 30 days, to ensure `powDown` does not overflow.
+    const duration = MathSol.min(
+        currentTimestamp - lastTimestamp,
+        thirtyDaysSeconds,
+    );
+
     virtualBalanceOvervalued = MathSol.mulDownFixed(
         virtualBalanceOvervalued,
-        MathSol.powDownFixed(
-            dailyPriceShiftBase,
-            (currentTimestamp - lastTimestamp) * WAD,
+        MathSol.powDownFixed(dailyPriceShiftBase, duration * WAD),
+    );
+
+    // Ensure that Vo does not go below the minimum allowed value (corresponding to centeredness == 1).
+    virtualBalanceOvervalued = MathSol.max(
+        virtualBalanceOvervalued,
+        MathSol.divDownFixed(
+            balancesScaledOvervalued,
+            sqrtScaled18(sqrtPriceRatio) - WAD,
         ),
     );
-    // // Va = (Ra * (Vb + Rb)) / (((priceRatio - 1) * Vb) - Rb)
+
     virtualBalanceUndervalued =
         (balancesScaledUndervalued *
             (virtualBalanceOvervalued + balancesScaledOvervalued)) /
@@ -529,4 +562,13 @@ export function computeInGivenOut(
     );
 
     return amountInScaled18;
+}
+
+/**
+ * @notice Calculate the square root of a value scaled by 18 decimals.
+ * @param valueScaled18 The value to calculate the square root of, scaled by 18 decimals
+ * @return sqrtValueScaled18 The square root of the value scaled by 18 decimals
+ */
+function sqrtScaled18(valueScaled18: bigint): bigint {
+    return sqrt(valueScaled18 * WAD);
 }
