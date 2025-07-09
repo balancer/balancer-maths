@@ -7,6 +7,7 @@ import type { LiquidityBootstrappingState } from '@/liquidityBootstrapping';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { QuantAmmState } from '@/quantAmm/quantAmmData';
+import { ReClammV2State } from '@/reClammV2';
 
 type PoolBase = {
     chainId: number;
@@ -24,6 +25,8 @@ type GyroEPool = PoolBase & GyroECLPState;
 
 type ReClammPool = PoolBase & ReClammState;
 
+type ReClammPoolV2 = PoolBase & ReClammV2State;
+
 type LiquidityBootstrappingPool = PoolBase & LiquidityBootstrappingState;
 
 type QuantAmmPool = PoolBase & QuantAmmState;
@@ -34,6 +37,7 @@ type SupportedPools =
     | BufferPool
     | GyroEPool
     | ReClammPool
+    | ReClammPoolV2
     | LiquidityBootstrappingPool
     | QuantAmmPool;
 
@@ -232,7 +236,7 @@ function mapPool(
             dSq: BigInt(pool.dSq),
         };
     }
-    if (pool.poolType === 'RECLAMM') {
+    if (pool.poolType === 'RECLAMM' || pool.poolType === 'RECLAMM_V2') {
         return {
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),

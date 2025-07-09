@@ -10,6 +10,7 @@ import { Weighted } from '../weighted';
 import { Stable } from '../stable';
 import { GyroECLP } from '../gyro';
 import { ReClamm } from '../reClamm';
+import { ReClammV2 } from '../reClammV2';
 import { QuantAmm } from '../quantAmm';
 import { LiquidityBootstrapping } from '../liquidityBootstrapping';
 
@@ -64,6 +65,7 @@ export class Vault {
             STABLE: Stable,
             GYROE: GyroECLP,
             RECLAMM: ReClamm,
+            RECLAMM_V2: ReClammV2,
             LIQUIDITY_BOOTSTRAPPING: LiquidityBootstrapping,
             QUANT_AMM_WEIGHTED: QuantAmm,
             // custom add liquidity types take precedence over base types

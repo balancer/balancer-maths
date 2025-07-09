@@ -1,6 +1,72 @@
 {
     "poolTests": [
         {
+            "testName": "ReClamm-V2-Out-Of-Range",
+            "chainId": "8453",
+            "blockNumber": "32641745",
+            "poolAddress": "0x3De1E230193F39DF0c122A345a928d909034c1a1",
+            "poolType": "RECLAMM_V2",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "100000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x4200000000000000000000000000000000000006"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "10000000000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x4200000000000000000000000000000000000006"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "2000000000000",
+                    "tokenIn": "0x4200000000000000000000000000000000000006",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "70000",
+                    "tokenIn": "0x4200000000000000000000000000000000000006",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                }
+            ]
+        },
+        {
+            "testName": "ReClamm-V2",
+            "chainId": "8453",
+            "blockNumber": "32632378",
+            "poolAddress": "0x12c2de9522f377b86828f6af01f58c046f814d3c",
+            "poolType": "RECLAMM_V2",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "100000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "100000000",
+                    "tokenIn": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "tokenOut": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "20000000",
+                    "tokenIn": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "70000000",
+                    "tokenIn": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+                    "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                }
+            ]
+        },
+        {
             "testName": "ReClamm-WETH-USDC-In-Range",
             "chainId": "8453",
             "blockNumber": "31094200",

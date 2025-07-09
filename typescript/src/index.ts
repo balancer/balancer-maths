@@ -6,5 +6,6 @@ export * from './buffer';
 export * from './hooks';
 export * from './gyro';
 export * from './reClamm';
+export * from './reClammV2';
 export * from './quantAmm';
 export * from './liquidityBootstrapping';

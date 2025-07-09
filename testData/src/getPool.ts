@@ -35,6 +35,7 @@ export async function getPool(
             chainId,
         ),
         RECLAMM: new ReClammPool(rpcUrl, chainId),
+        RECLAMM_V2: new ReClammPool(rpcUrl, chainId),
         QUANT_AMM_WEIGHTED: new QuantAmmPool(rpcUrl, chainId),
     };
     if (!poolData[poolType])
