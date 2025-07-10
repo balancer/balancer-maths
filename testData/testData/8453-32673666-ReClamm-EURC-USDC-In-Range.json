@@ -17,10 +17,7 @@
             "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42",
             "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
         ],
-        "scalingFactors": [
-            "1000000000000",
-            "1000000000000"
-        ],
+        "scalingFactors": ["1000000000000", "1000000000000"],
         "aggregateSwapFee": "500000000000000000",
         "swapFee": "250000000000000",
         "totalSupply": "37431808905174667155226173",
@@ -28,10 +25,7 @@
             "3243297378000000000000",
             "6275302947000000000000"
         ],
-        "tokenRates": [
-            "1000000000000000000",
-            "1000000000000000000"
-        ],
+        "tokenRates": ["1000000000000000000", "1000000000000000000"],
         "lastTimestamp": "1752136433",
         "lastVirtualBalances": [
             "362181285695594233642012",
@@ -43,7 +37,7 @@
         "endFourthRootPriceRatio": "1011900417200324692",
         "priceRatioUpdateStartTime": "1751988959",
         "priceRatioUpdateEndTime": "1751988959",
-        "currentTimestamp": "1752136679",
+        "currentTimestamp": "1752134917",
         "isPoolWithinTargetRange": true
     }
 }
