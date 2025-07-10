@@ -2,10 +2,10 @@
     "swaps": [
         {
             "swapKind": 0,
-            "amountRaw": "30000000",
+            "amountRaw": "10000000",
             "tokenIn": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
             "tokenOut": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "outputRaw": "35181364"
+            "outputRaw": "11727763"
         }
     ],
     "pool": {
@@ -17,7 +17,10 @@
             "0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42",
             "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
         ],
-        "scalingFactors": ["1000000000000", "1000000000000"],
+        "scalingFactors": [
+            "1000000000000",
+            "1000000000000"
+        ],
         "aggregateSwapFee": "500000000000000000",
         "swapFee": "250000000000000",
         "totalSupply": "37431808905174667155226173",
@@ -25,7 +28,10 @@
             "3243297378000000000000",
             "6275302947000000000000"
         ],
-        "tokenRates": ["1000000000000000000", "1000000000000000000"],
+        "tokenRates": [
+            "1000000000000000000",
+            "1000000000000000000"
+        ],
         "lastTimestamp": "1752136433",
         "lastVirtualBalances": [
             "362181285695594233642012",
@@ -37,7 +43,7 @@
         "endFourthRootPriceRatio": "1011900417200324692",
         "priceRatioUpdateStartTime": "1751988959",
         "priceRatioUpdateEndTime": "1751988959",
-        "currentTimestamp": "1752134917",
+        "currentTimestamp": "1752136679",
         "isPoolWithinTargetRange": true
     }
 }
