@@ -1,6 +1,3 @@
-import sys
-import os
-
 from dataclasses import dataclass, fields
 from typing import List
 
@@ -10,13 +7,6 @@ from src.common.pool_base import PoolBase
 from src.common.types import SwapInput, SwapKind
 from src.common.swap_params import SwapParams
 from src.vault.vault import Vault
-
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(current_file_dir)
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
 
 
 @dataclass

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Callable
-from common.maths import (
+from src.common.maths import (
     mul_down_fixed,
     div_down_fixed,
     mul_up_fixed,
