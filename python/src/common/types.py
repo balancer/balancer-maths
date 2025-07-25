@@ -6,6 +6,7 @@ from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
 from src.pools.gyro.gyro_eclp_data import GyroECLPState
 from src.pools.quantamm.quantamm_data import QuantAmmState
 from src.pools.reclamm.reclamm_data import ReClammState
+from src.pools.reclamm_v2.reclamm_v2_data import ReClammV2State
 from src.pools.stable.stable_data import StableState
 from src.pools.weighted.weighted_data import WeightedState
 
@@ -74,5 +75,6 @@ PoolState = (
     | Gyro2CLPState
     | GyroECLPState
     | ReClammState
+    | ReClammV2State
     | QuantAmmState
 )

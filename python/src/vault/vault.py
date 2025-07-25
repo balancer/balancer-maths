@@ -19,6 +19,7 @@ from src.pools.gyro.gyro_2clp import Gyro2CLP
 from src.pools.gyro.gyro_eclp import GyroECLP
 from src.pools.quantamm.quantamm import QuantAmm
 from src.pools.reclamm.reclamm import ReClamm
+from src.pools.reclamm_v2.reclamm_v2 import ReClammV2
 from src.pools.stable.stable import Stable
 from src.pools.weighted.weighted import Weighted
 from src.vault.swap import swap
@@ -43,6 +44,7 @@ class Vault:
             "RECLAMM": ReClamm,
             "QUANT_AMM_WEIGHTED": QuantAmm,
             "LIQUIDITY_BOOTSTRAPPING": LiquidityBootstrapping,
+            "RECLAMM_V2": ReClammV2,
         }
         default_hook_classes: Dict[str, Type[HookBase]] = {
             "ExitFee": ExitFeeHook,
