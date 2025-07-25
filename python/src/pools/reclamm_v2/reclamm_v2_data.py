@@ -63,4 +63,4 @@ def map_re_clamm_v2_state(pool_state: dict) -> ReClammV2State:
         end_fourth_root_price_ratio=int(pool_state["endFourthRootPriceRatio"]),
         price_ratio_update_start_time=int(pool_state["priceRatioUpdateStartTime"]),
         price_ratio_update_end_time=int(pool_state["priceRatioUpdateEndTime"]),
-    ) 
+    )
