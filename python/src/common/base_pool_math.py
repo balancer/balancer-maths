@@ -9,6 +9,7 @@ from src.common.maths import (
     mul_div_up,
     Rounding,
 )
+from src.common.bigint import BigInt
 
 
 @dataclass
@@ -112,9 +113,11 @@ def compute_add_liquidity_unbalanced(
     # // If rounding makes `invariantWithFeesApplied` smaller or equal to `currentInvariant`, this would effectively
     # // be a donation. In that case we just let checked math revert for simplicity; it's not a valid use-case to
     # // support at this point.
-    bpt_amount_out = (
-        total_supply * (invariant_with_fees_applied - current_invariant)
-    ) // current_invariant
+    bpt_amount_out = int(
+        BigInt(total_supply)
+        * BigInt(invariant_with_fees_applied - current_invariant)
+        // BigInt(current_invariant)
+    )
 
     return AddLiquidityUnbalancedResult(
         bpt_amount_out=bpt_amount_out, swap_fee_amounts=swap_fee_amounts
@@ -215,7 +218,9 @@ def compute_proportional_amounts_out(
     for index, balance in enumerate(balances):
         # // Since we multiply and divide we don't need to use FP math.
         # // Round down since we're calculating amounts out.
-        amounts_out[index] = (balance * bpt_amount_in) // bpt_total_supply
+        amounts_out[index] = int(
+            BigInt(balance) * BigInt(bpt_amount_in) // BigInt(bpt_total_supply)
+        )
     return amounts_out
 
 

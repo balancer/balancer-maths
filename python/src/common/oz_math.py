@@ -1,3 +1,6 @@
+from src.common.bigint import BigInt
+
+
 def sqrt(a: int) -> int:
     """
     Computes the integer square root of a number using Newton's method
@@ -40,11 +43,11 @@ def sqrt(a: int) -> int:
 
     # Apply Newton's method iterations
     # Each iteration approximately doubles the number of correct bits
-    xn = (xn + a // xn) >> 1
-    xn = (xn + a // xn) >> 1
-    xn = (xn + a // xn) >> 1
-    xn = (xn + a // xn) >> 1
-    xn = (xn + a // xn) >> 1
+    xn = int((BigInt(xn) + BigInt(a) // BigInt(xn)) >> 1)
+    xn = int((BigInt(xn) + BigInt(a) // BigInt(xn)) >> 1)
+    xn = int((BigInt(xn) + BigInt(a) // BigInt(xn)) >> 1)
+    xn = int((BigInt(xn) + BigInt(a) // BigInt(xn)) >> 1)
+    xn = int((BigInt(xn) + BigInt(a) // BigInt(xn)) >> 1)
 
     # Final adjustment: if xn > sqrt(a), decrement by 1
-    return xn - 1 if xn > a // xn else xn
+    return xn - 1 if xn > int(BigInt(a) // BigInt(xn)) else xn
