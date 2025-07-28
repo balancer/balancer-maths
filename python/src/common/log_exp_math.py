@@ -1,4 +1,4 @@
-from common.bigint import BigInt
+from src.common.bigint import BigInt
 
 WAD = BigInt(1000000000000000000)
 RAY = BigInt(1000000000000000000000000000000000000)

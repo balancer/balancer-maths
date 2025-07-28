@@ -1,17 +1,7 @@
-import sys
-import os
-
 from src.pools.reclamm.reclamm_data import map_re_clamm_state
 from src.pools.reclamm.reclamm import ReClamm
 from src.common.types import SwapKind
 from src.common.swap_params import SwapParams
-
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(current_file_dir)
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
 
 
 def test_reclamm_swap():

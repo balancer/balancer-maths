@@ -1,18 +1,9 @@
-from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
-from test.utils.read_test_data import read_test_data
-import os
-import sys
 from typing import cast
 
+from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
+from test.utils.read_test_data import read_test_data
 from vault.vault import Vault
 from src.common.types import PoolState, RemoveLiquidityInput, RemoveLiquidityKind
-
-# Get the directory of the current file
-current_file_dir = os.path.dirname(os.path.abspath(__file__))
-# Get the parent directory (one level up)
-parent_dir = os.path.dirname(current_file_dir)
-# Insert the parent directory at the start of sys.path
-sys.path.insert(0, parent_dir)
 
 test_data = read_test_data()
 

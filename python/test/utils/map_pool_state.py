@@ -7,6 +7,7 @@ from src.pools.liquidity_bootstrapping.liquidity_bootstrapping_data import (
     map_liquidity_bootstrapping_state,
 )
 from src.pools.reclamm.reclamm_data import map_re_clamm_state
+from src.pools.reclamm_v2.reclamm_v2_data import map_re_clamm_v2_state
 from src.pools.stable.stable_data import map_stable_state
 from src.pools.weighted.weighted_data import map_weighted_state
 
@@ -28,6 +29,8 @@ def map_pool_state(pool_state: dict) -> PoolState | BufferState:
         return map_stable_state(pool_state)
     elif pool_state["poolType"] == "WEIGHTED":
         return map_weighted_state(pool_state)
+    elif pool_state["poolType"] == "RECLAMM_V2":
+        return map_re_clamm_v2_state(pool_state)
     else:
         raise ValueError(f"Unsupported pool type: {pool_state['poolType']}")
 
