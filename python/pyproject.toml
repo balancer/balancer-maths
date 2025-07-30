@@ -1,14 +1,43 @@
 [project]
 name = "balancer-maths"
 version = "0.1.0"
-description = "Balancer mathematics library"
+description = "Python implementation of mathematics for Balancer pools"
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["balancer", "defi", "amm", "liquidity", "pools", "mathematics"]
 requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/balancer/balancer-maths"
+Repository = "https://github.com/balancer/balancer-maths"
+Documentation = "https://github.com/balancer/balancer-maths/tree/main/python#readme"
+"Bug Tracker" = "https://github.com/balancer/balancer-maths/issues"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
 [tool.pytest.ini_options]
 pythonpath = [
   ".", "src"
 ]
+testpaths = ["test"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+
+
