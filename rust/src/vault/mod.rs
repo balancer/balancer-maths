@@ -41,6 +41,9 @@ impl Vault {
                     weighted_state.clone(),
                 ))
             }
+            PoolState::Stable(stable_state) => {
+                Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -73,6 +76,9 @@ impl Vault {
                     weighted_state.clone(),
                 ))
             }
+            PoolState::Stable(stable_state) => {
+                Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -104,6 +110,9 @@ impl Vault {
                 Box::new(crate::pools::weighted::WeightedPool::from(
                     weighted_state.clone(),
                 ))
+            }
+            PoolState::Stable(stable_state) => {
+                Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
             }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };

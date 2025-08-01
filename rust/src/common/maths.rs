@@ -60,6 +60,8 @@ pub fn div_up(a: &BigInt, b: &BigInt) -> Result<BigInt, PoolError> {
     Ok(result)
 }
 
+
+
 /// Multiply and divide with up rounding
 pub fn mul_div_up_fixed(a: &BigInt, b: &BigInt, c: &BigInt) -> Result<BigInt, PoolError> {
     let product = a * b;

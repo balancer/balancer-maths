@@ -1,5 +1,6 @@
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
+use balancer_maths_rust::pools::stable::{StableState, StableMutable};
 use num_bigint::BigInt;
 mod utils;
 use utils::read_test_data;
@@ -9,6 +10,15 @@ use utils::SupportedPool;
 fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
     match pool {
         SupportedPool::Weighted(weighted_pool) => PoolState::Weighted(weighted_pool.state.clone()),
+        SupportedPool::Stable(stable_pool) => {
+            let stable_state = StableState {
+                base: stable_pool.state.base.clone(),
+                mutable: StableMutable {
+                    amp: stable_pool.state.mutable.amp.clone(),
+                },
+            };
+            PoolState::Stable(stable_state)
+        }
         // Add other pool types here as they are implemented
     }
 }
@@ -17,6 +27,7 @@ fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
 fn get_pool_address(pool: &SupportedPool) -> String {
     match pool {
         SupportedPool::Weighted(weighted_pool) => weighted_pool.base.pool_address.clone(),
+        SupportedPool::Stable(stable_pool) => stable_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
 }

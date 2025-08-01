@@ -106,8 +106,8 @@ pub enum PoolState {
     Base(BasePoolState),
     /// Weighted pool state
     Weighted(crate::pools::weighted::WeightedState),
-    /// Stable pool state (will be implemented later)
-    Stable(BasePoolState), // TODO: Replace with StableState
+    /// Stable pool state
+    Stable(crate::pools::stable::stable_data::StableState),
     /// Buffer pool state (will be implemented later)
     Buffer(BasePoolState), // TODO: Replace with BufferState
     /// Gyro pool state (will be implemented later)
@@ -180,7 +180,7 @@ impl PoolState {
         match self {
             PoolState::Base(base) => base,
             PoolState::Weighted(weighted) => weighted.base(),
-            PoolState::Stable(base) => base,
+            PoolState::Stable(stable) => &stable.base,
             PoolState::Buffer(base) => base,
             PoolState::Gyro(base) => base,
             PoolState::ReClamm(base) => base,

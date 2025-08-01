@@ -8,6 +8,19 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+/// Stable pool state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StableState {
+    pub base: BasePoolState,
+    pub mutable: StableMutable,
+}
+
+/// Stable pool mutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StableMutable {
+    pub amp: BigInt,
+}
+
 /// Base pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolBase {
@@ -25,11 +38,21 @@ pub struct WeightedPool {
     pub state: WeightedState,
 }
 
+/// Stable pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StablePool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: StableState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SupportedPool {
     Weighted(WeightedPool),
+    Stable(StablePool),
     // Add other pool types as needed
 }
 
@@ -139,6 +162,8 @@ struct RawPool {
     pub supports_unbalanced_liquidity: Option<bool>,
     // Weighted pool specific fields
     pub weights: Option<Vec<String>>,
+    // Stable pool specific fields
+    pub amp: Option<String>,
 }
 
 /// Read test data from JSON files in the testData directory
@@ -297,6 +322,55 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: weighted_state,
+            }))
+        }
+        "STABLE" => {
+            let amp = match raw_pool.amp {
+                Some(a) => a.parse::<BigInt>()?,
+                None => {
+                    return Err("Stable pool missing amp".into());
+                }
+            };
+            let stable_state = StableState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<BigInt>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(true),
+                    hook_type: None,
+                },
+                mutable: StableMutable { amp },
+            };
+            Ok(SupportedPool::Stable(StablePool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: stable_state,
             }))
         }
         _ => Err(format!("Unsupported pool type: {}", raw_pool.pool_type).into()),

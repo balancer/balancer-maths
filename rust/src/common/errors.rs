@@ -83,6 +83,9 @@ pub enum PoolError {
 
     /// No state for hook
     NoStateForHook(String),
+
+    /// Stable invariant didn't converge
+    StableInvariantDidntConverge,
 }
 
 impl fmt::Display for PoolError {
@@ -124,6 +127,7 @@ impl fmt::Display for PoolError {
                 write!(f, "Unsupported Hook Type: {}", hook_type)
             }
             PoolError::NoStateForHook(hook_name) => write!(f, "No state for Hook: {}", hook_name),
+            PoolError::StableInvariantDidntConverge => write!(f, "Stable invariant didn't converge"),
         }
     }
 }
