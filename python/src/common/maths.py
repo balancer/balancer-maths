@@ -44,7 +44,7 @@ def div_up(a: int, b: int) -> int:
 
 
 # @dev Return (a * b) / c, rounding up.
-def mul_div_up(a: int, b: int, c: int) -> int:
+def mul_div_up_fixed(a: int, b: int, c: int) -> int:
     product = a * b
     # // The traditional divUp formula is:
     # // divUp(x, y) := (x + y - 1) / y
