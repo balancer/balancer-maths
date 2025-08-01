@@ -1,8 +1,8 @@
 //! Weighted pool data structures
 
+use crate::common::types::BasePoolState;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
-use crate::common::types::BasePoolState;
 
 /// Weighted pool state (extends BasePoolState with weighted-specific fields)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -19,12 +19,12 @@ impl WeightedState {
     pub fn new(base: BasePoolState, weights: Vec<BigInt>) -> Self {
         Self { base, weights }
     }
-    
+
     /// Get the base pool state
     pub fn base(&self) -> &BasePoolState {
         &self.base
     }
-    
+
     /// Get the weights
     pub fn weights(&self) -> &[BigInt] {
         &self.weights
@@ -41,4 +41,4 @@ impl AsRef<BasePoolState> for WeightedState {
     fn as_ref(&self) -> &BasePoolState {
         &self.base
     }
-} 
+}

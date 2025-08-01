@@ -104,20 +104,20 @@ pub struct BasePoolState {
 pub enum PoolState {
     /// Base pool state
     Base(BasePoolState),
-    /// Weighted pool state (will be implemented later)
-    Weighted(BasePoolState), // TODO: Add weighted-specific fields
+    /// Weighted pool state
+    Weighted(crate::pools::weighted::WeightedState),
     /// Stable pool state (will be implemented later)
-    Stable(BasePoolState), // TODO: Add stable-specific fields
+    Stable(BasePoolState), // TODO: Replace with StableState
     /// Buffer pool state (will be implemented later)
-    Buffer(BasePoolState), // TODO: Add buffer-specific fields
+    Buffer(BasePoolState), // TODO: Replace with BufferState
     /// Gyro pool state (will be implemented later)
-    Gyro(BasePoolState), // TODO: Add gyro-specific fields
+    Gyro(BasePoolState), // TODO: Replace with GyroState
     /// ReClamm pool state (will be implemented later)
-    ReClamm(BasePoolState), // TODO: Add reclamm-specific fields
+    ReClamm(BasePoolState), // TODO: Replace with ReClammState
     /// QuantAMM pool state (will be implemented later)
-    QuantAmm(BasePoolState), // TODO: Add quantamm-specific fields
+    QuantAmm(BasePoolState), // TODO: Replace with QuantAmmState
     /// Liquidity bootstrapping pool state (will be implemented later)
-    LiquidityBootstrapping(BasePoolState), // TODO: Add LBP-specific fields
+    LiquidityBootstrapping(BasePoolState), // TODO: Replace with LiquidityBootstrappingState
 }
 
 /// Result of a swap operation
@@ -147,9 +147,31 @@ pub struct RemoveLiquidityResult {
     pub amounts_out_raw: Vec<BigInt>,
 }
 
+/// Swap parameters
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SwapParams {
+    /// Swap kind
+    pub swap_kind: SwapKind,
+    /// Token in index
+    pub token_in_index: usize,
+    /// Token out index
+    pub token_out_index: usize,
+    /// Amount (scaled 18)
+    pub amount_scaled_18: BigInt,
+    /// Balances (scaled 18)
+    pub balances_live_scaled_18: Vec<BigInt>,
+}
+
 /// Base hook state trait
 pub trait HookStateBase {
     fn hook_type(&self) -> &str;
+}
+
+/// Rounding direction for mathematical operations
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Rounding {
+    RoundDown = 0,
+    RoundUp = 1,
 }
 
 impl PoolState {
@@ -157,7 +179,7 @@ impl PoolState {
     pub fn base(&self) -> &BasePoolState {
         match self {
             PoolState::Base(base) => base,
-            PoolState::Weighted(base) => base,
+            PoolState::Weighted(weighted) => weighted.base(),
             PoolState::Stable(base) => base,
             PoolState::Buffer(base) => base,
             PoolState::Gyro(base) => base,
@@ -166,14 +188,14 @@ impl PoolState {
             PoolState::LiquidityBootstrapping(base) => base,
         }
     }
-    
+
     /// Get the pool type
     pub fn pool_type(&self) -> &str {
         &self.base().pool_type
     }
-    
+
     /// Get the pool address
     pub fn pool_address(&self) -> &str {
         &self.base().pool_address
     }
-} 
+}

@@ -1,9 +1,9 @@
 //! Stable surge hook implementation
 
-use num_bigint::BigInt;
-use serde::{Deserialize, Serialize};
 use crate::common::types::HookStateBase;
+use num_bigint::BigInt;
 use num_traits::Zero;
+use serde::{Deserialize, Serialize};
 
 /// Stable surge hook state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -33,4 +33,4 @@ impl Default for StableSurgeHookState {
             max_surge_fee_percentage: BigInt::zero(),
         }
     }
-} 
+}

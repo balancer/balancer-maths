@@ -7,45 +7,82 @@ use std::fmt;
 pub enum PoolError {
     /// Invalid amount provided (zero or negative)
     InvalidAmount,
-    
+
     /// Insufficient liquidity for the operation
     InsufficientLiquidity,
-    
+
     /// Mathematical overflow occurred
     MathOverflow,
-    
+
     /// Invalid pool type specified
     InvalidPoolType,
-    
+
     /// Invalid token index
     InvalidTokenIndex,
-    
+
     /// Invalid swap parameters
     InvalidSwapParameters,
-    
+
     /// Invalid liquidity parameters
     InvalidLiquidityParameters,
-    
+
     /// Pool not found
     PoolNotFound,
-    
+
     /// Hook error
     HookError(String),
-    
+
     /// Custom error message
     Custom(String),
-    
+
     /// Zero invariant error
     ZeroInvariant,
-    
+
     /// Maximum input ratio exceeded
     MaxInRatioExceeded,
-    
+
     /// Maximum output ratio exceeded
     MaxOutRatioExceeded,
-    
+
     /// Invalid input parameters
     InvalidInput(String),
+
+    // Python SystemError equivalents
+    /// Input token not found on pool
+    InputTokenNotFound,
+
+    /// Output token not found on pool
+    OutputTokenNotFound,
+
+    /// Trade amount too small
+    TradeAmountTooSmall,
+
+    /// Before swap hook failed
+    BeforeSwapHookFailed,
+
+    /// After swap hook failed
+    AfterSwapHookFailed,
+
+    /// Before add liquidity hook failed
+    BeforeAddLiquidityHookFailed,
+
+    /// After add liquidity hook failed
+    AfterAddLiquidityHookFailed,
+
+    /// Before remove liquidity hook failed
+    BeforeRemoveLiquidityHookFailed,
+
+    /// After remove liquidity hook failed
+    AfterRemoveLiquidityHookFailed,
+
+    /// Unsupported pool type
+    UnsupportedPoolType(String),
+
+    /// Unsupported hook type
+    UnsupportedHookType(String),
+
+    /// No state for hook
+    NoStateForHook(String),
 }
 
 impl fmt::Display for PoolError {
@@ -65,6 +102,28 @@ impl fmt::Display for PoolError {
             PoolError::MaxInRatioExceeded => write!(f, "Maximum input ratio exceeded"),
             PoolError::MaxOutRatioExceeded => write!(f, "Maximum output ratio exceeded"),
             PoolError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
+
+            // Python SystemError equivalents
+            PoolError::InputTokenNotFound => write!(f, "Input token not found on pool"),
+            PoolError::OutputTokenNotFound => write!(f, "Output token not found on pool"),
+            PoolError::TradeAmountTooSmall => write!(f, "TradeAmountTooSmall"),
+            PoolError::BeforeSwapHookFailed => write!(f, "BeforeSwapHookFailed"),
+            PoolError::AfterSwapHookFailed => write!(f, "AfterSwapHookFailed"),
+            PoolError::BeforeAddLiquidityHookFailed => write!(f, "BeforeAddLiquidityHookFailed"),
+            PoolError::AfterAddLiquidityHookFailed => write!(f, "AfterAddLiquidityHookFailed"),
+            PoolError::BeforeRemoveLiquidityHookFailed => {
+                write!(f, "BeforeRemoveLiquidityHookFailed")
+            }
+            PoolError::AfterRemoveLiquidityHookFailed => {
+                write!(f, "AfterRemoveLiquidityHookFailed")
+            }
+            PoolError::UnsupportedPoolType(pool_type) => {
+                write!(f, "Unsupported Pool Type: {}", pool_type)
+            }
+            PoolError::UnsupportedHookType(hook_type) => {
+                write!(f, "Unsupported Hook Type: {}", hook_type)
+            }
+            PoolError::NoStateForHook(hook_name) => write!(f, "No state for Hook: {}", hook_name),
         }
     }
 }
@@ -81,4 +140,4 @@ impl From<&str> for PoolError {
     fn from(msg: &str) -> Self {
         PoolError::Custom(msg.to_string())
     }
-} 
+}

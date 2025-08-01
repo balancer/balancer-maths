@@ -6,4 +6,4 @@ pub mod weighted_pool;
 
 pub use weighted_data::*;
 pub use weighted_math::*;
-pub use weighted_pool::*; 
+pub use weighted_pool::*;

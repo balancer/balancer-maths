@@ -1,14 +1,25 @@
 //! Common types, constants, and utilities shared across all pool implementations
 
-pub mod types;
 pub mod constants;
-pub mod maths;
-pub mod log_exp_math;
 pub mod errors;
+pub mod log_exp_math;
+pub mod maths;
 pub mod pool_base;
+pub mod types;
+pub mod utils;
 
-pub use types::*;
-pub use constants::*;
-pub use maths::*;
-pub use errors::*;
-pub use pool_base::*; 
+// Re-export commonly used items without glob imports to avoid ambiguity
+pub use constants::WAD;
+pub use errors::PoolError;
+pub use pool_base::PoolBase;
+pub use types::{
+    AddLiquidityInput, AddLiquidityResult, PoolState, RemoveLiquidityInput, RemoveLiquidityResult,
+    Rounding, SwapInput, SwapKind, SwapParams, SwapResult,
+};
+pub use utils::{
+    compute_and_charge_aggregate_swap_fees, copy_to_scaled18_apply_rate_round_down_array,
+    copy_to_scaled18_apply_rate_round_up_array, find_case_insensitive_index_in_list,
+    get_single_input_index, is_same_address, require_unbalanced_liquidity_enabled,
+    to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down,
+    to_scaled_18_apply_rate_round_up, MAX_UINT256,
+};
