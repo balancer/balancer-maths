@@ -3,6 +3,7 @@ use balancer_maths_rust::vault::Vault;
 use balancer_maths_rust::pools::stable::{StableState, StableMutable};
 use balancer_maths_rust::pools::gyro::{GyroECLPState, GyroECLPImmutable};
 use balancer_maths_rust::pools::quantamm::{QuantAmmState, QuantAmmMutable, QuantAmmImmutable};
+use balancer_maths_rust::pools::liquidity_bootstrapping::{LiquidityBootstrappingState, LiquidityBootstrappingMutable, LiquidityBootstrappingImmutable};
 use num_bigint::BigInt;
 mod utils;
 use utils::read_test_data;
@@ -59,6 +60,24 @@ fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
             };
             PoolState::QuantAmm(quant_amm_state)
         }
+        SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
+            let liquidity_bootstrapping_state = LiquidityBootstrappingState {
+                base: liquidity_bootstrapping_pool.state.base.clone(),
+                mutable: LiquidityBootstrappingMutable {
+                    is_swap_enabled: liquidity_bootstrapping_pool.state.mutable.is_swap_enabled,
+                    current_timestamp: liquidity_bootstrapping_pool.state.mutable.current_timestamp.clone(),
+                },
+                immutable: LiquidityBootstrappingImmutable {
+                    project_token_index: liquidity_bootstrapping_pool.state.immutable.project_token_index,
+                    is_project_token_swap_in_blocked: liquidity_bootstrapping_pool.state.immutable.is_project_token_swap_in_blocked,
+                    start_weights: liquidity_bootstrapping_pool.state.immutable.start_weights.clone(),
+                    end_weights: liquidity_bootstrapping_pool.state.immutable.end_weights.clone(),
+                    start_time: liquidity_bootstrapping_pool.state.immutable.start_time.clone(),
+                    end_time: liquidity_bootstrapping_pool.state.immutable.end_time.clone(),
+                },
+            };
+            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state)
+        }
         // Add other pool types here as they are implemented
     }
 }
@@ -70,6 +89,7 @@ fn get_pool_address(pool: &SupportedPool) -> String {
         SupportedPool::Stable(stable_pool) => stable_pool.base.pool_address.clone(),
         SupportedPool::GyroECLP(gyro_eclp_pool) => gyro_eclp_pool.base.pool_address.clone(),
         SupportedPool::QuantAmm(quant_amm_pool) => quant_amm_pool.base.pool_address.clone(),
+        SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => liquidity_bootstrapping_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
 }

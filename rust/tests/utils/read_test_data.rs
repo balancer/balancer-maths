@@ -77,6 +77,37 @@ pub struct QuantAmmState {
     pub immutable: QuantAmmImmutable,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LiquidityBootstrappingMutable {
+    #[serde(rename = "isSwapEnabled")]
+    pub is_swap_enabled: bool,
+    #[serde(rename = "currentTimestamp")]
+    pub current_timestamp: BigInt,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LiquidityBootstrappingImmutable {
+    #[serde(rename = "projectTokenIndex")]
+    pub project_token_index: usize,
+    #[serde(rename = "isProjectTokenSwapInBlocked")]
+    pub is_project_token_swap_in_blocked: bool,
+    #[serde(rename = "startWeights")]
+    pub start_weights: Vec<BigInt>,
+    #[serde(rename = "endWeights")]
+    pub end_weights: Vec<BigInt>,
+    #[serde(rename = "startTime")]
+    pub start_time: BigInt,
+    #[serde(rename = "endTime")]
+    pub end_time: BigInt,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LiquidityBootstrappingState {
+    pub base: BasePoolState,
+    pub mutable: LiquidityBootstrappingMutable,
+    pub immutable: LiquidityBootstrappingImmutable,
+}
+
 /// Base pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolBase {
@@ -121,6 +152,15 @@ pub struct QuantAmmPool {
     pub state: QuantAmmState,
 }
 
+/// Liquidity Bootstrapping pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LiquidityBootstrappingPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: LiquidityBootstrappingState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -129,6 +169,7 @@ pub enum SupportedPool {
     Stable(StablePool),
     GyroECLP(GyroECLPPool),
     QuantAmm(QuantAmmPool),
+    LiquidityBootstrapping(LiquidityBootstrappingPool),
     // Add other pool types as needed
 }
 
@@ -278,6 +319,21 @@ struct RawPool {
     pub current_timestamp: Option<String>,
     #[serde(rename = "maxTradeSizeRatio")]
     pub max_trade_size_ratio: Option<String>,
+    // Liquidity Bootstrapping specific fields
+    #[serde(rename = "projectTokenIndex")]
+    pub project_token_index: Option<serde_json::Value>,
+    #[serde(rename = "isProjectTokenSwapInBlocked")]
+    pub is_project_token_swap_in_blocked: Option<bool>,
+    #[serde(rename = "startWeights")]
+    pub start_weights: Option<Vec<String>>,
+    #[serde(rename = "endWeights")]
+    pub end_weights: Option<Vec<String>>,
+    #[serde(rename = "startTime")]
+    pub start_time: Option<String>,
+    #[serde(rename = "endTime")]
+    pub end_time: Option<String>,
+    #[serde(rename = "isSwapEnabled")]
+    pub is_swap_enabled: Option<bool>,
 }
 
 /// Read test data from JSON files in the testData directory
@@ -668,6 +724,96 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: quant_amm_state,
+            }))
+        }
+        "LIQUIDITY_BOOTSTRAPPING" => {
+            // Parse Liquidity Bootstrapping parameters
+            let project_token_index = raw_pool.project_token_index.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing projectTokenIndex")?
+                .as_u64()
+                .ok_or("projectTokenIndex must be a number")? as usize;
+            
+            let is_project_token_swap_in_blocked = raw_pool.is_project_token_swap_in_blocked
+                .ok_or("Liquidity Bootstrapping pool missing isProjectTokenSwapInBlocked")?;
+            
+            let start_weights = raw_pool.start_weights.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing startWeights")?
+                .into_iter()
+                .map(|w| w.parse::<BigInt>())
+                .collect::<Result<Vec<BigInt>, _>>()?;
+            
+            let end_weights = raw_pool.end_weights.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing endWeights")?
+                .into_iter()
+                .map(|w| w.parse::<BigInt>())
+                .collect::<Result<Vec<BigInt>, _>>()?;
+            
+            let start_time = raw_pool.start_time.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing startTime")?
+                .parse::<BigInt>()?;
+            
+            let end_time = raw_pool.end_time.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing endTime")?
+                .parse::<BigInt>()?;
+            
+            let is_swap_enabled = raw_pool.is_swap_enabled
+                .ok_or("Liquidity Bootstrapping pool missing isSwapEnabled")?;
+            
+            let current_timestamp = raw_pool.current_timestamp.as_ref()
+                .ok_or("Liquidity Bootstrapping pool missing currentTimestamp")?
+                .parse::<BigInt>()?;
+
+            let liquidity_bootstrapping_state = LiquidityBootstrappingState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<BigInt>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(true),
+                    hook_type: None,
+                },
+                mutable: LiquidityBootstrappingMutable {
+                    is_swap_enabled,
+                    current_timestamp,
+                },
+                immutable: LiquidityBootstrappingImmutable {
+                    project_token_index,
+                    is_project_token_swap_in_blocked,
+                    start_weights,
+                    end_weights,
+                    start_time,
+                    end_time,
+                },
+            };
+            Ok(SupportedPool::LiquidityBootstrapping(LiquidityBootstrappingPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: liquidity_bootstrapping_state,
             }))
         }
         _ => Err(format!("Unsupported pool type: {}", raw_pool.pool_type).into()),
