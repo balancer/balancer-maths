@@ -47,6 +47,9 @@ impl Vault {
             PoolState::GyroECLP(gyro_eclp_state) => {
                 Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
             }
+            PoolState::QuantAmm(quant_amm_state) => {
+                Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -85,6 +88,9 @@ impl Vault {
             PoolState::GyroECLP(gyro_eclp_state) => {
                 Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
             }
+            PoolState::QuantAmm(quant_amm_state) => {
+                Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -122,6 +128,9 @@ impl Vault {
             }
             PoolState::GyroECLP(gyro_eclp_state) => {
                 Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
+            }
+            PoolState::QuantAmm(quant_amm_state) => {
+                Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
             }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };

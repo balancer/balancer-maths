@@ -47,6 +47,36 @@ pub struct GyroECLPState {
     pub immutable: GyroECLPImmutable,
 }
 
+/// QuantAmm mutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuantAmmMutable {
+    #[serde(rename = "firstFourWeightsAndMultipliers")]
+    pub first_four_weights_and_multipliers: Vec<BigInt>,
+    #[serde(rename = "secondFourWeightsAndMultipliers")]
+    pub second_four_weights_and_multipliers: Vec<BigInt>,
+    #[serde(rename = "lastUpdateTime")]
+    pub last_update_time: BigInt,
+    #[serde(rename = "lastInteropTime")]
+    pub last_interop_time: BigInt,
+    #[serde(rename = "currentTimestamp")]
+    pub current_timestamp: BigInt,
+}
+
+/// QuantAmm immutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuantAmmImmutable {
+    #[serde(rename = "maxTradeSizeRatio")]
+    pub max_trade_size_ratio: BigInt,
+}
+
+/// QuantAmm state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuantAmmState {
+    pub base: BasePoolState,
+    pub mutable: QuantAmmMutable,
+    pub immutable: QuantAmmImmutable,
+}
+
 /// Base pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolBase {
@@ -82,6 +112,15 @@ pub struct GyroECLPPool {
     pub state: GyroECLPState,
 }
 
+/// QuantAmm pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuantAmmPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: QuantAmmState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -89,6 +128,7 @@ pub enum SupportedPool {
     Weighted(WeightedPool),
     Stable(StablePool),
     GyroECLP(GyroECLPPool),
+    QuantAmm(QuantAmmPool),
     // Add other pool types as needed
 }
 
@@ -225,6 +265,19 @@ struct RawPool {
     pub z: Option<String>,
     #[serde(rename = "dSq")]
     pub d_sq: Option<String>,
+    // QuantAmm specific fields
+    #[serde(rename = "firstFourWeightsAndMultipliers")]
+    pub first_four_weights_and_multipliers: Option<Vec<String>>,
+    #[serde(rename = "secondFourWeightsAndMultipliers")]
+    pub second_four_weights_and_multipliers: Option<Vec<String>>,
+    #[serde(rename = "lastUpdateTime")]
+    pub last_update_time: Option<String>,
+    #[serde(rename = "lastInteropTime")]
+    pub last_interop_time: Option<String>,
+    #[serde(rename = "currentTimestamp")]
+    pub current_timestamp: Option<String>,
+    #[serde(rename = "maxTradeSizeRatio")]
+    pub max_trade_size_ratio: Option<String>,
 }
 
 /// Read test data from JSON files in the testData directory
@@ -534,6 +587,87 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: gyro_eclp_state,
+            }))
+        }
+        "QUANT_AMM_WEIGHTED" => {
+            // Parse QuantAmm parameters
+            let first_four_weights_and_multipliers = raw_pool.first_four_weights_and_multipliers.as_ref()
+                .ok_or("QuantAmm pool missing firstFourWeightsAndMultipliers")?
+                .into_iter()
+                .map(|w| w.parse::<BigInt>())
+                .collect::<Result<Vec<BigInt>, _>>()?;
+            
+            let second_four_weights_and_multipliers = raw_pool.second_four_weights_and_multipliers.as_ref()
+                .ok_or("QuantAmm pool missing secondFourWeightsAndMultipliers")?
+                .into_iter()
+                .map(|w| w.parse::<BigInt>())
+                .collect::<Result<Vec<BigInt>, _>>()?;
+            
+            let last_update_time = raw_pool.last_update_time.as_ref()
+                .ok_or("QuantAmm pool missing lastUpdateTime")?
+                .parse::<BigInt>()?;
+            
+            let last_interop_time = raw_pool.last_interop_time.as_ref()
+                .ok_or("QuantAmm pool missing lastInteropTime")?
+                .parse::<BigInt>()?;
+            
+            let current_timestamp = raw_pool.current_timestamp.as_ref()
+                .ok_or("QuantAmm pool missing currentTimestamp")?
+                .parse::<BigInt>()?;
+            
+            let max_trade_size_ratio = raw_pool.max_trade_size_ratio.as_ref()
+                .ok_or("QuantAmm pool missing maxTradeSizeRatio")?
+                .parse::<BigInt>()?;
+
+            let quant_amm_state = QuantAmmState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<BigInt>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(true),
+                    hook_type: None,
+                },
+                mutable: QuantAmmMutable {
+                    first_four_weights_and_multipliers,
+                    second_four_weights_and_multipliers,
+                    last_update_time,
+                    last_interop_time,
+                    current_timestamp,
+                },
+                immutable: QuantAmmImmutable {
+                    max_trade_size_ratio,
+                },
+            };
+            Ok(SupportedPool::QuantAmm(QuantAmmPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: quant_amm_state,
             }))
         }
         _ => Err(format!("Unsupported pool type: {}", raw_pool.pool_type).into()),

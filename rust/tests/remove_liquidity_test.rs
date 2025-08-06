@@ -2,6 +2,7 @@ use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
 use balancer_maths_rust::pools::stable::{StableState, StableMutable};
 use balancer_maths_rust::pools::gyro::{GyroECLPState, GyroECLPImmutable};
+use balancer_maths_rust::pools::quantamm::{QuantAmmState, QuantAmmMutable, QuantAmmImmutable};
 mod utils;
 use utils::read_test_data;
 use utils::SupportedPool;
@@ -41,6 +42,22 @@ fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
             };
             PoolState::GyroECLP(gyro_eclp_state)
         }
+        SupportedPool::QuantAmm(quant_amm_pool) => {
+            let quant_amm_state = QuantAmmState {
+                base: quant_amm_pool.state.base.clone(),
+                mutable: QuantAmmMutable {
+                    first_four_weights_and_multipliers: quant_amm_pool.state.mutable.first_four_weights_and_multipliers.clone(),
+                    second_four_weights_and_multipliers: quant_amm_pool.state.mutable.second_four_weights_and_multipliers.clone(),
+                    last_update_time: quant_amm_pool.state.mutable.last_update_time.clone(),
+                    last_interop_time: quant_amm_pool.state.mutable.last_interop_time.clone(),
+                    current_timestamp: quant_amm_pool.state.mutable.current_timestamp.clone(),
+                },
+                immutable: QuantAmmImmutable {
+                    max_trade_size_ratio: quant_amm_pool.state.immutable.max_trade_size_ratio.clone(),
+                },
+            };
+            PoolState::QuantAmm(quant_amm_state)
+        }
         // Add other pool types here as they are implemented
     }
 }
@@ -51,6 +68,7 @@ fn get_pool_address(pool: &SupportedPool) -> String {
         SupportedPool::Weighted(weighted_pool) => weighted_pool.base.pool_address.clone(),
         SupportedPool::Stable(stable_pool) => stable_pool.base.pool_address.clone(),
         SupportedPool::GyroECLP(gyro_eclp_pool) => gyro_eclp_pool.base.pool_address.clone(),
+        SupportedPool::QuantAmm(quant_amm_pool) => quant_amm_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
 }
