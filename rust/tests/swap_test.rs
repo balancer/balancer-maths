@@ -1,9 +1,10 @@
 use balancer_maths_rust::common::types::*;
+use balancer_maths_rust::common::types::PoolStateOrBuffer;
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
 mod utils;
 use utils::read_test_data;
-use utils::{convert_to_pool_state, get_pool_address};
+use utils::{convert_to_pool_state};
 
 
 
@@ -39,8 +40,8 @@ fn test_swaps() {
         let pool_data = test_data.pools.get(&swap_test.test)
             .expect(&format!("Pool not found for test: {}", swap_test.test));
         
-        // Convert pool data to PoolState
-        let pool_state = convert_to_pool_state(pool_data);
+        // Convert pool data to PoolStateOrBuffer
+        let pool_state_or_buffer = convert_to_pool_state(pool_data);
 
         // Create SwapInput
         let swap_input = SwapInput {
@@ -57,25 +58,26 @@ fn test_swaps() {
         // Perform swap operation
         let result = vault.swap(
             &swap_input,
-            &pool_state,
+            &pool_state_or_buffer,
             None, // No hook state for now
         ).expect("Swap failed");
 
-
-
         // Check if this is a Buffer pool (which has tolerance)
-        if pool_state.base().pool_type == "Buffer" {
-            assert!(
-                are_big_ints_within_percent(&result, &swap_test.output_raw, 0.001),
-                "Buffer pool swap result outside tolerance for test: {}",
-                swap_test.test
-            );
-        } else {
-            assert_eq!(
-                result, swap_test.output_raw,
-                "Swap result mismatch for test: {}",
-                swap_test.test
-            );
+        match &pool_state_or_buffer {
+            PoolStateOrBuffer::Pool(pool_state) => {
+                assert_eq!(
+                    result, swap_test.output_raw,
+                    "Swap result mismatch for test: {}",
+                    swap_test.test
+                );
+            }
+            PoolStateOrBuffer::Buffer(_) => {
+                assert!(
+                    are_big_ints_within_percent(&result, &swap_test.output_raw, 0.001),
+                    "Buffer pool swap result outside tolerance for test: {}",
+                    swap_test.test
+                );
+            }
         }
     }
 }

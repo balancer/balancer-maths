@@ -1,4 +1,5 @@
 use balancer_maths_rust::common::types::*;
+use balancer_maths_rust::common::types::PoolStateOrBuffer;
 use balancer_maths_rust::vault::Vault;
 mod utils;
 use utils::read_test_data;
@@ -18,8 +19,17 @@ fn test_remove_liquidity() {
         let pool_data = test_data.pools.get(&remove_test.test)
             .expect(&format!("Pool not found for test: {}", remove_test.test));
         
-        // Convert pool data to PoolState
-        let pool_state = convert_to_pool_state(pool_data);
+        // Convert pool data to PoolStateOrBuffer
+        let pool_state_or_buffer = convert_to_pool_state(pool_data);
+
+        // Skip Buffer pools as they don't support remove_liquidity
+        let pool_state = match pool_state_or_buffer {
+            PoolStateOrBuffer::Pool(pool_state) => pool_state,
+            PoolStateOrBuffer::Buffer(_) => {
+                println!("Skipping Buffer pool for remove liquidity test: {}", remove_test.test);
+                continue;
+            }
+        };
 
         // Create RemoveLiquidityInput
         let remove_liquidity_input = RemoveLiquidityInput {

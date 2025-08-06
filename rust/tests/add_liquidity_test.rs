@@ -1,4 +1,5 @@
 use balancer_maths_rust::common::types::*;
+use balancer_maths_rust::common::types::PoolStateOrBuffer;
 use balancer_maths_rust::vault::Vault;
 mod utils;
 use utils::read_test_data;
@@ -20,8 +21,17 @@ fn test_add_liquidity() {
             .get(&add.test)
             .expect(&format!("No pool data found for test: {}", add.test));
 
-        // Convert pool to PoolState
-        let pool_state = convert_to_pool_state(pool);
+        // Convert pool to PoolStateOrBuffer
+        let pool_state_or_buffer = convert_to_pool_state(pool);
+
+        // Skip Buffer pools as they don't support add_liquidity
+        let pool_state = match pool_state_or_buffer {
+            PoolStateOrBuffer::Pool(pool_state) => pool_state,
+            PoolStateOrBuffer::Buffer(_) => {
+                println!("Skipping Buffer pool for add liquidity test: {}", add.test);
+                continue;
+            }
+        };
 
         // Convert kind to AddLiquidityKind
         let kind = match add.kind {

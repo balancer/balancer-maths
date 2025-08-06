@@ -1,22 +1,26 @@
 //! Shared test helper functions for pool state conversion and utilities
 
-use balancer_maths_rust::common::types::PoolState;
+use balancer_maths_rust::common::types::{PoolState, PoolStateOrBuffer};
 use balancer_maths_rust::pools::weighted::WeightedState;
 use balancer_maths_rust::pools::stable::{StableState, StableMutable};
 use balancer_maths_rust::pools::gyro::{GyroECLPState, GyroECLPImmutable};
 use balancer_maths_rust::pools::quantamm::{QuantAmmState, QuantAmmMutable, QuantAmmImmutable};
 use balancer_maths_rust::pools::liquidity_bootstrapping::{LiquidityBootstrappingState, LiquidityBootstrappingMutable, LiquidityBootstrappingImmutable};
+use balancer_maths_rust::pools::buffer::{BufferState, BufferMutable, BufferImmutable};
 use crate::utils::read_test_data::SupportedPool;
 
-/// Convert a SupportedPool from test data to a PoolState for the vault
-pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
+
+
+/// Convert a SupportedPool from test data to a PoolStateOrBuffer for the vault
+/// Returns PoolState for normal pools and BufferState for Buffer pools
+pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
     match pool {
         SupportedPool::Weighted(weighted_pool) => {
             let weighted_state = WeightedState {
                 base: weighted_pool.state.base.clone(),
                 weights: weighted_pool.state.weights.clone(),
             };
-            PoolState::Weighted(weighted_state)
+            PoolStateOrBuffer::Pool(PoolState::Weighted(weighted_state))
         }
         SupportedPool::Stable(stable_pool) => {
             let stable_state = StableState {
@@ -25,7 +29,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
                     amp: stable_pool.state.mutable.amp.clone(),
                 },
             };
-            PoolState::Stable(stable_state)
+            PoolStateOrBuffer::Pool(PoolState::Stable(stable_state))
         }
         SupportedPool::GyroECLP(gyro_eclp_pool) => {
             let gyro_eclp_state = GyroECLPState {
@@ -47,7 +51,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
                     d_sq: gyro_eclp_pool.state.immutable.d_sq.clone(),
                 },
             };
-            PoolState::GyroECLP(gyro_eclp_state)
+            PoolStateOrBuffer::Pool(PoolState::GyroECLP(gyro_eclp_state))
         }
         SupportedPool::QuantAmm(quant_amm_pool) => {
             let quant_amm_state = QuantAmmState {
@@ -63,7 +67,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
                     max_trade_size_ratio: quant_amm_pool.state.immutable.max_trade_size_ratio.clone(),
                 },
             };
-            PoolState::QuantAmm(quant_amm_state)
+            PoolStateOrBuffer::Pool(PoolState::QuantAmm(quant_amm_state))
         }
         SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
             let liquidity_bootstrapping_state = LiquidityBootstrappingState {
@@ -81,7 +85,22 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
                     end_time: liquidity_bootstrapping_pool.state.immutable.end_time.clone(),
                 },
             };
-            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state)
+            PoolStateOrBuffer::Pool(PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state))
+        }
+        SupportedPool::Buffer(buffer_pool) => {
+            let buffer_state = BufferState {
+                base: buffer_pool.state.base.clone(),
+                mutable: BufferMutable {
+                    rate: buffer_pool.state.mutable.rate.clone(),
+                    max_deposit: buffer_pool.state.mutable.max_deposit.clone(),
+                    max_mint: buffer_pool.state.mutable.max_mint.clone(),
+                },
+                immutable: BufferImmutable {
+                    pool_address: buffer_pool.state.immutable.pool_address.clone(),
+                    tokens: buffer_pool.state.immutable.tokens.clone(),
+                },
+            };
+            PoolStateOrBuffer::Buffer(buffer_state)
         }
         // Add other pool types here as they are implemented
     }
@@ -95,6 +114,7 @@ pub fn get_pool_address(pool: &SupportedPool) -> String {
         SupportedPool::GyroECLP(gyro_eclp_pool) => gyro_eclp_pool.base.pool_address.clone(),
         SupportedPool::QuantAmm(quant_amm_pool) => quant_amm_pool.base.pool_address.clone(),
         SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => liquidity_bootstrapping_pool.base.pool_address.clone(),
+        SupportedPool::Buffer(buffer_pool) => buffer_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
 } 

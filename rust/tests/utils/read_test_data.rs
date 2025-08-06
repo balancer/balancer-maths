@@ -108,6 +108,29 @@ pub struct LiquidityBootstrappingState {
     pub immutable: LiquidityBootstrappingImmutable,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufferMutable {
+    pub rate: BigInt,
+    #[serde(rename = "maxDeposit")]
+    pub max_deposit: Option<BigInt>,
+    #[serde(rename = "maxMint")]
+    pub max_mint: Option<BigInt>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufferImmutable {
+    #[serde(rename = "poolAddress")]
+    pub pool_address: String,
+    pub tokens: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufferState {
+    pub base: BasePoolState,
+    pub mutable: BufferMutable,
+    pub immutable: BufferImmutable,
+}
+
 /// Base pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolBase {
@@ -161,6 +184,15 @@ pub struct LiquidityBootstrappingPool {
     pub state: LiquidityBootstrappingState,
 }
 
+/// Buffer pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufferPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: BufferState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -170,6 +202,7 @@ pub enum SupportedPool {
     GyroECLP(GyroECLPPool),
     QuantAmm(QuantAmmPool),
     LiquidityBootstrapping(LiquidityBootstrappingPool),
+    Buffer(BufferPool),
     // Add other pool types as needed
 }
 
@@ -263,15 +296,15 @@ struct RawPool {
     #[serde(rename = "poolAddress")]
     pub pool_address: String,
     pub tokens: Vec<String>,
-    #[serde(rename = "scalingFactors")]
+    #[serde(rename = "scalingFactors", default = "default_scaling_factors")]
     pub scaling_factors: Vec<String>,
-    #[serde(rename = "swapFee")]
+    #[serde(rename = "swapFee", default = "default_swap_fee")]
     pub swap_fee: String,
-    #[serde(rename = "balancesLiveScaled18")]
+    #[serde(rename = "balancesLiveScaled18", default = "default_balances")]
     pub balances_live_scaled_18: Vec<String>,
-    #[serde(rename = "tokenRates")]
+    #[serde(rename = "tokenRates", default = "default_token_rates")]
     pub token_rates: Vec<String>,
-    #[serde(rename = "totalSupply")]
+    #[serde(rename = "totalSupply", default = "default_total_supply")]
     pub total_supply: String,
     #[serde(rename = "aggregateSwapFee")]
     pub aggregate_swap_fee: Option<String>,
@@ -334,6 +367,33 @@ struct RawPool {
     pub end_time: Option<String>,
     #[serde(rename = "isSwapEnabled")]
     pub is_swap_enabled: Option<bool>,
+    // Buffer specific fields
+    pub rate: Option<String>,
+    #[serde(rename = "maxDeposit")]
+    pub max_deposit: Option<String>,
+    #[serde(rename = "maxMint")]
+    pub max_mint: Option<String>,
+}
+
+// Default functions for serde
+fn default_scaling_factors() -> Vec<String> {
+    vec!["1".to_string(), "1".to_string()]
+}
+
+fn default_swap_fee() -> String {
+    "0".to_string()
+}
+
+fn default_balances() -> Vec<String> {
+    vec!["0".to_string(), "0".to_string()]
+}
+
+fn default_token_rates() -> Vec<String> {
+    vec!["1000000000000000000".to_string(), "1000000000000000000".to_string()]
+}
+
+fn default_total_supply() -> String {
+    "0".to_string()
 }
 
 /// Read test data from JSON files in the testData directory
@@ -814,6 +874,54 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: liquidity_bootstrapping_state,
+            }))
+        }
+        "Buffer" => {
+            // Parse Buffer parameters
+            let rate = raw_pool.rate.as_ref()
+                .ok_or("Buffer pool missing rate")?
+                .parse::<BigInt>()?;
+            
+            let max_deposit = raw_pool.max_deposit.as_ref()
+                .map(|d| d.parse::<BigInt>())
+                .transpose()?;
+            
+            let max_mint = raw_pool.max_mint.as_ref()
+                .map(|m| m.parse::<BigInt>())
+                .transpose()?;
+
+            // Buffer pools have minimal required fields, use defaults for missing ones
+            let buffer_state = BufferState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: vec![BigInt::from(1u64), BigInt::from(1u64)],
+                    swap_fee: BigInt::from(0u64),
+                    balances_live_scaled_18: vec![BigInt::from(0u64), BigInt::from(0u64)],
+                    token_rates: vec![BigInt::from(1000000000000000000u64), BigInt::from(1000000000000000000u64)],
+                    total_supply: BigInt::from(0u64),
+                    aggregate_swap_fee: BigInt::from(0u64),
+                    supports_unbalanced_liquidity: true,
+                    hook_type: None,
+                },
+                mutable: BufferMutable {
+                    rate,
+                    max_deposit,
+                    max_mint,
+                },
+                immutable: BufferImmutable {
+                    pool_address: raw_pool.pool_address.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                },
+            };
+            Ok(SupportedPool::Buffer(BufferPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: buffer_state,
             }))
         }
         _ => Err(format!("Unsupported pool type: {}", raw_pool.pool_type).into()),

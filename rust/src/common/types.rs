@@ -2,6 +2,7 @@
 
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
+use crate::pools::buffer::BufferState;
 
 /// Kind of swap operation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -108,8 +109,7 @@ pub enum PoolState {
     Weighted(crate::pools::weighted::WeightedState),
     /// Stable pool state
     Stable(crate::pools::stable::stable_data::StableState),
-    /// Buffer pool state (will be implemented later)
-    Buffer(BasePoolState), // TODO: Replace with BufferState
+
     /// Gyro ECLP pool state
     GyroECLP(crate::pools::gyro::gyro_eclp_data::GyroECLPState),
     /// ReClamm pool state (will be implemented later)
@@ -118,6 +118,13 @@ pub enum PoolState {
     QuantAmm(crate::pools::quantamm::quantamm_data::QuantAmmState),
     /// Liquidity bootstrapping pool state
     LiquidityBootstrapping(crate::pools::liquidity_bootstrapping::liquidity_bootstrapping_data::LiquidityBootstrappingState),
+}
+
+/// Union type for pool states - can be either a normal pool or a buffer pool
+#[derive(Debug, Clone)]
+pub enum PoolStateOrBuffer {
+    Pool(PoolState),
+    Buffer(BufferState),
 }
 
 /// Result of a swap operation
@@ -181,7 +188,7 @@ impl PoolState {
             PoolState::Base(base) => base,
             PoolState::Weighted(weighted) => weighted.base(),
             PoolState::Stable(stable) => &stable.base,
-            PoolState::Buffer(base) => base,
+
             PoolState::GyroECLP(gyro_eclp) => &gyro_eclp.base,
             PoolState::ReClamm(base) => base,
             PoolState::QuantAmm(quant_amm) => &quant_amm.base,
