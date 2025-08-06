@@ -112,8 +112,8 @@ pub enum PoolState {
 
     /// Gyro ECLP pool state
     GyroECLP(crate::pools::gyro::gyro_eclp_data::GyroECLPState),
-    /// ReClamm pool state (will be implemented later)
-    ReClamm(BasePoolState), // TODO: Replace with ReClammState
+    /// ReClamm pool state
+    ReClamm(crate::pools::reclamm::reclamm_data::ReClammState),
     /// QuantAMM pool state
     QuantAmm(crate::pools::quantamm::quantamm_data::QuantAmmState),
     /// Liquidity bootstrapping pool state
@@ -190,7 +190,7 @@ impl PoolState {
             PoolState::Stable(stable) => &stable.base,
 
             PoolState::GyroECLP(gyro_eclp) => &gyro_eclp.base,
-            PoolState::ReClamm(base) => base,
+            PoolState::ReClamm(re_clamm) => &re_clamm.base,
             PoolState::QuantAmm(quant_amm) => &quant_amm.base,
             PoolState::LiquidityBootstrapping(liquidity_bootstrapping) => &liquidity_bootstrapping.base,
         }

@@ -4,6 +4,7 @@ pub mod constants;
 pub mod errors;
 pub mod log_exp_math;
 pub mod maths;
+pub mod oz_math;
 pub mod pool_base;
 pub mod types;
 pub mod utils;
@@ -11,6 +12,7 @@ pub mod utils;
 // Re-export commonly used items without glob imports to avoid ambiguity
 pub use constants::WAD;
 pub use errors::PoolError;
+pub use oz_math::sqrt;
 pub use pool_base::PoolBase;
 pub use types::{
     AddLiquidityInput, AddLiquidityResult, PoolState, RemoveLiquidityInput, RemoveLiquidityResult,

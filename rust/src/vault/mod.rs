@@ -56,6 +56,9 @@ impl Vault {
                     PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => {
                         Box::new(crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(liquidity_bootstrapping_state.clone()))
                     }
+                    PoolState::ReClamm(re_clamm_state) => {
+                        Box::new(crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()))
+                    }
                     _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
                 };
 
@@ -149,6 +152,9 @@ impl Vault {
             }
             PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => {
                 Box::new(crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(liquidity_bootstrapping_state.clone()))
+            }
+            PoolState::ReClamm(re_clamm_state) => {
+                Box::new(crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()))
             }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };

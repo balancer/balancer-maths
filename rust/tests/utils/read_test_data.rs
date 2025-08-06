@@ -108,6 +108,45 @@ pub struct LiquidityBootstrappingState {
     pub immutable: LiquidityBootstrappingImmutable,
 }
 
+/// ReClamm mutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReClammMutable {
+    #[serde(rename = "lastVirtualBalances")]
+    pub last_virtual_balances: Vec<BigInt>,
+    #[serde(rename = "dailyPriceShiftBase")]
+    pub daily_price_shift_base: BigInt,
+    #[serde(rename = "lastTimestamp")]
+    pub last_timestamp: BigInt,
+    #[serde(rename = "currentTimestamp")]
+    pub current_timestamp: BigInt,
+    #[serde(rename = "centerednessMargin")]
+    pub centeredness_margin: BigInt,
+    #[serde(rename = "startFourthRootPriceRatio")]
+    pub start_fourth_root_price_ratio: BigInt,
+    #[serde(rename = "endFourthRootPriceRatio")]
+    pub end_fourth_root_price_ratio: BigInt,
+    #[serde(rename = "priceRatioUpdateStartTime")]
+    pub price_ratio_update_start_time: BigInt,
+    #[serde(rename = "priceRatioUpdateEndTime")]
+    pub price_ratio_update_end_time: BigInt,
+}
+
+/// ReClamm immutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReClammImmutable {
+    #[serde(rename = "poolAddress")]
+    pub pool_address: String,
+    pub tokens: Vec<String>,
+}
+
+/// ReClamm state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReClammState {
+    pub base: BasePoolState,
+    pub mutable: ReClammMutable,
+    pub immutable: ReClammImmutable,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufferMutable {
     pub rate: BigInt,
@@ -193,6 +232,15 @@ pub struct BufferPool {
     pub state: BufferState,
 }
 
+/// ReClamm pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReClammPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: ReClammState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -203,6 +251,7 @@ pub enum SupportedPool {
     QuantAmm(QuantAmmPool),
     LiquidityBootstrapping(LiquidityBootstrappingPool),
     Buffer(BufferPool),
+    ReClamm(ReClammPool),
     // Add other pool types as needed
 }
 
@@ -373,6 +422,23 @@ struct RawPool {
     pub max_deposit: Option<String>,
     #[serde(rename = "maxMint")]
     pub max_mint: Option<String>,
+    // ReClamm specific fields
+    #[serde(rename = "lastVirtualBalances")]
+    pub last_virtual_balances: Option<Vec<String>>,
+    #[serde(rename = "dailyPriceShiftBase")]
+    pub daily_price_shift_base: Option<String>,
+    #[serde(rename = "lastTimestamp")]
+    pub last_timestamp: Option<String>,
+    #[serde(rename = "centerednessMargin")]
+    pub centeredness_margin: Option<String>,
+    #[serde(rename = "startFourthRootPriceRatio")]
+    pub start_fourth_root_price_ratio: Option<String>,
+    #[serde(rename = "endFourthRootPriceRatio")]
+    pub end_fourth_root_price_ratio: Option<String>,
+    #[serde(rename = "priceRatioUpdateStartTime")]
+    pub price_ratio_update_start_time: Option<String>,
+    #[serde(rename = "priceRatioUpdateEndTime")]
+    pub price_ratio_update_end_time: Option<String>,
 }
 
 // Default functions for serde
@@ -874,6 +940,102 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: liquidity_bootstrapping_state,
+            }))
+        }
+        "RECLAMM" => {
+            // Parse ReClamm parameters
+            let last_virtual_balances = raw_pool.last_virtual_balances.as_ref()
+                .ok_or("ReClamm pool missing lastVirtualBalances")?
+                .into_iter()
+                .map(|v| v.parse::<BigInt>())
+                .collect::<Result<Vec<BigInt>, _>>()?;
+            
+            let daily_price_shift_base = raw_pool.daily_price_shift_base.as_ref()
+                .ok_or("ReClamm pool missing dailyPriceShiftBase")?
+                .parse::<BigInt>()?;
+            
+            let last_timestamp = raw_pool.last_timestamp.as_ref()
+                .ok_or("ReClamm pool missing lastTimestamp")?
+                .parse::<BigInt>()?;
+            
+            let current_timestamp = raw_pool.current_timestamp.as_ref()
+                .ok_or("ReClamm pool missing currentTimestamp")?
+                .parse::<BigInt>()?;
+            
+            let centeredness_margin = raw_pool.centeredness_margin.as_ref()
+                .ok_or("ReClamm pool missing centerednessMargin")?
+                .parse::<BigInt>()?;
+            
+            let start_fourth_root_price_ratio = raw_pool.start_fourth_root_price_ratio.as_ref()
+                .ok_or("ReClamm pool missing startFourthRootPriceRatio")?
+                .parse::<BigInt>()?;
+            
+            let end_fourth_root_price_ratio = raw_pool.end_fourth_root_price_ratio.as_ref()
+                .ok_or("ReClamm pool missing endFourthRootPriceRatio")?
+                .parse::<BigInt>()?;
+            
+            let price_ratio_update_start_time = raw_pool.price_ratio_update_start_time.as_ref()
+                .ok_or("ReClamm pool missing priceRatioUpdateStartTime")?
+                .parse::<BigInt>()?;
+            
+            let price_ratio_update_end_time = raw_pool.price_ratio_update_end_time.as_ref()
+                .ok_or("ReClamm pool missing priceRatioUpdateEndTime")?
+                .parse::<BigInt>()?;
+
+            let re_clamm_state = ReClammState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<BigInt>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(true),
+                    hook_type: None,
+                },
+                mutable: ReClammMutable {
+                    last_virtual_balances,
+                    daily_price_shift_base,
+                    last_timestamp,
+                    current_timestamp,
+                    centeredness_margin,
+                    start_fourth_root_price_ratio,
+                    end_fourth_root_price_ratio,
+                    price_ratio_update_start_time,
+                    price_ratio_update_end_time,
+                },
+                immutable: ReClammImmutable {
+                    pool_address: raw_pool.pool_address.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                },
+            };
+            Ok(SupportedPool::ReClamm(ReClammPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: re_clamm_state,
             }))
         }
         "Buffer" => {
