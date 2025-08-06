@@ -2,8 +2,8 @@
 
 pub mod weighted;
 pub mod stable;
+pub mod gyro;
 // pub mod buffer; // Commented out due to missing module file
-// pub mod gyro; // Commented out due to missing module file
 // pub mod reclamm; // Commented out due to missing module file
 // pub mod quantamm; // Commented out due to missing module file
 // pub mod liquidity_bootstrapping;
@@ -11,8 +11,8 @@ pub mod stable;
 // Re-export pool traits and types
 pub use weighted::{WeightedPool, WeightedState};
 pub use stable::{StablePool, StableState, StableMutable};
+pub use gyro::{GyroECLPPool, GyroECLPState, GyroECLPImmutable};
 // pub use buffer::*;
-// pub use gyro::*;
 // pub use reclamm::*;
 // pub use quantamm::*;
 // pub use liquidity_bootstrapping::*;

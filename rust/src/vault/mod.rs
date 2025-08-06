@@ -44,6 +44,9 @@ impl Vault {
             PoolState::Stable(stable_state) => {
                 Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
             }
+            PoolState::GyroECLP(gyro_eclp_state) => {
+                Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -79,6 +82,9 @@ impl Vault {
             PoolState::Stable(stable_state) => {
                 Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
             }
+            PoolState::GyroECLP(gyro_eclp_state) => {
+                Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
+            }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -113,6 +119,9 @@ impl Vault {
             }
             PoolState::Stable(stable_state) => {
                 Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
+            }
+            PoolState::GyroECLP(gyro_eclp_state) => {
+                Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
             }
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };

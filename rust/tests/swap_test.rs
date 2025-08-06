@@ -1,6 +1,7 @@
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
 use balancer_maths_rust::pools::stable::{StableState, StableMutable};
+use balancer_maths_rust::pools::gyro::{GyroECLPState, GyroECLPImmutable};
 use num_bigint::BigInt;
 mod utils;
 use utils::read_test_data;
@@ -19,6 +20,28 @@ fn convert_to_pool_state(pool: &SupportedPool) -> PoolState {
             };
             PoolState::Stable(stable_state)
         }
+        SupportedPool::GyroECLP(gyro_eclp_pool) => {
+            let gyro_eclp_state = GyroECLPState {
+                base: gyro_eclp_pool.state.base.clone(),
+                immutable: GyroECLPImmutable {
+                    alpha: gyro_eclp_pool.state.immutable.alpha.clone(),
+                    beta: gyro_eclp_pool.state.immutable.beta.clone(),
+                    c: gyro_eclp_pool.state.immutable.c.clone(),
+                    s: gyro_eclp_pool.state.immutable.s.clone(),
+                    lambda: gyro_eclp_pool.state.immutable.lambda.clone(),
+                    tau_alpha_x: gyro_eclp_pool.state.immutable.tau_alpha_x.clone(),
+                    tau_alpha_y: gyro_eclp_pool.state.immutable.tau_alpha_y.clone(),
+                    tau_beta_x: gyro_eclp_pool.state.immutable.tau_beta_x.clone(),
+                    tau_beta_y: gyro_eclp_pool.state.immutable.tau_beta_y.clone(),
+                    u: gyro_eclp_pool.state.immutable.u.clone(),
+                    v: gyro_eclp_pool.state.immutable.v.clone(),
+                    w: gyro_eclp_pool.state.immutable.w.clone(),
+                    z: gyro_eclp_pool.state.immutable.z.clone(),
+                    d_sq: gyro_eclp_pool.state.immutable.d_sq.clone(),
+                },
+            };
+            PoolState::GyroECLP(gyro_eclp_state)
+        }
         // Add other pool types here as they are implemented
     }
 }
@@ -28,6 +51,7 @@ fn get_pool_address(pool: &SupportedPool) -> String {
     match pool {
         SupportedPool::Weighted(weighted_pool) => weighted_pool.base.pool_address.clone(),
         SupportedPool::Stable(stable_pool) => stable_pool.base.pool_address.clone(),
+        SupportedPool::GyroECLP(gyro_eclp_pool) => gyro_eclp_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
 }

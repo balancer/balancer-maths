@@ -21,6 +21,32 @@ pub struct StableMutable {
     pub amp: BigInt,
 }
 
+/// Gyro ECLP immutable state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GyroECLPImmutable {
+    pub alpha: BigInt,
+    pub beta: BigInt,
+    pub c: BigInt,
+    pub s: BigInt,
+    pub lambda: BigInt,
+    pub tau_alpha_x: BigInt,
+    pub tau_alpha_y: BigInt,
+    pub tau_beta_x: BigInt,
+    pub tau_beta_y: BigInt,
+    pub u: BigInt,
+    pub v: BigInt,
+    pub w: BigInt,
+    pub z: BigInt,
+    pub d_sq: BigInt,
+}
+
+/// Gyro ECLP state for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GyroECLPState {
+    pub base: BasePoolState,
+    pub immutable: GyroECLPImmutable,
+}
+
 /// Base pool information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolBase {
@@ -47,12 +73,22 @@ pub struct StablePool {
     pub state: StableState,
 }
 
+/// Gyro ECLP pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GyroECLPPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: GyroECLPState,
+}
+
 /// Supported pool types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SupportedPool {
     Weighted(WeightedPool),
     Stable(StablePool),
+    GyroECLP(GyroECLPPool),
     // Add other pool types as needed
 }
 
@@ -164,6 +200,31 @@ struct RawPool {
     pub weights: Option<Vec<String>>,
     // Stable pool specific fields
     pub amp: Option<String>,
+    // Gyro ECLP specific fields
+    #[serde(rename = "paramsAlpha")]
+    pub params_alpha: Option<String>,
+    #[serde(rename = "paramsBeta")]
+    pub params_beta: Option<String>,
+    #[serde(rename = "paramsC")]
+    pub params_c: Option<String>,
+    #[serde(rename = "paramsS")]
+    pub params_s: Option<String>,
+    #[serde(rename = "paramsLambda")]
+    pub params_lambda: Option<String>,
+    #[serde(rename = "tauAlphaX")]
+    pub tau_alpha_x: Option<String>,
+    #[serde(rename = "tauAlphaY")]
+    pub tau_alpha_y: Option<String>,
+    #[serde(rename = "tauBetaX")]
+    pub tau_beta_x: Option<String>,
+    #[serde(rename = "tauBetaY")]
+    pub tau_beta_y: Option<String>,
+    pub u: Option<String>,
+    pub v: Option<String>,
+    pub w: Option<String>,
+    pub z: Option<String>,
+    #[serde(rename = "dSq")]
+    pub d_sq: Option<String>,
 }
 
 /// Read test data from JSON files in the testData directory
@@ -371,6 +432,108 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address,
                 },
                 state: stable_state,
+            }))
+        }
+        "GYROE" => {
+            // Parse all Gyro ECLP parameters
+            let alpha = raw_pool.params_alpha.as_ref()
+                .ok_or("Gyro ECLP pool missing paramsAlpha")?
+                .parse::<BigInt>()?;
+            let beta = raw_pool.params_beta.as_ref()
+                .ok_or("Gyro ECLP pool missing paramsBeta")?
+                .parse::<BigInt>()?;
+            let c = raw_pool.params_c.as_ref()
+                .ok_or("Gyro ECLP pool missing paramsC")?
+                .parse::<BigInt>()?;
+            let s = raw_pool.params_s.as_ref()
+                .ok_or("Gyro ECLP pool missing paramsS")?
+                .parse::<BigInt>()?;
+            let lambda = raw_pool.params_lambda.as_ref()
+                .ok_or("Gyro ECLP pool missing paramsLambda")?
+                .parse::<BigInt>()?;
+            let tau_alpha_x = raw_pool.tau_alpha_x.as_ref()
+                .ok_or("Gyro ECLP pool missing tauAlphaX")?
+                .parse::<BigInt>()?;
+            let tau_alpha_y = raw_pool.tau_alpha_y.as_ref()
+                .ok_or("Gyro ECLP pool missing tauAlphaY")?
+                .parse::<BigInt>()?;
+            let tau_beta_x = raw_pool.tau_beta_x.as_ref()
+                .ok_or("Gyro ECLP pool missing tauBetaX")?
+                .parse::<BigInt>()?;
+            let tau_beta_y = raw_pool.tau_beta_y.as_ref()
+                .ok_or("Gyro ECLP pool missing tauBetaY")?
+                .parse::<BigInt>()?;
+            let u = raw_pool.u.as_ref()
+                .ok_or("Gyro ECLP pool missing u")?
+                .parse::<BigInt>()?;
+            let v = raw_pool.v.as_ref()
+                .ok_or("Gyro ECLP pool missing v")?
+                .parse::<BigInt>()?;
+            let w = raw_pool.w.as_ref()
+                .ok_or("Gyro ECLP pool missing w")?
+                .parse::<BigInt>()?;
+            let z = raw_pool.z.as_ref()
+                .ok_or("Gyro ECLP pool missing z")?
+                .parse::<BigInt>()?;
+            let d_sq = raw_pool.d_sq.as_ref()
+                .ok_or("Gyro ECLP pool missing dSq")?
+                .parse::<BigInt>()?;
+
+            let gyro_eclp_state = GyroECLPState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<BigInt>())
+                        .collect::<Result<Vec<BigInt>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<BigInt>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(true),
+                    hook_type: None,
+                },
+                immutable: GyroECLPImmutable {
+                    alpha,
+                    beta,
+                    c,
+                    s,
+                    lambda,
+                    tau_alpha_x,
+                    tau_alpha_y,
+                    tau_beta_x,
+                    tau_beta_y,
+                    u,
+                    v,
+                    w,
+                    z,
+                    d_sq,
+                },
+            };
+            Ok(SupportedPool::GyroECLP(GyroECLPPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: gyro_eclp_state,
             }))
         }
         _ => Err(format!("Unsupported pool type: {}", raw_pool.pool_type).into()),
