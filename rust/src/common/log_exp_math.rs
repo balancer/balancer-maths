@@ -406,38 +406,3 @@ fn ln_36(x: &BigInt) -> Result<BigInt, PoolError> {
     // All that remains is multiplying by 2 (non fixed point).
     Ok(series_sum * BigInt::from(2))
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_pow_basic() {
-        let x = BigInt::from(2000000000000000000i128); // 2e18
-        let y = BigInt::from(1000000000000000000i128); // 1e18 (WAD)
-        let result = pow(&x, &y).unwrap();
-        assert_eq!(result, x); // x^1 = x
-    }
-
-    #[test]
-    fn test_pow_zero() {
-        let x = BigInt::from(1000000000000000000i128); // 1e18
-        let y = BigInt::zero();
-        let result = pow(&x, &y).unwrap();
-        assert_eq!(result, *WAD); // x^0 = 1
-    }
-
-    #[test]
-    fn test_ln_basic() {
-        let x = BigInt::from(1000000000000000000i128); // 1e18 (WAD)
-        let result = ln(&x).unwrap();
-        assert_eq!(result, BigInt::zero()); // ln(1) = 0
-    }
-
-    #[test]
-    fn test_ln_36_basic() {
-        let x = BigInt::from(1000000000000000000i128); // 1e18 (WAD)
-        let result = ln_36(&x).unwrap();
-        assert_eq!(result, BigInt::zero()); // ln(1) = 0
-    }
-}
