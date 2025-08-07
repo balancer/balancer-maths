@@ -76,14 +76,14 @@ pub fn swap(
     }
 
     // Apply swap fees
-    let mut swap_fee = base_state.swap_fee.clone();
-    if hook_class.config().should_call_compute_dynamic_swap_fee {
-        let result =
-            hook_class.on_compute_dynamic_swap_fee(&swap_params, &swap_fee, hook_state.unwrap());
-        if result.success {
-            swap_fee = result.dynamic_swap_fee;
+            let mut swap_fee = base_state.swap_fee.clone();
+        if hook_class.config().should_call_compute_dynamic_swap_fee {
+            let result =
+                hook_class.on_compute_dynamic_swap_fee(&swap_params, &swap_fee, hook_state.unwrap());
+            if result.success {
+                swap_fee = result.dynamic_swap_fee;
+            }
         }
-    }
 
     let mut total_swap_fee_amount_scaled_18 = BigInt::zero();
     if swap_params.swap_kind == SwapKind::GivenIn {

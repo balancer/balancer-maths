@@ -1,8 +1,11 @@
 //! Read and parse test data from JSON files
 
 use balancer_maths_rust::common::types::*;
+use balancer_maths_rust::hooks::types::HookState;
+use balancer_maths_rust::hooks::StableSurgeHookState;
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use num_bigint::BigInt;
+use num_traits::Zero;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -145,6 +148,16 @@ pub struct ReClammState {
     pub base: BasePoolState,
     pub mutable: ReClammMutable,
     pub immutable: ReClammImmutable,
+}
+
+/// Hook data for test data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HookData {
+    pub address: String,
+    #[serde(rename = "type")]
+    pub hook_type: String,
+    #[serde(rename = "dynamicData")]
+    pub dynamic_data: serde_json::Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -291,6 +304,7 @@ pub struct TestData {
     pub adds: Vec<Add>,
     pub removes: Vec<Remove>,
     pub pools: HashMap<String, SupportedPool>,
+    pub hook_state: Option<HookState>,
 }
 
 /// Raw JSON structure for parsing
@@ -439,6 +453,8 @@ struct RawPool {
     pub price_ratio_update_start_time: Option<String>,
     #[serde(rename = "priceRatioUpdateEndTime")]
     pub price_ratio_update_end_time: Option<String>,
+    // Hook data
+    pub hook: Option<HookData>,
 }
 
 // Default functions for serde
@@ -468,6 +484,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
     let mut swaps: Vec<Swap> = Vec::new();
     let mut adds: Vec<Add> = Vec::new();
     let mut removes: Vec<Remove> = Vec::new();
+    let mut hook_state: Option<HookState> = None;
 
     // Resolve the directory path relative to the current file's directory
     let absolute_directory_path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -536,8 +553,55 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                             }
                         }
                         // Process pool
-                        let pool = map_pool(json_data.pool)?;
-                        pools.insert(filename, pool);
+                        let pool = map_pool(json_data.pool.clone())?;
+                        pools.insert(filename.clone(), pool);
+                        
+                        // Parse hook state if present (only for the first file with hook data)
+                        if hook_state.is_none() {
+                            if let Some(hook_data) = &json_data.pool.hook {
+                                match hook_data.hook_type.as_str() {
+                                    "STABLE_SURGE" => {
+                                        let dynamic_data = &hook_data.dynamic_data;
+                                        let surge_threshold_percentage = dynamic_data["surgeThresholdPercentage"]
+                                            .as_str()
+                                            .unwrap_or("0")
+                                            .parse::<BigInt>()?;
+                                        let max_surge_fee_percentage = dynamic_data["maxSurgeFeePercentage"]
+                                            .as_str()
+                                            .unwrap_or("0")
+                                            .parse::<BigInt>()?;
+                                        
+                                        // Get the amp from the pool data if it's a stable pool
+                                        let amp = if json_data.pool.pool_type == "STABLE" {
+                                            json_data.pool.amp.as_ref()
+                                                .and_then(|a| a.parse::<BigInt>().ok())
+                                                .unwrap_or_else(BigInt::zero)
+                                        } else {
+                                            BigInt::zero()
+                                        };
+                                        
+                                        hook_state = Some(HookState::StableSurge(StableSurgeHookState {
+                                            hook_type: "StableSurge".to_string(),
+                                            amp,
+                                            surge_threshold_percentage,
+                                            max_surge_fee_percentage,
+                                        }));
+                                        
+                                        // Update the pool's hook_type field to match the hook
+                                        // This is needed for the vault to recognize the hook type
+                                        if let Some(pool) = pools.get_mut(&filename) {
+                                            match pool {
+                                                SupportedPool::Stable(stable_pool) => {
+                                                    stable_pool.state.base.hook_type = Some("StableSurge".to_string());
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
                     }
                     Err(e) => {
                         return Err(e.into());
@@ -552,6 +616,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
         adds,
         removes,
         pools,
+        hook_state,
     })
 }
 

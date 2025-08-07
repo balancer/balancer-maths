@@ -1,5 +1,5 @@
 use crate::common::errors::PoolError;
-use crate::common::types::Rounding;
+use crate::common::maths::div_up;
 use num_bigint::BigInt;
 use num_traits::Zero;
 
@@ -140,17 +140,20 @@ pub fn compute_balance(
     
     // Calculate inv2 and c
     let inv2 = invariant * invariant;
-    let c = (inv2.clone() * BigInt::from(AMP_PRECISION) / (amp_times_total.clone() * p_d)) * &balances[token_index];
+    let c = div_up(&(inv2.clone() * BigInt::from(AMP_PRECISION)), &(amp_times_total.clone() * p_d))? * &balances[token_index];
     
     let b = sum + (invariant * BigInt::from(AMP_PRECISION)) / amp_times_total;
     
     // Initial approximation
-    let mut token_balance = (inv2 + c.clone()) / (invariant + b.clone());
+    let mut token_balance = div_up(&(inv2 + c.clone()), &(invariant + b.clone()))?;
     
     // Iteratively solve for tokenBalance
-    for _ in 0..255 {
+    for i in 0..255 {
         let prev_token_balance = token_balance.clone();
-        token_balance = (token_balance.clone() * token_balance.clone() + c.clone()) / (token_balance * BigInt::from(2) + b.clone() - invariant);
+        token_balance = div_up(
+            &(token_balance.clone() * token_balance.clone() + c.clone()),
+            &(token_balance * BigInt::from(2) + b.clone() - invariant)
+        )?;
         
         // Check for convergence
         if token_balance > prev_token_balance {
@@ -165,22 +168,4 @@ pub fn compute_balance(
     Err(PoolError::StableInvariantDidntConverge)
 }
 
-/// Compute invariant with rounding
-pub fn compute_invariant_with_rounding(
-    amplification_parameter: &BigInt,
-    balances: &[BigInt],
-    rounding: Rounding,
-) -> Result<BigInt, PoolError> {
-    let mut invariant = compute_invariant(amplification_parameter, balances)?;
-    
-    if invariant > BigInt::zero() {
-        match rounding {
-            Rounding::RoundDown => {}
-            Rounding::RoundUp => {
-                invariant += BigInt::from(1u64);
-            }
-        }
-    }
-    
-    Ok(invariant)
-} 
+ 

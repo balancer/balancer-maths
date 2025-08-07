@@ -52,7 +52,9 @@ pub fn to_raw_undo_rate_round_down(
 ) -> Result<BigInt, PoolError> {
     // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
     // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
-    Ok(div_down_fixed(amount, &(scaling_factor * token_rate))?)
+    let denominator = scaling_factor * token_rate;
+    let result = div_down_fixed(amount, &denominator)?;
+    Ok(result)
 }
 
 /// Convert scaled 18 amount back to raw amount, rounding up

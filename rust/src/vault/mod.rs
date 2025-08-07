@@ -9,7 +9,7 @@ use crate::common::errors::PoolError;
 use crate::common::pool_base::PoolBase;
 use crate::common::types::*;
 use crate::hooks::types::HookState;
-use crate::hooks::{DefaultHook, HookBase};
+use crate::hooks::{DefaultHook, HookBase, StableSurgeHook};
 use crate::pools::buffer::erc4626_buffer_wrap_or_unwrap;
 use crate::vault::add_liquidity::add_liquidity;
 use crate::vault::remove_liquidity::remove_liquidity;
@@ -23,6 +23,33 @@ impl Vault {
     /// Create a new vault instance
     pub fn new() -> Self {
         Vault
+    }
+
+    /// Get hook instance based on hook type
+    fn get_hook(&self, hook_type: &Option<String>, hook_state: Option<&HookState>) -> Box<dyn HookBase> {
+        match hook_type {
+            Some(hook_type) => {
+                match hook_type.as_str() {
+                    "StableSurge" => {
+                        // Validate that hook state is provided and matches the type
+                        if let Some(HookState::StableSurge(_)) = hook_state {
+                            Box::new(StableSurgeHook::new())
+                        } else {
+                            // Fall back to default hook if state doesn't match
+                            Box::new(DefaultHook::new())
+                        }
+                    }
+                    _ => {
+                        // Unknown hook type, use default hook
+                        Box::new(DefaultHook::new())
+                    }
+                }
+            }
+            None => {
+                // No hook type specified, use default hook
+                Box::new(DefaultHook::new())
+            }
+        }
     }
 
     /// Perform a swap operation
@@ -63,7 +90,7 @@ impl Vault {
                 };
 
                 // Create hook instance
-                let hook: Box<dyn HookBase> = Box::new(DefaultHook::new());
+                let hook: Box<dyn HookBase> = self.get_hook(&base_state.hook_type, hook_state);
 
                 swap(
                     swap_input,
@@ -113,7 +140,7 @@ impl Vault {
         };
 
         // Create hook instance
-        let hook: Box<dyn HookBase> = Box::new(DefaultHook::new());
+        let hook: Box<dyn HookBase> = self.get_hook(&base_state.hook_type, hook_state);
 
         add_liquidity(
             add_liquidity_input,
@@ -160,7 +187,7 @@ impl Vault {
         };
 
         // Create hook instance
-        let hook: Box<dyn HookBase> = Box::new(DefaultHook::new());
+        let hook: Box<dyn HookBase> = self.get_hook(&base_state.hook_type, hook_state);
 
         remove_liquidity(
             remove_liquidity_input,

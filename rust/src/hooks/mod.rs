@@ -10,7 +10,7 @@ use num_traits::Zero;
 
 // Re-export hook-specific types
 pub use exit_fee::ExitFeeHookState;
-pub use stable_surge::StableSurgeHookState;
+pub use stable_surge::{StableSurgeHook, StableSurgeHookState};
 pub use types::{
     AfterAddLiquidityResult, AfterRemoveLiquidityResult, AfterSwapParams, AfterSwapResult,
     BeforeAddLiquidityResult, BeforeRemoveLiquidityResult, BeforeSwapResult, DynamicSwapFeeResult,

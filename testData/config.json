@@ -497,6 +497,60 @@
                     "decimals": 6
                 }
             ]
+        },
+        {
+            "testName": "Stable-Surge",
+            "chainId": "1",
+            "blockNumber": "22247251",
+            "poolAddress": "0x9ed5175aecb6653c1bdaa19793c16fd74fbeeb37",
+            "poolType": "STABLE",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+                    "tokenOut": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "1000000000000000000",
+                    "tokenIn": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+                    "tokenOut": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8"
+                },
+                {
+                    "swapKind": 0,
+                    "amountRaw": "100000000000000000",
+                    "tokenIn": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+                    "tokenOut": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "100000000000000000",
+                    "tokenIn": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+                    "tokenOut": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29"
+                }
+            ],
+            "adds": [
+                {
+                    "kind": "Unbalanced",
+                    "inputAmountsRaw": [
+                        "10000000000000000",
+                        "10000000000000000"
+                    ],
+                    "tokens": [
+                        "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+                        "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8"
+                    ],
+                    "decimals": [18, 18]
+                }
+            ],
+            "removes": [
+                {
+                    "kind": "Proportional",
+                    "bpt": "0x9ed5175aecb6653c1bdaa19793c16fd74fbeeb37",
+                    "bptInRaw": "100000000000000000"
+                }
+            ]
         }
     ]
 }

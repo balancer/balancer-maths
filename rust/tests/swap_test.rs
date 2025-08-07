@@ -59,7 +59,7 @@ fn test_swaps() {
         let result = vault.swap(
             &swap_input,
             &pool_state_or_buffer,
-            None, // No hook state for now
+            test_data.hook_state.as_ref(), // Pass hook state from test data
         ).expect("Swap failed");
 
         // Check if this is a Buffer pool (which has tolerance)
