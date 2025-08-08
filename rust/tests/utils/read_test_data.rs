@@ -2,7 +2,7 @@
 
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::hooks::types::HookState;
-use balancer_maths_rust::hooks::{StableSurgeHookState, ExitFeeHookState};
+use balancer_maths_rust::hooks::{AkronHookState, StableSurgeHookState, ExitFeeHookState};
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use num_bigint::BigInt;
 use num_traits::Zero;
@@ -621,6 +621,35 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                                 }
                                                 SupportedPool::Stable(stable_pool) => {
                                                     stable_pool.state.base.hook_type = Some("ExitFee".to_string());
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    "AKRON" => {
+                                        // For Akron hook, we need to extract weights and minimum swap fee from pool data
+                                        let weights = json_data.pool.weights
+                                            .as_ref()
+                                            .ok_or("Akron hook requires weights in pool data")?
+                                            .iter()
+                                            .map(|w_str| w_str.parse::<BigInt>())
+                                            .collect::<Result<Vec<BigInt>, _>>()?;
+                                        
+                                        let minimum_swap_fee_percentage = json_data.pool.swap_fee
+                                            .parse::<BigInt>()?;
+                                        
+                                        hook_state = Some(HookState::Akron(AkronHookState {
+                                            hook_type: "Akron".to_string(),
+                                            weights,
+                                            minimum_swap_fee_percentage,
+                                        }));
+                                        
+                                        // Update the pool's hook_type field to match the hook
+                                        // This is needed for the vault to recognize the hook type
+                                        if let Some(pool) = pools.get_mut(&filename) {
+                                            match pool {
+                                                SupportedPool::Weighted(weighted_pool) => {
+                                                    weighted_pool.state.base.hook_type = Some("Akron".to_string());
                                                 }
                                                 _ => {}
                                             }

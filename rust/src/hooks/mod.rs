@@ -1,5 +1,6 @@
 //! Hook implementations for Balancer pools
 
+pub mod akron;
 pub mod exit_fee;
 pub mod stable_surge;
 pub mod types;
@@ -11,6 +12,7 @@ use num_traits::Zero;
 // Re-export hook-specific types
 pub use exit_fee::{ExitFeeHook, ExitFeeHookState};
 pub use stable_surge::{StableSurgeHook, StableSurgeHookState};
+pub use akron::{AkronHook, AkronHookState};
 pub use types::{
     AfterAddLiquidityResult, AfterRemoveLiquidityResult, AfterSwapParams, AfterSwapResult,
     BeforeAddLiquidityResult, BeforeRemoveLiquidityResult, BeforeSwapResult, DynamicSwapFeeResult,

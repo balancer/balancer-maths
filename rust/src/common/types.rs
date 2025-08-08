@@ -181,6 +181,12 @@ pub enum Rounding {
     RoundUp = 1,
 }
 
+impl From<crate::pools::weighted::weighted_data::WeightedState> for PoolState {
+    fn from(weighted_state: crate::pools::weighted::weighted_data::WeightedState) -> Self {
+        PoolState::Weighted(weighted_state)
+    }
+}
+
 impl PoolState {
     /// Get the base pool state
     pub fn base(&self) -> &BasePoolState {
