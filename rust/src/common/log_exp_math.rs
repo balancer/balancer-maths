@@ -95,7 +95,7 @@ pub fn pow(x: &BigInt, y: &BigInt) -> Result<BigInt, PoolError> {
         return Err(PoolError::MathOverflow);
     }
 
-    Ok(exp(&logx_times_y)?)
+    exp(&logx_times_y)
 }
 
 /// Calculate exponential function e^x
@@ -248,12 +248,12 @@ fn ln(x: &BigInt) -> Result<BigInt, PoolError> {
     let mut sum = BigInt::zero();
     if a >= (&*A0 * &*WAD) {
         a = a.clone() / &*A0; // Integer, not fixed point division
-        sum = sum + &*X0;
+        sum += &*X0;
     }
 
     if a >= (&*A1 * &*WAD) {
         a = a.clone() / &*A1; // Integer, not fixed point division
-        sum = sum + &*X1;
+        sum += &*X1;
     }
 
     // All other a_n and x_n are stored as 20 digit fixed point numbers, so we convert the sum and a to this format.

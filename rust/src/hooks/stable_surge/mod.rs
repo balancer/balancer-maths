@@ -1,13 +1,13 @@
 //! Stable surge hook implementation
 
 use crate::common::maths::{complement_fixed, div_down_fixed, mul_down_fixed};
-use crate::common::types::{HookStateBase, SwapParams};
-use crate::common::types::SwapKind::GivenIn;
 use crate::common::pool_base::PoolBase;
-use crate::hooks::{DefaultHook, HookBase, HookConfig};
+use crate::common::types::SwapKind::GivenIn;
+use crate::common::types::{HookStateBase, SwapParams};
 use crate::hooks::types::{DynamicSwapFeeResult, HookState};
-use crate::pools::stable::StablePool;
+use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use crate::pools::stable::stable_data::StableMutable;
+use crate::pools::stable::StablePool;
 use num_bigint::BigInt;
 use num_traits::Zero;
 use serde::{Deserialize, Serialize};
@@ -52,7 +52,7 @@ impl StableSurgeHook {
     pub fn new() -> Self {
         let mut config = HookConfig::default();
         config.should_call_compute_dynamic_swap_fee = true;
-        
+
         Self { config }
     }
 
@@ -77,11 +77,15 @@ impl StableSurgeHook {
 
         // Update balances based on swap kind
         if swap_params.swap_kind == GivenIn {
-            new_balances[swap_params.token_in_index] = &new_balances[swap_params.token_in_index] + &swap_params.amount_scaled_18;
-            new_balances[swap_params.token_out_index] = &new_balances[swap_params.token_out_index] - &amount_calculated_scaled_18;
+            new_balances[swap_params.token_in_index] =
+                &new_balances[swap_params.token_in_index] + &swap_params.amount_scaled_18;
+            new_balances[swap_params.token_out_index] =
+                &new_balances[swap_params.token_out_index] - &amount_calculated_scaled_18;
         } else {
-            new_balances[swap_params.token_in_index] = &new_balances[swap_params.token_in_index] + &amount_calculated_scaled_18;
-            new_balances[swap_params.token_out_index] = &new_balances[swap_params.token_out_index] - &swap_params.amount_scaled_18;
+            new_balances[swap_params.token_in_index] =
+                &new_balances[swap_params.token_in_index] + &amount_calculated_scaled_18;
+            new_balances[swap_params.token_out_index] =
+                &new_balances[swap_params.token_out_index] - &swap_params.amount_scaled_18;
         }
 
         let new_total_imbalance = self.calculate_imbalance(&new_balances)?;
@@ -94,7 +98,9 @@ impl StableSurgeHook {
         let old_total_imbalance = self.calculate_imbalance(&swap_params.balances_live_scaled_18)?;
 
         // If the balance has improved or is within threshold, return static fee
-        if new_total_imbalance <= old_total_imbalance || new_total_imbalance <= *surge_threshold_percentage {
+        if new_total_imbalance <= old_total_imbalance
+            || new_total_imbalance <= *surge_threshold_percentage
+        {
             return Ok(static_fee_percentage.clone());
         }
 
@@ -103,19 +109,25 @@ impl StableSurgeHook {
         let fee_difference = max_surge_fee_percentage - static_fee_percentage;
         let imbalance_excess = &new_total_imbalance - surge_threshold_percentage;
         let threshold_complement = complement_fixed(surge_threshold_percentage)?;
-        
+
         let surge_multiplier = div_down_fixed(&imbalance_excess, &threshold_complement)?;
         let dynamic_fee_increase = mul_down_fixed(&fee_difference, &surge_multiplier)?;
-        
+
         Ok(static_fee_percentage + dynamic_fee_increase)
     }
 
     /// Calculate imbalance percentage for a list of balances
-    fn calculate_imbalance(&self, balances: &[BigInt]) -> Result<BigInt, crate::common::errors::PoolError> {
+    fn calculate_imbalance(
+        &self,
+        balances: &[BigInt],
+    ) -> Result<BigInt, crate::common::errors::PoolError> {
         let median = self.find_median(balances);
 
         let total_balance: BigInt = balances.iter().sum();
-        let total_diff: BigInt = balances.iter().map(|balance| self.abs_sub(balance, &median)).sum();
+        let total_diff: BigInt = balances
+            .iter()
+            .map(|balance| self.abs_sub(balance, &median))
+            .sum();
 
         crate::common::maths::div_down_fixed(&total_diff, &total_balance)
     }
@@ -167,12 +179,10 @@ impl HookBase for StableSurgeHook {
                     static_swap_fee_percentage,
                     state,
                 ) {
-                    Ok(dynamic_swap_fee) => {
-                        DynamicSwapFeeResult {
-                            success: true,
-                            dynamic_swap_fee,
-                        }
-                    }
+                    Ok(dynamic_swap_fee) => DynamicSwapFeeResult {
+                        success: true,
+                        dynamic_swap_fee,
+                    },
                     Err(_) => DynamicSwapFeeResult {
                         success: false,
                         dynamic_swap_fee: static_swap_fee_percentage.clone(),
@@ -195,7 +205,13 @@ impl HookBase for StableSurgeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeAddLiquidityResult {
-        DefaultHook::new().on_before_add_liquidity(kind, max_amounts_in_scaled_18, min_bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_add_liquidity(
+            kind,
+            max_amounts_in_scaled_18,
+            min_bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_after_add_liquidity(
@@ -207,7 +223,14 @@ impl HookBase for StableSurgeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterAddLiquidityResult {
-        DefaultHook::new().on_after_add_liquidity(kind, amounts_in_scaled_18, amounts_in_raw, bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_add_liquidity(
+            kind,
+            amounts_in_scaled_18,
+            amounts_in_raw,
+            bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_remove_liquidity(
@@ -218,7 +241,13 @@ impl HookBase for StableSurgeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
-        DefaultHook::new().on_before_remove_liquidity(kind, max_bpt_amount_in, min_amounts_out_scaled_18, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_remove_liquidity(
+            kind,
+            max_bpt_amount_in,
+            min_amounts_out_scaled_18,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_after_remove_liquidity(
@@ -230,7 +259,14 @@ impl HookBase for StableSurgeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterRemoveLiquidityResult {
-        DefaultHook::new().on_after_remove_liquidity(kind, bpt_amount_in, amounts_out_scaled_18, amounts_out_raw, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_remove_liquidity(
+            kind,
+            bpt_amount_in,
+            amounts_out_scaled_18,
+            amounts_out_raw,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_swap(

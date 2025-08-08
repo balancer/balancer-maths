@@ -1,8 +1,8 @@
+use crate::common::constants::WAD;
+use crate::common::maths::{mul_down_fixed, mul_up_fixed};
+use lazy_static::lazy_static;
 use num_bigint::BigInt;
 use num_traits::Zero;
-use lazy_static::lazy_static;
-use crate::common::maths::{mul_down_fixed, mul_up_fixed};
-use crate::common::constants::WAD;
 
 lazy_static! {
     // Square root constants for different precision levels
@@ -32,12 +32,15 @@ pub fn gyro_pool_math_sqrt(x: &BigInt, tolerance: u64) -> BigInt {
     }
 
     // Check that squaredGuess (guess * guess) is close enough from input
-    let guess_squared = mul_down_fixed(&guess, &guess).unwrap_or_else(|_| panic!("mul_down_fixed failed"));
+    let guess_squared =
+        mul_down_fixed(&guess, &guess).unwrap_or_else(|_| panic!("mul_down_fixed failed"));
     let tolerance_bigint = BigInt::from(tolerance);
-    
-    let upper_bound = x + &mul_up_fixed(&guess, &tolerance_bigint).unwrap_or_else(|_| panic!("mul_up_fixed failed"));
-    let lower_bound = x - &mul_up_fixed(&guess, &tolerance_bigint).unwrap_or_else(|_| panic!("mul_up_fixed failed"));
-    
+
+    let upper_bound = x + &mul_up_fixed(&guess, &tolerance_bigint)
+        .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
+    let lower_bound = x - &mul_up_fixed(&guess, &tolerance_bigint)
+        .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
+
     if !(guess_squared <= upper_bound && guess_squared >= lower_bound) {
         panic!("_sqrt FAILED");
     }
@@ -51,44 +54,42 @@ fn make_initial_guess(x: &BigInt) -> BigInt {
         let x_div_wad = x / &*WAD;
         let log2_halved = int_log2_halved(&x_div_wad);
         (BigInt::from(1u64) << log2_halved) * &*WAD
+    } else if x <= &BigInt::from(10u64) {
+        SQRT_1E_NEG_17.clone()
+    } else if x <= &BigInt::from(100u64) {
+        BigInt::from(10_000_000_000u64)
+    } else if x <= &BigInt::from(1000u64) {
+        SQRT_1E_NEG_15.clone()
+    } else if x <= &BigInt::from(10000u64) {
+        BigInt::from(100_000_000_000u64)
+    } else if x <= &BigInt::from(100000u64) {
+        SQRT_1E_NEG_13.clone()
+    } else if x <= &BigInt::from(1000000u64) {
+        BigInt::from(1_000_000_000_000u64)
+    } else if x <= &BigInt::from(10000000u64) {
+        SQRT_1E_NEG_11.clone()
+    } else if x <= &BigInt::from(100000000u64) {
+        BigInt::from(10_000_000_000_000u64)
+    } else if x <= &BigInt::from(1000000000u64) {
+        SQRT_1E_NEG_9.clone()
+    } else if x <= &BigInt::from(10000000000u64) {
+        BigInt::from(100_000_000_000_000u64)
+    } else if x <= &BigInt::from(100000000000u64) {
+        SQRT_1E_NEG_7.clone()
+    } else if x <= &BigInt::from(1000000000000u64) {
+        BigInt::from(1_000_000_000_000_000u64)
+    } else if x <= &BigInt::from(10000000000000u64) {
+        SQRT_1E_NEG_5.clone()
+    } else if x <= &BigInt::from(100000000000000u64) {
+        BigInt::from(10_000_000_000_000_000u64)
+    } else if x <= &BigInt::from(1000000000000000u64) {
+        SQRT_1E_NEG_3.clone()
+    } else if x <= &BigInt::from(10000000000000000u64) {
+        BigInt::from(100_000_000_000_000_000u64)
+    } else if x <= &BigInt::from(100000000000000000u64) {
+        SQRT_1E_NEG_1.clone()
     } else {
-        if x <= &BigInt::from(10u64) {
-            SQRT_1E_NEG_17.clone()
-        } else if x <= &BigInt::from(100u64) {
-            BigInt::from(10_000_000_000u64)
-        } else if x <= &BigInt::from(1000u64) {
-            SQRT_1E_NEG_15.clone()
-        } else if x <= &BigInt::from(10000u64) {
-            BigInt::from(100_000_000_000u64)
-        } else if x <= &BigInt::from(100000u64) {
-            SQRT_1E_NEG_13.clone()
-        } else if x <= &BigInt::from(1000000u64) {
-            BigInt::from(1_000_000_000_000u64)
-        } else if x <= &BigInt::from(10000000u64) {
-            SQRT_1E_NEG_11.clone()
-        } else if x <= &BigInt::from(100000000u64) {
-            BigInt::from(10_000_000_000_000u64)
-        } else if x <= &BigInt::from(1000000000u64) {
-            SQRT_1E_NEG_9.clone()
-        } else if x <= &BigInt::from(10000000000u64) {
-            BigInt::from(100_000_000_000_000u64)
-        } else if x <= &BigInt::from(100000000000u64) {
-            SQRT_1E_NEG_7.clone()
-        } else if x <= &BigInt::from(1000000000000u64) {
-            BigInt::from(1_000_000_000_000_000u64)
-        } else if x <= &BigInt::from(10000000000000u64) {
-            SQRT_1E_NEG_5.clone()
-        } else if x <= &BigInt::from(100000000000000u64) {
-            BigInt::from(10_000_000_000_000_000u64)
-        } else if x <= &BigInt::from(1000000000000000u64) {
-            SQRT_1E_NEG_3.clone()
-        } else if x <= &BigInt::from(10000000000000000u64) {
-            BigInt::from(100_000_000_000_000_000u64)
-        } else if x <= &BigInt::from(100000000000000000u64) {
-            SQRT_1E_NEG_1.clone()
-        } else {
-            x.clone()
-        }
+        x.clone()
     }
 }
 
@@ -127,4 +128,4 @@ fn int_log2_halved(x: &BigInt) -> u64 {
     }
 
     n
-} 
+}

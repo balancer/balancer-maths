@@ -23,4 +23,4 @@ pub struct BufferState {
     pub base: BasePoolState,
     pub mutable: BufferMutable,
     pub immutable: BufferImmutable,
-} 
+}

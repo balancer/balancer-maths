@@ -2,7 +2,7 @@
 
 use crate::common::errors::PoolError;
 use crate::common::maths::{
-    complement_fixed, div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed, mul_div_up_fixed,
+    complement_fixed, div_down_fixed, div_up_fixed, mul_div_up_fixed, mul_down_fixed, mul_up_fixed,
 };
 use crate::common::types::Rounding;
 use num_bigint::BigInt;
@@ -72,7 +72,7 @@ pub fn compute_add_liquidity_unbalanced(
     for index in 0..current_balances.len() {
         let proportional_token_balance =
             mul_down_fixed(&invariant_ratio, &current_balances[index])?;
-        if &new_balances[index] > &proportional_token_balance {
+        if new_balances[index] > proportional_token_balance {
             let taxable_amount = &new_balances[index] - &proportional_token_balance;
             let fee_amount = mul_up_fixed(&taxable_amount, swap_fee_percentage)?;
             swap_fee_amounts[index] = fee_amount.clone();

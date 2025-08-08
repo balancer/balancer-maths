@@ -1,11 +1,9 @@
-use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::common::types::PoolStateOrBuffer;
+use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
 mod utils;
 use utils::read_test_data;
 use utils::{convert_to_pool_state, get_pool_address};
-
-
 
 #[test]
 fn test_add_liquidity() {
@@ -19,7 +17,7 @@ fn test_add_liquidity() {
         let pool = test_data
             .pools
             .get(&add.test)
-            .expect(&format!("No pool data found for test: {}", add.test));
+            .unwrap_or_else(|| panic!("No pool data found for test: {}", add.test));
 
         // Convert pool to PoolStateOrBuffer
         let pool_state_or_buffer = convert_to_pool_state(pool);

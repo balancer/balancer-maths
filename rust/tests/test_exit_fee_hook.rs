@@ -28,14 +28,23 @@ fn create_test_pool_state() -> WeightedState {
             ],
             scaling_factors: vec![BigInt::from(1), BigInt::from(1)],
             swap_fee: BigInt::from(100000000000000000u64),
-            balances_live_scaled_18: vec![BigInt::from(5000000000000000u64), BigInt::from(5000000000000000000u64)],
-            token_rates: vec![BigInt::from(1000000000000000000u64), BigInt::from(1000000000000000000u64)],
+            balances_live_scaled_18: vec![
+                BigInt::from(5000000000000000u64),
+                BigInt::from(5000000000000000000u64),
+            ],
+            token_rates: vec![
+                BigInt::from(1000000000000000000u64),
+                BigInt::from(1000000000000000000u64),
+            ],
             total_supply: BigInt::from(158113883008415798u64),
             aggregate_swap_fee: BigInt::zero(),
             supports_unbalanced_liquidity: true,
             hook_type: Some("ExitFee".to_string()),
         },
-        weights: vec![BigInt::from(500000000000000000u64), BigInt::from(500000000000000000u64)],
+        weights: vec![
+            BigInt::from(500000000000000000u64),
+            BigInt::from(500000000000000000u64),
+        ],
     }
 }
 
@@ -58,11 +67,13 @@ fn test_hook_exit_fee_no_fee() {
     let hook_state = create_test_hook_state();
 
     let vault = Vault::new();
-    let result = vault.remove_liquidity(
-        &remove_liquidity_input,
-        &PoolState::Weighted(weighted_state),
-        Some(&HookState::ExitFee(hook_state)),
-    ).unwrap();
+    let result = vault
+        .remove_liquidity(
+            &remove_liquidity_input,
+            &PoolState::Weighted(weighted_state),
+            Some(&HookState::ExitFee(hook_state)),
+        )
+        .unwrap();
 
     // Expected values from Python test
     assert_eq!(result.amounts_out_raw[0], BigInt::from(316227766016u64));
@@ -73,17 +84,19 @@ fn test_hook_exit_fee_no_fee() {
 fn test_hook_exit_fee_with_fee() {
     let remove_liquidity_input = create_test_remove_liquidity_input();
     let weighted_state = create_test_pool_state();
-    
+
     // 5% fee
     let mut hook_state = create_test_hook_state();
     hook_state.remove_liquidity_hook_fee_percentage = BigInt::from(50000000000000000u64);
 
     let vault = Vault::new();
-    let result = vault.remove_liquidity(
-        &remove_liquidity_input,
-        &PoolState::Weighted(weighted_state),
-        Some(&HookState::ExitFee(hook_state)),
-    ).unwrap();
+    let result = vault
+        .remove_liquidity(
+            &remove_liquidity_input,
+            &PoolState::Weighted(weighted_state),
+            Some(&HookState::ExitFee(hook_state)),
+        )
+        .unwrap();
 
     // Expected values from Python test
     assert_eq!(result.amounts_out_raw[0], BigInt::from(300416377716u64));

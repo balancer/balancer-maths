@@ -60,8 +60,6 @@ pub fn div_up(a: &BigInt, b: &BigInt) -> Result<BigInt, PoolError> {
     Ok(result)
 }
 
-
-
 /// Multiply and divide with up rounding
 pub fn mul_div_up_fixed(a: &BigInt, b: &BigInt, c: &BigInt) -> Result<BigInt, PoolError> {
     let product = a * b;
@@ -94,7 +92,7 @@ pub fn pow_down_fixed_with_version(
     let raw = log_exp_math::pow(base, exponent)?;
     let max_error = mul_up_fixed(&raw, &MAX_POW_RELATIVE_ERROR)? + &BigInt::one();
 
-    if &raw < &max_error {
+    if raw < max_error {
         return Ok(BigInt::zero());
     }
 

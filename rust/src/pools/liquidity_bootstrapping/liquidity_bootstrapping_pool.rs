@@ -72,8 +72,9 @@ impl LiquidityBootstrappingPool {
         }
 
         // Check if project token swap in is blocked
-        if self.is_project_token_swap_in_blocked() 
-            && token_in_index == self.state.immutable.project_token_index {
+        if self.is_project_token_swap_in_blocked()
+            && token_in_index == self.state.immutable.project_token_index
+        {
             return Err(PoolError::InvalidSwapParameters);
         }
 
@@ -99,27 +100,24 @@ impl PoolBase for LiquidityBootstrappingPool {
         let balance_out = &swap_params.balances_live_scaled_18[token_out_index];
         let amount_scaled_18 = &swap_params.amount_scaled_18;
 
-        let (weight_in, weight_out) = self.get_normalized_weight_pair(token_in_index, token_out_index)?;
+        let (weight_in, weight_out) =
+            self.get_normalized_weight_pair(token_in_index, token_out_index)?;
 
         match swap_params.swap_kind {
-            crate::common::types::SwapKind::GivenIn => {
-                compute_out_given_exact_in(
-                    balance_in,
-                    &weight_in,
-                    balance_out,
-                    &weight_out,
-                    amount_scaled_18,
-                )
-            }
-            crate::common::types::SwapKind::GivenOut => {
-                compute_in_given_exact_out(
-                    balance_in,
-                    &weight_in,
-                    balance_out,
-                    &weight_out,
-                    amount_scaled_18,
-                )
-            }
+            crate::common::types::SwapKind::GivenIn => compute_out_given_exact_in(
+                balance_in,
+                &weight_in,
+                balance_out,
+                &weight_out,
+                amount_scaled_18,
+            ),
+            crate::common::types::SwapKind::GivenOut => compute_in_given_exact_out(
+                balance_in,
+                &weight_in,
+                balance_out,
+                &weight_out,
+                amount_scaled_18,
+            ),
         }
     }
 
@@ -168,6 +166,7 @@ impl PoolBase for LiquidityBootstrappingPool {
 
 impl From<LiquidityBootstrappingState> for LiquidityBootstrappingPool {
     fn from(liquidity_bootstrapping_state: LiquidityBootstrappingState) -> Self {
-        Self::new(liquidity_bootstrapping_state).expect("Failed to create LiquidityBootstrappingPool from state")
+        Self::new(liquidity_bootstrapping_state)
+            .expect("Failed to create LiquidityBootstrappingPool from state")
     }
-} 
+}

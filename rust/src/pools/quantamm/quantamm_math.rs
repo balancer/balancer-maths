@@ -7,12 +7,12 @@ lazy_static::lazy_static! {
 }
 
 /// Calculate the current block weight based on time interpolation
-/// 
+///
 /// # Arguments
 /// * `weight` - The base weight
 /// * `multiplier` - The weight multiplier
 /// * `time_since_last_update` - The time since the last weight update
-/// 
+///
 /// # Returns
 /// The interpolated weight
 pub fn calculate_block_normalised_weight(
@@ -24,18 +24,22 @@ pub fn calculate_block_normalised_weight(
     let multiplier_scaled18 = multiplier * &*ONE;
 
     if multiplier > &BigInt::zero() {
-        weight + mul_down_fixed(&multiplier_scaled18, time_since_last_update).unwrap_or_else(|_| BigInt::zero())
+        weight
+            + mul_down_fixed(&multiplier_scaled18, time_since_last_update)
+                .unwrap_or_else(|_| BigInt::zero())
     } else {
-        weight - mul_down_fixed(&(-multiplier_scaled18), time_since_last_update).unwrap_or_else(|_| BigInt::zero())
+        weight
+            - mul_down_fixed(&(-multiplier_scaled18), time_since_last_update)
+                .unwrap_or_else(|_| BigInt::zero())
     }
 }
 
 /// Extract weights and multipliers from the first four tokens
-/// 
+///
 /// # Arguments
 /// * `tokens` - List of token addresses
 /// * `first_four_weights_and_multipliers` - Packed weights and multipliers for first four tokens
-/// 
+///
 /// # Returns
 /// Tuple of (weights, multipliers) for first four tokens
 pub fn get_first_four_weights_and_multipliers(
@@ -56,11 +60,11 @@ pub fn get_first_four_weights_and_multipliers(
 }
 
 /// Extract weights and multipliers from the remaining tokens
-/// 
+///
 /// # Arguments
 /// * `tokens` - List of token addresses
 /// * `second_four_weights_and_multipliers` - Packed weights and multipliers for remaining tokens
-/// 
+///
 /// # Returns
 /// Tuple of (weights, multipliers) for remaining tokens
 pub fn get_second_four_weights_and_multipliers(
@@ -82,4 +86,4 @@ pub fn get_second_four_weights_and_multipliers(
     }
 
     (weights, multipliers)
-} 
+}

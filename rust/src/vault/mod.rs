@@ -9,7 +9,9 @@ use crate::common::errors::PoolError;
 use crate::common::pool_base::PoolBase;
 use crate::common::types::*;
 use crate::hooks::types::HookState;
-use crate::hooks::{AkronHook, DefaultHook, DirectionalFeeHook, HookBase, StableSurgeHook, ExitFeeHook};
+use crate::hooks::{
+    AkronHook, DefaultHook, DirectionalFeeHook, ExitFeeHook, HookBase, StableSurgeHook,
+};
 use crate::pools::buffer::erc4626_buffer_wrap_or_unwrap;
 use crate::vault::add_liquidity::add_liquidity;
 use crate::vault::remove_liquidity::remove_liquidity;
@@ -26,26 +28,44 @@ impl Vault {
     }
 
     /// Get hook instance based on hook type
-    fn get_hook(&self, hook_type: &Option<String>, hook_state: Option<&HookState>) -> Box<dyn HookBase> {
+    fn get_hook(
+        &self,
+        hook_type: &Option<String>,
+        hook_state: Option<&HookState>,
+    ) -> Box<dyn HookBase> {
         match hook_type {
-            Some(hook_type) => {
-                match hook_type.as_str() {
-                    "Akron" => {
-                        if let Some(HookState::Akron(_)) = hook_state { Box::new(AkronHook::new()) } else { Box::new(DefaultHook::new()) }
+            Some(hook_type) => match hook_type.as_str() {
+                "Akron" => {
+                    if let Some(HookState::Akron(_)) = hook_state {
+                        Box::new(AkronHook::new())
+                    } else {
+                        Box::new(DefaultHook::new())
                     }
-                    "DirectionalFee" => {
-                        if let Some(HookState::DirectionalFee(_)) = hook_state { Box::new(DirectionalFeeHook::new()) } else { Box::new(DefaultHook::new()) }
-                    }
-                    "StableSurge" => {
-                        if let Some(HookState::StableSurge(_)) = hook_state { Box::new(StableSurgeHook::new()) } else { Box::new(DefaultHook::new()) }
-                    }
-                    "ExitFee" => {
-                        if let Some(HookState::ExitFee(_)) = hook_state { Box::new(ExitFeeHook::new()) } else { Box::new(DefaultHook::new()) }
-                    }
-                    _ => { Box::new(DefaultHook::new()) }
                 }
-            }
-            None => { Box::new(DefaultHook::new()) }
+                "DirectionalFee" => {
+                    if let Some(HookState::DirectionalFee(_)) = hook_state {
+                        Box::new(DirectionalFeeHook::new())
+                    } else {
+                        Box::new(DefaultHook::new())
+                    }
+                }
+                "StableSurge" => {
+                    if let Some(HookState::StableSurge(_)) = hook_state {
+                        Box::new(StableSurgeHook::new())
+                    } else {
+                        Box::new(DefaultHook::new())
+                    }
+                }
+                "ExitFee" => {
+                    if let Some(HookState::ExitFee(_)) = hook_state {
+                        Box::new(ExitFeeHook::new())
+                    } else {
+                        Box::new(DefaultHook::new())
+                    }
+                }
+                _ => Box::new(DefaultHook::new()),
+            },
+            None => Box::new(DefaultHook::new()),
         }
     }
 
@@ -68,21 +88,23 @@ impl Vault {
                             weighted_state.clone(),
                         ))
                     }
-                    PoolState::Stable(stable_state) => {
-                        Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
-                    }
-                    PoolState::GyroECLP(gyro_eclp_state) => {
-                        Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
-                    }
-                    PoolState::QuantAmm(quant_amm_state) => {
-                        Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
-                    }
-                    PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => {
-                        Box::new(crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(liquidity_bootstrapping_state.clone()))
-                    }
-                    PoolState::ReClamm(re_clamm_state) => {
-                        Box::new(crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()))
-                    }
+                    PoolState::Stable(stable_state) => Box::new(
+                        crate::pools::stable::StablePool::new(stable_state.mutable.clone()),
+                    ),
+                    PoolState::GyroECLP(gyro_eclp_state) => Box::new(
+                        crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()),
+                    ),
+                    PoolState::QuantAmm(quant_amm_state) => Box::new(
+                        crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()),
+                    ),
+                    PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => Box::new(
+                        crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(
+                            liquidity_bootstrapping_state.clone(),
+                        ),
+                    ),
+                    PoolState::ReClamm(re_clamm_state) => Box::new(
+                        crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
+                    ),
                     _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
                 };
 
@@ -90,7 +112,13 @@ impl Vault {
                 let hook: Box<dyn HookBase> = self.get_hook(&base_state.hook_type, hook_state);
 
                 // Execute swap
-                swap(swap_input, pool_state, pool.as_ref(), hook.as_ref(), hook_state)
+                swap(
+                    swap_input,
+                    pool_state,
+                    pool.as_ref(),
+                    hook.as_ref(),
+                    hook_state,
+                )
             }
             PoolStateOrBuffer::Buffer(buffer_state) => {
                 Ok(erc4626_buffer_wrap_or_unwrap(swap_input, buffer_state)?)
@@ -115,18 +143,20 @@ impl Vault {
                     weighted_state.clone(),
                 ))
             }
-            PoolState::Stable(stable_state) => {
-                Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
-            }
-            PoolState::GyroECLP(gyro_eclp_state) => {
-                Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
-            }
-            PoolState::QuantAmm(quant_amm_state) => {
-                Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
-            }
-            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => {
-                Box::new(crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(liquidity_bootstrapping_state.clone()))
-            }
+            PoolState::Stable(stable_state) => Box::new(crate::pools::stable::StablePool::new(
+                stable_state.mutable.clone(),
+            )),
+            PoolState::GyroECLP(gyro_eclp_state) => Box::new(
+                crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()),
+            ),
+            PoolState::QuantAmm(quant_amm_state) => Box::new(
+                crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()),
+            ),
+            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => Box::new(
+                crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(
+                    liquidity_bootstrapping_state.clone(),
+                ),
+            ),
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -159,21 +189,23 @@ impl Vault {
                     weighted_state.clone(),
                 ))
             }
-            PoolState::Stable(stable_state) => {
-                Box::new(crate::pools::stable::StablePool::new(stable_state.mutable.clone()))
-            }
-            PoolState::GyroECLP(gyro_eclp_state) => {
-                Box::new(crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()))
-            }
-            PoolState::QuantAmm(quant_amm_state) => {
-                Box::new(crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()))
-            }
-            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => {
-                Box::new(crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(liquidity_bootstrapping_state.clone()))
-            }
-            PoolState::ReClamm(re_clamm_state) => {
-                Box::new(crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()))
-            }
+            PoolState::Stable(stable_state) => Box::new(crate::pools::stable::StablePool::new(
+                stable_state.mutable.clone(),
+            )),
+            PoolState::GyroECLP(gyro_eclp_state) => Box::new(
+                crate::pools::gyro::GyroECLPPool::new(gyro_eclp_state.immutable.clone()),
+            ),
+            PoolState::QuantAmm(quant_amm_state) => Box::new(
+                crate::pools::quantamm::QuantAmmPool::from(quant_amm_state.clone()),
+            ),
+            PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state) => Box::new(
+                crate::pools::liquidity_bootstrapping::LiquidityBootstrappingPool::from(
+                    liquidity_bootstrapping_state.clone(),
+                ),
+            ),
+            PoolState::ReClamm(re_clamm_state) => Box::new(
+                crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
+            ),
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 

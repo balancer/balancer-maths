@@ -29,7 +29,7 @@ pub fn to_scaled_18_apply_rate_round_down(
     scaling_factor: &BigInt,
     rate: &BigInt,
 ) -> Result<BigInt, PoolError> {
-    Ok(mul_down_fixed(&(amount * scaling_factor), rate)?)
+    mul_down_fixed(&(amount * scaling_factor), rate)
 }
 
 /// Convert to scaled 18 with rate applied, rounding up
@@ -38,7 +38,7 @@ pub fn to_scaled_18_apply_rate_round_up(
     scaling_factor: &BigInt,
     rate: &BigInt,
 ) -> Result<BigInt, PoolError> {
-    Ok(mul_up_fixed(&(amount * scaling_factor), rate)?)
+    mul_up_fixed(&(amount * scaling_factor), rate)
 }
 
 /// Convert scaled 18 amount back to raw amount, rounding down
@@ -68,7 +68,7 @@ pub fn to_raw_undo_rate_round_up(
 ) -> Result<BigInt, PoolError> {
     // Do division last. Scaling factor is not a FP18, but a FP18 normalized by FP(1).
     // `scalingFactor * tokenRate` is a precise FP18, so there is no rounding direction here.
-    Ok(div_up_fixed(amount, &(scaling_factor * token_rate))?)
+    div_up_fixed(amount, &(scaling_factor * token_rate))
 }
 
 /// Check if two addresses are the same (case insensitive)

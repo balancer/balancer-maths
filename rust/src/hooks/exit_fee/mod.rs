@@ -2,8 +2,8 @@
 
 use crate::common::maths::mul_down_fixed;
 use crate::common::types::{HookStateBase, RemoveLiquidityKind};
-use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use crate::hooks::types::{AfterRemoveLiquidityResult, HookState};
+use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use num_bigint::BigInt;
 use num_traits::Zero;
 use serde::{Deserialize, Serialize};
@@ -46,7 +46,7 @@ impl ExitFeeHook {
         let mut config = HookConfig::default();
         config.should_call_after_remove_liquidity = true;
         config.enable_hook_adjusted_amounts = true;
-        
+
         Self { config }
     }
 }
@@ -83,17 +83,19 @@ impl HookBase for ExitFeeHook {
 
                 let mut accrued_fees = vec![BigInt::zero(); state.tokens.len()];
                 let mut hook_adjusted_amounts_out_raw = amounts_out_raw.to_vec();
-                
+
                 if state.remove_liquidity_hook_fee_percentage > BigInt::zero() {
                     // Charge fees proportional to amounts out of each token
                     for i in 0..amounts_out_raw.len() {
                         let hook_fee = mul_down_fixed(
                             &amounts_out_raw[i],
                             &state.remove_liquidity_hook_fee_percentage,
-                        ).unwrap_or_else(|_| BigInt::zero());
-                        
+                        )
+                        .unwrap_or_else(|_| BigInt::zero());
+
                         accrued_fees[i] = hook_fee.clone();
-                        hook_adjusted_amounts_out_raw[i] = &hook_adjusted_amounts_out_raw[i] - &hook_fee;
+                        hook_adjusted_amounts_out_raw[i] =
+                            &hook_adjusted_amounts_out_raw[i] - &hook_fee;
                         // Fees don't need to be transferred to the hook, because donation will reinsert them in the vault
                     }
 
@@ -131,7 +133,13 @@ impl HookBase for ExitFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeAddLiquidityResult {
-        DefaultHook::new().on_before_add_liquidity(kind, max_amounts_in_scaled_18, min_bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_add_liquidity(
+            kind,
+            max_amounts_in_scaled_18,
+            min_bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_after_add_liquidity(
@@ -143,7 +151,14 @@ impl HookBase for ExitFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterAddLiquidityResult {
-        DefaultHook::new().on_after_add_liquidity(kind, amounts_in_scaled_18, amounts_in_raw, bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_add_liquidity(
+            kind,
+            amounts_in_scaled_18,
+            amounts_in_raw,
+            bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_remove_liquidity(
@@ -154,7 +169,13 @@ impl HookBase for ExitFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
-        DefaultHook::new().on_before_remove_liquidity(kind, max_bpt_amount_in, min_amounts_out_scaled_18, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_remove_liquidity(
+            kind,
+            max_bpt_amount_in,
+            min_amounts_out_scaled_18,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_swap(
@@ -179,7 +200,11 @@ impl HookBase for ExitFeeHook {
         static_swap_fee_percentage: &BigInt,
         hook_state: &HookState,
     ) -> crate::hooks::types::DynamicSwapFeeResult {
-        DefaultHook::new().on_compute_dynamic_swap_fee(swap_params, static_swap_fee_percentage, hook_state)
+        DefaultHook::new().on_compute_dynamic_swap_fee(
+            swap_params,
+            static_swap_fee_percentage,
+            hook_state,
+        )
     }
 }
 

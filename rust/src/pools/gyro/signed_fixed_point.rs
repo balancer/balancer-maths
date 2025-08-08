@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use num_bigint::BigInt;
-use num_traits::{Zero, Signed, One};
+use num_traits::{One, Signed, Zero};
 use std::str::FromStr;
 
 lazy_static! {
@@ -12,14 +12,12 @@ lazy_static! {
 pub struct FixedPointError(pub &'static str);
 
 pub fn add(a: &BigInt, b: &BigInt) -> BigInt {
-    let c = a + b;
     // Overflow check is not needed for BigInt
-    c
+    a + b
 }
 
 pub fn sub(a: &BigInt, b: &BigInt) -> BigInt {
-    let c = a - b;
-    c
+    a - b
 }
 
 pub fn mul_up_fixed(a: &BigInt, b: &BigInt) -> BigInt {
@@ -38,7 +36,11 @@ pub fn mul_down_mag(a: &BigInt, b: &BigInt) -> BigInt {
 pub fn mul_down_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
     let product = a * b;
     let result = product.abs() / &*ONE;
-    if product.is_negative() { -result } else { result }
+    if product.is_negative() {
+        -result
+    } else {
+        result
+    }
 }
 
 pub fn mul_up_mag(a: &BigInt, b: &BigInt) -> BigInt {
@@ -80,7 +82,11 @@ pub fn div_down_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
     }
     let product = a * &*ONE;
     let abs_result = product.abs() / b.abs();
-    if product.is_negative() != b.is_negative() { -abs_result } else { abs_result }
+    if product.is_negative() != b.is_negative() {
+        -abs_result
+    } else {
+        abs_result
+    }
 }
 
 pub fn div_up_mag(a: &BigInt, b: &BigInt) -> BigInt {
@@ -169,7 +175,7 @@ pub fn mul_down_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {
     let b2 = b % &e_19;
     let prod1 = a * &b1;
     let prod2 = a * &b2;
-    
+
     if prod1 >= BigInt::zero() && prod2 >= BigInt::zero() {
         let prod2_div_e19 = &prod2 / &e_19;
         (&prod1 + &prod2_div_e19) / &e_19
@@ -198,7 +204,7 @@ pub fn mul_up_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {
     let b2 = b % &e_19;
     let prod1 = a * &b1;
     let prod2 = a * &b2;
-    
+
     // For division, implement truncation toward zero (like Solidity)
     let trunc_div = |x: &BigInt, y: &BigInt| -> BigInt {
         let abs_result = x.abs() / y.abs();
@@ -208,11 +214,14 @@ pub fn mul_up_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {
             abs_result
         }
     };
-    
+
     if prod1 <= BigInt::zero() && prod2 <= BigInt::zero() {
         trunc_div(&(&prod1 + &trunc_div(&prod2, &e_19)), &e_19)
     } else {
-        trunc_div(&(&prod1 + &trunc_div(&prod2, &e_19) - BigInt::from(1u64)), &e_19) + BigInt::from(1u64)
+        trunc_div(
+            &(&prod1 + &trunc_div(&prod2, &e_19) - BigInt::from(1u64)),
+            &e_19,
+        ) + BigInt::from(1u64)
     }
 }
 

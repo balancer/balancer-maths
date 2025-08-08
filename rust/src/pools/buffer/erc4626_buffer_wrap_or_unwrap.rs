@@ -11,11 +11,11 @@ lazy_static::lazy_static! {
 }
 
 /// ERC4626 Buffer wrap or unwrap function
-/// 
+///
 /// # Arguments
 /// * `swap_input` - Swap input parameters
 /// * `pool_state` - Buffer pool state
-/// 
+///
 /// # Returns
 /// Calculated amount for wrap/unwrap operation
 pub fn erc4626_buffer_wrap_or_unwrap(
@@ -30,11 +30,12 @@ pub fn erc4626_buffer_wrap_or_unwrap(
     }
 
     // Determine wrapping direction based on token addresses
-    let wrapping_direction = if is_same_address(&swap_input.token_in, &pool_state.immutable.pool_address) {
-        WrappingDirection::Unwrap
-    } else {
-        WrappingDirection::Wrap
-    };
+    let wrapping_direction =
+        if is_same_address(&swap_input.token_in, &pool_state.immutable.pool_address) {
+            WrappingDirection::Unwrap
+        } else {
+            WrappingDirection::Wrap
+        };
 
     calculate_buffer_amounts(
         wrapping_direction,
@@ -49,4 +50,4 @@ pub fn erc4626_buffer_wrap_or_unwrap(
 /// Check if two addresses are the same (case-insensitive)
 fn is_same_address(addr1: &str, addr2: &str) -> bool {
     addr1.to_lowercase() == addr2.to_lowercase()
-} 
+}

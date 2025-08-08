@@ -26,4 +26,4 @@ pub struct LiquidityBootstrappingState {
     pub base: BasePoolState,
     pub mutable: LiquidityBootstrappingMutable,
     pub immutable: LiquidityBootstrappingImmutable,
-} 
+}

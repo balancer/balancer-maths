@@ -2,7 +2,7 @@
 
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::hooks::types::HookState;
-use balancer_maths_rust::hooks::{AkronHookState, StableSurgeHookState, ExitFeeHookState};
+use balancer_maths_rust::hooks::{AkronHookState, ExitFeeHookState, StableSurgeHookState};
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use num_bigint::BigInt;
 use num_traits::Zero;
@@ -472,7 +472,10 @@ fn default_balances() -> Vec<String> {
 }
 
 fn default_token_rates() -> Vec<String> {
-    vec!["1000000000000000000".to_string(), "1000000000000000000".to_string()]
+    vec![
+        "1000000000000000000".to_string(),
+        "1000000000000000000".to_string(),
+    ]
 }
 
 fn default_total_supply() -> String {
@@ -556,71 +559,78 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                         // Process pool
                         let pool = map_pool(json_data.pool.clone())?;
                         pools.insert(filename.clone(), pool);
-                        
+
                         // Parse hook state if present (only for the first file with hook data)
                         if hook_state.is_none() {
                             if let Some(hook_data) = &json_data.pool.hook {
                                 match hook_data.hook_type.as_str() {
                                     "STABLE_SURGE" => {
                                         let dynamic_data = &hook_data.dynamic_data;
-                                        let surge_threshold_percentage = dynamic_data["surgeThresholdPercentage"]
+                                        let surge_threshold_percentage = dynamic_data
+                                            ["surgeThresholdPercentage"]
                                             .as_str()
                                             .unwrap_or("0")
                                             .parse::<BigInt>()?;
-                                        let max_surge_fee_percentage = dynamic_data["maxSurgeFeePercentage"]
+                                        let max_surge_fee_percentage = dynamic_data
+                                            ["maxSurgeFeePercentage"]
                                             .as_str()
                                             .unwrap_or("0")
                                             .parse::<BigInt>()?;
-                                        
+
                                         // Get the amp from the pool data if it's a stable pool
                                         let amp = if json_data.pool.pool_type == "STABLE" {
-                                            json_data.pool.amp.as_ref()
+                                            json_data
+                                                .pool
+                                                .amp
+                                                .as_ref()
                                                 .and_then(|a| a.parse::<BigInt>().ok())
                                                 .unwrap_or_else(BigInt::zero)
                                         } else {
                                             BigInt::zero()
                                         };
-                                        
-                                        hook_state = Some(HookState::StableSurge(StableSurgeHookState {
-                                            hook_type: "StableSurge".to_string(),
-                                            amp,
-                                            surge_threshold_percentage,
-                                            max_surge_fee_percentage,
-                                        }));
-                                        
+
+                                        hook_state =
+                                            Some(HookState::StableSurge(StableSurgeHookState {
+                                                hook_type: "StableSurge".to_string(),
+                                                amp,
+                                                surge_threshold_percentage,
+                                                max_surge_fee_percentage,
+                                            }));
+
                                         // Update the pool's hook_type field to match the hook
                                         // This is needed for the vault to recognize the hook type
                                         if let Some(pool) = pools.get_mut(&filename) {
-                                            match pool {
-                                                SupportedPool::Stable(stable_pool) => {
-                                                    stable_pool.state.base.hook_type = Some("StableSurge".to_string());
-                                                }
-                                                _ => {}
+                                            if let SupportedPool::Stable(stable_pool) = pool {
+                                                stable_pool.state.base.hook_type =
+                                                    Some("StableSurge".to_string());
                                             }
                                         }
                                     }
                                     "EXIT_FEE" => {
                                         let dynamic_data = &hook_data.dynamic_data;
-                                        let remove_liquidity_hook_fee_percentage = dynamic_data["removeLiquidityHookFeePercentage"]
+                                        let remove_liquidity_hook_fee_percentage = dynamic_data
+                                            ["removeLiquidityHookFeePercentage"]
                                             .as_str()
                                             .unwrap_or("0")
                                             .parse::<BigInt>()?;
-                                        
+
                                         hook_state = Some(HookState::ExitFee(ExitFeeHookState {
                                             hook_type: "ExitFee".to_string(),
                                             tokens: json_data.pool.tokens.clone(),
                                             remove_liquidity_hook_fee_percentage,
                                         }));
-                                        
+
                                         // Update the pool's hook_type field to match the hook
                                         // This is needed for the vault to recognize the hook type
                                         if let Some(pool) = pools.get_mut(&filename) {
                                             match pool {
                                                 SupportedPool::Weighted(weighted_pool) => {
-                                                    weighted_pool.state.base.hook_type = Some("ExitFee".to_string());
+                                                    weighted_pool.state.base.hook_type =
+                                                        Some("ExitFee".to_string());
                                                 }
                                                 SupportedPool::Stable(stable_pool) => {
-                                                    stable_pool.state.base.hook_type = Some("ExitFee".to_string());
+                                                    stable_pool.state.base.hook_type =
+                                                        Some("ExitFee".to_string());
                                                 }
                                                 _ => {}
                                             }
@@ -628,30 +638,30 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                     }
                                     "AKRON" => {
                                         // For Akron hook, we need to extract weights and minimum swap fee from pool data
-                                        let weights = json_data.pool.weights
+                                        let weights = json_data
+                                            .pool
+                                            .weights
                                             .as_ref()
                                             .ok_or("Akron hook requires weights in pool data")?
                                             .iter()
                                             .map(|w_str| w_str.parse::<BigInt>())
                                             .collect::<Result<Vec<BigInt>, _>>()?;
-                                        
-                                        let minimum_swap_fee_percentage = json_data.pool.swap_fee
-                                            .parse::<BigInt>()?;
-                                        
+
+                                        let minimum_swap_fee_percentage =
+                                            json_data.pool.swap_fee.parse::<BigInt>()?;
+
                                         hook_state = Some(HookState::Akron(AkronHookState {
                                             hook_type: "Akron".to_string(),
                                             weights,
                                             minimum_swap_fee_percentage,
                                         }));
-                                        
+
                                         // Update the pool's hook_type field to match the hook
                                         // This is needed for the vault to recognize the hook type
                                         if let Some(pool) = pools.get_mut(&filename) {
-                                            match pool {
-                                                SupportedPool::Weighted(weighted_pool) => {
-                                                    weighted_pool.state.base.hook_type = Some("Akron".to_string());
-                                                }
-                                                _ => {}
+                                            if let SupportedPool::Weighted(weighted_pool) = pool {
+                                                weighted_pool.state.base.hook_type =
+                                                    Some("Akron".to_string());
                                             }
                                         }
                                     }
@@ -793,46 +803,74 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
         }
         "GYROE" => {
             // Parse all Gyro ECLP parameters
-            let alpha = raw_pool.params_alpha.as_ref()
+            let alpha = raw_pool
+                .params_alpha
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsAlpha")?
                 .parse::<BigInt>()?;
-            let beta = raw_pool.params_beta.as_ref()
+            let beta = raw_pool
+                .params_beta
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsBeta")?
                 .parse::<BigInt>()?;
-            let c = raw_pool.params_c.as_ref()
+            let c = raw_pool
+                .params_c
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsC")?
                 .parse::<BigInt>()?;
-            let s = raw_pool.params_s.as_ref()
+            let s = raw_pool
+                .params_s
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsS")?
                 .parse::<BigInt>()?;
-            let lambda = raw_pool.params_lambda.as_ref()
+            let lambda = raw_pool
+                .params_lambda
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsLambda")?
                 .parse::<BigInt>()?;
-            let tau_alpha_x = raw_pool.tau_alpha_x.as_ref()
+            let tau_alpha_x = raw_pool
+                .tau_alpha_x
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing tauAlphaX")?
                 .parse::<BigInt>()?;
-            let tau_alpha_y = raw_pool.tau_alpha_y.as_ref()
+            let tau_alpha_y = raw_pool
+                .tau_alpha_y
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing tauAlphaY")?
                 .parse::<BigInt>()?;
-            let tau_beta_x = raw_pool.tau_beta_x.as_ref()
+            let tau_beta_x = raw_pool
+                .tau_beta_x
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing tauBetaX")?
                 .parse::<BigInt>()?;
-            let tau_beta_y = raw_pool.tau_beta_y.as_ref()
+            let tau_beta_y = raw_pool
+                .tau_beta_y
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing tauBetaY")?
                 .parse::<BigInt>()?;
-            let u = raw_pool.u.as_ref()
+            let u = raw_pool
+                .u
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing u")?
                 .parse::<BigInt>()?;
-            let v = raw_pool.v.as_ref()
+            let v = raw_pool
+                .v
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing v")?
                 .parse::<BigInt>()?;
-            let w = raw_pool.w.as_ref()
+            let w = raw_pool
+                .w
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing w")?
                 .parse::<BigInt>()?;
-            let z = raw_pool.z.as_ref()
+            let z = raw_pool
+                .z
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing z")?
                 .parse::<BigInt>()?;
-            let d_sq = raw_pool.d_sq.as_ref()
+            let d_sq = raw_pool
+                .d_sq
+                .as_ref()
                 .ok_or("Gyro ECLP pool missing dSq")?
                 .parse::<BigInt>()?;
 
@@ -895,31 +933,43 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
         }
         "QUANT_AMM_WEIGHTED" => {
             // Parse QuantAmm parameters
-            let first_four_weights_and_multipliers = raw_pool.first_four_weights_and_multipliers.as_ref()
+            let first_four_weights_and_multipliers = raw_pool
+                .first_four_weights_and_multipliers
+                .as_ref()
                 .ok_or("QuantAmm pool missing firstFourWeightsAndMultipliers")?
-                .into_iter()
+                .iter()
                 .map(|w| w.parse::<BigInt>())
                 .collect::<Result<Vec<BigInt>, _>>()?;
-            
-            let second_four_weights_and_multipliers = raw_pool.second_four_weights_and_multipliers.as_ref()
+
+            let second_four_weights_and_multipliers = raw_pool
+                .second_four_weights_and_multipliers
+                .as_ref()
                 .ok_or("QuantAmm pool missing secondFourWeightsAndMultipliers")?
-                .into_iter()
+                .iter()
                 .map(|w| w.parse::<BigInt>())
                 .collect::<Result<Vec<BigInt>, _>>()?;
-            
-            let last_update_time = raw_pool.last_update_time.as_ref()
+
+            let last_update_time = raw_pool
+                .last_update_time
+                .as_ref()
                 .ok_or("QuantAmm pool missing lastUpdateTime")?
                 .parse::<BigInt>()?;
-            
-            let last_interop_time = raw_pool.last_interop_time.as_ref()
+
+            let last_interop_time = raw_pool
+                .last_interop_time
+                .as_ref()
                 .ok_or("QuantAmm pool missing lastInteropTime")?
                 .parse::<BigInt>()?;
-            
-            let current_timestamp = raw_pool.current_timestamp.as_ref()
+
+            let current_timestamp = raw_pool
+                .current_timestamp
+                .as_ref()
                 .ok_or("QuantAmm pool missing currentTimestamp")?
                 .parse::<BigInt>()?;
-            
-            let max_trade_size_ratio = raw_pool.max_trade_size_ratio.as_ref()
+
+            let max_trade_size_ratio = raw_pool
+                .max_trade_size_ratio
+                .as_ref()
                 .ok_or("QuantAmm pool missing maxTradeSizeRatio")?
                 .parse::<BigInt>()?;
 
@@ -976,38 +1026,53 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
         }
         "LIQUIDITY_BOOTSTRAPPING" => {
             // Parse Liquidity Bootstrapping parameters
-            let project_token_index = raw_pool.project_token_index.as_ref()
+            let project_token_index = raw_pool
+                .project_token_index
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing projectTokenIndex")?
                 .as_u64()
-                .ok_or("projectTokenIndex must be a number")? as usize;
-            
-            let is_project_token_swap_in_blocked = raw_pool.is_project_token_swap_in_blocked
+                .ok_or("projectTokenIndex must be a number")?
+                as usize;
+
+            let is_project_token_swap_in_blocked = raw_pool
+                .is_project_token_swap_in_blocked
                 .ok_or("Liquidity Bootstrapping pool missing isProjectTokenSwapInBlocked")?;
-            
-            let start_weights = raw_pool.start_weights.as_ref()
+
+            let start_weights = raw_pool
+                .start_weights
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing startWeights")?
-                .into_iter()
+                .iter()
                 .map(|w| w.parse::<BigInt>())
                 .collect::<Result<Vec<BigInt>, _>>()?;
-            
-            let end_weights = raw_pool.end_weights.as_ref()
+
+            let end_weights = raw_pool
+                .end_weights
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing endWeights")?
-                .into_iter()
+                .iter()
                 .map(|w| w.parse::<BigInt>())
                 .collect::<Result<Vec<BigInt>, _>>()?;
-            
-            let start_time = raw_pool.start_time.as_ref()
+
+            let start_time = raw_pool
+                .start_time
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing startTime")?
                 .parse::<BigInt>()?;
-            
-            let end_time = raw_pool.end_time.as_ref()
+
+            let end_time = raw_pool
+                .end_time
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing endTime")?
                 .parse::<BigInt>()?;
-            
-            let is_swap_enabled = raw_pool.is_swap_enabled
+
+            let is_swap_enabled = raw_pool
+                .is_swap_enabled
                 .ok_or("Liquidity Bootstrapping pool missing isSwapEnabled")?;
-            
-            let current_timestamp = raw_pool.current_timestamp.as_ref()
+
+            let current_timestamp = raw_pool
+                .current_timestamp
+                .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing currentTimestamp")?
                 .parse::<BigInt>()?;
 
@@ -1055,52 +1120,72 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     end_time,
                 },
             };
-            Ok(SupportedPool::LiquidityBootstrapping(LiquidityBootstrappingPool {
-                base: PoolBase {
-                    chain_id: raw_pool.chain_id.parse()?,
-                    block_number: raw_pool.block_number.parse()?,
-                    pool_address: raw_pool.pool_address,
+            Ok(SupportedPool::LiquidityBootstrapping(
+                LiquidityBootstrappingPool {
+                    base: PoolBase {
+                        chain_id: raw_pool.chain_id.parse()?,
+                        block_number: raw_pool.block_number.parse()?,
+                        pool_address: raw_pool.pool_address,
+                    },
+                    state: liquidity_bootstrapping_state,
                 },
-                state: liquidity_bootstrapping_state,
-            }))
+            ))
         }
         "RECLAMM" => {
             // Parse ReClamm parameters
-            let last_virtual_balances = raw_pool.last_virtual_balances.as_ref()
+            let last_virtual_balances = raw_pool
+                .last_virtual_balances
+                .as_ref()
                 .ok_or("ReClamm pool missing lastVirtualBalances")?
-                .into_iter()
+                .iter()
                 .map(|v| v.parse::<BigInt>())
                 .collect::<Result<Vec<BigInt>, _>>()?;
-            
-            let daily_price_shift_base = raw_pool.daily_price_shift_base.as_ref()
+
+            let daily_price_shift_base = raw_pool
+                .daily_price_shift_base
+                .as_ref()
                 .ok_or("ReClamm pool missing dailyPriceShiftBase")?
                 .parse::<BigInt>()?;
-            
-            let last_timestamp = raw_pool.last_timestamp.as_ref()
+
+            let last_timestamp = raw_pool
+                .last_timestamp
+                .as_ref()
                 .ok_or("ReClamm pool missing lastTimestamp")?
                 .parse::<BigInt>()?;
-            
-            let current_timestamp = raw_pool.current_timestamp.as_ref()
+
+            let current_timestamp = raw_pool
+                .current_timestamp
+                .as_ref()
                 .ok_or("ReClamm pool missing currentTimestamp")?
                 .parse::<BigInt>()?;
-            
-            let centeredness_margin = raw_pool.centeredness_margin.as_ref()
+
+            let centeredness_margin = raw_pool
+                .centeredness_margin
+                .as_ref()
                 .ok_or("ReClamm pool missing centerednessMargin")?
                 .parse::<BigInt>()?;
-            
-            let start_fourth_root_price_ratio = raw_pool.start_fourth_root_price_ratio.as_ref()
+
+            let start_fourth_root_price_ratio = raw_pool
+                .start_fourth_root_price_ratio
+                .as_ref()
                 .ok_or("ReClamm pool missing startFourthRootPriceRatio")?
                 .parse::<BigInt>()?;
-            
-            let end_fourth_root_price_ratio = raw_pool.end_fourth_root_price_ratio.as_ref()
+
+            let end_fourth_root_price_ratio = raw_pool
+                .end_fourth_root_price_ratio
+                .as_ref()
                 .ok_or("ReClamm pool missing endFourthRootPriceRatio")?
                 .parse::<BigInt>()?;
-            
-            let price_ratio_update_start_time = raw_pool.price_ratio_update_start_time.as_ref()
+
+            let price_ratio_update_start_time = raw_pool
+                .price_ratio_update_start_time
+                .as_ref()
                 .ok_or("ReClamm pool missing priceRatioUpdateStartTime")?
                 .parse::<BigInt>()?;
-            
-            let price_ratio_update_end_time = raw_pool.price_ratio_update_end_time.as_ref()
+
+            let price_ratio_update_end_time = raw_pool
+                .price_ratio_update_end_time
+                .as_ref()
                 .ok_or("ReClamm pool missing priceRatioUpdateEndTime")?
                 .parse::<BigInt>()?;
 
@@ -1162,15 +1247,21 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
         }
         "Buffer" => {
             // Parse Buffer parameters
-            let rate = raw_pool.rate.as_ref()
+            let rate = raw_pool
+                .rate
+                .as_ref()
                 .ok_or("Buffer pool missing rate")?
                 .parse::<BigInt>()?;
-            
-            let max_deposit = raw_pool.max_deposit.as_ref()
+
+            let max_deposit = raw_pool
+                .max_deposit
+                .as_ref()
                 .map(|d| d.parse::<BigInt>())
                 .transpose()?;
-            
-            let max_mint = raw_pool.max_mint.as_ref()
+
+            let max_mint = raw_pool
+                .max_mint
+                .as_ref()
                 .map(|m| m.parse::<BigInt>())
                 .transpose()?;
 
@@ -1183,7 +1274,10 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: vec![BigInt::from(1u64), BigInt::from(1u64)],
                     swap_fee: BigInt::from(0u64),
                     balances_live_scaled_18: vec![BigInt::from(0u64), BigInt::from(0u64)],
-                    token_rates: vec![BigInt::from(1000000000000000000u64), BigInt::from(1000000000000000000u64)],
+                    token_rates: vec![
+                        BigInt::from(1000000000000000000u64),
+                        BigInt::from(1000000000000000000u64),
+                    ],
                     total_supply: BigInt::from(0u64),
                     aggregate_swap_fee: BigInt::from(0u64),
                     supports_unbalanced_liquidity: true,

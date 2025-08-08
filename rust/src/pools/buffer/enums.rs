@@ -5,4 +5,4 @@ pub enum WrappingDirection {
     Wrap = 0,
     /// Unwrap wrapped tokens to underlying tokens
     Unwrap = 1,
-} 
+}

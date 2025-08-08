@@ -1,12 +1,12 @@
 use crate::common::errors::PoolError;
 use crate::common::maths::mul_down_fixed;
+use crate::common::pool_base::PoolBase;
 use crate::common::types::{Rounding, SwapKind, SwapParams};
 use crate::pools::stable::stable_data::StableMutable;
 use crate::pools::stable::stable_math::{
-    compute_balance, compute_in_given_exact_out, compute_invariant,
-    compute_out_given_exact_in, _MAX_INVARIANT_RATIO, _MIN_INVARIANT_RATIO,
+    compute_balance, compute_in_given_exact_out, compute_invariant, compute_out_given_exact_in,
+    _MAX_INVARIANT_RATIO, _MIN_INVARIANT_RATIO,
 };
-use crate::common::pool_base::PoolBase;
 use num_bigint::BigInt;
 use num_traits::Zero;
 
@@ -34,34 +34,27 @@ impl PoolBase for StablePool {
     }
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
-        let invariant = compute_invariant(
-            &self.amp,
-            &swap_params.balances_live_scaled_18,
-        )?;
+        let invariant = compute_invariant(&self.amp, &swap_params.balances_live_scaled_18)?;
 
         let result = match swap_params.swap_kind {
-            SwapKind::GivenIn => {
-                            compute_out_given_exact_in(
+            SwapKind::GivenIn => compute_out_given_exact_in(
                 &self.amp,
                 &swap_params.balances_live_scaled_18,
                 swap_params.token_in_index,
                 swap_params.token_out_index,
                 &swap_params.amount_scaled_18,
                 &invariant,
-            )?
-            },
-            SwapKind::GivenOut => {
-                            compute_in_given_exact_out(
+            )?,
+            SwapKind::GivenOut => compute_in_given_exact_out(
                 &self.amp,
                 &swap_params.balances_live_scaled_18,
                 swap_params.token_in_index,
                 swap_params.token_out_index,
                 &swap_params.amount_scaled_18,
                 &invariant,
-            )?
-            },
+            )?,
         };
-        
+
         Ok(result)
     }
 
@@ -71,7 +64,7 @@ impl PoolBase for StablePool {
         rounding: Rounding,
     ) -> Result<BigInt, PoolError> {
         let mut invariant = compute_invariant(&self.amp, balances_live_scaled18)?;
-        
+
         if invariant > BigInt::zero() {
             match rounding {
                 Rounding::RoundDown => {}
@@ -80,7 +73,7 @@ impl PoolBase for StablePool {
                 }
             }
         }
-        
+
         Ok(invariant)
     }
 
@@ -92,7 +85,7 @@ impl PoolBase for StablePool {
     ) -> Result<BigInt, PoolError> {
         let invariant = self.compute_invariant(balances_live_scaled18, Rounding::RoundUp)?;
         let scaled_invariant = mul_down_fixed(&invariant, invariant_ratio)?;
-        
+
         compute_balance(
             &self.amp,
             balances_live_scaled18,
@@ -100,4 +93,4 @@ impl PoolBase for StablePool {
             token_in_index,
         )
     }
-} 
+}

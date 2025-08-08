@@ -6,7 +6,9 @@ use crate::common::maths::{complement_fixed, mul_div_up_fixed, mul_up_fixed};
 use crate::common::pool_base::PoolBase;
 use crate::common::types::*;
 use crate::common::utils::{
-    compute_and_charge_aggregate_swap_fees, find_case_insensitive_index_in_list, to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down, to_scaled_18_apply_rate_round_up,
+    compute_and_charge_aggregate_swap_fees, find_case_insensitive_index_in_list,
+    to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down,
+    to_scaled_18_apply_rate_round_up,
 };
 use crate::hooks::types::{AfterSwapParams, HookState};
 use crate::hooks::HookBase;
@@ -37,8 +39,9 @@ pub fn swap(
     let input_index = find_case_insensitive_index_in_list(&base_state.tokens, &swap_input.token_in)
         .ok_or(PoolError::InputTokenNotFound)?;
 
-    let output_index = find_case_insensitive_index_in_list(&base_state.tokens, &swap_input.token_out)
-        .ok_or(PoolError::OutputTokenNotFound)?;
+    let output_index =
+        find_case_insensitive_index_in_list(&base_state.tokens, &swap_input.token_out)
+            .ok_or(PoolError::OutputTokenNotFound)?;
 
     // Compute amount given scaled to 18 decimals
     let amount_given_scaled_18 = compute_amount_given_scaled_18(
@@ -76,14 +79,14 @@ pub fn swap(
     }
 
     // Apply swap fees
-            let mut swap_fee = base_state.swap_fee.clone();
-        if hook_class.config().should_call_compute_dynamic_swap_fee {
-            let result =
-                hook_class.on_compute_dynamic_swap_fee(&swap_params, &swap_fee, hook_state.unwrap());
-            if result.success {
-                swap_fee = result.dynamic_swap_fee;
-            }
+    let mut swap_fee = base_state.swap_fee.clone();
+    if hook_class.config().should_call_compute_dynamic_swap_fee {
+        let result =
+            hook_class.on_compute_dynamic_swap_fee(&swap_params, &swap_fee, hook_state.unwrap());
+        if result.success {
+            swap_fee = result.dynamic_swap_fee;
         }
+    }
 
     let mut total_swap_fee_amount_scaled_18 = BigInt::zero();
     if swap_params.swap_kind == SwapKind::GivenIn {

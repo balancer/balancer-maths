@@ -1,11 +1,11 @@
 use crate::common::errors::PoolError;
+use crate::common::pool_base::PoolBase;
 use crate::common::types::{Rounding, SwapKind, SwapParams};
 use crate::pools::gyro::gyro_eclp_data::GyroECLPImmutable;
 use crate::pools::gyro::gyro_eclp_math::{
-    compute_balance, calc_in_given_out,
-    calc_out_given_in, calculate_invariant_with_error, DerivedEclpParams, EclpParams, Vector2,
+    calc_in_given_out, calc_out_given_in, calculate_invariant_with_error, compute_balance,
+    DerivedEclpParams, EclpParams, Vector2,
 };
-use crate::common::pool_base::PoolBase;
 use num_bigint::BigInt;
 
 /// Gyro ECLP pool implementation
@@ -63,14 +63,14 @@ impl PoolBase for GyroECLPPool {
             &self.params,
             &self.derived,
         )?;
-        
+
         let invariant = Vector2 {
             x: &current_invariant + &(&inv_err * BigInt::from(2u64)),
             y: current_invariant,
         };
 
         let token_in_is_token0 = swap_params.token_in_index == 0;
-        
+
         match swap_params.swap_kind {
             SwapKind::GivenIn => calc_out_given_in(
                 &swap_params.balances_live_scaled_18,
@@ -118,4 +118,4 @@ impl PoolBase for GyroECLPPool {
             &self.derived,
         )
     }
-} 
+}

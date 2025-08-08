@@ -1,7 +1,7 @@
 use crate::common::maths::{div_down_fixed, div_up_fixed, mul_div_up_fixed, pow_up_fixed};
 use crate::common::types::{HookStateBase, SwapKind};
-use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use crate::hooks::types::{DynamicSwapFeeResult, HookState};
+use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use num_bigint::BigInt;
 use num_traits::Zero;
 use serde::{Deserialize, Serialize};
@@ -61,10 +61,8 @@ impl AkronHook {
             &div_up_fixed(&balance_plus_amount, &balance_plus_amount_times_2)?,
             exponent,
         )?;
-        let power_without_fees = pow_up_fixed(
-            &div_up_fixed(balance_in, &balance_plus_amount)?,
-            exponent,
-        )?;
+        let power_without_fees =
+            pow_up_fixed(&div_up_fixed(balance_in, &balance_plus_amount)?, exponent)?;
 
         let numerator = mul_div_up_fixed(
             &balance_plus_amount,
@@ -89,10 +87,8 @@ impl AkronHook {
             &div_up_fixed(&balance_minus_amount, &balance_minus_amount_times_2)?,
             exponent,
         )?;
-        let power_without_fees = pow_up_fixed(
-            &div_up_fixed(balance_out, &balance_minus_amount)?,
-            exponent,
-        )?;
+        let power_without_fees =
+            pow_up_fixed(&div_up_fixed(balance_out, &balance_minus_amount)?, exponent)?;
 
         let numerator = power_with_fees.clone() - power_without_fees;
         let denominator = power_with_fees.clone() - crate::common::constants::WAD.clone();
@@ -122,32 +118,37 @@ impl HookBase for AkronHook {
                     let exponent = div_down_fixed(
                         &state.weights[swap_params.token_in_index],
                         &state.weights[swap_params.token_out_index],
-                    ).unwrap_or_else(|_| BigInt::zero());
+                    )
+                    .unwrap_or_else(|_| BigInt::zero());
 
                     Self::compute_swap_fee_percentage_given_exact_in(
                         &swap_params.balances_live_scaled_18[swap_params.token_in_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
-                    ).unwrap_or_else(|_| BigInt::zero())
+                    )
+                    .unwrap_or_else(|_| BigInt::zero())
                 } else {
                     let exponent = div_up_fixed(
                         &state.weights[swap_params.token_out_index],
                         &state.weights[swap_params.token_in_index],
-                    ).unwrap_or_else(|_| BigInt::zero());
+                    )
+                    .unwrap_or_else(|_| BigInt::zero());
 
                     Self::compute_swap_fee_percentage_given_exact_out(
                         &swap_params.balances_live_scaled_18[swap_params.token_out_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
-                    ).unwrap_or_else(|_| BigInt::zero())
+                    )
+                    .unwrap_or_else(|_| BigInt::zero())
                 };
 
                 // Charge the static or calculated fee, whichever is greater
-                let dynamic_swap_fee = if state.minimum_swap_fee_percentage > calculated_swap_fee_percentage {
-                    state.minimum_swap_fee_percentage.clone()
-                } else {
-                    calculated_swap_fee_percentage
-                };
+                let dynamic_swap_fee =
+                    if state.minimum_swap_fee_percentage > calculated_swap_fee_percentage {
+                        state.minimum_swap_fee_percentage.clone()
+                    } else {
+                        calculated_swap_fee_percentage
+                    };
 
                 DynamicSwapFeeResult {
                     success: true,
@@ -170,7 +171,13 @@ impl HookBase for AkronHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeAddLiquidityResult {
-        DefaultHook::new().on_before_add_liquidity(kind, max_amounts_in_scaled_18, min_bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_add_liquidity(
+            kind,
+            max_amounts_in_scaled_18,
+            min_bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_after_add_liquidity(
@@ -182,7 +189,14 @@ impl HookBase for AkronHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterAddLiquidityResult {
-        DefaultHook::new().on_after_add_liquidity(kind, amounts_in_scaled_18, amounts_in_raw, bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_add_liquidity(
+            kind,
+            amounts_in_scaled_18,
+            amounts_in_raw,
+            bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_remove_liquidity(
@@ -193,7 +207,13 @@ impl HookBase for AkronHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
-        DefaultHook::new().on_before_remove_liquidity(kind, max_bpt_amount_in, min_amounts_out_scaled_18, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_remove_liquidity(
+            kind,
+            max_bpt_amount_in,
+            min_amounts_out_scaled_18,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_after_remove_liquidity(
@@ -205,7 +225,14 @@ impl HookBase for AkronHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterRemoveLiquidityResult {
-        DefaultHook::new().on_after_remove_liquidity(kind, bpt_amount_in, amounts_out_scaled_18, amounts_out_raw, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_remove_liquidity(
+            kind,
+            bpt_amount_in,
+            amounts_out_scaled_18,
+            amounts_out_raw,
+            balances_scaled_18,
+            hook_state,
+        )
     }
 
     fn on_before_swap(

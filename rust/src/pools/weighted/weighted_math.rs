@@ -100,7 +100,7 @@ pub fn compute_out_given_exact_in(
     weight_out: &BigInt,
     amount_in: &BigInt,
 ) -> Result<BigInt, PoolError> {
-    if amount_in > &mul_down_fixed(balance_in, &*MAX_IN_RATIO)? {
+    if amount_in > &mul_down_fixed(balance_in, &MAX_IN_RATIO)? {
         return Err(PoolError::MaxInRatioExceeded);
     }
 
@@ -110,7 +110,7 @@ pub fn compute_out_given_exact_in(
     let power = pow_up_fixed(&base, &exponent)?;
 
     // Because of rounding up, power can be greater than one. Using complement prevents reverts.
-    Ok(mul_down_fixed(balance_out, &complement_fixed(&power)?)?)
+    mul_down_fixed(balance_out, &complement_fixed(&power)?)
 }
 
 /// Computes how many tokens must be sent to a pool in order to take `amount_out`, given the
@@ -130,7 +130,7 @@ pub fn compute_in_given_exact_out(
     weight_out: &BigInt,
     amount_out: &BigInt,
 ) -> Result<BigInt, PoolError> {
-    if amount_out > &mul_down_fixed(balance_out, &*MAX_OUT_RATIO)? {
+    if amount_out > &mul_down_fixed(balance_out, &MAX_OUT_RATIO)? {
         return Err(PoolError::MaxOutRatioExceeded);
     }
 
@@ -142,7 +142,7 @@ pub fn compute_in_given_exact_out(
     // the following subtraction should never revert.
     let ratio = power - &*WAD;
 
-    Ok(mul_up_fixed(balance_in, &ratio)?)
+    mul_up_fixed(balance_in, &ratio)
 }
 
 /// Calculate balance out given invariant
@@ -161,5 +161,5 @@ pub fn compute_balance_out_given_invariant(
     // Calculate by how much the token balance has to increase to match the invariantRatio.
     let balance_ratio = pow_up_fixed(invariant_ratio, &div_up_fixed(&WAD, weight)?)?;
 
-    Ok(mul_up_fixed(current_balance, &balance_ratio)?)
+    mul_up_fixed(current_balance, &balance_ratio)
 }

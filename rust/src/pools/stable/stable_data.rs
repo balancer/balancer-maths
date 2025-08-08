@@ -21,4 +21,4 @@ impl From<StableState> for crate::common::types::PoolState {
     fn from(state: StableState) -> Self {
         crate::common::types::PoolState::Stable(state)
     }
-} 
+}

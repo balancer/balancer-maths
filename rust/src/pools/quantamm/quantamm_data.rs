@@ -24,4 +24,4 @@ pub struct QuantAmmState {
     pub base: BasePoolState,
     pub mutable: QuantAmmMutable,
     pub immutable: QuantAmmImmutable,
-} 
+}

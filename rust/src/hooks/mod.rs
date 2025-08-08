@@ -21,7 +21,7 @@ use num_bigint::BigInt;
 use num_traits::Zero;
 
 /// Hook configuration flags
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct HookConfig {
     /// Whether to call compute dynamic swap fee
     pub should_call_compute_dynamic_swap_fee: bool,
@@ -39,21 +39,6 @@ pub struct HookConfig {
     pub should_call_after_remove_liquidity: bool,
     /// Whether to enable hook adjusted amounts
     pub enable_hook_adjusted_amounts: bool,
-}
-
-impl Default for HookConfig {
-    fn default() -> Self {
-        Self {
-            should_call_compute_dynamic_swap_fee: false,
-            should_call_before_swap: false,
-            should_call_after_swap: false,
-            should_call_before_add_liquidity: false,
-            should_call_after_add_liquidity: false,
-            should_call_before_remove_liquidity: false,
-            should_call_after_remove_liquidity: false,
-            enable_hook_adjusted_amounts: false,
-        }
-    }
 }
 
 /// Trait for pool hooks (matches Python HookBase interface exactly)

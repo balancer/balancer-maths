@@ -38,4 +38,4 @@ pub struct ReClammState {
     pub base: BasePoolState,
     pub mutable: ReClammMutable,
     pub immutable: ReClammImmutable,
-} 
+}

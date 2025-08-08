@@ -32,4 +32,4 @@ impl From<GyroECLPState> for crate::common::types::PoolState {
     fn from(state: GyroECLPState) -> Self {
         crate::common::types::PoolState::GyroECLP(state)
     }
-} 
+}

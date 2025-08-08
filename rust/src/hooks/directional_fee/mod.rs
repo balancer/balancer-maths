@@ -1,8 +1,7 @@
-use crate::common::errors::PoolError;
 use crate::common::maths::div_down_fixed;
-use crate::common::types::{HookStateBase, SwapKind};
-use crate::hooks::{DefaultHook, HookBase, HookConfig};
+use crate::common::types::HookStateBase;
 use crate::hooks::types::{DynamicSwapFeeResult, HookState};
+use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use num_bigint::BigInt;
 use num_traits::Zero;
 use serde::{Deserialize, Serialize};
@@ -14,7 +13,9 @@ pub struct DirectionalFeeHookState {
 
 impl Default for DirectionalFeeHookState {
     fn default() -> Self {
-        Self { hook_type: "DirectionalFee".to_string() }
+        Self {
+            hook_type: "DirectionalFee".to_string(),
+        }
     }
 }
 
@@ -37,8 +38,12 @@ impl DirectionalFeeHook {
 }
 
 impl HookBase for DirectionalFeeHook {
-    fn hook_type(&self) -> &str { "DirectionalFee" }
-    fn config(&self) -> &HookConfig { &self.config }
+    fn hook_type(&self) -> &str {
+        "DirectionalFee"
+    }
+    fn config(&self) -> &HookConfig {
+        &self.config
+    }
 
     fn on_compute_dynamic_swap_fee(
         &self,
@@ -71,7 +76,10 @@ impl HookBase for DirectionalFeeHook {
             static_swap_fee_percentage.clone()
         };
 
-        DynamicSwapFeeResult { success: true, dynamic_swap_fee }
+        DynamicSwapFeeResult {
+            success: true,
+            dynamic_swap_fee,
+        }
     }
 
     // Delegate others to DefaultHook
@@ -83,7 +91,13 @@ impl HookBase for DirectionalFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeAddLiquidityResult {
-        DefaultHook::new().on_before_add_liquidity(kind, max_amounts_in_scaled_18, min_bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_add_liquidity(
+            kind,
+            max_amounts_in_scaled_18,
+            min_bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
     fn on_after_add_liquidity(
         &self,
@@ -94,7 +108,14 @@ impl HookBase for DirectionalFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterAddLiquidityResult {
-        DefaultHook::new().on_after_add_liquidity(kind, amounts_in_scaled_18, amounts_in_raw, bpt_amount_out, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_add_liquidity(
+            kind,
+            amounts_in_scaled_18,
+            amounts_in_raw,
+            bpt_amount_out,
+            balances_scaled_18,
+            hook_state,
+        )
     }
     fn on_before_remove_liquidity(
         &self,
@@ -104,7 +125,13 @@ impl HookBase for DirectionalFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
-        DefaultHook::new().on_before_remove_liquidity(kind, max_bpt_amount_in, min_amounts_out_scaled_18, balances_scaled_18, hook_state)
+        DefaultHook::new().on_before_remove_liquidity(
+            kind,
+            max_bpt_amount_in,
+            min_amounts_out_scaled_18,
+            balances_scaled_18,
+            hook_state,
+        )
     }
     fn on_after_remove_liquidity(
         &self,
@@ -115,7 +142,14 @@ impl HookBase for DirectionalFeeHook {
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterRemoveLiquidityResult {
-        DefaultHook::new().on_after_remove_liquidity(kind, bpt_amount_in, amounts_out_scaled_18, amounts_out_raw, balances_scaled_18, hook_state)
+        DefaultHook::new().on_after_remove_liquidity(
+            kind,
+            bpt_amount_in,
+            amounts_out_scaled_18,
+            amounts_out_raw,
+            balances_scaled_18,
+            hook_state,
+        )
     }
     fn on_before_swap(
         &self,
@@ -133,4 +167,8 @@ impl HookBase for DirectionalFeeHook {
     }
 }
 
-impl Default for DirectionalFeeHook { fn default() -> Self { Self::new() } }
+impl Default for DirectionalFeeHook {
+    fn default() -> Self {
+        Self::new()
+    }
+}

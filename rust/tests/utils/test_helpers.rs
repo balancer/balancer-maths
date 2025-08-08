@@ -1,16 +1,16 @@
 //! Shared test helper functions for pool state conversion and utilities
 
-use balancer_maths_rust::common::types::{PoolState, PoolStateOrBuffer};
-use balancer_maths_rust::pools::weighted::WeightedState;
-use balancer_maths_rust::pools::stable::{StableState, StableMutable};
-use balancer_maths_rust::pools::gyro::{GyroECLPState, GyroECLPImmutable};
-use balancer_maths_rust::pools::quantamm::{QuantAmmState, QuantAmmMutable, QuantAmmImmutable};
-use balancer_maths_rust::pools::liquidity_bootstrapping::{LiquidityBootstrappingState, LiquidityBootstrappingMutable, LiquidityBootstrappingImmutable};
-use balancer_maths_rust::pools::reclamm::{ReClammState, ReClammMutable, ReClammImmutable};
-use balancer_maths_rust::pools::buffer::{BufferState, BufferMutable, BufferImmutable};
 use crate::utils::read_test_data::SupportedPool;
-
-
+use balancer_maths_rust::common::types::{PoolState, PoolStateOrBuffer};
+use balancer_maths_rust::pools::buffer::{BufferImmutable, BufferMutable, BufferState};
+use balancer_maths_rust::pools::gyro::{GyroECLPImmutable, GyroECLPState};
+use balancer_maths_rust::pools::liquidity_bootstrapping::{
+    LiquidityBootstrappingImmutable, LiquidityBootstrappingMutable, LiquidityBootstrappingState,
+};
+use balancer_maths_rust::pools::quantamm::{QuantAmmImmutable, QuantAmmMutable, QuantAmmState};
+use balancer_maths_rust::pools::reclamm::{ReClammImmutable, ReClammMutable, ReClammState};
+use balancer_maths_rust::pools::stable::{StableMutable, StableState};
+use balancer_maths_rust::pools::weighted::WeightedState;
 
 /// Convert a SupportedPool from test data to a PoolStateOrBuffer for the vault
 /// Returns PoolState for normal pools and BufferState for Buffer pools
@@ -58,57 +58,121 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
             let quant_amm_state = QuantAmmState {
                 base: quant_amm_pool.state.base.clone(),
                 mutable: QuantAmmMutable {
-                    first_four_weights_and_multipliers: quant_amm_pool.state.mutable.first_four_weights_and_multipliers.clone(),
-                    second_four_weights_and_multipliers: quant_amm_pool.state.mutable.second_four_weights_and_multipliers.clone(),
+                    first_four_weights_and_multipliers: quant_amm_pool
+                        .state
+                        .mutable
+                        .first_four_weights_and_multipliers
+                        .clone(),
+                    second_four_weights_and_multipliers: quant_amm_pool
+                        .state
+                        .mutable
+                        .second_four_weights_and_multipliers
+                        .clone(),
                     last_update_time: quant_amm_pool.state.mutable.last_update_time.clone(),
                     last_interop_time: quant_amm_pool.state.mutable.last_interop_time.clone(),
                     current_timestamp: quant_amm_pool.state.mutable.current_timestamp.clone(),
                 },
                 immutable: QuantAmmImmutable {
-                    max_trade_size_ratio: quant_amm_pool.state.immutable.max_trade_size_ratio.clone(),
+                    max_trade_size_ratio: quant_amm_pool
+                        .state
+                        .immutable
+                        .max_trade_size_ratio
+                        .clone(),
                 },
             };
             PoolStateOrBuffer::Pool(PoolState::QuantAmm(quant_amm_state))
         }
-                    SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
-                let liquidity_bootstrapping_state = LiquidityBootstrappingState {
-                    base: liquidity_bootstrapping_pool.state.base.clone(),
-                    mutable: LiquidityBootstrappingMutable {
-                        is_swap_enabled: liquidity_bootstrapping_pool.state.mutable.is_swap_enabled,
-                        current_timestamp: liquidity_bootstrapping_pool.state.mutable.current_timestamp.clone(),
-                    },
-                    immutable: LiquidityBootstrappingImmutable {
-                        project_token_index: liquidity_bootstrapping_pool.state.immutable.project_token_index,
-                        is_project_token_swap_in_blocked: liquidity_bootstrapping_pool.state.immutable.is_project_token_swap_in_blocked,
-                        start_weights: liquidity_bootstrapping_pool.state.immutable.start_weights.clone(),
-                        end_weights: liquidity_bootstrapping_pool.state.immutable.end_weights.clone(),
-                        start_time: liquidity_bootstrapping_pool.state.immutable.start_time.clone(),
-                        end_time: liquidity_bootstrapping_pool.state.immutable.end_time.clone(),
-                    },
-                };
-                PoolStateOrBuffer::Pool(PoolState::LiquidityBootstrapping(liquidity_bootstrapping_state))
-            }
-            SupportedPool::ReClamm(re_clamm_pool) => {
-                let re_clamm_state = ReClammState {
-                    base: re_clamm_pool.state.base.clone(),
-                    mutable: ReClammMutable {
-                        last_virtual_balances: re_clamm_pool.state.mutable.last_virtual_balances.clone(),
-                        daily_price_shift_base: re_clamm_pool.state.mutable.daily_price_shift_base.clone(),
-                        last_timestamp: re_clamm_pool.state.mutable.last_timestamp.clone(),
-                        current_timestamp: re_clamm_pool.state.mutable.current_timestamp.clone(),
-                        centeredness_margin: re_clamm_pool.state.mutable.centeredness_margin.clone(),
-                        start_fourth_root_price_ratio: re_clamm_pool.state.mutable.start_fourth_root_price_ratio.clone(),
-                        end_fourth_root_price_ratio: re_clamm_pool.state.mutable.end_fourth_root_price_ratio.clone(),
-                        price_ratio_update_start_time: re_clamm_pool.state.mutable.price_ratio_update_start_time.clone(),
-                        price_ratio_update_end_time: re_clamm_pool.state.mutable.price_ratio_update_end_time.clone(),
-                    },
-                    immutable: ReClammImmutable {
-                        pool_address: re_clamm_pool.state.immutable.pool_address.clone(),
-                        tokens: re_clamm_pool.state.immutable.tokens.clone(),
-                    },
-                };
-                PoolStateOrBuffer::Pool(PoolState::ReClamm(re_clamm_state))
-            }
+        SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
+            let liquidity_bootstrapping_state = LiquidityBootstrappingState {
+                base: liquidity_bootstrapping_pool.state.base.clone(),
+                mutable: LiquidityBootstrappingMutable {
+                    is_swap_enabled: liquidity_bootstrapping_pool.state.mutable.is_swap_enabled,
+                    current_timestamp: liquidity_bootstrapping_pool
+                        .state
+                        .mutable
+                        .current_timestamp
+                        .clone(),
+                },
+                immutable: LiquidityBootstrappingImmutable {
+                    project_token_index: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .project_token_index,
+                    is_project_token_swap_in_blocked: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .is_project_token_swap_in_blocked,
+                    start_weights: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .start_weights
+                        .clone(),
+                    end_weights: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .end_weights
+                        .clone(),
+                    start_time: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .start_time
+                        .clone(),
+                    end_time: liquidity_bootstrapping_pool
+                        .state
+                        .immutable
+                        .end_time
+                        .clone(),
+                },
+            };
+            PoolStateOrBuffer::Pool(PoolState::LiquidityBootstrapping(
+                liquidity_bootstrapping_state,
+            ))
+        }
+        SupportedPool::ReClamm(re_clamm_pool) => {
+            let re_clamm_state = ReClammState {
+                base: re_clamm_pool.state.base.clone(),
+                mutable: ReClammMutable {
+                    last_virtual_balances: re_clamm_pool
+                        .state
+                        .mutable
+                        .last_virtual_balances
+                        .clone(),
+                    daily_price_shift_base: re_clamm_pool
+                        .state
+                        .mutable
+                        .daily_price_shift_base
+                        .clone(),
+                    last_timestamp: re_clamm_pool.state.mutable.last_timestamp.clone(),
+                    current_timestamp: re_clamm_pool.state.mutable.current_timestamp.clone(),
+                    centeredness_margin: re_clamm_pool.state.mutable.centeredness_margin.clone(),
+                    start_fourth_root_price_ratio: re_clamm_pool
+                        .state
+                        .mutable
+                        .start_fourth_root_price_ratio
+                        .clone(),
+                    end_fourth_root_price_ratio: re_clamm_pool
+                        .state
+                        .mutable
+                        .end_fourth_root_price_ratio
+                        .clone(),
+                    price_ratio_update_start_time: re_clamm_pool
+                        .state
+                        .mutable
+                        .price_ratio_update_start_time
+                        .clone(),
+                    price_ratio_update_end_time: re_clamm_pool
+                        .state
+                        .mutable
+                        .price_ratio_update_end_time
+                        .clone(),
+                },
+                immutable: ReClammImmutable {
+                    pool_address: re_clamm_pool.state.immutable.pool_address.clone(),
+                    tokens: re_clamm_pool.state.immutable.tokens.clone(),
+                },
+            };
+            PoolStateOrBuffer::Pool(PoolState::ReClamm(re_clamm_state))
+        }
         SupportedPool::Buffer(buffer_pool) => {
             let buffer_state = BufferState {
                 base: buffer_pool.state.base.clone(),
@@ -123,8 +187,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                 },
             };
             PoolStateOrBuffer::Buffer(buffer_state)
-        }
-        // Add other pool types here as they are implemented
+        } // Add other pool types here as they are implemented
     }
 }
 
@@ -136,9 +199,11 @@ pub fn get_pool_address(pool: &SupportedPool) -> String {
         SupportedPool::Stable(stable_pool) => stable_pool.base.pool_address.clone(),
         SupportedPool::GyroECLP(gyro_eclp_pool) => gyro_eclp_pool.base.pool_address.clone(),
         SupportedPool::QuantAmm(quant_amm_pool) => quant_amm_pool.base.pool_address.clone(),
-        SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => liquidity_bootstrapping_pool.base.pool_address.clone(),
+        SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
+            liquidity_bootstrapping_pool.base.pool_address.clone()
+        }
         SupportedPool::ReClamm(re_clamm_pool) => re_clamm_pool.base.pool_address.clone(),
         SupportedPool::Buffer(buffer_pool) => buffer_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }
-} 
+}

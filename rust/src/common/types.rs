@@ -1,8 +1,8 @@
 //! Core types for the Balancer maths library
 
+use crate::pools::buffer::BufferState;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
-use crate::pools::buffer::BufferState;
 
 /// Kind of swap operation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -198,7 +198,9 @@ impl PoolState {
             PoolState::GyroECLP(gyro_eclp) => &gyro_eclp.base,
             PoolState::ReClamm(re_clamm) => &re_clamm.base,
             PoolState::QuantAmm(quant_amm) => &quant_amm.base,
-            PoolState::LiquidityBootstrapping(liquidity_bootstrapping) => &liquidity_bootstrapping.base,
+            PoolState::LiquidityBootstrapping(liquidity_bootstrapping) => {
+                &liquidity_bootstrapping.base
+            }
         }
     }
 

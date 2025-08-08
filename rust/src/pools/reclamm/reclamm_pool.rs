@@ -56,7 +56,8 @@ impl PoolBase for ReClammPool {
     }
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
-        let compute_result = self._compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
+        let compute_result =
+            self._compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
 
         match swap_params.swap_kind {
             SwapKind::GivenIn => {
@@ -67,7 +68,8 @@ impl PoolBase for ReClammPool {
                     swap_params.token_in_index,
                     swap_params.token_out_index,
                     &swap_params.amount_scaled_18,
-                ).map_err(|_| PoolError::InvalidSwapParameters)?;
+                )
+                .map_err(|_| PoolError::InvalidSwapParameters)?;
 
                 Ok(amount_calculated_scaled_18)
             }
@@ -79,7 +81,8 @@ impl PoolBase for ReClammPool {
                     swap_params.token_in_index,
                     swap_params.token_out_index,
                     &swap_params.amount_scaled_18,
-                ).map_err(|_| PoolError::InvalidSwapParameters)?;
+                )
+                .map_err(|_| PoolError::InvalidSwapParameters)?;
 
                 Ok(amount_calculated_scaled_18)
             }
@@ -104,4 +107,4 @@ impl PoolBase for ReClammPool {
         // Only needed for unbalanced liquidity and thats not possible in this pool
         Ok(BigInt::zero())
     }
-} 
+}

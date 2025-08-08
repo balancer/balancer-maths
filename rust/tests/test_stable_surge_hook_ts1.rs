@@ -1,5 +1,6 @@
-use balancer_maths_rust::common::types::{SwapInput, SwapKind, BasePoolState};
-use balancer_maths_rust::hooks::stable_surge::{StableSurgeHookState};
+use balancer_maths_rust::common::types::{BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind};
+use balancer_maths_rust::hooks::stable_surge::StableSurgeHookState;
+use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
@@ -53,7 +54,7 @@ fn create_test_hook_state() -> StableSurgeHookState {
 fn test_stable_surge_ts1_below_threshold_static_fee_case1() {
     // Replicating: < surgeThresholdPercentage, should use staticSwapFee
     // https://www.tdly.co/shared/simulation/e50584b3-d8ed-4633-b261-47401482c7b7
-    
+
     let pool_state = create_test_pool_state();
     let hook_state = create_test_hook_state();
     let vault = Vault::new();
@@ -65,12 +66,14 @@ fn test_stable_surge_ts1_below_threshold_static_fee_case1() {
         token_out: "0xb19382073c7a0addbb56ac6af1808fa49e377b75".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::StableSurge(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::StableSurge(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(78522716365403684u64));
 }
 
@@ -78,7 +81,7 @@ fn test_stable_surge_ts1_below_threshold_static_fee_case1() {
 fn test_stable_surge_ts1_below_threshold_static_fee_case2() {
     // Replicating: < surgeThresholdPercentage, should use staticSwapFee
     // https://www.tdly.co/shared/simulation/1220e0ec-1d3d-4f2a-8eb0-850fed8d15ed
-    
+
     let pool_state = create_test_pool_state();
     let hook_state = create_test_hook_state();
     let vault = Vault::new();
@@ -90,12 +93,14 @@ fn test_stable_surge_ts1_below_threshold_static_fee_case2() {
         token_out: "0xb19382073c7a0addbb56ac6af1808fa49e377b75".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::StableSurge(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::StableSurge(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(452983383563178802u64));
 }
 
@@ -103,7 +108,7 @@ fn test_stable_surge_ts1_below_threshold_static_fee_case2() {
 fn test_stable_surge_ts1_above_threshold_surge_fee() {
     // Replicating: > surgeThresholdPercentage, should use surge fee
     // https://www.tdly.co/shared/simulation/ce2a1146-68d4-49fc-b9d2-1fbc22086ea5
-    
+
     let pool_state = create_test_pool_state();
     let hook_state = create_test_hook_state();
     let vault = Vault::new();
@@ -115,11 +120,13 @@ fn test_stable_surge_ts1_above_threshold_surge_fee() {
         token_out: "0x7b79995e5f793a07bc00c21412e50ecae098e7f9".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::StableSurge(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::StableSurge(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(3252130027531260u64));
 }

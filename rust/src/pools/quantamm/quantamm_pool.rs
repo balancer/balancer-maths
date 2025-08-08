@@ -108,12 +108,16 @@ impl QuantAmmPool {
         amount_scaled_18: &BigInt,
         balance_scaled_18: &BigInt,
     ) -> Result<(), PoolError> {
-        let max_amount = mul_down_fixed(balance_scaled_18, &self.state.immutable.max_trade_size_ratio).unwrap_or_else(|_| BigInt::zero());
-        
+        let max_amount = mul_down_fixed(
+            balance_scaled_18,
+            &self.state.immutable.max_trade_size_ratio,
+        )
+        .unwrap_or_else(|_| BigInt::zero());
+
         if amount_scaled_18 > &max_amount {
             return Err(PoolError::InvalidSwapParameters);
         }
-        
+
         Ok(())
     }
 }
@@ -133,7 +137,8 @@ impl PoolBase for QuantAmmPool {
         let balance_out = &swap_params.balances_live_scaled_18[token_out_index];
         let amount_scaled_18 = &swap_params.amount_scaled_18;
 
-        let (weight_in, weight_out) = self.get_normalized_weight_pair(token_in_index, token_out_index)?;
+        let (weight_in, weight_out) =
+            self.get_normalized_weight_pair(token_in_index, token_out_index)?;
 
         match swap_params.swap_kind {
             crate::common::types::SwapKind::GivenIn => {
@@ -220,4 +225,4 @@ impl From<QuantAmmState> for QuantAmmPool {
     fn from(quant_amm_state: QuantAmmState) -> Self {
         Self::new(quant_amm_state).expect("Failed to create QuantAmmPool from state")
     }
-} 
+}

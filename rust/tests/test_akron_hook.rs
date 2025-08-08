@@ -1,5 +1,6 @@
-use balancer_maths_rust::common::types::{SwapInput, SwapKind, BasePoolState};
+use balancer_maths_rust::common::types::{BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind};
 use balancer_maths_rust::hooks::akron::AkronHookState;
+use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
@@ -13,10 +14,7 @@ fn create_test_pool_state() -> WeightedState {
             "0xC768c589647798a6EE01A91FdE98EF2ed046DBD6".to_string(),
             "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
         ],
-        scaling_factors: vec![
-            BigInt::from(1000000000000u64),
-            BigInt::from(1u64),
-        ],
+        scaling_factors: vec![BigInt::from(1000000000000u64), BigInt::from(1u64)],
         swap_fee: BigInt::from(10000000000000u64),
         aggregate_swap_fee: BigInt::from(500000000000000000u64),
         balances_live_scaled_18: vec![
@@ -67,12 +65,14 @@ fn test_akron_minimum_fee_token_in_6_decimals_given_in() {
         token_out: "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(4034072160040u64));
 }
 
@@ -90,12 +90,14 @@ fn test_akron_minimum_fee_token_in_6_decimals_given_out() {
         token_out: "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(2564u64));
 }
 
@@ -113,12 +115,14 @@ fn test_akron_minimum_fee_token_out_6_decimals_given_in() {
         token_out: "0xc768c589647798a6ee01a91fde98ef2ed046dbd6".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(2478u64));
 }
 
@@ -136,12 +140,14 @@ fn test_akron_minimum_fee_token_out_6_decimals_given_out() {
         token_out: "0xc768c589647798a6ee01a91fde98ef2ed046dbd6".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(4034173201018u64));
 }
 
@@ -159,12 +165,14 @@ fn test_akron_lvr_fee_token_in_6_decimals_given_in() {
         token_out: "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(4013866684978601u64));
 }
 
@@ -182,12 +190,14 @@ fn test_akron_lvr_fee_token_in_6_decimals_given_out() {
         token_out: "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(25102559u64));
 }
 
@@ -205,12 +215,14 @@ fn test_akron_lvr_fee_token_out_6_decimals_given_in() {
         token_out: "0xc768c589647798a6ee01a91fde98ef2ed046dbd6".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(24482275u64));
 }
 
@@ -228,11 +240,13 @@ fn test_akron_lvr_fee_token_out_6_decimals_given_out() {
         token_out: "0xc768c589647798a6ee01a91fde98ef2ed046dbd6".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::Akron(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(42485246562777219u64));
 }

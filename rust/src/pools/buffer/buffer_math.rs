@@ -9,7 +9,7 @@ lazy_static::lazy_static! {
 }
 
 /// Calculate buffer amounts for wrap/unwrap operations
-/// 
+///
 /// # Arguments
 /// * `direction` - Wrapping direction (Wrap or Unwrap)
 /// * `kind` - Swap kind (GivenIn or GivenOut)
@@ -17,7 +17,7 @@ lazy_static::lazy_static! {
 /// * `rate` - Exchange rate (scaled 18)
 /// * `max_deposit` - Maximum deposit limit (optional)
 /// * `max_mint` - Maximum mint limit (optional)
-/// 
+///
 /// # Returns
 /// Converted amount
 pub fn calculate_buffer_amounts(
@@ -49,7 +49,8 @@ pub fn calculate_buffer_amounts(
                     if amount_raw > max_shares {
                         return Err(format!(
                             "ERC4626ExceededMaxMint {} {}",
-                            amount_raw, max_mint.unwrap_or(&BigInt::zero())
+                            amount_raw,
+                            max_mint.unwrap_or(&BigInt::zero())
                         ));
                     }
                     Ok(_convert_to_assets(amount_raw, rate, Rounding::RoundUp))
@@ -73,11 +74,7 @@ pub fn calculate_buffer_amounts(
 }
 
 /// Convert assets to shares
-fn _convert_to_shares(
-    assets: &BigInt,
-    rate: &BigInt,
-    rounding: Rounding,
-) -> BigInt {
+fn _convert_to_shares(assets: &BigInt, rate: &BigInt, rounding: Rounding) -> BigInt {
     match rounding {
         Rounding::RoundUp => div_up_fixed(assets, rate).unwrap_or_else(|_| BigInt::zero()),
         Rounding::RoundDown => div_down_fixed(assets, rate).unwrap_or_else(|_| BigInt::zero()),
@@ -85,13 +82,9 @@ fn _convert_to_shares(
 }
 
 /// Convert shares to assets
-fn _convert_to_assets(
-    shares: &BigInt,
-    rate: &BigInt,
-    rounding: Rounding,
-) -> BigInt {
+fn _convert_to_assets(shares: &BigInt, rate: &BigInt, rounding: Rounding) -> BigInt {
     match rounding {
         Rounding::RoundUp => mul_up_fixed(shares, rate).unwrap_or_else(|_| BigInt::zero()),
         Rounding::RoundDown => mul_down_fixed(shares, rate).unwrap_or_else(|_| BigInt::zero()),
     }
-} 
+}

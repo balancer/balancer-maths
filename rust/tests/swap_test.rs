@@ -1,12 +1,10 @@
-use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::common::types::PoolStateOrBuffer;
+use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
 mod utils;
+use utils::convert_to_pool_state;
 use utils::read_test_data;
-use utils::{convert_to_pool_state};
-
-
 
 /// Check if two BigInts are within a percentage tolerance (for Buffer pools)
 fn are_big_ints_within_percent(value1: &BigInt, value2: &BigInt, percent: f64) -> bool {
@@ -35,11 +33,13 @@ fn test_swaps() {
 
     for swap_test in test_data.swaps {
         println!("Swap Test: {}", swap_test.test);
-        
+
         // Get the pool data for this test
-        let pool_data = test_data.pools.get(&swap_test.test)
-            .expect(&format!("Pool not found for test: {}", swap_test.test));
-        
+        let pool_data = test_data
+            .pools
+            .get(&swap_test.test)
+            .unwrap_or_else(|| panic!("Pool not found for test: {}", swap_test.test));
+
         // Convert pool data to PoolStateOrBuffer
         let pool_state_or_buffer = convert_to_pool_state(pool_data);
 
@@ -56,11 +56,13 @@ fn test_swaps() {
         };
 
         // Perform swap operation
-        let result = vault.swap(
-            &swap_input,
-            &pool_state_or_buffer,
-            test_data.hook_state.as_ref(), // Pass hook state from test data
-        ).expect("Swap failed");
+        let result = vault
+            .swap(
+                &swap_input,
+                &pool_state_or_buffer,
+                test_data.hook_state.as_ref(), // Pass hook state from test data
+            )
+            .expect("Swap failed");
 
         // Check if this is a Buffer pool (which has tolerance)
         match &pool_state_or_buffer {

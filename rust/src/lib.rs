@@ -14,8 +14,8 @@ pub use common::pool_base::PoolBase;
 pub use common::types::{AddLiquidityKind, PoolState, RemoveLiquidityKind, SwapKind};
 
 // Re-export hook types and traits
-pub use hooks::{DefaultHook, HookBase};
 pub use hooks::types::HookState;
+pub use hooks::{DefaultHook, HookBase};
 
 // Re-export pool implementations
 pub use pools::weighted::{WeightedPool, WeightedState};

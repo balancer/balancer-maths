@@ -1,5 +1,6 @@
-use balancer_maths_rust::common::types::{SwapInput, SwapKind, BasePoolState};
-use balancer_maths_rust::hooks::stable_surge::{StableSurgeHookState};
+use balancer_maths_rust::common::types::{BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind};
+use balancer_maths_rust::hooks::stable_surge::StableSurgeHookState;
+use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
@@ -60,7 +61,7 @@ fn create_test_hook_state() -> StableSurgeHookState {
 fn test_stable_surge_ts3_match_tenderly_simulation() {
     // Replicating: should match tenderly simulation
     // https://www.tdly.co/shared/simulation/350f9500-0ad1-4396-98d3-18a7f7576246
-    
+
     let pool_state = create_test_pool_state();
     let hook_state = create_test_hook_state();
     let vault = Vault::new();
@@ -72,12 +73,14 @@ fn test_stable_surge_ts3_match_tenderly_simulation() {
         token_out: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".to_string(),
     };
 
-    let output_amount = vault.swap(
-        &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::StableSurge(hook_state)),
-    ).expect("Swap failed");
-    
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(pool_state.into()),
+            Some(&HookState::StableSurge(hook_state)),
+        )
+        .expect("Swap failed");
+
     assert_eq!(output_amount, BigInt::from(37594448u64));
 }
 
@@ -85,7 +88,7 @@ fn test_stable_surge_ts3_match_tenderly_simulation() {
 fn test_stable_surge_ts3_should_throw_error() {
     // Replicating: should match simulation (error case)
     // This test expects an error to be thrown
-    
+
     let pool_state = create_test_pool_state();
     let hook_state = create_test_hook_state();
     let vault = Vault::new();
@@ -99,10 +102,10 @@ fn test_stable_surge_ts3_should_throw_error() {
 
     let result = vault.swap(
         &swap_input,
-        &balancer_maths_rust::common::types::PoolStateOrBuffer::Pool(pool_state.into()),
-        Some(&balancer_maths_rust::hooks::types::HookState::StableSurge(hook_state)),
+        &PoolStateOrBuffer::Pool(pool_state.into()),
+        Some(&HookState::StableSurge(hook_state)),
     );
-    
+
     // This test expects an error to be thrown
     assert!(result.is_err());
 }

@@ -7,7 +7,7 @@ lazy_static::lazy_static! {
 }
 
 /// Calculate the normalized weights for a liquidity bootstrapping pool
-/// 
+///
 /// # Arguments
 /// * `project_token_index` - Index of the project token
 /// * `current_time` - Current timestamp in seconds
@@ -15,7 +15,7 @@ lazy_static::lazy_static! {
 /// * `end_time` - End time of the weight change
 /// * `project_token_start_weight` - Initial weight of the project token
 /// * `project_token_end_weight` - Final weight of the project token
-/// 
+///
 /// # Returns
 /// Array of normalized weights for the tokens
 pub fn get_normalized_weights(
@@ -77,11 +77,7 @@ fn calculate_value_change_progress(
 }
 
 /// Interpolate a value based on the progress of a change
-fn interpolate_value(
-    start_value: &BigInt,
-    end_value: &BigInt,
-    pct_progress: &BigInt,
-) -> BigInt {
+fn interpolate_value(start_value: &BigInt, end_value: &BigInt, pct_progress: &BigInt) -> BigInt {
     if pct_progress >= &*WAD || start_value == end_value {
         return end_value.clone();
     }
@@ -99,4 +95,4 @@ fn interpolate_value(
             .unwrap_or_else(|_| BigInt::zero());
         start_value + delta
     }
-} 
+}

@@ -24,8 +24,6 @@ pub fn compute_invariant(
         return Ok(BigInt::zero());
     }
 
-
-
     // Initial invariant and amplification
     let mut invariant = total_balance.clone();
     let amp_times_total = amplification_parameter * num_tokens;
@@ -39,8 +37,9 @@ pub fn compute_invariant(
         }
 
         let prev_invariant = invariant.clone();
-        
-        let numerator = (amp_times_total.clone() * total_balance.clone()) / BigInt::from(AMP_PRECISION);
+
+        let numerator =
+            (amp_times_total.clone() * total_balance.clone()) / BigInt::from(AMP_PRECISION);
         let numerator = numerator + (d_p.clone() * BigInt::from(num_tokens));
         let numerator = numerator * invariant.clone();
 
@@ -55,10 +54,8 @@ pub fn compute_invariant(
             if &invariant - &prev_invariant <= BigInt::from(1u64) {
                 return Ok(invariant);
             }
-        } else {
-            if &prev_invariant - &invariant <= BigInt::from(1u64) {
-                return Ok(invariant);
-            }
+        } else if &prev_invariant - &invariant <= BigInt::from(1u64) {
+            return Ok(invariant);
         }
     }
 
@@ -75,7 +72,7 @@ pub fn compute_out_given_exact_in(
     invariant: &BigInt,
 ) -> Result<BigInt, PoolError> {
     let mut balances_copy = balances.to_vec();
-    
+
     // Add the token amount to the input balance
     balances_copy[token_index_in] += token_amount_in;
 
@@ -101,7 +98,7 @@ pub fn compute_in_given_exact_out(
     invariant: &BigInt,
 ) -> Result<BigInt, PoolError> {
     let mut balances_copy = balances.to_vec();
-    
+
     // Subtract the token amount from the output balance
     balances_copy[token_index_out] -= token_amount_out;
 
@@ -126,35 +123,38 @@ pub fn compute_balance(
 ) -> Result<BigInt, PoolError> {
     let num_tokens = balances.len() as u64;
     let amp_times_total = amplification_parameter * BigInt::from(num_tokens);
-    
+
     // Calculate sum and P_D
     let mut sum = balances[0].clone();
     let mut p_d = balances[0].clone() * BigInt::from(num_tokens);
-    
+
     for j in 1..balances.len() {
         p_d = (p_d.clone() * balances[j].clone() * BigInt::from(num_tokens)) / invariant;
-        sum = sum + &balances[j];
+        sum += &balances[j];
     }
-    
-    sum = sum - &balances[token_index];
-    
+
+    sum -= &balances[token_index];
+
     // Calculate inv2 and c
     let inv2 = invariant * invariant;
-    let c = div_up(&(inv2.clone() * BigInt::from(AMP_PRECISION)), &(amp_times_total.clone() * p_d))? * &balances[token_index];
-    
+    let c = div_up(
+        &(inv2.clone() * BigInt::from(AMP_PRECISION)),
+        &(amp_times_total.clone() * p_d),
+    )? * &balances[token_index];
+
     let b = sum + (invariant * BigInt::from(AMP_PRECISION)) / amp_times_total;
-    
+
     // Initial approximation
     let mut token_balance = div_up(&(inv2 + c.clone()), &(invariant + b.clone()))?;
-    
+
     // Iteratively solve for tokenBalance
     for _i in 0..255 {
         let prev_token_balance = token_balance.clone();
         token_balance = div_up(
             &(token_balance.clone() * token_balance.clone() + c.clone()),
-            &(token_balance * BigInt::from(2) + b.clone() - invariant)
+            &(token_balance * BigInt::from(2) + b.clone() - invariant),
         )?;
-        
+
         // Check for convergence
         if token_balance > prev_token_balance {
             if &token_balance - &prev_token_balance <= BigInt::from(1) {
@@ -164,8 +164,6 @@ pub fn compute_balance(
             return Ok(token_balance);
         }
     }
-    
+
     Err(PoolError::StableInvariantDidntConverge)
 }
-
- 
