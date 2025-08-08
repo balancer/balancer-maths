@@ -9,7 +9,7 @@ use crate::common::errors::PoolError;
 use crate::common::pool_base::PoolBase;
 use crate::common::types::*;
 use crate::hooks::types::HookState;
-use crate::hooks::{AkronHook, DefaultHook, HookBase, StableSurgeHook, ExitFeeHook};
+use crate::hooks::{AkronHook, DefaultHook, DirectionalFeeHook, HookBase, StableSurgeHook, ExitFeeHook};
 use crate::pools::buffer::erc4626_buffer_wrap_or_unwrap;
 use crate::vault::add_liquidity::add_liquidity;
 use crate::vault::remove_liquidity::remove_liquidity;
@@ -31,42 +31,21 @@ impl Vault {
             Some(hook_type) => {
                 match hook_type.as_str() {
                     "Akron" => {
-                        // Validate that hook state is provided and matches the type
-                        if let Some(HookState::Akron(_)) = hook_state {
-                            Box::new(AkronHook::new())
-                        } else {
-                            // Fall back to default hook if state doesn't match
-                            Box::new(DefaultHook::new())
-                        }
+                        if let Some(HookState::Akron(_)) = hook_state { Box::new(AkronHook::new()) } else { Box::new(DefaultHook::new()) }
+                    }
+                    "DirectionalFee" => {
+                        if let Some(HookState::DirectionalFee(_)) = hook_state { Box::new(DirectionalFeeHook::new()) } else { Box::new(DefaultHook::new()) }
                     }
                     "StableSurge" => {
-                        // Validate that hook state is provided and matches the type
-                        if let Some(HookState::StableSurge(_)) = hook_state {
-                            Box::new(StableSurgeHook::new())
-                        } else {
-                            // Fall back to default hook if state doesn't match
-                            Box::new(DefaultHook::new())
-                        }
+                        if let Some(HookState::StableSurge(_)) = hook_state { Box::new(StableSurgeHook::new()) } else { Box::new(DefaultHook::new()) }
                     }
                     "ExitFee" => {
-                        // Validate that hook state is provided and matches the type
-                        if let Some(HookState::ExitFee(_)) = hook_state {
-                            Box::new(ExitFeeHook::new())
-                        } else {
-                            // Fall back to default hook if state doesn't match
-                            Box::new(DefaultHook::new())
-                        }
+                        if let Some(HookState::ExitFee(_)) = hook_state { Box::new(ExitFeeHook::new()) } else { Box::new(DefaultHook::new()) }
                     }
-                    _ => {
-                        // Unknown hook type, use default hook
-                        Box::new(DefaultHook::new())
-                    }
+                    _ => { Box::new(DefaultHook::new()) }
                 }
             }
-            None => {
-                // No hook type specified, use default hook
-                Box::new(DefaultHook::new())
-            }
+            None => { Box::new(DefaultHook::new()) }
         }
     }
 
@@ -107,20 +86,14 @@ impl Vault {
                     _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
                 };
 
-                // Create hook instance
+                // Get hook instance
                 let hook: Box<dyn HookBase> = self.get_hook(&base_state.hook_type, hook_state);
 
-                swap(
-                    swap_input,
-                    pool_state,
-                    pool.as_ref(),
-                    hook.as_ref(),
-                    hook_state,
-                )
+                // Execute swap
+                swap(swap_input, pool_state, pool.as_ref(), hook.as_ref(), hook_state)
             }
             PoolStateOrBuffer::Buffer(buffer_state) => {
-                erc4626_buffer_wrap_or_unwrap(swap_input, buffer_state)
-                    .map_err(|_| PoolError::InvalidSwapParameters)
+                Ok(erc4626_buffer_wrap_or_unwrap(swap_input, buffer_state)?)
             }
         }
     }

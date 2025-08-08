@@ -1,23 +1,24 @@
 //! Hook implementations for Balancer pools
 
 pub mod akron;
+pub mod directional_fee;
 pub mod exit_fee;
 pub mod stable_surge;
 pub mod types;
 
-use crate::common::types::*;
-use num_bigint::BigInt;
-use num_traits::Zero;
-
-// Re-export hook-specific types
+pub use akron::{AkronHook, AkronHookState};
+pub use directional_fee::{DirectionalFeeHook, DirectionalFeeHookState};
 pub use exit_fee::{ExitFeeHook, ExitFeeHookState};
 pub use stable_surge::{StableSurgeHook, StableSurgeHookState};
-pub use akron::{AkronHook, AkronHookState};
-pub use types::{
+
+use crate::common::types::{AddLiquidityKind, RemoveLiquidityKind, SwapParams};
+use crate::hooks::types::{
     AfterAddLiquidityResult, AfterRemoveLiquidityResult, AfterSwapParams, AfterSwapResult,
     BeforeAddLiquidityResult, BeforeRemoveLiquidityResult, BeforeSwapResult, DynamicSwapFeeResult,
     HookState,
 };
+use num_bigint::BigInt;
+use num_traits::Zero;
 
 /// Hook configuration flags
 #[derive(Debug, Clone, PartialEq)]

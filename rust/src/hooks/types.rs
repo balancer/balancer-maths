@@ -1,6 +1,7 @@
 //! Hook types and state definitions
 
 use super::akron::AkronHookState;
+use super::directional_fee::DirectionalFeeHookState;
 use super::exit_fee::ExitFeeHookState;
 use super::stable_surge::StableSurgeHookState;
 use crate::common::types::{HookStateBase, SwapKind};
@@ -13,6 +14,8 @@ use serde::{Deserialize, Serialize};
 pub enum HookState {
     /// Akron hook state
     Akron(AkronHookState),
+    /// Directional fee hook state
+    DirectionalFee(DirectionalFeeHookState),
     /// Exit fee hook state
     ExitFee(ExitFeeHookState),
     /// Stable surge hook state
@@ -24,6 +27,7 @@ impl HookState {
     pub fn hook_type(&self) -> &str {
         match self {
             HookState::Akron(state) => state.hook_type(),
+            HookState::DirectionalFee(state) => state.hook_type(),
             HookState::ExitFee(state) => state.hook_type(),
             HookState::StableSurge(state) => state.hook_type(),
         }
