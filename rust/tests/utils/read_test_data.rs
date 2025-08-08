@@ -2,7 +2,7 @@
 
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::hooks::types::HookState;
-use balancer_maths_rust::hooks::StableSurgeHookState;
+use balancer_maths_rust::hooks::{StableSurgeHookState, ExitFeeHookState};
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use num_bigint::BigInt;
 use num_traits::Zero;
@@ -593,6 +593,33 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                             match pool {
                                                 SupportedPool::Stable(stable_pool) => {
                                                     stable_pool.state.base.hook_type = Some("StableSurge".to_string());
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    "EXIT_FEE" => {
+                                        let dynamic_data = &hook_data.dynamic_data;
+                                        let remove_liquidity_hook_fee_percentage = dynamic_data["removeLiquidityHookFeePercentage"]
+                                            .as_str()
+                                            .unwrap_or("0")
+                                            .parse::<BigInt>()?;
+                                        
+                                        hook_state = Some(HookState::ExitFee(ExitFeeHookState {
+                                            hook_type: "ExitFee".to_string(),
+                                            tokens: json_data.pool.tokens.clone(),
+                                            remove_liquidity_hook_fee_percentage,
+                                        }));
+                                        
+                                        // Update the pool's hook_type field to match the hook
+                                        // This is needed for the vault to recognize the hook type
+                                        if let Some(pool) = pools.get_mut(&filename) {
+                                            match pool {
+                                                SupportedPool::Weighted(weighted_pool) => {
+                                                    weighted_pool.state.base.hook_type = Some("ExitFee".to_string());
+                                                }
+                                                SupportedPool::Stable(stable_pool) => {
+                                                    stable_pool.state.base.hook_type = Some("ExitFee".to_string());
                                                 }
                                                 _ => {}
                                             }

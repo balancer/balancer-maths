@@ -9,7 +9,7 @@ use num_bigint::BigInt;
 use num_traits::Zero;
 
 // Re-export hook-specific types
-pub use exit_fee::ExitFeeHookState;
+pub use exit_fee::{ExitFeeHook, ExitFeeHookState};
 pub use stable_surge::{StableSurgeHook, StableSurgeHookState};
 pub use types::{
     AfterAddLiquidityResult, AfterRemoveLiquidityResult, AfterSwapParams, AfterSwapResult,
