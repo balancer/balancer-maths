@@ -299,6 +299,7 @@ pub struct Remove {
 
 /// Complete test data structure
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TestData {
     pub swaps: Vec<Swap>,
     pub adds: Vec<Add>,

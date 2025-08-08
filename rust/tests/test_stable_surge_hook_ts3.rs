@@ -1,6 +1,6 @@
 use balancer_maths_rust::common::types::{SwapInput, SwapKind, BasePoolState};
-use balancer_maths_rust::hooks::stable_surge::{StableSurgeHook, StableSurgeHookState};
-use balancer_maths_rust::pools::stable::{StablePool, StableMutable, StableState};
+use balancer_maths_rust::hooks::stable_surge::{StableSurgeHookState};
+use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
 use num_bigint::BigInt;
 

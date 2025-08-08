@@ -159,7 +159,7 @@ fn compute_virtual_balances_updating_price_range(
         (&balances_scaled_18[B], &balances_scaled_18[A])
     };
 
-    let (virtual_balance_undervalued, virtual_balance_overvalued) = if is_pool_above_center {
+    let (_virtual_balance_undervalued, virtual_balance_overvalued) = if is_pool_above_center {
         (virtual_balance_a, virtual_balance_b)
     } else {
         (virtual_balance_b, virtual_balance_a)

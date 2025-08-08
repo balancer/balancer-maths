@@ -148,7 +148,7 @@ pub fn compute_balance(
     let mut token_balance = div_up(&(inv2 + c.clone()), &(invariant + b.clone()))?;
     
     // Iteratively solve for tokenBalance
-    for i in 0..255 {
+    for _i in 0..255 {
         let prev_token_balance = token_balance.clone();
         token_balance = div_up(
             &(token_balance.clone() * token_balance.clone() + c.clone()),

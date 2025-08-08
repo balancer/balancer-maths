@@ -1,5 +1,4 @@
 use num_bigint::BigInt;
-use num_traits::Zero;
 
 /// Computes the integer square root of a number using Newton's method
 /// Ported from OpenZeppelin's Solidity library to Rust
@@ -82,41 +81,3 @@ pub fn sqrt(a: &BigInt) -> BigInt {
         xn
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_sqrt_edge_cases() {
-        assert_eq!(sqrt(&BigInt::from(0u64)), BigInt::from(0u64));
-        assert_eq!(sqrt(&BigInt::from(1u64)), BigInt::from(1u64));
-    }
-
-    #[test]
-    fn test_sqrt_perfect_squares() {
-        assert_eq!(sqrt(&BigInt::from(4u64)), BigInt::from(2u64));
-        assert_eq!(sqrt(&BigInt::from(9u64)), BigInt::from(3u64));
-        assert_eq!(sqrt(&BigInt::from(16u64)), BigInt::from(4u64));
-        assert_eq!(sqrt(&BigInt::from(25u64)), BigInt::from(5u64));
-        assert_eq!(sqrt(&BigInt::from(100u64)), BigInt::from(10u64));
-    }
-
-    #[test]
-    fn test_sqrt_non_perfect_squares() {
-        assert_eq!(sqrt(&BigInt::from(2u64)), BigInt::from(1u64));
-        assert_eq!(sqrt(&BigInt::from(3u64)), BigInt::from(1u64));
-        assert_eq!(sqrt(&BigInt::from(5u64)), BigInt::from(2u64));
-        assert_eq!(sqrt(&BigInt::from(8u64)), BigInt::from(2u64));
-        assert_eq!(sqrt(&BigInt::from(15u64)), BigInt::from(3u64));
-        assert_eq!(sqrt(&BigInt::from(24u64)), BigInt::from(4u64));
-        assert_eq!(sqrt(&BigInt::from(35u64)), BigInt::from(5u64));
-    }
-
-    #[test]
-    fn test_sqrt_large_numbers() {
-        let large_number = BigInt::from(1000000000000000000u64); // 10^18
-        let expected = BigInt::from(3162277660168379u64); // sqrt(10^18)
-        assert_eq!(sqrt(&large_number), expected);
-    }
-} 

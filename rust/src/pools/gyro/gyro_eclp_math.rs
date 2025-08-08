@@ -1,7 +1,7 @@
 use crate::common::errors::PoolError;
 use crate::pools::gyro::signed_fixed_point::{
     mul_up_fixed, mul_down_mag, mul_down_mag_u, mul_up_mag_u, div_down_mag,
-    div_down_mag_u, div_up_mag_u, mul_xp, mul_xp_u, div_xp_u, mul_down_xp_to_np_u, mul_up_xp_to_np_u
+    div_down_mag_u, div_up_mag_u, mul_xp_u, div_xp_u, mul_down_xp_to_np_u, mul_up_xp_to_np_u
 };
 use crate::pools::gyro::gyro_pool_math::gyro_pool_math_sqrt;
 use lazy_static::lazy_static;
@@ -82,9 +82,10 @@ fn scalar_prod(t1: &Vector2, t2: &Vector2) -> BigInt {
     x_prod + y_prod
 }
 
-fn scalar_prod_xp(t1: &Vector2, t2: &Vector2) -> BigInt {
-    mul_xp(&t1.x, &t2.x) + mul_xp(&t1.y, &t2.y)
-}
+// commented out to avoid dead code warning
+// fn scalar_prod_xp(t1: &Vector2, t2: &Vector2) -> BigInt {
+//     mul_xp(&t1.x, &t2.x) + mul_xp(&t1.y, &t2.y)
+// }
 
 fn mul_a(params: &EclpParams, tp: &Vector2) -> Vector2 {
     Vector2 {

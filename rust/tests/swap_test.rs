@@ -64,7 +64,7 @@ fn test_swaps() {
 
         // Check if this is a Buffer pool (which has tolerance)
         match &pool_state_or_buffer {
-            PoolStateOrBuffer::Pool(pool_state) => {
+            PoolStateOrBuffer::Pool(_pool_state) => {
                 assert_eq!(
                     result, swap_test.output_raw,
                     "Swap result mismatch for test: {}",

@@ -129,6 +129,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
 }
 
 /// Get the pool address from a SupportedPool
+#[allow(dead_code)]
 pub fn get_pool_address(pool: &SupportedPool) -> String {
     match pool {
         SupportedPool::Weighted(weighted_pool) => weighted_pool.base.pool_address.clone(),
