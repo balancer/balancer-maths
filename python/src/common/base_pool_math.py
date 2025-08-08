@@ -6,7 +6,7 @@ from src.common.maths import (
     mul_up_fixed,
     div_up_fixed,
     complement_fixed,
-    mul_div_up,
+    mul_div_up_fixed,
     Rounding,
 )
 from src.common.bigint import BigInt
@@ -268,7 +268,7 @@ def compute_remove_liquidity_single_token_exact_in(
     # // Compute the amount to be withdrawn from the pool.
     amount_out = current_balances[token_out_index] - new_balance
 
-    new_balance_before_tax = mul_div_up(
+    new_balance_before_tax = mul_div_up_fixed(
         new_supply, current_balances[token_out_index], total_supply
     )
 
@@ -371,7 +371,7 @@ def compute_remove_liquidity_single_token_exact_out(
     # //
     # // Since `currentInvariant` is rounded up and `invariantWithFeesApplied` is rounded down, the difference
     # // should always be positive. The checked math will revert if that is not the case.
-    bpt_amount_in = mul_div_up(
+    bpt_amount_in = mul_div_up_fixed(
         total_supply, current_invariant - invariant_with_fees_applied, current_invariant
     )
 

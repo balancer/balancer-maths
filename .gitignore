@@ -91,3 +91,9 @@ __pycache__
 pip*
 .travis.yml
 .coveragerc
+
+# Rust
+target/
+**/*.rs.bk
+rust/Cargo.lock
+*.pdb

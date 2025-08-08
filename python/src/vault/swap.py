@@ -1,5 +1,5 @@
 from src.common.constants import WAD
-from src.common.maths import mul_up_fixed, mul_div_up, complement_fixed
+from src.common.maths import mul_up_fixed, mul_div_up_fixed, complement_fixed
 from src.common.pool_base import PoolBase
 from src.common.types import PoolState, SwapKind, SwapInput
 from src.common.swap_params import SwapParams
@@ -111,7 +111,7 @@ def swap(
         # // To ensure symmetry with EXACT_IN, the swap fee used by ExactOut is
         # // `amountCalculated * fee% / (100% - fee%)`. Add it to the calculated amountIn. Round up to avoid losses
         # // during precision loss.
-        total_swap_fee_amount_scaled18 = mul_div_up(
+        total_swap_fee_amount_scaled18 = mul_div_up_fixed(
             amount_calculated_scaled18, swap_fee, complement_fixed(swap_fee)
         )
         amount_calculated_scaled18 += total_swap_fee_amount_scaled18
