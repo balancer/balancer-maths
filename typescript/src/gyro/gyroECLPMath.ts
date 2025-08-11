@@ -448,7 +448,8 @@ export class GyroECLPMath {
         err =
             err +
             (SignedFixedPoint.mulUpXpToNpU(invariant, mulDenominator) *
-                ((params.lambda * params.lambda) / BigInt('1000000000000000000000000000000000000')) *
+                ((params.lambda * params.lambda) /
+                    BigInt('1000000000000000000000000000000000000')) *
                 40n) /
                 this._ONE_XP +
             1n;

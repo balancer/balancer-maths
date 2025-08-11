@@ -175,15 +175,21 @@ class SignedFixedPoint:
         b2 = b % e_19
         prod1 = a * b1
         prod2 = a * b2
-        print(f"PYTHON: mul_down_xp_to_np_u - a={a}, b={b}, e_19={e_19}, b1={b1}, b2={b2}, prod1={prod1}, prod2={prod2}")
-        
+        print(
+            f"PYTHON: mul_down_xp_to_np_u - a={a}, b={b}, e_19={e_19}, b1={b1}, b2={b2}, prod1={prod1}, prod2={prod2}"
+        )
+
         if prod1 >= 0 and prod2 >= 0:
             result = (prod1 + prod2 // e_19) // e_19
-            print(f"PYTHON: mul_down_xp_to_np_u - positive case: (prod1 + prod2 // e_19) // e_19 = ({prod1} + {prod2 // e_19}) // {e_19} = {result}")
+            print(
+                f"PYTHON: mul_down_xp_to_np_u - positive case: (prod1 + prod2 // e_19) // e_19 = ({prod1} + {prod2 // e_19}) // {e_19} = {result}"
+            )
         else:
             result = (prod1 + prod2 // e_19 + 1) // e_19 - 1
-            print(f"PYTHON: mul_down_xp_to_np_u - negative case: (prod1 + prod2 // e_19 + 1) // e_19 - 1 = ({prod1} + {prod2 // e_19} + 1) // {e_19} - 1 = {result}")
-        
+            print(
+                f"PYTHON: mul_down_xp_to_np_u - negative case: (prod1 + prod2 // e_19 + 1) // e_19 - 1 = ({prod1} + {prod2 // e_19} + 1) // {e_19} - 1 = {result}"
+            )
+
         return result
 
     @classmethod

@@ -271,7 +271,7 @@ class GyroECLPMath:
             raise MaxBalancesExceededError()
 
         at_a_chi = cls.calc_at_a_chi(x, y, params, derived)
-        
+
         invariant_result = cls.calc_invariant_sqrt(x, y, params, derived)
         sqrt = invariant_result[0]
         err = invariant_result[1]
@@ -304,7 +304,7 @@ class GyroECLPMath:
         # As an alternative, could do, but could overflow:
         # invariant = (AtAChi.add(sqrt) - err).divXp(denominator)
         numerator = at_a_chi + sqrt - err
-        
+
         invariant = SignedFixedPoint.mul_down_xp_to_np_u(
             numerator,
             mul_denominator,
@@ -397,9 +397,7 @@ class GyroECLPMath:
         term_xp = term_xp1 + term_xp2 + term_xp3
 
         denominator = SignedFixedPoint.mul_xp_u(
-            SignedFixedPoint.mul_xp_u(
-                SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq
-            ),
+            SignedFixedPoint.mul_xp_u(SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq),
             d.dSq,
         )
         term_xp = SignedFixedPoint.div_xp_u(term_xp, denominator)
