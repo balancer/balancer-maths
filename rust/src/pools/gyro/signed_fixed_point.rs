@@ -157,16 +157,16 @@ pub fn div_xp_u(a: &BigInt, b: &BigInt) -> BigInt {
 pub fn mul_down_xp_to_np(a: &BigInt, b: &BigInt) -> BigInt {
     let e_19 = BigInt::from(10_000_000_000_000_000_000u64);
     let b1 = b / &e_19;
-    let b2 = b % &e_19;
     let prod1 = a * &b1;
-    let prod2 = a * &b2;
-    if prod1 >= BigInt::zero() && prod2 >= BigInt::zero() {
-        (prod1 / &*ONE) * &e_19 + (prod2 / &*ONE)
-    } else if prod1 <= BigInt::zero() && prod2 <= BigInt::zero() {
-        (prod1 / &*ONE) * &e_19 + (prod2 / &*ONE)
-    } else {
-        (prod1 / &*ONE) * &e_19 + (prod2 / &*ONE)
+    if a != &BigInt::zero() && &prod1 / a != b1 {
+        panic!("MulOverflow");
     }
+    let b2 = b % &e_19;
+    let prod2 = a * &b2;
+    if a != &BigInt::zero() && &prod2 / a != b2 {
+        panic!("MulOverflow");
+    }
+    (prod1 / &*ONE) * &e_19 + (prod2 / &*ONE)
 }
 
 pub fn mul_down_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {

@@ -176,12 +176,12 @@ export class SignedFixedPoint {
         const E19 = BigInt('10000000000000000000');
         const b1 = b / E19;
         const prod1 = a * b1;
-        if (!(a === 0n || prod1 / a === b1)) {
+        if (a !== 0n && prod1 / a !== b1) {
             throw new FixedPointError('MulOverflow');
         }
         const b2 = b % E19;
         const prod2 = a * b2;
-        if (!(a === 0n || prod2 / a === b2)) {
+        if (a !== 0n && prod2 / a !== b2) {
             throw new FixedPointError('MulOverflow');
         }
         return prod1 >= 0n && prod2 >= 0n

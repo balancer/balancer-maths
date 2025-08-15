@@ -156,11 +156,11 @@ class SignedFixedPoint:
         e_19 = int("10000000000000000000")
         b1 = b // e_19
         prod1 = a * b1
-        if not (a == 0 or prod1 // a == b1):
+        if a != 0 and prod1 // a != b1:
             raise FixedPointError("MulOverflow")
         b2 = b % e_19
         prod2 = a * b2
-        if not (a == 0 or prod2 // a == b2):
+        if a != 0 and prod2 // a != b2:
             raise FixedPointError("MulOverflow")
         return (
             (prod1 + prod2 // e_19) // e_19
