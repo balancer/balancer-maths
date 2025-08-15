@@ -255,7 +255,7 @@ pub fn compute_remove_liquidity_single_token_exact_out(
 
     // Create swap fees array
     let mut swap_fee_amounts = vec![BigInt::zero(); num_tokens];
-    swap_fee_amounts[token_out_index] = fee.clone();
+    swap_fee_amounts[token_out_index] = fee;
 
     // Calculate the amount of BPT to burn
     let bpt_amount_in = mul_div_up_fixed(

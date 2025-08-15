@@ -38,14 +38,13 @@ pub fn compute_invariant(
 
         let prev_invariant = invariant.clone();
 
-        let numerator =
-            (amp_times_total.clone() * total_balance.clone()) / BigInt::from(AMP_PRECISION);
+        let numerator = (&amp_times_total * &total_balance) / BigInt::from(AMP_PRECISION);
         let numerator = numerator + (d_p.clone() * BigInt::from(num_tokens));
-        let numerator = numerator * invariant.clone();
+        let numerator = numerator * &invariant;
 
-        let amp_minus_precision = amp_times_total.clone() - BigInt::from(AMP_PRECISION);
-        let denominator = (amp_minus_precision * invariant.clone()) / BigInt::from(AMP_PRECISION);
-        let denominator = denominator + (BigInt::from(num_tokens + 1) * d_p.clone());
+        let amp_minus_precision = &amp_times_total - BigInt::from(AMP_PRECISION);
+        let denominator = (amp_minus_precision * &invariant) / BigInt::from(AMP_PRECISION);
+        let denominator = denominator + (BigInt::from(num_tokens + 1) * d_p);
 
         invariant = numerator / denominator;
 
@@ -126,10 +125,10 @@ pub fn compute_balance(
 
     // Calculate sum and P_D
     let mut sum = balances[0].clone();
-    let mut p_d = balances[0].clone() * BigInt::from(num_tokens);
+    let mut p_d = &balances[0] * BigInt::from(num_tokens);
 
     for j in 1..balances.len() {
-        p_d = (p_d.clone() * balances[j].clone() * BigInt::from(num_tokens)) / invariant;
+        p_d = (&p_d * &balances[j] * BigInt::from(num_tokens)) / invariant;
         sum += &balances[j];
     }
 
@@ -142,7 +141,7 @@ pub fn compute_balance(
         &(amp_times_total.clone() * p_d),
     )? * &balances[token_index];
 
-    let b = sum + (invariant * BigInt::from(AMP_PRECISION)) / amp_times_total;
+    let b = sum + (invariant * BigInt::from(AMP_PRECISION)) / &amp_times_total;
 
     // Initial approximation
     let mut token_balance = div_up(&(inv2 + c.clone()), &(invariant + b.clone()))?;

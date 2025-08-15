@@ -47,7 +47,7 @@ pub fn div_down_fixed(a: &BigInt, b: &BigInt) -> Result<BigInt, PoolError> {
     }
 
     let a_inflated = a * &*WAD;
-    let result = a_inflated.clone() / b;
+    let result = a_inflated / b;
     Ok(result)
 }
 
