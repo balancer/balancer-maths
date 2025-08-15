@@ -68,7 +68,7 @@ fn test_akron_minimum_fee_token_in_6_decimals_given_in() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -93,7 +93,7 @@ fn test_akron_minimum_fee_token_in_6_decimals_given_out() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -118,7 +118,7 @@ fn test_akron_minimum_fee_token_out_6_decimals_given_in() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -143,7 +143,7 @@ fn test_akron_minimum_fee_token_out_6_decimals_given_out() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -168,7 +168,7 @@ fn test_akron_lvr_fee_token_in_6_decimals_given_in() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -193,7 +193,7 @@ fn test_akron_lvr_fee_token_in_6_decimals_given_out() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -218,7 +218,7 @@ fn test_akron_lvr_fee_token_out_6_decimals_given_in() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");
@@ -243,7 +243,7 @@ fn test_akron_lvr_fee_token_out_6_decimals_given_out() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::Akron(hook_state)),
         )
         .expect("Swap failed");

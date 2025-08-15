@@ -76,7 +76,7 @@ fn test_stable_surge_ts3_match_tenderly_simulation() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::StableSurge(hook_state)),
         )
         .expect("Swap failed");
@@ -102,7 +102,7 @@ fn test_stable_surge_ts3_should_throw_error() {
 
     let result = vault.swap(
         &swap_input,
-        &PoolStateOrBuffer::Pool(pool_state.into()),
+        &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
         Some(&HookState::StableSurge(hook_state)),
     );
 

@@ -133,7 +133,7 @@ fn test_directional_fee_integration_vault_swap_with_and_without_hook() {
     let out_with_hook = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_with_hook.clone().into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_with_hook.clone().into())),
             Some(&HookState::DirectionalFee(
                 DirectionalFeeHookState::default(),
             )),
@@ -143,7 +143,7 @@ fn test_directional_fee_integration_vault_swap_with_and_without_hook() {
     let out_without_hook = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_without_hook.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_without_hook.into())),
             None,
         )
         .expect("swap without hook failed");

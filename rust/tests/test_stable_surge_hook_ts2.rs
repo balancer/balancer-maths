@@ -76,7 +76,7 @@ fn test_stable_surge_ts2_below_threshold_static_fee() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::StableSurge(hook_state)),
         )
         .expect("Swap failed");
@@ -103,7 +103,7 @@ fn test_stable_surge_ts2_above_threshold_surge_fee() {
     let output_amount = vault
         .swap(
             &swap_input,
-            &PoolStateOrBuffer::Pool(pool_state.into()),
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
             Some(&HookState::StableSurge(hook_state)),
         )
         .expect("Swap failed");
