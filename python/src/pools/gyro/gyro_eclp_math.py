@@ -271,6 +271,7 @@ class GyroECLPMath:
             raise MaxBalancesExceededError()
 
         at_a_chi = cls.calc_at_a_chi(x, y, params, derived)
+
         invariant_result = cls.calc_invariant_sqrt(x, y, params, derived)
         sqrt = invariant_result[0]
         err = invariant_result[1]
@@ -302,8 +303,10 @@ class GyroECLPMath:
 
         # As an alternative, could do, but could overflow:
         # invariant = (AtAChi.add(sqrt) - err).divXp(denominator)
+        numerator = at_a_chi + sqrt - err
+
         invariant = SignedFixedPoint.mul_down_xp_to_np_u(
-            at_a_chi + sqrt - err,
+            numerator,
             mul_denominator,
         )
 
@@ -342,11 +345,10 @@ class GyroECLPMath:
         p: EclpParams,
         d: DerivedEclpParams,
     ) -> tuple[int, int]:
-        val = (
-            cls.calc_min_atx_a_chiy_sq_plus_atx_sq(x, y, p, d)
-            + cls.calc_2_atx_aty_a_chix_a_chiy(x, y, p, d)
-            + cls.calc_min_aty_a_chix_sq_plus_aty_sq(x, y, p, d)
-        )
+        val1 = cls.calc_min_atx_a_chiy_sq_plus_atx_sq(x, y, p, d)
+        val2 = cls.calc_2_atx_aty_a_chix_a_chiy(x, y, p, d)
+        val3 = cls.calc_min_aty_a_chix_sq_plus_aty_sq(x, y, p, d)
+        val = val1 + val2 + val3
 
         err = (
             SignedFixedPoint.mul_up_mag_u(x, x) + SignedFixedPoint.mul_up_mag_u(y, y)
@@ -364,52 +366,49 @@ class GyroECLPMath:
         p: EclpParams,
         d: DerivedEclpParams,
     ) -> int:
-        term_np = SignedFixedPoint.mul_up_mag_u(
+        term1 = SignedFixedPoint.mul_up_mag_u(
             SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(x, x), p.c),
             p.c,
-        ) + SignedFixedPoint.mul_up_mag_u(
+        )
+        term2 = SignedFixedPoint.mul_up_mag_u(
             SignedFixedPoint.mul_up_mag_u(SignedFixedPoint.mul_up_mag_u(y, y), p.s),
             p.s,
         )
+        term_np = term1 + term2
 
-        term_np -= SignedFixedPoint.mul_down_mag_u(
+        term3 = SignedFixedPoint.mul_down_mag_u(
             SignedFixedPoint.mul_down_mag_u(
                 SignedFixedPoint.mul_down_mag_u(x, y), p.c * 2
             ),
             p.s,
         )
+        term_np -= term3
 
-        term_xp = (
-            SignedFixedPoint.mul_xp_u(d.u, d.u)
-            + SignedFixedPoint.div_down_mag_u(
-                SignedFixedPoint.mul_xp_u(d.u * 2, d.v), p.lambda_
-            )
-            + SignedFixedPoint.div_down_mag_u(
-                SignedFixedPoint.div_down_mag_u(
-                    SignedFixedPoint.mul_xp_u(d.v, d.v), p.lambda_
-                ),
-                p.lambda_,
-            )
+        term_xp1 = SignedFixedPoint.mul_xp_u(d.u, d.u)
+        term_xp2 = SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.mul_xp_u(d.u * 2, d.v), p.lambda_
         )
-
-        term_xp = SignedFixedPoint.div_xp_u(
-            term_xp,
-            SignedFixedPoint.mul_xp_u(
-                SignedFixedPoint.mul_xp_u(
-                    SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq
-                ),
-                d.dSq,
+        term_xp3 = SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.div_down_mag_u(
+                SignedFixedPoint.mul_xp_u(d.v, d.v), p.lambda_
             ),
+            p.lambda_,
         )
+        term_xp = term_xp1 + term_xp2 + term_xp3
+
+        denominator = SignedFixedPoint.mul_xp_u(
+            SignedFixedPoint.mul_xp_u(SignedFixedPoint.mul_xp_u(d.dSq, d.dSq), d.dSq),
+            d.dSq,
+        )
+        term_xp = SignedFixedPoint.div_xp_u(term_xp, denominator)
 
         val = SignedFixedPoint.mul_down_xp_to_np_u(-term_np, term_xp)
 
-        val += SignedFixedPoint.mul_down_xp_to_np_u(
-            SignedFixedPoint.div_down_mag_u(
-                SignedFixedPoint.div_down_mag_u(term_np - 9, p.lambda_), p.lambda_
-            ),
-            SignedFixedPoint.div_xp_u(SignedFixedPoint.ONE_XP, d.dSq),
+        term4 = SignedFixedPoint.div_down_mag_u(
+            SignedFixedPoint.div_down_mag_u(term_np - 9, p.lambda_), p.lambda_
         )
+        term5 = SignedFixedPoint.div_xp_u(SignedFixedPoint.ONE_XP, d.dSq)
+        val += SignedFixedPoint.mul_down_xp_to_np_u(term4, term5)
 
         return val
 

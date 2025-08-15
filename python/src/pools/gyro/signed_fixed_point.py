@@ -156,11 +156,11 @@ class SignedFixedPoint:
         e_19 = int("10000000000000000000")
         b1 = b // e_19
         prod1 = a * b1
-        if not (a == 0 or prod1 // a == b1):
+        if a != 0 and prod1 // a != b1:
             raise FixedPointError("MulOverflow")
         b2 = b % e_19
         prod2 = a * b2
-        if not (a == 0 or prod2 // a == b2):
+        if a != 0 and prod2 // a != b2:
             raise FixedPointError("MulOverflow")
         return (
             (prod1 + prod2 // e_19) // e_19
@@ -175,11 +175,22 @@ class SignedFixedPoint:
         b2 = b % e_19
         prod1 = a * b1
         prod2 = a * b2
-        return (
-            (prod1 + prod2 // e_19) // e_19
-            if prod1 >= 0 and prod2 >= 0
-            else (prod1 + prod2 // e_19 + 1) // e_19 - 1
+        print(
+            f"PYTHON: mul_down_xp_to_np_u - a={a}, b={b}, e_19={e_19}, b1={b1}, b2={b2}, prod1={prod1}, prod2={prod2}"
         )
+
+        if prod1 >= 0 and prod2 >= 0:
+            result = (prod1 + prod2 // e_19) // e_19
+            print(
+                f"PYTHON: mul_down_xp_to_np_u - positive case: (prod1 + prod2 // e_19) // e_19 = ({prod1} + {prod2 // e_19}) // {e_19} = {result}"
+            )
+        else:
+            result = (prod1 + prod2 // e_19 + 1) // e_19 - 1
+            print(
+                f"PYTHON: mul_down_xp_to_np_u - negative case: (prod1 + prod2 // e_19 + 1) // e_19 - 1 = ({prod1} + {prod2 // e_19} + 1) // {e_19} - 1 = {result}"
+            )
+
+        return result
 
     @classmethod
     def mul_up_xp_to_np(cls, a: int, b: int) -> int:
