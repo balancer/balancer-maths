@@ -37,6 +37,7 @@ pub struct RemoveLiquiditySingleTokenExactOutResult {
 }
 
 /// Compute add liquidity for unbalanced amounts
+#[allow(clippy::type_complexity)]
 pub fn compute_add_liquidity_unbalanced(
     current_balances: &[BigInt],
     exact_amounts: &[BigInt],
@@ -94,6 +95,7 @@ pub fn compute_add_liquidity_unbalanced(
 }
 
 /// Compute add liquidity for single token exact out
+#[allow(clippy::type_complexity)]
 pub fn compute_add_liquidity_single_token_exact_out(
     current_balances: &[BigInt],
     token_in_index: usize,
@@ -155,6 +157,7 @@ pub fn compute_proportional_amounts_out(
 }
 
 /// Compute remove liquidity single token exact in
+#[allow(clippy::type_complexity)]
 pub fn compute_remove_liquidity_single_token_exact_in(
     current_balances: &[BigInt],
     token_out_index: usize,
@@ -205,6 +208,7 @@ pub fn compute_remove_liquidity_single_token_exact_in(
 }
 
 /// Compute remove liquidity single token exact out
+#[allow(clippy::type_complexity)]
 pub fn compute_remove_liquidity_single_token_exact_out(
     current_balances: &[BigInt],
     token_out_index: usize,

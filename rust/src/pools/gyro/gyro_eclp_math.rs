@@ -470,6 +470,7 @@ pub fn calculate_invariant_with_error(
     Ok((invariant, err))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn solve_quadratic_swap(
     lambda: &BigInt,
     x: &BigInt,

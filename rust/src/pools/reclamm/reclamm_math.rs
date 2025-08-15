@@ -18,6 +18,7 @@ lazy_static::lazy_static! {
 }
 
 /// Compute current virtual balances for ReClamm pool
+#[allow(clippy::too_many_arguments)]
 pub fn compute_current_virtual_balances(
     current_timestamp: &BigInt,
     balances_scaled_18: &[BigInt],
