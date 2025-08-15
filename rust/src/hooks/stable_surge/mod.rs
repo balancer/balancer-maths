@@ -50,8 +50,10 @@ pub struct StableSurgeHook {
 
 impl StableSurgeHook {
     pub fn new() -> Self {
-        let mut config = HookConfig::default();
-        config.should_call_compute_dynamic_swap_fee = true;
+        let config = HookConfig {
+            should_call_compute_dynamic_swap_fee: true,
+            ..Default::default()
+        };
 
         Self { config }
     }

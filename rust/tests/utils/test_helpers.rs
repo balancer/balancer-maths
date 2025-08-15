@@ -21,7 +21,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                 base: weighted_pool.state.base.clone(),
                 weights: weighted_pool.state.weights.clone(),
             };
-            PoolStateOrBuffer::Pool(PoolState::Weighted(weighted_state))
+            PoolStateOrBuffer::Pool(Box::new(PoolState::Weighted(weighted_state)))
         }
         SupportedPool::Stable(stable_pool) => {
             let stable_state = StableState {
@@ -30,7 +30,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     amp: stable_pool.state.mutable.amp.clone(),
                 },
             };
-            PoolStateOrBuffer::Pool(PoolState::Stable(stable_state))
+            PoolStateOrBuffer::Pool(Box::new(PoolState::Stable(stable_state)))
         }
         SupportedPool::GyroECLP(gyro_eclp_pool) => {
             let gyro_eclp_state = GyroECLPState {
@@ -52,7 +52,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     d_sq: gyro_eclp_pool.state.immutable.d_sq.clone(),
                 },
             };
-            PoolStateOrBuffer::Pool(PoolState::GyroECLP(gyro_eclp_state))
+            PoolStateOrBuffer::Pool(Box::new(PoolState::GyroECLP(gyro_eclp_state)))
         }
         SupportedPool::QuantAmm(quant_amm_pool) => {
             let quant_amm_state = QuantAmmState {
@@ -80,7 +80,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .clone(),
                 },
             };
-            PoolStateOrBuffer::Pool(PoolState::QuantAmm(quant_amm_state))
+            PoolStateOrBuffer::Pool(Box::new(PoolState::QuantAmm(quant_amm_state)))
         }
         SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
             let liquidity_bootstrapping_state = LiquidityBootstrappingState {
@@ -124,9 +124,9 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .clone(),
                 },
             };
-            PoolStateOrBuffer::Pool(PoolState::LiquidityBootstrapping(
+            PoolStateOrBuffer::Pool(Box::new(PoolState::LiquidityBootstrapping(
                 liquidity_bootstrapping_state,
-            ))
+            )))
         }
         SupportedPool::ReClamm(re_clamm_pool) => {
             let re_clamm_state = ReClammState {
@@ -171,7 +171,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     tokens: re_clamm_pool.state.immutable.tokens.clone(),
                 },
             };
-            PoolStateOrBuffer::Pool(PoolState::ReClamm(re_clamm_state))
+            PoolStateOrBuffer::Pool(Box::new(PoolState::ReClamm(re_clamm_state)))
         }
         SupportedPool::Buffer(buffer_pool) => {
             let buffer_state = BufferState {
@@ -186,7 +186,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     tokens: buffer_pool.state.immutable.tokens.clone(),
                 },
             };
-            PoolStateOrBuffer::Buffer(buffer_state)
+            PoolStateOrBuffer::Buffer(Box::new(buffer_state))
         } // Add other pool types here as they are implemented
     }
 }

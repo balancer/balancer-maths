@@ -247,12 +247,12 @@ fn ln(x: &BigInt) -> Result<BigInt, PoolError> {
 
     let mut sum = BigInt::zero();
     if a >= (&*A0 * &*WAD) {
-        a = a / &*A0; // Integer, not fixed point division
+        a /= &*A0; // Integer, not fixed point division
         sum += &*X0;
     }
 
     if a >= (&*A1 * &*WAD) {
-        a = a / &*A1; // Integer, not fixed point division
+        a /= &*A1; // Integer, not fixed point division
         sum += &*X1;
     }
 

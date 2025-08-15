@@ -127,9 +127,9 @@ pub fn compute_balance(
     let mut sum = balances[0].clone();
     let mut p_d = &balances[0] * BigInt::from(num_tokens);
 
-    for j in 1..balances.len() {
-        p_d = (&p_d * &balances[j] * BigInt::from(num_tokens)) / invariant;
-        sum += &balances[j];
+    for balance in balances.iter().skip(1) {
+        p_d = (&p_d * balance * BigInt::from(num_tokens)) / invariant;
+        sum += balance;
     }
 
     sum -= &balances[token_index];

@@ -23,8 +23,8 @@ fn test_remove_liquidity() {
         let pool_state_or_buffer = convert_to_pool_state(pool_data);
 
         // Skip Buffer pools as they don't support remove_liquidity
-        let pool_state = match pool_state_or_buffer {
-            PoolStateOrBuffer::Pool(pool_state) => pool_state,
+        let pool_state = match &pool_state_or_buffer {
+            PoolStateOrBuffer::Pool(pool_state) => pool_state.as_ref(),
             PoolStateOrBuffer::Buffer(_) => {
                 println!(
                     "Skipping Buffer pool for remove liquidity test: {}",

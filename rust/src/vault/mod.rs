@@ -81,7 +81,7 @@ impl Vault {
                 let base_state = pool_state.base();
 
                 // Create pool instance
-                let pool: Box<dyn PoolBase> = match pool_state {
+                let pool: Box<dyn PoolBase> = match pool_state.as_ref() {
                     PoolState::Weighted(weighted_state) => {
                         // Use the weights from the WeightedState directly
                         Box::new(crate::pools::weighted::WeightedPool::from(
@@ -120,9 +120,10 @@ impl Vault {
                     hook_state,
                 )
             }
-            PoolStateOrBuffer::Buffer(buffer_state) => {
-                Ok(erc4626_buffer_wrap_or_unwrap(swap_input, buffer_state)?)
-            }
+            PoolStateOrBuffer::Buffer(buffer_state) => Ok(erc4626_buffer_wrap_or_unwrap(
+                swap_input,
+                buffer_state.as_ref(),
+            )?),
         }
     }
 

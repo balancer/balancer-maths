@@ -123,8 +123,8 @@ pub enum PoolState {
 /// Union type for pool states - can be either a normal pool or a buffer pool
 #[derive(Debug, Clone)]
 pub enum PoolStateOrBuffer {
-    Pool(PoolState),
-    Buffer(BufferState),
+    Pool(Box<PoolState>),
+    Buffer(Box<BufferState>),
 }
 
 /// Result of a swap operation

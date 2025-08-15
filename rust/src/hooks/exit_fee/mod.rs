@@ -43,9 +43,11 @@ pub struct ExitFeeHook {
 
 impl ExitFeeHook {
     pub fn new() -> Self {
-        let mut config = HookConfig::default();
-        config.should_call_after_remove_liquidity = true;
-        config.enable_hook_adjusted_amounts = true;
+        let config = HookConfig {
+            should_call_after_remove_liquidity: true,
+            enable_hook_adjusted_amounts: true,
+            ..Default::default()
+        };
 
         Self { config }
     }
