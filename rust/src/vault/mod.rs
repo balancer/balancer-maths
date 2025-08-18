@@ -105,6 +105,9 @@ impl Vault {
                     PoolState::ReClamm(re_clamm_state) => Box::new(
                         crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
                     ),
+                    PoolState::ReClammV2(re_clamm_v2_state) => Box::new(
+                        crate::pools::reclammv2::ReClammV2Pool::new(re_clamm_v2_state.clone()),
+                    ),
                     _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
                 };
 
@@ -158,6 +161,12 @@ impl Vault {
                     liquidity_bootstrapping_state.clone(),
                 ),
             ),
+            PoolState::ReClamm(re_clamm_state) => Box::new(
+                crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
+            ),
+            PoolState::ReClammV2(re_clamm_v2_state) => Box::new(
+                crate::pools::reclammv2::ReClammV2Pool::new(re_clamm_v2_state.clone()),
+            ),
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };
 
@@ -206,6 +215,9 @@ impl Vault {
             ),
             PoolState::ReClamm(re_clamm_state) => Box::new(
                 crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
+            ),
+            PoolState::ReClammV2(re_clamm_v2_state) => Box::new(
+                crate::pools::reclammv2::ReClammV2Pool::new(re_clamm_v2_state.clone()),
             ),
             _ => return Err(PoolError::UnsupportedPoolType(base_state.pool_type.clone())),
         };

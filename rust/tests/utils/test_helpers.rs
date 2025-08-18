@@ -9,6 +9,7 @@ use balancer_maths_rust::pools::liquidity_bootstrapping::{
 };
 use balancer_maths_rust::pools::quantamm::{QuantAmmImmutable, QuantAmmMutable, QuantAmmState};
 use balancer_maths_rust::pools::reclamm::{ReClammImmutable, ReClammMutable, ReClammState};
+use balancer_maths_rust::pools::reclammv2::{ReClammV2Immutable, ReClammV2Mutable, ReClammV2State};
 use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::pools::weighted::WeightedState;
 
@@ -173,6 +174,51 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::ReClamm(re_clamm_state)))
         }
+        SupportedPool::ReClammV2(re_clamm_v2_pool) => {
+            let re_clamm_v2_state = ReClammV2State {
+                base: re_clamm_v2_pool.state.base.clone(),
+                mutable: ReClammV2Mutable {
+                    last_virtual_balances: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .last_virtual_balances
+                        .clone(),
+                    daily_price_shift_base: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .daily_price_shift_base
+                        .clone(),
+                    last_timestamp: re_clamm_v2_pool.state.mutable.last_timestamp.clone(),
+                    current_timestamp: re_clamm_v2_pool.state.mutable.current_timestamp.clone(),
+                    centeredness_margin: re_clamm_v2_pool.state.mutable.centeredness_margin.clone(),
+                    start_fourth_root_price_ratio: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .start_fourth_root_price_ratio
+                        .clone(),
+                    end_fourth_root_price_ratio: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .end_fourth_root_price_ratio
+                        .clone(),
+                    price_ratio_update_start_time: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .price_ratio_update_start_time
+                        .clone(),
+                    price_ratio_update_end_time: re_clamm_v2_pool
+                        .state
+                        .mutable
+                        .price_ratio_update_end_time
+                        .clone(),
+                },
+                immutable: ReClammV2Immutable {
+                    pool_address: re_clamm_v2_pool.state.immutable.pool_address.clone(),
+                    tokens: re_clamm_v2_pool.state.immutable.tokens.clone(),
+                },
+            };
+            PoolStateOrBuffer::Pool(Box::new(PoolState::ReClammV2(re_clamm_v2_state)))
+        }
         SupportedPool::Buffer(buffer_pool) => {
             let buffer_state = BufferState {
                 base: buffer_pool.state.base.clone(),
@@ -203,6 +249,7 @@ pub fn get_pool_address(pool: &SupportedPool) -> String {
             liquidity_bootstrapping_pool.base.pool_address.clone()
         }
         SupportedPool::ReClamm(re_clamm_pool) => re_clamm_pool.base.pool_address.clone(),
+        SupportedPool::ReClammV2(re_clamm_v2_pool) => re_clamm_v2_pool.base.pool_address.clone(),
         SupportedPool::Buffer(buffer_pool) => buffer_pool.base.pool_address.clone(),
         // Add other pool types here as they are implemented
     }

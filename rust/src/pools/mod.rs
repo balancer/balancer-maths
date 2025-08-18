@@ -5,6 +5,7 @@ pub mod gyro;
 pub mod liquidity_bootstrapping;
 pub mod quantamm;
 pub mod reclamm;
+pub mod reclammv2;
 pub mod stable;
 pub mod weighted;
 
@@ -19,5 +20,6 @@ pub use liquidity_bootstrapping::{
 };
 pub use quantamm::{QuantAmmImmutable, QuantAmmMutable, QuantAmmPool, QuantAmmState};
 pub use reclamm::{ReClammImmutable, ReClammMutable, ReClammPool, ReClammState};
+pub use reclammv2::{ReClammV2Immutable, ReClammV2Mutable, ReClammV2Pool, ReClammV2State};
 pub use stable::{StableMutable, StablePool, StableState};
 pub use weighted::{WeightedPool, WeightedState};
