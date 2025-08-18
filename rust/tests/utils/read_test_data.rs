@@ -647,11 +647,11 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
 
                                         // Update the pool's hook_type field to match the hook
                                         // This is needed for the vault to recognize the hook type
-                                        if let Some(pool) = pools.get_mut(&filename) {
-                                            if let SupportedPool::Stable(stable_pool) = pool {
-                                                stable_pool.state.base.hook_type =
-                                                    Some("StableSurge".to_string());
-                                            }
+                                        if let Some(SupportedPool::Stable(stable_pool)) =
+                                            pools.get_mut(&filename)
+                                        {
+                                            stable_pool.state.base.hook_type =
+                                                Some("StableSurge".to_string());
                                         }
                                     }
                                     "EXIT_FEE" => {
@@ -706,11 +706,11 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
 
                                         // Update the pool's hook_type field to match the hook
                                         // This is needed for the vault to recognize the hook type
-                                        if let Some(pool) = pools.get_mut(&filename) {
-                                            if let SupportedPool::Weighted(weighted_pool) = pool {
-                                                weighted_pool.state.base.hook_type =
-                                                    Some("Akron".to_string());
-                                            }
+                                        if let Some(SupportedPool::Weighted(weighted_pool)) =
+                                            pools.get_mut(&filename)
+                                        {
+                                            weighted_pool.state.base.hook_type =
+                                                Some("Akron".to_string());
                                         }
                                     }
                                     _ => {}
