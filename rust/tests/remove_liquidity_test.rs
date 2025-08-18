@@ -51,7 +51,7 @@ fn test_remove_liquidity() {
         let result = vault
             .remove_liquidity(
                 &remove_liquidity_input,
-                &pool_state,
+                pool_state,
                 None, // No hook state for now
             )
             .expect("Remove liquidity failed");
