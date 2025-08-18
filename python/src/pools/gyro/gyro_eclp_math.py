@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
-from src.pools.gyro.signed_fixed_point import SignedFixedPoint
+
 from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
+from src.pools.gyro.signed_fixed_point import SignedFixedPoint
 
 
 @dataclass

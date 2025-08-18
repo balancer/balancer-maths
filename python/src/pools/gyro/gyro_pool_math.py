@@ -1,9 +1,5 @@
 from src.common.constants import WAD
-from src.common.maths import (
-    mul_down_fixed,
-    mul_up_fixed,
-)
-
+from src.common.maths import mul_down_fixed, mul_up_fixed
 
 _SQRT_1E_NEG_1 = 316227766016837933
 _SQRT_1E_NEG_3 = 31622776601683793

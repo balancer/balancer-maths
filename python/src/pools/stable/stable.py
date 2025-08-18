@@ -1,17 +1,17 @@
 from typing import List
 
-from src.common.maths import mul_down_fixed, Rounding
+from src.common.maths import Rounding, mul_down_fixed
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
 from src.pools.stable.stable_data import StableMutable
 from src.pools.stable.stable_math import (
-    compute_invariant,
-    compute_out_given_exact_in,
-    compute_in_given_exact_out,
-    compute_balance,
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
+    compute_balance,
+    compute_in_given_exact_out,
+    compute_invariant,
+    compute_out_given_exact_in,
 )
 
 

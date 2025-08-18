@@ -1,7 +1,7 @@
-import sys
 import os
+import sys
 from types import SimpleNamespace
-from typing import TypeGuard, Protocol
+from typing import Protocol, TypeGuard
 
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 from src.hooks.default_hook import DefaultHook

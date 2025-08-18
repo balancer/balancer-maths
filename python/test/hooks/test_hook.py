@@ -1,7 +1,7 @@
-import sys
 import os
-
+import sys
 from test.test_custom_pool import CustomPool, map_custom_pool_state
+
 import pytest
 
 from src.common.types import SwapInput, SwapKind

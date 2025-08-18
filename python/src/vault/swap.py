@@ -1,15 +1,15 @@
 from src.common.constants import WAD
-from src.common.maths import mul_up_fixed, mul_div_up_fixed, complement_fixed
+from src.common.maths import complement_fixed, mul_div_up_fixed, mul_up_fixed
 from src.common.pool_base import PoolBase
-from src.common.types import PoolState, SwapKind, SwapInput
 from src.common.swap_params import SwapParams
+from src.common.types import PoolState, SwapInput, SwapKind
 from src.common.utils import (
-    find_case_insensitive_index_in_list,
-    _to_scaled_18_apply_rate_round_down,
-    _to_scaled_18_apply_rate_round_up,
+    _compute_and_charge_aggregate_swap_fees,
     _to_raw_undo_rate_round_down,
     _to_raw_undo_rate_round_up,
-    _compute_and_charge_aggregate_swap_fees,
+    _to_scaled_18_apply_rate_round_down,
+    _to_scaled_18_apply_rate_round_up,
+    find_case_insensitive_index_in_list,
 )
 from src.hooks.types import AfterSwapParams, HookBase, HookState
 

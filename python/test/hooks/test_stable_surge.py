@@ -1,7 +1,7 @@
 from src.common.types import SwapInput, SwapKind
+from src.hooks.stable_surge.types import map_stable_surge_hook_state
 from src.pools.stable.stable_data import map_stable_state
 from src.vault.vault import Vault
-from src.hooks.stable_surge.types import map_stable_surge_hook_state
 
 pool_state = {
     "poolType": "STABLE",

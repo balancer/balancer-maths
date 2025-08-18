@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 from src.common.maths import (
     WAD,
-    mul_down_fixed,
-    div_up_fixed,
-    div_down_fixed,
-    mul_up_fixed,
     Rounding,
+    div_down_fixed,
+    div_up_fixed,
+    mul_down_fixed,
+    mul_up_fixed,
 )
 from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
 

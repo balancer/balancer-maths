@@ -1,10 +1,10 @@
-import sys
 import os
+import sys
 from types import SimpleNamespace
-from typing import TypeGuard, Protocol
+from typing import Protocol, TypeGuard
 
-from src.common.types import SwapKind, SwapInput
 from src.common.swap_params import SwapParams
+from src.common.types import SwapInput, SwapKind
 from src.hooks.default_hook import DefaultHook
 from src.hooks.types import BeforeSwapResult, HookState
 from src.pools.weighted.weighted_data import map_weighted_state

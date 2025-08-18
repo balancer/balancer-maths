@@ -1,4 +1,4 @@
-from src.common.maths import div_down_fixed, mul_up_fixed, mul_down_fixed, div_up_fixed
+from src.common.maths import div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed
 from src.common.types import PoolState
 
 MAX_UINT256 = 2**256 - 1

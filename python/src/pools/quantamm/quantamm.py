@@ -11,13 +11,13 @@ from src.pools.quantamm.quantamm_math import (
     get_second_four_weights_and_multipliers,
 )
 from src.pools.weighted.weighted_math import (
+    _MAX_INVARIANT_RATIO,
+    _MIN_INVARIANT_RATIO,
     compute_balance_out_given_invariant,
     compute_in_given_exact_out,
     compute_invariant_down,
     compute_invariant_up,
     compute_out_given_exact_in,
-    _MAX_INVARIANT_RATIO,
-    _MIN_INVARIANT_RATIO,
 )
 
 

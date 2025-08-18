@@ -1,8 +1,8 @@
 from src.common.maths import mul_down_fixed
 from src.common.types import RemoveLiquidityKind
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import AfterRemoveLiquidityResult
 from src.hooks.exit_fee.types import ExitFeeHookState
+from src.hooks.types import AfterRemoveLiquidityResult
 
 
 # This hook implements the ExitFeeHookExample found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/c848c849cb44dc35f05d15858e4fba9f17e92d5e/pkg/pool-hooks/contracts/ExitFeeHookExample.sol
