@@ -75,17 +75,19 @@ class LogExpMath:
         # x^y = exp(y * ln(x)).
 
         # The ln function takes a signed value, so we need to make sure x fits in the signed 256 bit range.
-        assert (
+        if not (
             x
             < 57896044618658097711785492504343953926634992332820282019728792003956564819968
-        ), "Errors.X_OUT_OF_BOUNDS"
+        ):
+            raise ValueError("Errors.X_OUT_OF_BOUNDS")
         x_int256 = BigInt(x)
 
         # We will compute y * ln(x) in a single step. Depending on the value of x, we can either use ln or ln_36. In
         # both cases, we leave the division by ONE_18 (due to fixed point multiplication) to the end.
 
         # This prevents y * ln(x) from overflowing, and at the same time guarantees y fits in the signed 256 bit range.
-        assert y < LogExpMath.MILD_EXPONENT_BOUND, "Errors.Y_OUT_OF_BOUNDS"
+        if not (y < LogExpMath.MILD_EXPONENT_BOUND):
+            raise ValueError("Errors.Y_OUT_OF_BOUNDS")
         y_int256 = BigInt(y)
 
         if LogExpMath.LN_36_LOWER_BOUND < x_int256 < LogExpMath.LN_36_UPPER_BOUND:
@@ -104,20 +106,22 @@ class LogExpMath:
         logx_times_y = logx_times_y // WAD
 
         # Finally, we compute exp(y * ln(x)) to arrive at x^y
-        assert (
+        if not (
             LogExpMath.MIN_NATURAL_EXPONENT
             <= logx_times_y
             <= LogExpMath.MAX_NATURAL_EXPONENT
-        ), "Errors.PRODUCT_OUT_OF_BOUNDS"
+        ):
+            raise ValueError("Errors.PRODUCT_OUT_OF_BOUNDS")
 
         return int(LogExpMath.exp(logx_times_y))
 
     @staticmethod
     def exp(x_: BigInt) -> BigInt:
         x = x_
-        assert (
+        if not (
             LogExpMath.MIN_NATURAL_EXPONENT <= x <= LogExpMath.MAX_NATURAL_EXPONENT
-        ), "Errors.INVALID_EXPONENT"
+        ):
+            raise ValueError("Errors.INVALID_EXPONENT")
 
         if x < BigInt(0):
             # We only handle positive exponents: e^(-x) is computed as 1 / e^x. We can safely make x positive since it

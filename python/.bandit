@@ -1,0 +1,12 @@
+# Bandit configuration file
+# See: https://bandit.readthedocs.io/en/latest/config.html
+
+# Skip certain tests that are not relevant for this math library
+skips: ['B101', 'B601']  # Skip assert_used and shell_injection
+
+# Set confidence and severity levels
+confidence: medium
+severity: medium
+
+# Exclude certain directories
+exclude_dirs: ['test', '.venv', '__pycache__', '.pytest_cache']
