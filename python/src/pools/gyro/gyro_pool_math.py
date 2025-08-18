@@ -12,7 +12,6 @@ _SQRT_1E_NEG_15 = 31622776601
 _SQRT_1E_NEG_17 = 3162277660
 
 
-@staticmethod
 def gyro_pool_math_sqrt(x: int, tolerance: int) -> int:
     if x == 0:
         return 0
@@ -33,7 +32,6 @@ def gyro_pool_math_sqrt(x: int, tolerance: int) -> int:
     return guess
 
 
-@staticmethod
 def _make_initial_guess(x: int) -> int:
     if x >= WAD:
         return (1 << _int_log2_halved(x // WAD)) * WAD
@@ -75,7 +73,6 @@ def _make_initial_guess(x: int) -> int:
         return x
 
 
-@staticmethod
 def _int_log2_halved(x: int) -> int:
     n = 0
 

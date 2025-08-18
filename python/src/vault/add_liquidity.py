@@ -58,7 +58,7 @@ def add_liquidity(
     if add_liquidity_input.kind.value == AddLiquidityKind.UNBALANCED.value:
         _require_unbalanced_liquidity_enabled(pool_state)
         amounts_in_scaled18 = max_amounts_in_scaled18
-        computed = compute_add_liquidity_unbalanced(
+        unbalanced_result = compute_add_liquidity_unbalanced(
             updated_balances_live_scaled18,
             max_amounts_in_scaled18,
             pool_state.total_supply,
@@ -66,8 +66,8 @@ def add_liquidity(
             pool_class.get_maximum_invariant_ratio(),
             pool_class.compute_invariant,
         )
-        bpt_amount_out = computed.bpt_amount_out
-        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
+        bpt_amount_out = unbalanced_result.bpt_amount_out
+        swap_fee_amounts_scaled18 = unbalanced_result.swap_fee_amounts
 
     elif (
         add_liquidity_input.kind.value == AddLiquidityKind.SINGLE_TOKEN_EXACT_OUT.value
@@ -76,7 +76,7 @@ def add_liquidity(
         token_index = _get_single_input_index(max_amounts_in_scaled18)
         amounts_in_scaled18 = max_amounts_in_scaled18
         bpt_amount_out = add_liquidity_input.min_bpt_amount_out_raw
-        computed = compute_add_liquidity_single_token_exact_out(
+        exact_out_result = compute_add_liquidity_single_token_exact_out(
             updated_balances_live_scaled18,
             token_index,
             bpt_amount_out,
@@ -85,8 +85,8 @@ def add_liquidity(
             pool_class.get_maximum_invariant_ratio(),
             pool_class.compute_balance,
         )
-        amounts_in_scaled18[token_index] = computed.amount_in_with_fee
-        swap_fee_amounts_scaled18 = computed.swap_fee_amounts
+        amounts_in_scaled18[token_index] = exact_out_result.amount_in_with_fee
+        swap_fee_amounts_scaled18 = exact_out_result.swap_fee_amounts
     else:
         raise ValueError("Unsupported AddLiquidity Kind")
 
@@ -119,7 +119,7 @@ def add_liquidity(
         )
 
     if hook_class.should_call_after_add_liquidity:
-        hook_return = hook_class.on_after_add_liquidity(
+        after_add_result = hook_class.on_after_add_liquidity(
             add_liquidity_input.kind,
             amounts_in_scaled18,
             amounts_in_raw,
@@ -128,8 +128,8 @@ def add_liquidity(
             hook_state,
         )
 
-        if hook_return.success is False or len(
-            hook_return.hook_adjusted_amounts_in_raw
+        if after_add_result.success is False or len(
+            after_add_result.hook_adjusted_amounts_in_raw
         ) is not len(amounts_in_raw):
             raise SystemError(
                 "AfterAddLiquidityHookFailed",
@@ -139,7 +139,7 @@ def add_liquidity(
 
         # If hook adjusted amounts is not enabled, ignore amounts returned by the hook
         if hook_class.enable_hook_adjusted_amounts:
-            for i, a in enumerate(hook_return.hook_adjusted_amounts_in_raw):
+            for i, a in enumerate(after_add_result.hook_adjusted_amounts_in_raw):
                 amounts_in_raw[i] = a
 
     return AddLiquidityResult(

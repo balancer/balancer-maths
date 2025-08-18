@@ -18,8 +18,11 @@ class StableSurgeHook(DefaultHook):
         self,
         swap_params: SwapParams,
         static_swap_fee_percentage: int,
-        hook_state: StableSurgeHookState,
+        hook_state: StableSurgeHookState | object | None,
     ) -> DynamicSwapFeeResult:
+        if not isinstance(hook_state, StableSurgeHookState):
+            return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
+
         stable_state = StableMutable(amp=hook_state.amp)
         stable_pool = Stable(stable_state)
 

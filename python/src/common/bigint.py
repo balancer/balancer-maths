@@ -102,5 +102,7 @@ class BigInt(int):
         quotient = quotient if (a * b) >= 0 else -quotient
         return BigInt(a - b * quotient)
 
-    def __ipow__(self, other):
-        return BigInt(int(self) ** int(other))
+    def __ipow__(self, other, modulo=None):
+        if modulo is None:
+            return BigInt(int(self) ** int(other))
+        return BigInt(pow(int(self), int(other), int(modulo)))

@@ -72,13 +72,13 @@ def swap(
 
     swap_fee = pool_state.swap_fee
     if hook_class.should_call_compute_dynamic_swap_fee:
-        hook_return = hook_class.on_compute_dynamic_swap_fee(
+        dynamic_fee_result = hook_class.on_compute_dynamic_swap_fee(
             swap_params,
             pool_state.swap_fee,
             hook_state,
         )
-        if hook_return.success is True:
-            swap_fee = hook_return.dynamic_swap_fee
+        if dynamic_fee_result.success is True:
+            swap_fee = dynamic_fee_result.dynamic_swap_fee
 
     total_swap_fee_amount_scaled18 = 0
     if swap_params.swap_kind.value == SwapKind.GIVENIN.value:
@@ -153,7 +153,7 @@ def swap(
     updated_balances_live_scaled18[output_index] -= balance_out_decrement
 
     if hook_class.should_call_after_swap:
-        hook_return = hook_class.on_after_swap(
+        after_swap_result = hook_class.on_after_swap(
             AfterSwapParams(
                 kind=swap_input.swap_kind,
                 token_in=swap_input.token_in,
@@ -175,13 +175,15 @@ def swap(
             ),
             hook_state,
         )
-        if hook_return.success is False:
+        if after_swap_result.success is False:
             raise SystemError(
                 "AfterAddSwapHookFailed", pool_state.pool_type, pool_state.hook_type
             )
         # If hook adjusted amounts is not enabled, ignore amount returned by the hook
         if hook_class.enable_hook_adjusted_amounts:
-            amount_calculated_raw = hook_return.hook_adjusted_amount_calculated_raw
+            amount_calculated_raw = (
+                after_swap_result.hook_adjusted_amount_calculated_raw
+            )
 
     return amount_calculated_raw
 

@@ -17,7 +17,7 @@ class ExitFeeHook(DefaultHook):
         amounts_out_scaled18: list[int],
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
-        hook_state: ExitFeeHookState,
+        hook_state: ExitFeeHookState | object | None,
     ) -> AfterRemoveLiquidityResult:
 
         # // Our current architecture only supports fees on tokens. Since we must always respect exact `amountsOut`, and
@@ -25,6 +25,11 @@ class ExitFeeHook(DefaultHook):
         # // removeLiquidity.
         if kind != RemoveLiquidityKind.PROPORTIONAL:
             raise ValueError("ExitFeeHook: Unsupported RemoveLiquidityKind: ", kind)
+
+        if not isinstance(hook_state, ExitFeeHookState):
+            return AfterRemoveLiquidityResult(
+                success=False, hook_adjusted_amounts_out_raw=[]
+            )
 
         accrued_fees = [0] * len(hook_state.tokens)
         hook_adjusted_amounts_out_raw = amounts_out_raw[:]
