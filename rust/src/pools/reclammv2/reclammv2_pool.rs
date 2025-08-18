@@ -56,7 +56,8 @@ impl PoolBase for ReClammV2Pool {
     }
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
-        let compute_result = self.compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
+        let compute_result =
+            self.compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
 
         match swap_params.swap_kind {
             SwapKind::GivenIn => {
