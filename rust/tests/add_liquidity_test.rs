@@ -47,7 +47,7 @@ fn test_add_liquidity() {
         };
 
         // Perform add liquidity
-        match vault.add_liquidity(&add_input, &pool_state, None) {
+        match vault.add_liquidity(&add_input, pool_state, None) {
             Ok(calculated_amounts) => {
                 assert_eq!(
                     calculated_amounts.bpt_amount_out_raw, add.bpt_out_raw,

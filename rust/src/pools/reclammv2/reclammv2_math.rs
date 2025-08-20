@@ -1,9 +1,10 @@
-use crate::common::constants::{RAY, TWO_WAD};
-use crate::common::log_exp_math::pow;
-use crate::common::maths::{div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed};
+use crate::common::constants::{RAY, TWO_WAD, WAD};
+use crate::common::log_exp_math;
+use crate::common::maths::{
+    div_down_fixed, div_up_fixed, mul_div_up_fixed, mul_down_fixed, mul_up_fixed, pow_down_fixed,
+};
 use crate::common::oz_math::sqrt;
 use crate::common::types::Rounding;
-use crate::common::WAD;
 use num_bigint::BigInt;
 use num_traits::Zero;
 
@@ -11,10 +12,10 @@ use num_traits::Zero;
 const A: usize = 0;
 const B: usize = 1;
 lazy_static::lazy_static! {
-    static ref INITIALIZATION_MAX_BALANCE_A: BigInt = BigInt::from(1_000_000u64) * WAD.clone();
+    static ref THIRTY_DAYS_SECONDS: BigInt = BigInt::from(30 * 24 * 60 * 60u64); // 2,592,000 seconds
 }
 
-/// Compute current virtual balances for ReClamm pool
+/// Compute current virtual balances for ReClammV2 pool
 #[allow(clippy::too_many_arguments)]
 pub fn compute_current_virtual_balances(
     current_timestamp: &BigInt,
@@ -55,12 +56,13 @@ pub fn compute_current_virtual_balances(
         && last_timestamp < price_ratio_update_end_time
     {
         let (new_virtual_balance_a, new_virtual_balance_b) =
-            calculate_virtual_balances_updating_price_ratio(
+            compute_virtual_balances_updating_price_ratio(
                 &current_fourth_root_price_ratio,
                 balances_scaled_18,
                 last_virtual_balance_a,
                 last_virtual_balance_b,
             );
+
         current_virtual_balance_a = new_virtual_balance_a;
         current_virtual_balance_b = new_virtual_balance_b;
         changed = true;
@@ -84,6 +86,7 @@ pub fn compute_current_virtual_balances(
                 current_timestamp,
                 last_timestamp,
             );
+
         current_virtual_balance_a = new_virtual_balance_a;
         current_virtual_balance_b = new_virtual_balance_b;
         changed = true;
@@ -96,15 +99,15 @@ pub fn compute_current_virtual_balances(
     )
 }
 
-/// Calculate virtual balances when updating price ratio using Bhaskara formula
-fn calculate_virtual_balances_updating_price_ratio(
+/// Compute virtual balances when updating price ratio
+fn compute_virtual_balances_updating_price_ratio(
     current_fourth_root_price_ratio: &BigInt,
     balances_scaled_18: &[BigInt],
     last_virtual_balance_a: &BigInt,
     last_virtual_balance_b: &BigInt,
 ) -> (BigInt, BigInt) {
     // Compute the current pool centeredness, which will remain constant.
-    let (pool_centeredness, is_pool_above_center) = compute_centeredness(
+    let (centeredness, is_pool_above_center) = compute_centeredness(
         balances_scaled_18,
         last_virtual_balance_a,
         last_virtual_balance_b,
@@ -117,15 +120,15 @@ fn calculate_virtual_balances_updating_price_ratio(
         last_virtual_balance_overvalued,
     ) = if is_pool_above_center {
         (
-            &balances_scaled_18[A],
-            last_virtual_balance_a,
-            last_virtual_balance_b,
+            balances_scaled_18[A].clone(),
+            last_virtual_balance_a.clone(),
+            last_virtual_balance_b.clone(),
         )
     } else {
         (
-            &balances_scaled_18[B],
-            last_virtual_balance_b,
-            last_virtual_balance_a,
+            balances_scaled_18[B].clone(),
+            last_virtual_balance_b.clone(),
+            last_virtual_balance_a.clone(),
         )
     };
 
@@ -145,17 +148,16 @@ fn calculate_virtual_balances_updating_price_ratio(
 
     // Using FixedPoint math as little as possible to improve the precision of the result.
     // Note: The input of sqrt must be a 36-decimal number, so that the final result is 18 decimals.
-    let sqrt_input =
-        &pool_centeredness * (&pool_centeredness + &(4 * &sqrt_price_ratio) - &*TWO_WAD) + &*RAY;
+    let sqrt_input = &centeredness * (&centeredness + &(4 * &sqrt_price_ratio) - &*TWO_WAD) + &*RAY;
     let sqrt_result = sqrt(&sqrt_input);
 
     let virtual_balance_undervalued = balance_token_undervalued
-        * (&*WAD + &pool_centeredness + &sqrt_result)
+        * (&*WAD + &centeredness + &sqrt_result)
         / &(2 * (&sqrt_price_ratio - &*WAD));
 
-    let virtual_balance_overvalued = (&virtual_balance_undervalued
-        * last_virtual_balance_overvalued)
-        / last_virtual_balance_undervalued;
+    let virtual_balance_overvalued = &virtual_balance_undervalued
+        * &last_virtual_balance_overvalued
+        / &last_virtual_balance_undervalued;
 
     if is_pool_above_center {
         (virtual_balance_undervalued, virtual_balance_overvalued)
@@ -174,40 +176,85 @@ fn compute_virtual_balances_updating_price_range(
     current_timestamp: &BigInt,
     last_timestamp: &BigInt,
 ) -> (BigInt, BigInt) {
-    let sqrt_price_ratio = sqrt(
-        &(&compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b) * &*WAD),
+    let sqrt_price_ratio = sqrt_scaled_18(&compute_price_ratio(
+        balances_scaled_18,
+        virtual_balance_a,
+        virtual_balance_b,
+    ));
+
+    // The overvalued token is the one with a lower token balance (therefore, rarer and more valuable).
+    let (
+        balances_scaled_undervalued,
+        balances_scaled_overvalued,
+        _virtual_balance_undervalued,
+        virtual_balance_overvalued,
+    ) = if is_pool_above_center {
+        (
+            balances_scaled_18[0].clone(),
+            balances_scaled_18[1].clone(),
+            virtual_balance_a.clone(),
+            virtual_balance_b.clone(),
+        )
+    } else {
+        (
+            balances_scaled_18[1].clone(),
+            balances_scaled_18[0].clone(),
+            virtual_balance_b.clone(),
+            virtual_balance_a.clone(),
+        )
+    };
+
+    // +-----------------------------------------+
+    // |                      (Tc - Tl)          |
+    // |      Vo = Vo * (Psb)^                   |
+    // +-----------------------------------------+
+    // |  Where:                                 |
+    // |    Vo = Virtual balance overvalued      |
+    // |    Psb = Price shift daily rate base    |
+    // |    Tc = Current timestamp               |
+    // |    Tl = Last timestamp                  |
+    // +-----------------------------------------+
+    // |               Ru * (Vo + Ro)            |
+    // |      Vu = ----------------------        |
+    // |             (Qo - 1) * Vo - Ro          |
+    // +-----------------------------------------+
+    // |  Where:                                 |
+    // |    Vu = Virtual balance undervalued     |
+    // |    Vo = Virtual balance overvalued      |
+    // |    Ru = Real balance undervalued        |
+    // |    Ro = Real balance overvalued         |
+    // |    Qo = Square root of price ratio      |
+    // +-----------------------------------------+
+
+    // Cap the duration (time between operations) at 30 days, to ensure `pow_down` does not overflow.
+    let duration = std::cmp::min(
+        current_timestamp - last_timestamp,
+        THIRTY_DAYS_SECONDS.clone(),
     );
 
-    let (balances_scaled_undervalued, balances_scaled_overvalued) = if is_pool_above_center {
-        (&balances_scaled_18[A], &balances_scaled_18[B])
-    } else {
-        (&balances_scaled_18[B], &balances_scaled_18[A])
-    };
+    let mut virtual_balance_overvalued = mul_down_fixed(
+        &virtual_balance_overvalued,
+        &pow_down_fixed(daily_price_shift_base, &(duration * &*WAD))
+            .unwrap_or_else(|_| WAD.clone()),
+    )
+    .unwrap_or_else(|_| BigInt::zero());
 
-    let (_virtual_balance_undervalued, virtual_balance_overvalued) = if is_pool_above_center {
-        (virtual_balance_a, virtual_balance_b)
-    } else {
-        (virtual_balance_b, virtual_balance_a)
-    };
+    // Ensure that Vo does not go below the minimum allowed value (corresponding to centeredness == 1).
+    let min_virtual_balance_overvalued = div_down_fixed(
+        &balances_scaled_overvalued,
+        &(sqrt_scaled_18(&sqrt_price_ratio) - &*WAD),
+    )
+    .unwrap_or_else(|_| BigInt::zero());
 
-    // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
-    let time_difference = current_timestamp - last_timestamp;
-    let time_difference_wad = &time_difference * &*WAD;
+    if virtual_balance_overvalued < min_virtual_balance_overvalued {
+        virtual_balance_overvalued = min_virtual_balance_overvalued;
+    }
 
-    let shift_factor =
-        pow(daily_price_shift_base, &time_difference_wad).unwrap_or_else(|_| WAD.clone());
-    let virtual_balance_overvalued = mul_down_fixed(virtual_balance_overvalued, &shift_factor)
-        .unwrap_or_else(|_| BigInt::zero());
-
-    // Va = (Ra * (Vb + Rb)) / (((priceRatio - 1) * Vb) - Rb)
-    let price_ratio_minus_one = &sqrt_price_ratio - &*WAD;
-    let denominator = mul_down_fixed(&price_ratio_minus_one, &virtual_balance_overvalued)
-        .unwrap_or_else(|_| BigInt::zero())
-        - balances_scaled_overvalued;
-
-    let virtual_balance_undervalued = (balances_scaled_undervalued
-        * (&virtual_balance_overvalued + balances_scaled_overvalued))
-        / &denominator;
+    let virtual_balance_undervalued = &balances_scaled_undervalued
+        * &(&virtual_balance_overvalued + &balances_scaled_overvalued)
+        / &(mul_down_fixed(&(sqrt_price_ratio - &*WAD), &virtual_balance_overvalued)
+            .unwrap_or_else(|_| BigInt::zero())
+            - &balances_scaled_overvalued);
 
     if is_pool_above_center {
         (virtual_balance_undervalued, virtual_balance_overvalued)
@@ -234,19 +281,25 @@ fn compute_price_range(
     virtual_balance_a: &BigInt,
     virtual_balance_b: &BigInt,
 ) -> (BigInt, BigInt) {
-    let invariant = compute_invariant(
+    let current_invariant = compute_invariant(
         balances_scaled_18,
         virtual_balance_a,
         virtual_balance_b,
         Rounding::RoundDown,
     );
 
+    // P_min(a) = Vb / (Va + Ra_max)
+    // We don't have Ra_max, but: invariant=(Ra_max + Va)(Vb)
+    // Then, (Va + Ra_max) = invariant/Vb, and:
     // P_min(a) = Vb^2 / invariant
-    let min_price = (virtual_balance_b * virtual_balance_b) / &invariant;
+    let min_price = virtual_balance_b * virtual_balance_b / &current_invariant;
 
+    // Similarly, P_max(a) = (Rb_max + Vb)/Va
+    // We don't have Rb_max, but: invariant=(Rb_max + Vb)(Va)
+    // Then, (Rb_max + Vb) = invariant/Va, and:
     // P_max(a) = invariant / Va^2
     let max_price = div_down_fixed(
-        &invariant,
+        &current_invariant,
         &mul_down_fixed(virtual_balance_a, virtual_balance_a).unwrap_or_else(|_| BigInt::zero()),
     )
     .unwrap_or_else(|_| BigInt::zero());
@@ -256,68 +309,63 @@ fn compute_price_range(
 
 /// Compute fourth root price ratio
 fn compute_fourth_root_price_ratio(
-    current_timestamp: &BigInt,
+    current_time: &BigInt,
     start_fourth_root_price_ratio: &BigInt,
     end_fourth_root_price_ratio: &BigInt,
     price_ratio_update_start_time: &BigInt,
     price_ratio_update_end_time: &BigInt,
 ) -> BigInt {
-    if current_timestamp >= price_ratio_update_end_time {
-        return end_fourth_root_price_ratio.clone();
-    } else if current_timestamp <= price_ratio_update_start_time {
-        return start_fourth_root_price_ratio.clone();
-    }
-
-    let exponent = div_down_fixed(
-        &(current_timestamp - price_ratio_update_start_time),
-        &(price_ratio_update_end_time - price_ratio_update_start_time),
-    )
-    .unwrap_or_else(|_| BigInt::zero());
-
-    let current_fourth_root_price_ratio = mul_down_fixed(
-        start_fourth_root_price_ratio,
-        &pow(
-            &div_down_fixed(end_fourth_root_price_ratio, start_fourth_root_price_ratio)
-                .unwrap_or_else(|_| BigInt::zero()),
-            &exponent,
-        )
-        .unwrap_or_else(|_| BigInt::zero()),
-    )
-    .unwrap_or_else(|_| BigInt::zero());
-
-    // Since we're rounding current fourth root price ratio down, we only need to check the lower boundary.
-    let minimum_fourth_root_price_ratio =
-        if start_fourth_root_price_ratio < end_fourth_root_price_ratio {
-            start_fourth_root_price_ratio.clone()
-        } else {
-            end_fourth_root_price_ratio.clone()
-        };
-
-    if current_fourth_root_price_ratio > minimum_fourth_root_price_ratio {
-        current_fourth_root_price_ratio
+    // if start and end time are the same, return end value.
+    if current_time >= price_ratio_update_end_time {
+        end_fourth_root_price_ratio.clone()
+    } else if current_time <= price_ratio_update_start_time {
+        start_fourth_root_price_ratio.clone()
     } else {
-        minimum_fourth_root_price_ratio
+        let exponent = div_down_fixed(
+            &(current_time - price_ratio_update_start_time),
+            &(price_ratio_update_end_time - price_ratio_update_start_time),
+        )
+        .unwrap_or_else(|_| BigInt::zero());
+
+        let current_fourth_root_price_ratio = mul_down_fixed(
+            start_fourth_root_price_ratio,
+            &log_exp_math::pow(
+                &div_down_fixed(end_fourth_root_price_ratio, start_fourth_root_price_ratio)
+                    .unwrap_or_else(|_| BigInt::zero()),
+                &exponent,
+            )
+            .unwrap_or_else(|_| WAD.clone()),
+        )
+        .unwrap_or_else(|_| BigInt::zero());
+
+        // Since we're rounding current fourth root price ratio down, we only need to check the lower boundary.
+        let minimum_fourth_root_price_ratio =
+            std::cmp::min(start_fourth_root_price_ratio, end_fourth_root_price_ratio);
+        std::cmp::max(
+            minimum_fourth_root_price_ratio.clone(),
+            current_fourth_root_price_ratio,
+        )
     }
 }
 
-/// Compute centeredness of the pool
+/// Compute centeredness
 fn compute_centeredness(
     balances_scaled_18: &[BigInt],
     virtual_balance_a: &BigInt,
     virtual_balance_b: &BigInt,
 ) -> (BigInt, bool) {
-    if balances_scaled_18[A] == BigInt::zero() {
+    if balances_scaled_18[A].is_zero() {
         // Also return false if both are 0 to be consistent with the logic below.
         return (BigInt::zero(), false);
-    } else if balances_scaled_18[B] == BigInt::zero() {
+    } else if balances_scaled_18[B].is_zero() {
         return (BigInt::zero(), true);
     }
 
     let numerator = &balances_scaled_18[A] * virtual_balance_b;
     let denominator = virtual_balance_a * &balances_scaled_18[B];
 
-    // The centeredness is defined between 0 and 1. If the numerator is greater than the denominator,
-    // we compute the inverse ratio.
+    // The centeredness is defined between 0 and 1. If the numerator is greater than the denominator, we compute
+    // the inverse ratio.
     if numerator <= denominator {
         let pool_centeredness =
             div_down_fixed(&numerator, &denominator).unwrap_or_else(|_| BigInt::zero());
@@ -331,34 +379,35 @@ fn compute_centeredness(
     }
 }
 
-/// Compute invariant for ReClamm pool
+/// Compute invariant for ReClammV2 pool
 pub fn compute_invariant(
     balances_scaled_18: &[BigInt],
     virtual_balance_a: &BigInt,
     virtual_balance_b: &BigInt,
     rounding: Rounding,
 ) -> BigInt {
-    let total_balance_a = &balances_scaled_18[A] + virtual_balance_a;
-    let total_balance_b = &balances_scaled_18[B] + virtual_balance_b;
-
     match rounding {
-        Rounding::RoundDown => {
-            mul_down_fixed(&total_balance_a, &total_balance_b).unwrap_or_else(|_| BigInt::zero())
-        }
-        Rounding::RoundUp => {
-            mul_up_fixed(&total_balance_a, &total_balance_b).unwrap_or_else(|_| BigInt::zero())
-        }
+        Rounding::RoundDown => mul_down_fixed(
+            &(balances_scaled_18[A].clone() + virtual_balance_a),
+            &(balances_scaled_18[B].clone() + virtual_balance_b),
+        )
+        .unwrap_or_else(|_| BigInt::zero()),
+        Rounding::RoundUp => mul_up_fixed(
+            &(balances_scaled_18[A].clone() + virtual_balance_a),
+            &(balances_scaled_18[B].clone() + virtual_balance_b),
+        )
+        .unwrap_or_else(|_| BigInt::zero()),
     }
 }
 
-/// Compute output given input for ReClamm pool
+/// Compute output given input for ReClammV2 pool
 pub fn compute_out_given_in(
     balances_scaled_18: &[BigInt],
     virtual_balance_a: &BigInt,
     virtual_balance_b: &BigInt,
     token_in_index: usize,
     token_out_index: usize,
-    amount_given_scaled_18: &BigInt,
+    amount_in_scaled_18: &BigInt,
 ) -> Result<BigInt, String> {
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
         (virtual_balance_a, virtual_balance_b)
@@ -366,38 +415,20 @@ pub fn compute_out_given_in(
         (virtual_balance_b, virtual_balance_a)
     };
 
-    // Round up, so the swapper absorbs rounding imprecisions
-    let invariant = compute_invariant(
-        balances_scaled_18,
-        virtual_balance_a,
-        virtual_balance_b,
-        Rounding::RoundUp,
-    );
+    // Use BigInt for precise division to avoid off-by-one errors
+    let amount_out_scaled_18 = &(&balances_scaled_18[token_out_index] + virtual_balance_token_out)
+        * amount_in_scaled_18
+        / &(&balances_scaled_18[token_in_index] + virtual_balance_token_in + amount_in_scaled_18);
 
-    // Total (virtual + real) token out amount that should stay in the pool after the swap
-    let new_total_token_out_pool_balance = div_up_fixed(
-        &invariant,
-        &(&balances_scaled_18[token_in_index] + virtual_balance_token_in + amount_given_scaled_18),
-    )
-    .unwrap_or_else(|_| BigInt::zero());
-
-    let current_total_token_out_pool_balance =
-        &balances_scaled_18[token_out_index] + virtual_balance_token_out;
-
-    if new_total_token_out_pool_balance > current_total_token_out_pool_balance {
-        return Err("reClammMath: NegativeAmountOut".to_string());
-    }
-
-    let amount_out_scaled_18 =
-        current_total_token_out_pool_balance - new_total_token_out_pool_balance;
     if amount_out_scaled_18 > balances_scaled_18[token_out_index] {
+        // Amount out cannot be greater than the real balance of the token in the pool.
         return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
     }
 
     Ok(amount_out_scaled_18)
 }
 
-/// Compute input given output for ReClamm pool
+/// Compute input given output for ReClammV2 pool
 pub fn compute_in_given_out(
     balances_scaled_18: &[BigInt],
     virtual_balance_a: &BigInt,
@@ -407,16 +438,9 @@ pub fn compute_in_given_out(
     amount_out_scaled_18: &BigInt,
 ) -> Result<BigInt, String> {
     if amount_out_scaled_18 > &balances_scaled_18[token_out_index] {
+        // Amount out cannot be greater than the real balance of the token in the pool.
         return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
     }
-
-    // Round up, so the swapper absorbs any imprecision due to rounding
-    let invariant = compute_invariant(
-        balances_scaled_18,
-        virtual_balance_a,
-        virtual_balance_b,
-        Rounding::RoundUp,
-    );
 
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
         (virtual_balance_a, virtual_balance_b)
@@ -424,14 +448,18 @@ pub fn compute_in_given_out(
         (virtual_balance_b, virtual_balance_a)
     };
 
-    // Rounding division up, which will round the `tokenIn` amount up, favoring the Vault
-    let amount_in_scaled_18 = div_up_fixed(
-        &invariant,
+    // Round up to favor the vault (i.e. request larger amount in from the user).
+    let amount_in_scaled_18 = mul_div_up_fixed(
+        &(&balances_scaled_18[token_in_index] + virtual_balance_token_in),
+        amount_out_scaled_18,
         &(&balances_scaled_18[token_out_index] + virtual_balance_token_out - amount_out_scaled_18),
     )
-    .unwrap_or_else(|_| BigInt::zero())
-        - &balances_scaled_18[token_in_index]
-        - virtual_balance_token_in;
+    .unwrap_or_else(|_| BigInt::zero());
 
     Ok(amount_in_scaled_18)
+}
+
+/// Calculate the square root of a value scaled by 18 decimals
+fn sqrt_scaled_18(value_scaled_18: &BigInt) -> BigInt {
+    sqrt(&(value_scaled_18 * &*WAD))
 }

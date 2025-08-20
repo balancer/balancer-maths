@@ -51,8 +51,12 @@ pub fn get_first_four_weights_and_multipliers(
     let mut weights = vec![BigInt::zero(); less_than_4_tokens_offset];
     let mut multipliers = vec![BigInt::zero(); less_than_4_tokens_offset];
 
-    weights[..less_than_4_tokens_offset].clone_from_slice(&first_four_weights_and_multipliers[..less_than_4_tokens_offset]);
-    multipliers[..less_than_4_tokens_offset].clone_from_slice(&first_four_weights_and_multipliers[less_than_4_tokens_offset..(less_than_4_tokens_offset + less_than_4_tokens_offset)]);
+    weights[..less_than_4_tokens_offset]
+        .clone_from_slice(&first_four_weights_and_multipliers[..less_than_4_tokens_offset]);
+    multipliers[..less_than_4_tokens_offset].clone_from_slice(
+        &first_four_weights_and_multipliers
+            [less_than_4_tokens_offset..(less_than_4_tokens_offset + less_than_4_tokens_offset)],
+    );
 
     (weights, multipliers)
 }
@@ -78,8 +82,12 @@ pub fn get_second_four_weights_and_multipliers(
     let mut weights = vec![BigInt::zero(); more_than_4_tokens_offset];
     let mut multipliers = vec![BigInt::zero(); more_than_4_tokens_offset];
 
-    weights[..more_than_4_tokens_offset].clone_from_slice(&second_four_weights_and_multipliers[..more_than_4_tokens_offset]);
-    multipliers[..more_than_4_tokens_offset].clone_from_slice(&second_four_weights_and_multipliers[more_than_4_tokens_offset..(more_than_4_tokens_offset + more_than_4_tokens_offset)]);
+    weights[..more_than_4_tokens_offset]
+        .clone_from_slice(&second_four_weights_and_multipliers[..more_than_4_tokens_offset]);
+    multipliers[..more_than_4_tokens_offset].clone_from_slice(
+        &second_four_weights_and_multipliers
+            [more_than_4_tokens_offset..(more_than_4_tokens_offset + more_than_4_tokens_offset)],
+    );
 
     (weights, multipliers)
 }

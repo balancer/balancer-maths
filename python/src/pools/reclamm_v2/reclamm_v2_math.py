@@ -7,7 +7,7 @@ from src.common.maths import (
     div_up_fixed,
     div_down_fixed,
     mul_up_fixed,
-    mul_div_up,
+    mul_div_up_fixed,
     Rounding,
     pow_down_fixed,
 )
@@ -521,7 +521,7 @@ def compute_in_given_out(
         virtual_balance_token_out = virtual_balance_a
 
     # Round up to favor the vault (i.e. request larger amount in from the user).
-    amount_in_scaled_18 = mul_div_up(
+    amount_in_scaled_18 = mul_div_up_fixed(
         balances_scaled_18[token_in_index] + virtual_balance_token_in,
         amount_out_scaled_18,
         balances_scaled_18[token_out_index]

@@ -2,6 +2,7 @@
 
 use lazy_static::lazy_static;
 use num_bigint::BigInt;
+use std::str::FromStr;
 
 lazy_static! {
     /// WAD (1e18) - used for fixed-point arithmetic
@@ -15,4 +16,7 @@ lazy_static! {
 
     /// MAX_POW_RELATIVE_ERROR - used for power calculations
     pub static ref MAX_POW_RELATIVE_ERROR: BigInt = BigInt::from(10_000u64);
+
+    // RAY constant for 36 decimal precision
+    pub static ref RAY: BigInt = BigInt::from_str("1000000000000000000000000000000000000").unwrap();
 }
