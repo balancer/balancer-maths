@@ -1,6 +1,6 @@
 # Balancer Maths Python
 
-Python implementation of mathematics for Balancer pools.
+Python implementation of mathematics for Balancer v3
 
 > **Note**: This is the Python implementation within the [balancer-maths](https://github.com/balancer/balancer-maths) monorepo, which also contains TypeScript and Rust implementations.
 
