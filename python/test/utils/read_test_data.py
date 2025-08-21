@@ -34,7 +34,7 @@ def read_test_data():
                         test_data["adds"].append(
                             {
                                 **add,
-                                "kind" : 0 if add["kind"] == 'Unbalanced' else 1,
+                                "kind": 0 if add["kind"] == "Unbalanced" else 1,
                                 "test": filename,
                             }
                         )
@@ -44,7 +44,7 @@ def read_test_data():
                         test_data["removes"].append(
                             {
                                 **remove,
-                                "kind" : mapRemoveKind(remove["kind"]),
+                                "kind": mapRemoveKind(remove["kind"]),
                                 "test": filename,
                             }
                         )
@@ -53,8 +53,13 @@ def read_test_data():
 
     return test_data
 
+
 def mapRemoveKind(kind):
-    if kind == 'Proportional': return 0
-    elif kind == 'SingleTokenExactIn': return 1
-    elif kind == 'SingleTokenExactOut': return 2
-    else: raise ValueError("Unsupported RemoveKind:", kind)
+    if kind == "Proportional":
+        return 0
+    elif kind == "SingleTokenExactIn":
+        return 1
+    elif kind == "SingleTokenExactOut":
+        return 2
+    else:
+        raise ValueError("Unsupported RemoveKind:", kind)

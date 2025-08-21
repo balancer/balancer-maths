@@ -1,11 +1,11 @@
-from src.pools.weighted.weighted import Weighted
+from src.common.swap_params import SwapParams
 from src.pools.liquidity_bootstrapping.liquidity_bootstrapping_data import (
     LiquidityBootstrappingState,
 )
 from src.pools.liquidity_bootstrapping.liquidity_bootstrapping_math import (
     get_normalized_weights,
 )
-from src.common.swap_params import SwapParams
+from src.pools.weighted.weighted import Weighted
 
 
 class LiquidityBootstrapping(Weighted):

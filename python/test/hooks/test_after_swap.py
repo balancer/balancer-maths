@@ -2,19 +2,14 @@ import os
 import sys
 from test.test_custom_pool import CustomPoolState, map_custom_pool_state
 from types import SimpleNamespace
-from typing import TypeGuard, Protocol
+from typing import Protocol, TypeGuard
 
 from src.common.maths import Rounding
 from src.common.pool_base import PoolBase
-from src.common.types import SwapInput, SwapKind
 from src.common.swap_params import SwapParams
-
+from src.common.types import SwapInput, SwapKind
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import (
-    AfterSwapParams,
-    AfterSwapResult,
-    HookState,
-)
+from src.hooks.types import AfterSwapParams, AfterSwapResult, HookState
 from src.vault.vault import Vault
 
 # Get the directory of the current file

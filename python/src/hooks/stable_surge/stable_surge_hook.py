@@ -1,6 +1,6 @@
 from typing import List
 
-from src.common.maths import div_down_fixed, mul_down_fixed, complement_fixed
+from src.common.maths import complement_fixed, div_down_fixed, mul_down_fixed
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
 from src.hooks.default_hook import DefaultHook
@@ -18,8 +18,11 @@ class StableSurgeHook(DefaultHook):
         self,
         swap_params: SwapParams,
         static_swap_fee_percentage: int,
-        hook_state: StableSurgeHookState,
+        hook_state: StableSurgeHookState | object | None,
     ) -> DynamicSwapFeeResult:
+        if not isinstance(hook_state, StableSurgeHookState):
+            return DynamicSwapFeeResult(success=False, dynamic_swap_fee=0)
+
         stable_state = StableMutable(amp=hook_state.amp)
         stable_pool = Stable(stable_state)
 

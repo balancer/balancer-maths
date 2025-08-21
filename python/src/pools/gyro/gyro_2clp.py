@@ -3,10 +3,10 @@ from typing import List
 
 from src.common.maths import (
     Rounding,
-    mul_down_fixed,
     div_down_fixed,
-    mul_up_fixed,
     div_up,
+    mul_down_fixed,
+    mul_up_fixed,
 )
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
@@ -14,11 +14,11 @@ from src.common.types import SwapKind
 from src.common.utils import MAX_UINT256
 from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
 from src.pools.gyro.gyro_2clp_math import (
+    calc_in_given_out,
+    calc_out_given_in,
     calculate_invariant,
     calculate_virtual_parameter0,
     calculate_virtual_parameter1,
-    calc_out_given_in,
-    calc_in_given_out,
 )
 
 

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
-from src.pools.gyro.signed_fixed_point import SignedFixedPoint
+
 from src.pools.gyro.gyro_pool_math import gyro_pool_math_sqrt
+from src.pools.gyro.signed_fixed_point import SignedFixedPoint
 
 
 @dataclass
@@ -567,9 +568,11 @@ class GyroECLPMath:
         invariant: Vector2,
     ) -> int:
         if token_in_is_token0:
-            ix_in, ix_out, calc_given = 0, 1, cls.calc_y_given_x
+            ix_in, ix_out = 0, 1
+            calc_given = cls.calc_y_given_x  # type: ignore[assignment]
         else:
-            ix_in, ix_out, calc_given = 1, 0, cls.calc_x_given_y
+            ix_in, ix_out = 1, 0
+            calc_given = cls.calc_x_given_y  # type: ignore[assignment]
 
         bal_in_new = balances[ix_in] + amount_in
         cls.check_asset_bounds(params, derived, invariant, bal_in_new, ix_in)
@@ -587,17 +590,13 @@ class GyroECLPMath:
         invariant: Vector2,
     ) -> int:
         if token_in_is_token0:
-            ix_in, ix_out, calc_given = (
-                0,
-                1,
-                cls.calc_x_given_y,
-            )  # Note: reversed compared to calc_out_given_in
+            ix_in, ix_out = 0, 1
+            calc_given = cls.calc_x_given_y  # type: ignore[assignment]
+            # Note: reversed compared to calc_out_given_in
         else:
-            ix_in, ix_out, calc_given = (
-                1,
-                0,
-                cls.calc_y_given_x,
-            )  # Note: reversed compared to calc_out_given_in
+            ix_in, ix_out = 1, 0
+            calc_given = cls.calc_y_given_x  # type: ignore[assignment]
+            # Note: reversed compared to calc_out_given_in
 
         if amount_out > balances[ix_out]:
             raise ValueError("Asset bounds exceeded")

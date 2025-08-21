@@ -1,8 +1,8 @@
+from src.common.types import SwapInput
 from src.common.utils import is_same_address
+from src.pools.buffer.buffer_data import BufferState
 from src.pools.buffer.buffer_math import calculate_buffer_amounts
 from src.pools.buffer.enums import WrappingDirection
-from src.common.types import SwapInput
-from src.pools.buffer.buffer_data import BufferState
 
 _MINIMUM_WRAP_AMOUNT = 1000
 

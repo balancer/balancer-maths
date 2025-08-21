@@ -1,15 +1,15 @@
-from typing import Tuple, List
+from typing import List, Tuple
+
 from src.common.constants import RAY, TWO_WAD, WAD
 from src.common.log_exp_math import LogExpMath
 from src.common.maths import (
-    mul_down_fixed,
-    div_up_fixed,
-    div_down_fixed,
-    mul_up_fixed,
     Rounding,
+    div_down_fixed,
+    div_up_fixed,
+    mul_down_fixed,
+    mul_up_fixed,
 )
 from src.common.oz_math import sqrt
-
 
 # Constants
 A = 0

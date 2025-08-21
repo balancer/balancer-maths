@@ -1,12 +1,12 @@
-from src.common.types import SwapKind
-from src.pools.buffer.enums import WrappingDirection
 from src.common.maths import (
+    Rounding,
     div_down_fixed,
     div_up_fixed,
     mul_down_fixed,
     mul_up_fixed,
-    Rounding,
 )
+from src.common.types import SwapKind
+from src.pools.buffer.enums import WrappingDirection
 
 
 # See VaultExtension for SC code.

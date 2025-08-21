@@ -1,14 +1,13 @@
-import sys
 import os
+import sys
 from types import SimpleNamespace
-from typing import TypeGuard, Protocol
+from typing import Protocol, TypeGuard
 
 from src.common.types import AddLiquidityInput, AddLiquidityKind
 from src.hooks.default_hook import DefaultHook
 from src.hooks.types import BeforeAddLiquidityResult, HookState
 from src.pools.weighted.weighted_data import map_weighted_state
 from src.vault.vault import Vault
-
 
 # Get the directory of the current file
 current_file_dir = os.path.dirname(os.path.abspath(__file__))

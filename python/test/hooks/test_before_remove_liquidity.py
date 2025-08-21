@@ -1,13 +1,13 @@
-import sys
 import os
-from types import SimpleNamespace
-from typing import TypeGuard, Protocol
-
+import sys
 from test.test_custom_pool import map_custom_pool_state
+from types import SimpleNamespace
+from typing import Protocol, TypeGuard
+
 from src.common.maths import Rounding
-from src.common.swap_params import SwapParams
-from src.common.types import RemoveLiquidityKind, RemoveLiquidityInput
 from src.common.pool_base import PoolBase
+from src.common.swap_params import SwapParams
+from src.common.types import RemoveLiquidityInput, RemoveLiquidityKind
 from src.hooks.default_hook import DefaultHook
 from src.hooks.types import BeforeRemoveLiquidityResult, HookState
 from src.vault.vault import Vault

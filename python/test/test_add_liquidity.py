@@ -1,10 +1,9 @@
-from typing import cast
-
 from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
 from test.utils.read_test_data import read_test_data
-from vault.vault import Vault
-from src.common.types import AddLiquidityInput, AddLiquidityKind, PoolState
+from typing import cast
 
+from src.common.types import AddLiquidityInput, AddLiquidityKind, PoolState
+from vault.vault import Vault
 
 test_data = read_test_data()
 

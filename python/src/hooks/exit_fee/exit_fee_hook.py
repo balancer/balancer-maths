@@ -1,8 +1,8 @@
 from src.common.maths import mul_down_fixed
 from src.common.types import RemoveLiquidityKind
 from src.hooks.default_hook import DefaultHook
-from src.hooks.types import AfterRemoveLiquidityResult
 from src.hooks.exit_fee.types import ExitFeeHookState
+from src.hooks.types import AfterRemoveLiquidityResult
 
 
 # This hook implements the ExitFeeHookExample found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/c848c849cb44dc35f05d15858e4fba9f17e92d5e/pkg/pool-hooks/contracts/ExitFeeHookExample.sol
@@ -17,7 +17,7 @@ class ExitFeeHook(DefaultHook):
         amounts_out_scaled18: list[int],
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
-        hook_state: ExitFeeHookState,
+        hook_state: ExitFeeHookState | object | None,
     ) -> AfterRemoveLiquidityResult:
 
         # // Our current architecture only supports fees on tokens. Since we must always respect exact `amountsOut`, and
@@ -25,6 +25,11 @@ class ExitFeeHook(DefaultHook):
         # // removeLiquidity.
         if kind != RemoveLiquidityKind.PROPORTIONAL:
             raise ValueError("ExitFeeHook: Unsupported RemoveLiquidityKind: ", kind)
+
+        if not isinstance(hook_state, ExitFeeHookState):
+            return AfterRemoveLiquidityResult(
+                success=False, hook_adjusted_amounts_out_raw=[]
+            )
 
         accrued_fees = [0] * len(hook_state.tokens)
         hook_adjusted_amounts_out_raw = amounts_out_raw[:]

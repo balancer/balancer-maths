@@ -4,8 +4,8 @@ from typing import List
 from src.common.base_pool_state import BasePoolState
 from src.common.maths import Rounding
 from src.common.pool_base import PoolBase
-from src.common.types import SwapInput, SwapKind
 from src.common.swap_params import SwapParams
+from src.common.types import SwapInput, SwapKind
 from src.vault.vault import Vault
 
 

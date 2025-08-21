@@ -4,16 +4,16 @@ from src.common.maths import Rounding
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
+from src.pools.weighted.weighted_data import WeightedState
 from src.pools.weighted.weighted_math import (
-    compute_out_given_exact_in,
-    compute_in_given_exact_out,
-    compute_invariant_up,
-    compute_invariant_down,
-    compute_balance_out_given_invariant,
     _MAX_INVARIANT_RATIO,
     _MIN_INVARIANT_RATIO,
+    compute_balance_out_given_invariant,
+    compute_in_given_exact_out,
+    compute_invariant_down,
+    compute_invariant_up,
+    compute_out_given_exact_in,
 )
-from src.pools.weighted.weighted_data import WeightedState
 
 
 class Weighted(PoolBase):

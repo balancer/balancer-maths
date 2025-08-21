@@ -2,10 +2,10 @@ from src.common.types import PoolState
 from src.pools.buffer.buffer_data import BufferState, map_buffer_state
 from src.pools.gyro.gyro_2clp_data import map_gyro_2clp_state
 from src.pools.gyro.gyro_eclp_data import map_gyro_eclp_state
-from src.pools.quantamm.quantamm_data import map_quant_amm_state
 from src.pools.liquidity_bootstrapping.liquidity_bootstrapping_data import (
     map_liquidity_bootstrapping_state,
 )
+from src.pools.quantamm.quantamm_data import map_quant_amm_state
 from src.pools.reclamm.reclamm_data import map_re_clamm_state
 from src.pools.reclamm_v2.reclamm_v2_data import map_re_clamm_v2_state
 from src.pools.stable.stable_data import map_stable_state
