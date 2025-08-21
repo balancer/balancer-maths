@@ -44,8 +44,8 @@ pool = {
 swap_input = SwapInput(
     amount_raw=1000000000000000000,
     swap_kind=SwapKind.GIVENIN,
-    token_in=pool["tokens"][0],
-    token_out=pool["tokens"][1],
+    token_in=pool["tokens"][0],  # type: ignore
+    token_out=pool["tokens"][1],  # type: ignore
 )
 
 EXPECTED_CALCULATED = 100000000000
@@ -115,7 +115,7 @@ class CustomHook(DefaultHook):
         assert [
             token_in_balance_scaled18,
             token_out_balance_scaled18,
-        ] == hook_state.expected_balances_live_scaled18
+        ] == hook_state.expected_balances_live_scaled18  # type: ignore
         return AfterSwapResult(success=True, hook_adjusted_amount_calculated_raw=1)
 
 
@@ -131,8 +131,8 @@ def test_hook_after_swap_no_fee():
     # with aggregateFee = 0, balance out is just balance - calculated
     input_hook_state = SimpleNamespace(
         expected_balances_live_scaled18=[
-            pool["balancesLiveScaled18"][0] + swap_input.amount_raw,
-            pool["balancesLiveScaled18"][1] - EXPECTED_CALCULATED,
+            pool["balancesLiveScaled18"][0] + swap_input.amount_raw,  # type: ignore
+            pool["balancesLiveScaled18"][1] - EXPECTED_CALCULATED,  # type: ignore
         ]
     )
     custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
@@ -151,10 +151,10 @@ def test_hook_after_swap_with_fee():
     expected_aggregate_swap_fee_amount = 50000000000000000
     input_hook_state = SimpleNamespace(
         expected_balances_live_scaled18=[
-            pool["balancesLiveScaled18"][0]
+            pool["balancesLiveScaled18"][0]  # type: ignore
             + swap_input.amount_raw
             - expected_aggregate_swap_fee_amount,
-            pool["balancesLiveScaled18"][1] - EXPECTED_CALCULATED,
+            pool["balancesLiveScaled18"][1] - EXPECTED_CALCULATED,  # type: ignore
         ]
     )
     custom_state_with_fee = map_custom_pool_state(

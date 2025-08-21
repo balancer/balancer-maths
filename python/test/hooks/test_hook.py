@@ -2,7 +2,7 @@ import os
 import sys
 from test.test_custom_pool import CustomPool, map_custom_pool_state
 
-import pytest
+import pytest  # type: ignore
 
 from src.common.types import SwapInput, SwapKind
 from src.hooks.default_hook import DefaultHook

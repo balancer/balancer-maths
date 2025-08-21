@@ -41,8 +41,8 @@ pool = {
 swap_input = SwapInput(
     amount_raw=100000000,
     swap_kind=SwapKind.GIVENIN,
-    token_in=pool["tokens"][0],
-    token_out=pool["tokens"][1],
+    token_in=pool["tokens"][0],  # type: ignore
+    token_out=pool["tokens"][1],  # type: ignore
 )
 
 
@@ -65,7 +65,7 @@ class CustomHook(DefaultHook):
             raise ValueError("hook_state must have a balance_change attribute")
 
         # Now the type checker knows hook_state has balance_change
-        balance_change = hook_state.balance_change
+        balance_change = hook_state.balance_change  # type: ignore
         assert swap_params.swap_kind == swap_input.swap_kind
         assert swap_params.index_in == 0
         assert swap_params.index_out == 1

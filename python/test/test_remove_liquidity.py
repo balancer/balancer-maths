@@ -3,7 +3,7 @@ from test.utils.read_test_data import read_test_data
 from typing import cast
 
 from src.common.types import PoolState, RemoveLiquidityInput, RemoveLiquidityKind
-from vault.vault import Vault
+from src.vault.vault import Vault
 
 test_data = read_test_data()
 
