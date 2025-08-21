@@ -1,7 +1,7 @@
 [project]
 name = "balancer-maths"
 version = "0.1.0"
-description = "Python implementation of mathematics for Balancer pools"
+description = "Python implementation of mathematics for Balancer v3 pools"
 readme = "README.md"
 license = {text = "MIT"}
 keywords = ["balancer", "defi", "amm", "liquidity", "pools", "mathematics"]
