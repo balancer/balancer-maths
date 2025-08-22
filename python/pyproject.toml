@@ -1,6 +1,6 @@
 [project]
 name = "balancer-maths"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python implementation of mathematics for Balancer v3"
 readme = "README.md"
 license = {text = "MIT"}
@@ -45,3 +45,6 @@ target-version = ['py310']
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = "balancer_maths"
