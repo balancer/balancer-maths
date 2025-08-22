@@ -1,6 +1,24 @@
 # Balancer Maths Python
 
-Python implementation of maths for Balancer pools.
+Python implementation of mathematics for Balancer v3
+
+> **Note**: This is the Python implementation within the [balancer-maths](https://github.com/balancer/balancer-maths) monorepo, which also contains TypeScript and Rust implementations.
+
+## Installation
+
+### From PyPI (recommended)
+
+```bash
+pip install balancer-maths
+```
+
+### From source
+
+```bash
+git clone https://github.com/balancer/balancer-maths.git
+cd balancer-maths/python
+pip install -e .
+```
 
 ## Development Setup
 
@@ -8,6 +26,11 @@ Python implementation of maths for Balancer pools.
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+```
+
+2. Install development dependencies:
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Hooks Support
@@ -149,5 +172,60 @@ calculated_result = vault.remove_liquidity(
     pool,
     hook_state=input_hook_state
 )
+```
+
+## Building and Releasing
+
+### Local Development
+
+To build the package locally for testing:
+
+```bash
+python build_and_release.py --all
+```
+
+This will:
+- Clean previous build artifacts
+- Install build dependencies
+- Build the package
+- Check the built package
+
+### Releasing to PyPI
+
+1. **Test Release** (recommended first):
+```bash
+python build_and_release.py --test-upload
+```
+
+2. **Production Release**:
+```bash
+python build_and_release.py --upload
+```
+
+**Note**: You'll need to have your PyPI credentials configured. You can set them up using:
+```bash
+pip install twine
+twine configure
+```
+
+### Manual Build
+
+If you prefer to build manually:
+
+```bash
+# Install build tools
+pip install build twine
+
+# Build the package
+python -m build
+
+# Check the package
+twine check dist/*
+
+# Upload to TestPyPI
+twine upload --repository testpypi dist/*
+
+# Upload to PyPI
+twine upload dist/*
 ```
 
