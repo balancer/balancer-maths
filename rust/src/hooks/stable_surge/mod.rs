@@ -243,10 +243,10 @@ impl HookBase for StableSurgeHook {
 
     fn on_after_add_liquidity(
         &self,
-        kind: AddLiquidityKind,
+        _kind: AddLiquidityKind,
         amounts_in_scaled_18: &[BigInt],
         amounts_in_raw: &[BigInt],
-        bpt_amount_out: &BigInt,
+        _bpt_amount_out: &BigInt,
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
     ) -> AfterAddLiquidityResult {
@@ -315,7 +315,7 @@ impl HookBase for StableSurgeHook {
     fn on_after_remove_liquidity(
         &self,
         kind: RemoveLiquidityKind,
-        bpt_amount_in: &BigInt,
+        _bpt_amount_in: &BigInt,
         amounts_out_scaled_18: &[BigInt],
         amounts_out_raw: &[BigInt],
         balances_scaled_18: &[BigInt],
