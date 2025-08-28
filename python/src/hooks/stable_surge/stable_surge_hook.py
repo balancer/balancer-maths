@@ -141,8 +141,11 @@ class StableSurgeHook(DefaultHook):
         amounts_in_raw: list[int],
         bpt_amount_out: int,
         balances_scaled18: list[int],
-        hook_state: StableSurgeHookState,
+        hook_state: StableSurgeHookState | object | None,
     ) -> AfterAddLiquidityResult:
+        if not isinstance(hook_state, StableSurgeHookState):
+            return AfterAddLiquidityResult(success=False, hook_adjusted_amounts_in_raw=[])
+
         # Rebuild old balances before adding liquidity
         old_balances_scaled18 = [0] * len(balances_scaled18)
         for i in range(len(balances_scaled18)):
@@ -169,8 +172,11 @@ class StableSurgeHook(DefaultHook):
         amounts_out_scaled18: list[int],
         amounts_out_raw: list[int],
         balances_scaled18: list[int],
-        hook_state: StableSurgeHookState,
+        hook_state: StableSurgeHookState | object | None,
     ) -> AfterRemoveLiquidityResult:
+        if not isinstance(hook_state, StableSurgeHookState):
+            return AfterRemoveLiquidityResult(success=False, hook_adjusted_amounts_out_raw=[])
+
         # Proportional remove is always fine
         if kind == RemoveLiquidityKind.PROPORTIONAL:
             return AfterRemoveLiquidityResult(
