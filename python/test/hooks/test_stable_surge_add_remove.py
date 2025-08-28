@@ -1,5 +1,7 @@
 # pytest test/hooks/test_stable_surge_add_remove.py --capture=no
 # pytest test/hooks/test_stable_surge_add_remove.py::TestStableSurgeAddRemove::test_pool_surging_unbalanced_add_liquidity_throws --capture=no
+import pytest
+
 from src.common.types import (
     AddLiquidityInput,
     AddLiquidityKind,
@@ -9,7 +11,6 @@ from src.common.types import (
 from src.hooks.stable_surge.types import map_stable_surge_hook_state
 from src.pools.stable.stable_data import map_stable_state
 from src.vault.vault import Vault
-import pytest
 
 pool_state = {
     "poolType": "STABLE",
