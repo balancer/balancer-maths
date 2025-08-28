@@ -1,10 +1,15 @@
 //! Stable surge hook implementation
 
+use crate::common::errors::PoolError;
 use crate::common::maths::{complement_fixed, div_down_fixed, mul_down_fixed};
 use crate::common::pool_base::PoolBase;
 use crate::common::types::SwapKind::GivenIn;
-use crate::common::types::{HookStateBase, SwapParams};
-use crate::hooks::types::{DynamicSwapFeeResult, HookState};
+use crate::common::types::{AddLiquidityKind, HookStateBase, RemoveLiquidityKind, SwapParams};
+use crate::hooks::types::{
+    AfterAddLiquidityResult, AfterRemoveLiquidityResult, AfterSwapParams, AfterSwapResult,
+    BeforeAddLiquidityResult, BeforeRemoveLiquidityResult, BeforeSwapResult, DynamicSwapFeeResult,
+    HookState,
+};
 use crate::hooks::{DefaultHook, HookBase, HookConfig};
 use crate::pools::stable::stable_data::StableMutable;
 use crate::pools::stable::StablePool;
@@ -52,6 +57,8 @@ impl StableSurgeHook {
     pub fn new() -> Self {
         let config = HookConfig {
             should_call_compute_dynamic_swap_fee: true,
+            should_call_after_add_liquidity: true,
+            should_call_after_remove_liquidity: true,
             ..Default::default()
         };
 
@@ -66,7 +73,7 @@ impl StableSurgeHook {
         max_surge_fee_percentage: &BigInt,
         static_fee_percentage: &BigInt,
         hook_state: &StableSurgeHookState,
-    ) -> Result<BigInt, crate::common::errors::PoolError> {
+    ) -> Result<BigInt, PoolError> {
         // Create a temporary stable pool for swap simulation
         let stable_state = StableMutable {
             amp: hook_state.amp.clone(),
@@ -119,10 +126,7 @@ impl StableSurgeHook {
     }
 
     /// Calculate imbalance percentage for a list of balances
-    fn calculate_imbalance(
-        &self,
-        balances: &[BigInt],
-    ) -> Result<BigInt, crate::common::errors::PoolError> {
+    fn calculate_imbalance(&self, balances: &[BigInt]) -> Result<BigInt, PoolError> {
         let median = self.find_median(balances);
 
         let total_balance: BigInt = balances.iter().sum();
@@ -131,7 +135,7 @@ impl StableSurgeHook {
             .map(|balance| self.abs_sub(balance, &median))
             .sum();
 
-        crate::common::maths::div_down_fixed(&total_diff, &total_balance)
+        div_down_fixed(&total_diff, &total_balance)
     }
 
     /// Find the median of a list of BigInts
@@ -154,6 +158,27 @@ impl StableSurgeHook {
         } else {
             b - a
         }
+    }
+
+    /// Determine if the pool is surging based on threshold percentage, current balances, and new total imbalance
+    fn is_surging(
+        &self,
+        threshold_percentage: &BigInt,
+        current_balances: &[BigInt],
+        new_total_imbalance: &BigInt,
+    ) -> Result<bool, PoolError> {
+        // If we are balanced, or the balance has improved, do not surge: simply return False
+        if new_total_imbalance.is_zero() {
+            return Ok(false);
+        }
+
+        let old_total_imbalance = self.calculate_imbalance(current_balances)?;
+
+        // Surging if imbalance grows and we're currently above the threshold
+        Ok(
+            new_total_imbalance > &old_total_imbalance
+                && new_total_imbalance > threshold_percentage,
+        )
     }
 }
 
@@ -201,12 +226,12 @@ impl HookBase for StableSurgeHook {
     // Delegate all other methods to DefaultHook
     fn on_before_add_liquidity(
         &self,
-        kind: crate::common::types::AddLiquidityKind,
+        kind: AddLiquidityKind,
         max_amounts_in_scaled_18: &[BigInt],
         min_bpt_amount_out: &BigInt,
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
-    ) -> crate::hooks::types::BeforeAddLiquidityResult {
+    ) -> BeforeAddLiquidityResult {
         DefaultHook::new().on_before_add_liquidity(
             kind,
             max_amounts_in_scaled_18,
@@ -218,31 +243,66 @@ impl HookBase for StableSurgeHook {
 
     fn on_after_add_liquidity(
         &self,
-        kind: crate::common::types::AddLiquidityKind,
+        kind: AddLiquidityKind,
         amounts_in_scaled_18: &[BigInt],
         amounts_in_raw: &[BigInt],
         bpt_amount_out: &BigInt,
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
-    ) -> crate::hooks::types::AfterAddLiquidityResult {
-        DefaultHook::new().on_after_add_liquidity(
-            kind,
-            amounts_in_scaled_18,
-            amounts_in_raw,
-            bpt_amount_out,
-            balances_scaled_18,
-            hook_state,
-        )
+    ) -> AfterAddLiquidityResult {
+        match hook_state {
+            HookState::StableSurge(state) => {
+                // Rebuild old balances before adding liquidity
+                let mut old_balances_scaled_18 = vec![BigInt::zero(); balances_scaled_18.len()];
+                for i in 0..balances_scaled_18.len() {
+                    old_balances_scaled_18[i] = &balances_scaled_18[i] - &amounts_in_scaled_18[i];
+                }
+
+                let new_total_imbalance = match self.calculate_imbalance(balances_scaled_18) {
+                    Ok(imbalance) => imbalance,
+                    Err(_) => {
+                        return AfterAddLiquidityResult {
+                            success: false,
+                            hook_adjusted_amounts_in_raw: amounts_in_raw.to_vec(),
+                        }
+                    }
+                };
+
+                let is_surging = match self.is_surging(
+                    &state.surge_threshold_percentage,
+                    &old_balances_scaled_18,
+                    &new_total_imbalance,
+                ) {
+                    Ok(surging) => surging,
+                    Err(_) => {
+                        return AfterAddLiquidityResult {
+                            success: false,
+                            hook_adjusted_amounts_in_raw: amounts_in_raw.to_vec(),
+                        }
+                    }
+                };
+
+                // If we're not surging, it's fine to proceed; otherwise halt execution by returning false
+                AfterAddLiquidityResult {
+                    success: !is_surging,
+                    hook_adjusted_amounts_in_raw: amounts_in_raw.to_vec(),
+                }
+            }
+            _ => AfterAddLiquidityResult {
+                success: false,
+                hook_adjusted_amounts_in_raw: amounts_in_raw.to_vec(),
+            },
+        }
     }
 
     fn on_before_remove_liquidity(
         &self,
-        kind: crate::common::types::RemoveLiquidityKind,
+        kind: RemoveLiquidityKind,
         max_bpt_amount_in: &BigInt,
         min_amounts_out_scaled_18: &[BigInt],
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
-    ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
+    ) -> BeforeRemoveLiquidityResult {
         DefaultHook::new().on_before_remove_liquidity(
             kind,
             max_bpt_amount_in,
@@ -254,36 +314,75 @@ impl HookBase for StableSurgeHook {
 
     fn on_after_remove_liquidity(
         &self,
-        kind: crate::common::types::RemoveLiquidityKind,
+        kind: RemoveLiquidityKind,
         bpt_amount_in: &BigInt,
         amounts_out_scaled_18: &[BigInt],
         amounts_out_raw: &[BigInt],
         balances_scaled_18: &[BigInt],
         hook_state: &HookState,
-    ) -> crate::hooks::types::AfterRemoveLiquidityResult {
-        DefaultHook::new().on_after_remove_liquidity(
-            kind,
-            bpt_amount_in,
-            amounts_out_scaled_18,
-            amounts_out_raw,
-            balances_scaled_18,
-            hook_state,
-        )
+    ) -> AfterRemoveLiquidityResult {
+        match hook_state {
+            HookState::StableSurge(state) => {
+                // Proportional remove is always fine
+                if kind == RemoveLiquidityKind::Proportional {
+                    return AfterRemoveLiquidityResult {
+                        success: true,
+                        hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+                    };
+                }
+
+                // Rebuild old balances before removing liquidity
+                let mut old_balances_scaled_18 = vec![BigInt::zero(); balances_scaled_18.len()];
+                for i in 0..balances_scaled_18.len() {
+                    old_balances_scaled_18[i] = &balances_scaled_18[i] + &amounts_out_scaled_18[i];
+                }
+
+                let new_total_imbalance = match self.calculate_imbalance(balances_scaled_18) {
+                    Ok(imbalance) => imbalance,
+                    Err(_) => {
+                        return AfterRemoveLiquidityResult {
+                            success: false,
+                            hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+                        }
+                    }
+                };
+
+                let is_surging = match self.is_surging(
+                    &state.surge_threshold_percentage,
+                    &old_balances_scaled_18,
+                    &new_total_imbalance,
+                ) {
+                    Ok(surging) => surging,
+                    Err(_) => {
+                        return AfterRemoveLiquidityResult {
+                            success: false,
+                            hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+                        }
+                    }
+                };
+
+                // If we're not surging, it's fine to proceed; otherwise halt execution by returning false
+                AfterRemoveLiquidityResult {
+                    success: !is_surging,
+                    hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+                }
+            }
+            _ => AfterRemoveLiquidityResult {
+                success: false,
+                hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+            },
+        }
     }
 
-    fn on_before_swap(
-        &self,
-        swap_params: &SwapParams,
-        hook_state: &HookState,
-    ) -> crate::hooks::types::BeforeSwapResult {
+    fn on_before_swap(&self, swap_params: &SwapParams, hook_state: &HookState) -> BeforeSwapResult {
         DefaultHook::new().on_before_swap(swap_params, hook_state)
     }
 
     fn on_after_swap(
         &self,
-        after_swap_params: &crate::hooks::types::AfterSwapParams,
+        after_swap_params: &AfterSwapParams,
         hook_state: &HookState,
-    ) -> crate::hooks::types::AfterSwapResult {
+    ) -> AfterSwapResult {
         DefaultHook::new().on_after_swap(after_swap_params, hook_state)
     }
 }
