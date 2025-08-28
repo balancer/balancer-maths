@@ -1,6 +1,6 @@
 import { HookBase, HookStateBase } from './types';
 import { MathSol } from '../utils/math';
-import { SwapKind, SwapParams } from '../vault/types';
+import { AddKind, RemoveKind, SwapKind, SwapParams } from '../vault/types';
 import { Stable } from '../stable';
 
 export type HookStateStableSurge = HookStateBase & {
@@ -16,9 +16,9 @@ export class StableSurgeHook implements HookBase {
     public shouldCallBeforeSwap = false;
     public shouldCallAfterSwap = false;
     public shouldCallBeforeAddLiquidity = false;
-    public shouldCallAfterAddLiquidity = false;
+    public shouldCallAfterAddLiquidity = true;
     public shouldCallBeforeRemoveLiquidity = false;
-    public shouldCallAfterRemoveLiquidity = false;
+    public shouldCallAfterRemoveLiquidity = true;
     public enableHookAdjustedAmounts = false;
 
     onComputeDynamicSwapFee(
@@ -97,6 +97,25 @@ export class StableSurgeHook implements HookBase {
         return dynamicSwapFee;
     }
 
+    private isSurging(
+        thresholdPercentage: bigint,
+        currentBalances: bigint[],
+        newTotalImbalance: bigint,
+    ): boolean {
+        // If we are balanced, or the balance has improved, do not surge: simply return the regular fee percentage.
+        if (newTotalImbalance === 0n) {
+            return false;
+        }
+
+        const oldTotalImbalance = this.calculateImbalance(currentBalances);
+
+        // Surging if imbalance grows and we're currently above the threshold.
+        return (
+            newTotalImbalance > oldTotalImbalance &&
+            newTotalImbalance > thresholdPercentage
+        );
+    }
+
     private calculateImbalance(balances: bigint[]): bigint {
         const median = this.findMedian(balances);
 
@@ -134,16 +153,77 @@ export class StableSurgeHook implements HookBase {
         return { success: false, hookAdjustedBalancesScaled18: [] };
     }
 
-    onAfterAddLiquidity() {
-        return { success: false, hookAdjustedAmountsInRaw: [] };
+    onAfterAddLiquidity(
+        kind: AddKind,
+        amountsInScaled18: bigint[],
+        amountsInRaw: bigint[],
+        bptAmountOut: bigint,
+        balancesScaled18: bigint[],
+        hookState: HookStateStableSurge,
+    ): { success: boolean; hookAdjustedAmountsInRaw: bigint[] } {
+        // Proportional add is always fine.
+        // if (kind == AddKind.PROPORTIONAL) {
+        //     return { success: true, hookAdjustedAmountsInRaw: amountsInRaw };
+        // }
+
+        // Rebuild old balances before adding liquidity.
+        const oldBalancesScaled18 = new Array(balancesScaled18.length).fill(0n);
+        for (let i = 0; i < balancesScaled18.length; ++i) {
+            oldBalancesScaled18[i] = balancesScaled18[i] - amountsInScaled18[i];
+        }
+
+        const newTotalImbalance = this.calculateImbalance(balancesScaled18);
+
+        const isSurging = this.isSurging(
+            hookState.surgeThresholdPercentage,
+            oldBalancesScaled18,
+            newTotalImbalance,
+        );
+
+        // If we're not surging, it's fine to proceed; otherwise halt execution by returning false.
+        return {
+            success: isSurging === false,
+            hookAdjustedAmountsInRaw: amountsInRaw,
+        };
     }
 
     onBeforeRemoveLiquidity() {
         return { success: false, hookAdjustedBalancesScaled18: [] };
     }
 
-    onAfterRemoveLiquidity() {
-        return { success: false, hookAdjustedAmountsOutRaw: [] };
+    onAfterRemoveLiquidity(
+        kind: RemoveKind,
+        bptAmountIn: bigint,
+        amountsOutScaled18: bigint[],
+        amountsOutRaw: bigint[],
+        balancesScaled18: bigint[],
+        hookState: HookStateStableSurge,
+    ): { success: boolean; hookAdjustedAmountsOutRaw: bigint[] } {
+        // Proportional remove is always fine.
+        if (kind == RemoveKind.PROPORTIONAL) {
+            return { success: true, hookAdjustedAmountsOutRaw: amountsOutRaw };
+        }
+
+        // Rebuild old balances before removing liquidity.
+        const oldBalancesScaled18 = new Array(balancesScaled18.length).fill(0n);
+        for (let i = 0; i < balancesScaled18.length; ++i) {
+            oldBalancesScaled18[i] =
+                balancesScaled18[i] + amountsOutScaled18[i];
+        }
+
+        const newTotalImbalance = this.calculateImbalance(balancesScaled18);
+
+        const isSurging = this.isSurging(
+            hookState.surgeThresholdPercentage,
+            oldBalancesScaled18,
+            newTotalImbalance,
+        );
+
+        // If we're not surging, it's fine to proceed; otherwise halt execution by returning false.
+        return {
+            success: isSurging === false,
+            hookAdjustedAmountsOutRaw: amountsOutRaw,
+        };
     }
 
     onBeforeSwap() {
