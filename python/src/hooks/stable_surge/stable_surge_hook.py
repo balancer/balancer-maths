@@ -2,10 +2,14 @@ from typing import List
 
 from src.common.maths import complement_fixed, div_down_fixed, mul_down_fixed
 from src.common.swap_params import SwapParams
-from src.common.types import SwapKind
+from src.common.types import AddLiquidityKind, RemoveLiquidityKind, SwapKind
 from src.hooks.default_hook import DefaultHook
 from src.hooks.stable_surge.types import StableSurgeHookState
-from src.hooks.types import DynamicSwapFeeResult
+from src.hooks.types import (
+    AfterAddLiquidityResult,
+    AfterRemoveLiquidityResult,
+    DynamicSwapFeeResult,
+)
 from src.pools.stable.stable import Stable
 from src.pools.stable.stable_data import StableMutable
 
@@ -13,6 +17,8 @@ from src.pools.stable.stable_data import StableMutable
 # This hook implements the StableSurgeHook found in mono-repo: https://github.com/balancer/balancer-v3-monorepo/blob/main/pkg/pool-hooks/contracts/StableSurgeHook.sol
 class StableSurgeHook(DefaultHook):
     should_call_compute_dynamic_swap_fee = True
+    should_call_after_add_liquidity = True
+    should_call_after_remove_liquidity = True
 
     def on_compute_dynamic_swap_fee(
         self,
@@ -98,3 +104,94 @@ class StableSurgeHook(DefaultHook):
 
     def abs_sub(self, a: int, b: int) -> int:
         return abs(a - b)
+
+    def is_surging(
+        self,
+        threshold_percentage: int,
+        current_balances: List[int],
+        new_total_imbalance: int,
+    ) -> bool:
+        """
+        Determine if the pool is surging based on threshold percentage, current balances, and new total imbalance.
+
+        Args:
+            threshold_percentage: The threshold percentage for surge detection
+            current_balances: Current token balances in the pool
+            new_total_imbalance: The new total imbalance after a potential operation
+
+        Returns:
+            True if the pool is surging, False otherwise
+        """
+        # If we are balanced, or the balance has improved, do not surge: simply return False
+        if new_total_imbalance == 0:
+            return False
+
+        old_total_imbalance = self.calculate_imbalance(current_balances)
+
+        # Surging if imbalance grows and we're currently above the threshold
+        return (
+            new_total_imbalance > old_total_imbalance
+            and new_total_imbalance > threshold_percentage
+        )
+
+    def on_after_add_liquidity(
+        self,
+        kind: AddLiquidityKind,
+        amounts_in_scaled18: list[int],
+        amounts_in_raw: list[int],
+        bpt_amount_out: int,
+        balances_scaled18: list[int],
+        hook_state: StableSurgeHookState,
+    ) -> AfterAddLiquidityResult:
+        # Rebuild old balances before adding liquidity
+        old_balances_scaled18 = [0] * len(balances_scaled18)
+        for i in range(len(balances_scaled18)):
+            old_balances_scaled18[i] = balances_scaled18[i] - amounts_in_scaled18[i]
+
+        new_total_imbalance = self.calculate_imbalance(balances_scaled18)
+
+        is_surging = self.is_surging(
+            hook_state.surge_threshold_percentage,
+            old_balances_scaled18,
+            new_total_imbalance,
+        )
+
+        # If we're not surging, it's fine to proceed; otherwise halt execution by returning False
+        return AfterAddLiquidityResult(
+            success=not is_surging,
+            hook_adjusted_amounts_in_raw=amounts_in_raw,
+        )
+
+    def on_after_remove_liquidity(
+        self,
+        kind: RemoveLiquidityKind,
+        bpt_amount_in: int,
+        amounts_out_scaled18: list[int],
+        amounts_out_raw: list[int],
+        balances_scaled18: list[int],
+        hook_state: StableSurgeHookState,
+    ) -> AfterRemoveLiquidityResult:
+        # Proportional remove is always fine
+        if kind == RemoveLiquidityKind.PROPORTIONAL:
+            return AfterRemoveLiquidityResult(
+                success=True, hook_adjusted_amounts_out_raw=amounts_out_raw
+            )
+
+        # Rebuild old balances before removing liquidity
+        old_balances_scaled18 = [0] * len(balances_scaled18)
+        for i in range(len(balances_scaled18)):
+            old_balances_scaled18[i] = balances_scaled18[i] + amounts_out_scaled18[i]
+
+        new_total_imbalance = self.calculate_imbalance(balances_scaled18)
+
+        is_surging = self.is_surging(
+            hook_state.surge_threshold_percentage,
+            old_balances_scaled18,
+            new_total_imbalance,
+        )
+
+        # If we're not surging, it's fine to proceed; otherwise halt execution by returning False
+        return AfterRemoveLiquidityResult(
+            success=not is_surging,
+            hook_adjusted_amounts_out_raw=amounts_out_raw,
+        )
