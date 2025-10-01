@@ -183,7 +183,6 @@ pub enum Rounding {
     RoundUp = 1,
 }
 
-
 impl PoolState {
     /// Get the base pool state
     pub fn base(&self) -> &BasePoolState {
