@@ -39,3 +39,9 @@ pub struct ReClammV2State {
     pub mutable: ReClammV2Mutable,
     pub immutable: ReClammV2Immutable,
 }
+
+impl From<ReClammV2State> for crate::common::types::PoolState {
+    fn from(state: ReClammV2State) -> Self {
+        crate::common::types::PoolState::ReClammV2(state)
+    }
+}

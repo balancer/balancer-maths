@@ -27,3 +27,9 @@ pub struct LiquidityBootstrappingState {
     pub mutable: LiquidityBootstrappingMutable,
     pub immutable: LiquidityBootstrappingImmutable,
 }
+
+impl From<LiquidityBootstrappingState> for crate::common::types::PoolState {
+    fn from(state: LiquidityBootstrappingState) -> Self {
+        crate::common::types::PoolState::LiquidityBootstrapping(state)
+    }
+}

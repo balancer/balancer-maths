@@ -42,3 +42,9 @@ impl AsRef<BasePoolState> for WeightedState {
         &self.base
     }
 }
+
+impl From<WeightedState> for crate::common::types::PoolState {
+    fn from(state: WeightedState) -> Self {
+        crate::common::types::PoolState::Weighted(state)
+    }
+}
