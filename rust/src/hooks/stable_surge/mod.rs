@@ -144,7 +144,7 @@ impl StableSurgeHook {
         sorted_balances.sort();
         let mid = sorted_balances.len() / 2;
 
-        if sorted_balances.len() % 2 == 0 {
+        if sorted_balances.len().is_multiple_of(2) {
             (&sorted_balances[mid - 1] + &sorted_balances[mid]) / 2
         } else {
             sorted_balances[mid].clone()
