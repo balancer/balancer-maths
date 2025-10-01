@@ -25,3 +25,9 @@ pub struct QuantAmmState {
     pub mutable: QuantAmmMutable,
     pub immutable: QuantAmmImmutable,
 }
+
+impl From<QuantAmmState> for crate::common::types::PoolState {
+    fn from(state: QuantAmmState) -> Self {
+        crate::common::types::PoolState::QuantAmm(state)
+    }
+}
