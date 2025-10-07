@@ -2,7 +2,6 @@
 name = "balancer-maths-rust"
 version = "0.2.0"
 edition = "2021"
-rust-version = "1.90"
 description = "Balancer V3 mathematics library in Rust"
 license = "MIT"
 repository = "https://github.com/balancer/balancer-maths"
