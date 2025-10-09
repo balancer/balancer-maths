@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2025-10-09
+
+### Changed
+- Use mul_up_mag_u instead of *.
+
 ## [0.2.1] - 2025-01-27
 
 ### Changed
