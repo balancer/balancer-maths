@@ -430,7 +430,7 @@ pub fn calculate_invariant_with_error(
     }
 
     // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
-    err = &(&(&params.lambda * (x + y)) / &*_ONE_XP + &err + BigInt::from(1u64))
+    err = &(&(mul_up_mag_u(&params.lambda, &(x + y)) / &*_ONE_XP) + &err + BigInt::from(1u64))
         * BigInt::from(20u64);
 
     let achiachi = calc_a_chi_a_chi_in_xp(params, derived);
