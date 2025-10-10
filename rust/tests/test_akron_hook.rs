@@ -250,3 +250,64 @@ fn test_akron_lvr_fee_token_out_6_decimals_given_out() {
 
     assert_eq!(output_amount, BigInt::from(42485246562777219u64));
 }
+
+#[test]
+fn test_akron_barter() {
+    let base_pool_state = BasePoolState {
+        pool_address: "0x4fbb7870dbe7a7ef4866a33c0eed73d395730dc0".to_string(),
+        pool_type: "WEIGHTED".to_string(),
+        tokens: vec![
+            "0xC768c589647798a6EE01A91FdE98EF2ed046DBD6".to_string(),
+            "0xe298b938631f750DD409fB18227C4a23dCdaab9b".to_string(),
+        ],
+        scaling_factors: vec![BigInt::from(1000000000000u64), BigInt::from(1u64)],
+        swap_fee: BigInt::from(10000000000000u64),
+        aggregate_swap_fee: BigInt::from(500000000000000000u64),
+        balances_live_scaled_18: vec![
+            BigInt::parse_bytes(b"30417509760267238652173", 10).unwrap(),
+            BigInt::parse_bytes(b"6813017555509436365", 10).unwrap(),
+        ],
+        token_rates: vec![
+            BigInt::parse_bytes(b"1109425102377741626", 10).unwrap(),
+            BigInt::parse_bytes(b"1034384500353239717", 10).unwrap(),
+        ],
+        total_supply: BigInt::parse_bytes(b"426911581972494637403", 10).unwrap(),
+        supports_unbalanced_liquidity: false,
+        hook_type: Some("Akron".to_string()),
+    };
+
+    let pool_state = WeightedState {
+        base: base_pool_state,
+        weights: vec![
+            BigInt::from(500000000000000000u64),
+            BigInt::from(500000000000000000u64),
+        ],
+    };
+
+    let hook_state = AkronHookState {
+        hook_type: "Akron".to_string(),
+        weights: vec![
+            BigInt::from(500000000000000000u64),
+            BigInt::from(500000000000000000u64),
+        ],
+        minimum_swap_fee_percentage: BigInt::from(10000000000000u64),
+    };
+    let vault = Vault::new();
+
+    let swap_input = SwapInput {
+        swap_kind: SwapKind::GivenIn,
+        amount_raw: BigInt::from(56882078163300968u64),
+        token_in: "0xe298b938631f750dd409fb18227c4a23dcdaab9b".to_string(),
+        token_out: "0xc768c589647798a6ee01a91fde98ef2ed046dbd6".to_string(),
+    };
+
+    let output_amount = vault
+        .swap(
+            &swap_input,
+            &PoolStateOrBuffer::Pool(Box::new(pool_state.into())),
+            Some(&HookState::Akron(hook_state)),
+        )
+        .expect("Swap failed");
+
+    assert_eq!(output_amount, BigInt::from(232758975u64));
+}
