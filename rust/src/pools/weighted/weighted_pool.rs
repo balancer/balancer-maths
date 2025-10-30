@@ -5,17 +5,17 @@ use crate::common::pool_base::PoolBase;
 use crate::common::types::{Rounding, SwapParams};
 use crate::pools::weighted::weighted_data::WeightedState;
 use crate::pools::weighted::weighted_math::{MAX_INVARIANT_RATIO, MIN_INVARIANT_RATIO, *};
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 
 /// Weighted pool implementation
 pub struct WeightedPool {
     /// Normalized weights (scaled 18)
-    normalized_weights: Vec<BigInt>,
+    normalized_weights: Vec<U256>,
 }
 
 impl WeightedPool {
     /// Create a new weighted pool
-    pub fn new(weights: Vec<BigInt>) -> Result<Self, PoolError> {
+    pub fn new(weights: Vec<U256>) -> Result<Self, PoolError> {
         if weights.is_empty() {
             return Err(PoolError::InvalidSwapParameters);
         }
@@ -25,13 +25,13 @@ impl WeightedPool {
     }
 
     /// Get the normalized weights
-    pub fn normalized_weights(&self) -> &[BigInt] {
+    pub fn normalized_weights(&self) -> &[U256] {
         &self.normalized_weights
     }
 }
 
 impl PoolBase for WeightedPool {
-    fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
+    fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         let token_in_index = swap_params.token_in_index;
         let token_out_index = swap_params.token_out_index;
 
@@ -67,9 +67,9 @@ impl PoolBase for WeightedPool {
 
     fn compute_invariant(
         &self,
-        balances_live_scaled_18: &[BigInt],
+        balances_live_scaled_18: &[U256],
         rounding: Rounding,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         match rounding {
             Rounding::RoundDown => {
                 compute_invariant_down(&self.normalized_weights, balances_live_scaled_18)
@@ -82,10 +82,10 @@ impl PoolBase for WeightedPool {
 
     fn compute_balance(
         &self,
-        balances_live_scaled_18: &[BigInt],
+        balances_live_scaled_18: &[U256],
         token_in_index: usize,
-        invariant_ratio: &BigInt,
-    ) -> Result<BigInt, PoolError> {
+        invariant_ratio: &U256,
+    ) -> Result<U256, PoolError> {
         if token_in_index >= balances_live_scaled_18.len()
             || token_in_index >= self.normalized_weights.len()
         {
@@ -99,11 +99,11 @@ impl PoolBase for WeightedPool {
         compute_balance_out_given_invariant(current_balance, weight, invariant_ratio)
     }
 
-    fn get_maximum_invariant_ratio(&self) -> BigInt {
+    fn get_maximum_invariant_ratio(&self) -> U256 {
         MAX_INVARIANT_RATIO.clone()
     }
 
-    fn get_minimum_invariant_ratio(&self) -> BigInt {
+    fn get_minimum_invariant_ratio(&self) -> U256 {
         MIN_INVARIANT_RATIO.clone()
     }
 }

@@ -9,8 +9,7 @@ use crate::common::utils::{
 };
 use crate::hooks::types::HookState;
 use crate::hooks::HookBase;
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Add liquidity to a pool
 pub fn add_liquidity(
@@ -61,7 +60,7 @@ pub fn add_liquidity(
     }
 
     // Initialize amounts_in_scaled18
-    let mut amounts_in_scaled18 = vec![BigInt::zero(); base_state.tokens.len()];
+    let mut amounts_in_scaled18 = vec![U256::ZERO; base_state.tokens.len()];
 
     let (bpt_amount_out, swap_fee_amounts_scaled18) = match add_liquidity_input.kind {
         AddLiquidityKind::Unbalanced => {
@@ -99,7 +98,7 @@ pub fn add_liquidity(
     };
 
     // Initialize amountsInRaw as a list with the same length as the tokens in the pool
-    let mut amounts_in_raw = vec![BigInt::zero(); base_state.tokens.len()];
+    let mut amounts_in_raw = vec![U256::ZERO; base_state.tokens.len()];
 
     for i in 0..base_state.tokens.len() {
         // amountsInRaw are amounts actually entering the Pool, so we round up.

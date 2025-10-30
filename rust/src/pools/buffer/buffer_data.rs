@@ -1,13 +1,13 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// Buffer mutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BufferMutable {
-    pub rate: BigInt,
-    pub max_deposit: Option<BigInt>,
-    pub max_mint: Option<BigInt>,
+    pub rate: U256,
+    pub max_deposit: Option<U256>,
+    pub max_mint: Option<U256>,
 }
 
 /// Buffer immutable state

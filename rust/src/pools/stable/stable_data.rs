@@ -1,11 +1,11 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// Stable pool mutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StableMutable {
-    pub amp: BigInt,
+    pub amp: U256,
 }
 
 /// Stable pool state

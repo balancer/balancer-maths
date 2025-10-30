@@ -16,7 +16,7 @@ use crate::pools::buffer::erc4626_buffer_wrap_or_unwrap;
 use crate::vault::add_liquidity::add_liquidity;
 use crate::vault::remove_liquidity::remove_liquidity;
 use crate::vault::swap::swap;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 
 /// Main vault interface for pool operations
 pub struct Vault;
@@ -75,7 +75,7 @@ impl Vault {
         swap_input: &SwapInput,
         pool_state_or_buffer: &PoolStateOrBuffer,
         hook_state: Option<&HookState>,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         match pool_state_or_buffer {
             PoolStateOrBuffer::Pool(pool_state) => {
                 let base_state = pool_state.base();

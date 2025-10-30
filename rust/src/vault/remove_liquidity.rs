@@ -13,8 +13,7 @@ use crate::vault::base_pool_math::{
     compute_proportional_amounts_out, compute_remove_liquidity_single_token_exact_in,
     compute_remove_liquidity_single_token_exact_out,
 };
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Remove liquidity from a pool
 pub fn remove_liquidity(
@@ -73,7 +72,7 @@ pub fn remove_liquidity(
         match remove_liquidity_input.kind {
             RemoveLiquidityKind::Proportional => {
                 let bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw.clone();
-                let swap_fee_amounts_scaled18 = vec![BigInt::zero(); base_state.tokens.len()];
+                let swap_fee_amounts_scaled18 = vec![U256::ZERO; base_state.tokens.len()];
                 let amounts_out_scaled18 = compute_proportional_amounts_out(
                     &updated_balances_live_scaled18,
                     &base_state.total_supply,
@@ -132,7 +131,7 @@ pub fn remove_liquidity(
             }
         };
 
-    let mut amounts_out_raw = vec![BigInt::zero(); base_state.tokens.len()];
+    let mut amounts_out_raw = vec![U256::ZERO; base_state.tokens.len()];
 
     for i in 0..base_state.tokens.len() {
         // amountsInRaw are amounts actually entering the Pool, so we round up.

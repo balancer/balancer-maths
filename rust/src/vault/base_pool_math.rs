@@ -5,56 +5,55 @@ use crate::common::maths::{
     complement_fixed, div_down_fixed, div_up_fixed, mul_div_up_fixed, mul_down_fixed, mul_up_fixed,
 };
 use crate::common::types::Rounding;
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Result of add liquidity unbalanced operation
 #[derive(Debug, Clone)]
 pub struct AddLiquidityUnbalancedResult {
-    pub bpt_amount_out: BigInt,
-    pub swap_fee_amounts: Vec<BigInt>,
+    pub bpt_amount_out: U256,
+    pub swap_fee_amounts: Vec<U256>,
 }
 
 /// Result of add liquidity single token exact out operation
 #[derive(Debug, Clone)]
 pub struct AddLiquiditySingleTokenExactOutResult {
-    pub amount_in_with_fee: BigInt,
-    pub swap_fee_amounts: Vec<BigInt>,
+    pub amount_in_with_fee: U256,
+    pub swap_fee_amounts: Vec<U256>,
 }
 
 /// Result of remove liquidity single token exact in operation
 #[derive(Debug, Clone)]
 pub struct RemoveLiquiditySingleTokenExactInResult {
-    pub amount_out_with_fee: BigInt,
-    pub swap_fee_amounts: Vec<BigInt>,
+    pub amount_out_with_fee: U256,
+    pub swap_fee_amounts: Vec<U256>,
 }
 
 /// Result of remove liquidity single token exact out operation
 #[derive(Debug, Clone)]
 pub struct RemoveLiquiditySingleTokenExactOutResult {
-    pub bpt_amount_in: BigInt,
-    pub swap_fee_amounts: Vec<BigInt>,
+    pub bpt_amount_in: U256,
+    pub swap_fee_amounts: Vec<U256>,
 }
 
 /// Compute add liquidity for unbalanced amounts
 #[allow(clippy::type_complexity)]
 pub fn compute_add_liquidity_unbalanced(
-    current_balances: &[BigInt],
-    exact_amounts: &[BigInt],
-    total_supply: &BigInt,
-    swap_fee_percentage: &BigInt,
-    max_invariant_ratio: &BigInt,
-    compute_invariant: &dyn Fn(&[BigInt], Rounding) -> Result<BigInt, PoolError>,
+    current_balances: &[U256],
+    exact_amounts: &[U256],
+    total_supply: &U256,
+    swap_fee_percentage: &U256,
+    max_invariant_ratio: &U256,
+    compute_invariant: &dyn Fn(&[U256], Rounding) -> Result<U256, PoolError>,
 ) -> Result<AddLiquidityUnbalancedResult, PoolError> {
     let num_tokens = current_balances.len();
 
     // Create new balances with added amounts
-    let mut new_balances = vec![BigInt::zero(); num_tokens];
-    let mut swap_fee_amounts = vec![BigInt::zero(); num_tokens];
+    let mut new_balances = vec![U256::ZERO; num_tokens];
+    let mut swap_fee_amounts = vec![U256::ZERO; num_tokens];
 
     // Loop through each token, updating the balance with the added amount
     for index in 0..current_balances.len() {
-        new_balances[index] = &current_balances[index] + &exact_amounts[index] - BigInt::from(1);
+        new_balances[index] = &current_balances[index] + &exact_amounts[index] - U256::ONE;
     }
 
     // Calculate current and new invariants
@@ -97,13 +96,13 @@ pub fn compute_add_liquidity_unbalanced(
 /// Compute add liquidity for single token exact out
 #[allow(clippy::type_complexity)]
 pub fn compute_add_liquidity_single_token_exact_out(
-    current_balances: &[BigInt],
+    current_balances: &[U256],
     token_in_index: usize,
-    exact_bpt_amount_out: &BigInt,
-    total_supply: &BigInt,
-    swap_fee_percentage: &BigInt,
-    max_invariant_ratio: &BigInt,
-    compute_balance: &dyn Fn(&[BigInt], usize, &BigInt) -> Result<BigInt, PoolError>,
+    exact_bpt_amount_out: &U256,
+    total_supply: &U256,
+    swap_fee_percentage: &U256,
+    max_invariant_ratio: &U256,
+    compute_balance: &dyn Fn(&[U256], usize, &U256) -> Result<U256, PoolError>,
 ) -> Result<AddLiquiditySingleTokenExactOutResult, PoolError> {
     let new_supply = exact_bpt_amount_out + total_supply;
     let invariant_ratio = div_up_fixed(&new_supply, total_supply)?;
@@ -130,7 +129,7 @@ pub fn compute_add_liquidity_single_token_exact_out(
         div_up_fixed(&taxable_amount, &complement_fixed(swap_fee_percentage)?)? - &taxable_amount;
 
     // Create swap fees array
-    let mut swap_fee_amounts = vec![BigInt::zero(); current_balances.len()];
+    let mut swap_fee_amounts = vec![U256::ZERO; current_balances.len()];
     swap_fee_amounts[token_in_index] = fee.clone();
 
     let amount_in_with_fee = &amount_in + &fee;
@@ -142,10 +141,10 @@ pub fn compute_add_liquidity_single_token_exact_out(
 
 /// Compute proportional amounts out for remove liquidity
 pub fn compute_proportional_amounts_out(
-    balances: &[BigInt],
-    bpt_total_supply: &BigInt,
-    bpt_amount_in: &BigInt,
-) -> Result<Vec<BigInt>, PoolError> {
+    balances: &[U256],
+    bpt_total_supply: &U256,
+    bpt_amount_in: &U256,
+) -> Result<Vec<U256>, PoolError> {
     let mut amounts_out = Vec::with_capacity(balances.len());
 
     for balance in balances {
@@ -159,13 +158,13 @@ pub fn compute_proportional_amounts_out(
 /// Compute remove liquidity single token exact in
 #[allow(clippy::type_complexity)]
 pub fn compute_remove_liquidity_single_token_exact_in(
-    current_balances: &[BigInt],
+    current_balances: &[U256],
     token_out_index: usize,
-    exact_bpt_amount_in: &BigInt,
-    total_supply: &BigInt,
-    swap_fee_percentage: &BigInt,
-    min_invariant_ratio: &BigInt,
-    compute_balance: &dyn Fn(&[BigInt], usize, &BigInt) -> Result<BigInt, PoolError>,
+    exact_bpt_amount_in: &U256,
+    total_supply: &U256,
+    swap_fee_percentage: &U256,
+    min_invariant_ratio: &U256,
+    compute_balance: &dyn Fn(&[U256], usize, &U256) -> Result<U256, PoolError>,
 ) -> Result<RemoveLiquiditySingleTokenExactInResult, PoolError> {
     // Calculate new supply accounting for burning exact_bpt_amount_in
     let new_supply = total_supply - exact_bpt_amount_in;
@@ -196,7 +195,7 @@ pub fn compute_remove_liquidity_single_token_exact_in(
     let fee = mul_up_fixed(&taxable_amount, swap_fee_percentage)?;
 
     // Create swap fees array
-    let mut swap_fee_amounts = vec![BigInt::zero(); current_balances.len()];
+    let mut swap_fee_amounts = vec![U256::ZERO; current_balances.len()];
     swap_fee_amounts[token_out_index] = fee.clone();
 
     // Return the net amount after subtracting the fee
@@ -210,22 +209,22 @@ pub fn compute_remove_liquidity_single_token_exact_in(
 /// Compute remove liquidity single token exact out
 #[allow(clippy::type_complexity)]
 pub fn compute_remove_liquidity_single_token_exact_out(
-    current_balances: &[BigInt],
+    current_balances: &[U256],
     token_out_index: usize,
-    exact_amount_out: &BigInt,
-    total_supply: &BigInt,
-    swap_fee_percentage: &BigInt,
-    min_invariant_ratio: &BigInt,
-    compute_invariant: &dyn Fn(&[BigInt], Rounding) -> Result<BigInt, PoolError>,
+    exact_amount_out: &U256,
+    total_supply: &U256,
+    swap_fee_percentage: &U256,
+    min_invariant_ratio: &U256,
+    compute_invariant: &dyn Fn(&[U256], Rounding) -> Result<U256, PoolError>,
 ) -> Result<RemoveLiquiditySingleTokenExactOutResult, PoolError> {
     let num_tokens = current_balances.len();
 
     // Create new balances array
-    let mut new_balances = vec![BigInt::zero(); num_tokens];
+    let mut new_balances = vec![U256::ZERO; num_tokens];
 
     // Copy current_balances to new_balances
     for index in 0..current_balances.len() {
-        new_balances[index] = &current_balances[index] - BigInt::from(1);
+        new_balances[index] = &current_balances[index] - U256::ONE;
     }
 
     // Update the balance of token_out_index with exact_amount_out
@@ -258,7 +257,7 @@ pub fn compute_remove_liquidity_single_token_exact_out(
     let invariant_with_fees_applied = compute_invariant(&new_balances, Rounding::RoundDown)?;
 
     // Create swap fees array
-    let mut swap_fee_amounts = vec![BigInt::zero(); num_tokens];
+    let mut swap_fee_amounts = vec![U256::ZERO; num_tokens];
     swap_fee_amounts[token_out_index] = fee;
 
     // Calculate the amount of BPT to burn

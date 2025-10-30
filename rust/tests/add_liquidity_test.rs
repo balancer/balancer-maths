@@ -11,6 +11,9 @@ fn test_add_liquidity() {
     let vault = Vault::new();
 
     for add in test_data.adds {
+        // if add.test != "1-22524240-QuantAMM.json" {
+        //     continue;
+        // }
         println!("Testing add liquidity: {} (kind: {})", add.test, add.kind);
 
         // Get the pool data for this test

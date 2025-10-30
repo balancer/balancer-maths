@@ -12,13 +12,12 @@ use crate::common::utils::{
 };
 use crate::hooks::types::{AfterSwapParams, HookState};
 use crate::hooks::HookBase;
+use alloy_primitives::U256;
 use lazy_static::lazy_static;
-use num_bigint::BigInt;
-use num_traits::Zero;
 
 lazy_static! {
     /// Minimum trade amount (scaled 18)
-    static ref MINIMUM_TRADE_AMOUNT: BigInt = BigInt::from(1000000i64); // 1e6
+    static ref MINIMUM_TRADE_AMOUNT: U256 = U256::from(1000000i64); // 1e6
 }
 
 /// Perform a swap operation
@@ -28,9 +27,9 @@ pub fn swap(
     pool_class: &dyn PoolBase,
     hook_class: &dyn HookBase,
     hook_state: Option<&HookState>,
-) -> Result<BigInt, PoolError> {
+) -> Result<U256, PoolError> {
     if swap_input.amount_raw.is_zero() {
-        return Ok(BigInt::zero());
+        return Ok(U256::ZERO);
     }
 
     let base_state = pool_state.base();
@@ -88,7 +87,7 @@ pub fn swap(
         }
     }
 
-    let mut total_swap_fee_amount_scaled_18 = BigInt::zero();
+    let mut total_swap_fee_amount_scaled_18 = U256::ZERO;
     if swap_params.swap_kind == SwapKind::GivenIn {
         // Round up to avoid losses during precision loss
         total_swap_fee_amount_scaled_18 = mul_up_fixed(&swap_params.amount_scaled_18, &swap_fee)?;
@@ -187,13 +186,13 @@ pub fn swap(
 
 /// Compute amount given scaled to 18 decimals
 pub fn compute_amount_given_scaled_18(
-    amount_given_raw: &BigInt,
+    amount_given_raw: &U256,
     swap_kind: SwapKind,
     index_in: usize,
     index_out: usize,
-    scaling_factors: &[BigInt],
-    token_rates: &[BigInt],
-) -> Result<BigInt, PoolError> {
+    scaling_factors: &[U256],
+    token_rates: &[U256],
+) -> Result<U256, PoolError> {
     match swap_kind {
         SwapKind::GivenIn => {
             // If the amountGiven is entering the pool math (ExactIn), round down
@@ -216,17 +215,17 @@ pub fn compute_amount_given_scaled_18(
 }
 
 /// Compute rate rounded up
-pub fn compute_rate_round_up(rate: &BigInt) -> BigInt {
+pub fn compute_rate_round_up(rate: &U256) -> U256 {
     let rounded_rate = (rate / &*WAD) * &*WAD;
     if &rounded_rate == rate {
         rate.clone()
     } else {
-        rate + BigInt::from(1)
+        rate + U256::ONE
     }
 }
 
 /// Ensure valid swap amount
-pub fn ensure_valid_swap_amount(trade_amount: &BigInt) -> Result<(), PoolError> {
+pub fn ensure_valid_swap_amount(trade_amount: &U256) -> Result<(), PoolError> {
     if trade_amount < &*MINIMUM_TRADE_AMOUNT {
         return Err(PoolError::TradeAmountTooSmall);
     }

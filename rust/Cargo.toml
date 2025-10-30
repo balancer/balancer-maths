@@ -10,8 +10,7 @@ repository = "https://github.com/balancer/balancer-maths"
 
 [dependencies]
 # Big integers - essential for financial calculations
-num-bigint = { version = "0.4", features = ["serde"] }
-num-traits = "0.2"
+alloy-primitives = { version = "0.5", features = ["serde"] }
 lazy_static = "1.4"
 
 # Serialization - for data structures

@@ -1,7 +1,7 @@
 //! Core types for the Balancer maths library
 
 use crate::pools::buffer::BufferState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// Kind of swap operation
@@ -37,7 +37,7 @@ pub enum RemoveLiquidityKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SwapInput {
     /// Amount to swap (raw, not scaled)
-    pub amount_raw: BigInt,
+    pub amount_raw: U256,
     /// Kind of swap operation
     pub swap_kind: SwapKind,
     /// Token address to swap from
@@ -52,9 +52,9 @@ pub struct AddLiquidityInput {
     /// Pool address
     pub pool: String,
     /// Maximum amounts to add (raw, not scaled)
-    pub max_amounts_in_raw: Vec<BigInt>,
+    pub max_amounts_in_raw: Vec<U256>,
     /// Minimum BPT amount to receive
-    pub min_bpt_amount_out_raw: BigInt,
+    pub min_bpt_amount_out_raw: U256,
     /// Kind of add liquidity operation
     pub kind: AddLiquidityKind,
 }
@@ -65,9 +65,9 @@ pub struct RemoveLiquidityInput {
     /// Pool address
     pub pool: String,
     /// Minimum amounts to receive (raw, not scaled)
-    pub min_amounts_out_raw: Vec<BigInt>,
+    pub min_amounts_out_raw: Vec<U256>,
     /// Maximum BPT amount to burn
-    pub max_bpt_amount_in_raw: BigInt,
+    pub max_bpt_amount_in_raw: U256,
     /// Kind of remove liquidity operation
     pub kind: RemoveLiquidityKind,
 }
@@ -82,17 +82,17 @@ pub struct BasePoolState {
     /// Token addresses
     pub tokens: Vec<String>,
     /// Scaling factors for each token
-    pub scaling_factors: Vec<BigInt>,
+    pub scaling_factors: Vec<U256>,
     /// Token rates (scaled 18)
-    pub token_rates: Vec<BigInt>,
+    pub token_rates: Vec<U256>,
     /// Balances (scaled 18)
-    pub balances_live_scaled_18: Vec<BigInt>,
+    pub balances_live_scaled_18: Vec<U256>,
     /// Swap fee (scaled 18)
-    pub swap_fee: BigInt,
+    pub swap_fee: U256,
     /// Aggregate swap fee (scaled 18)
-    pub aggregate_swap_fee: BigInt,
+    pub aggregate_swap_fee: U256,
     /// Total supply (scaled 18)
-    pub total_supply: BigInt,
+    pub total_supply: U256,
     /// Whether pool supports unbalanced liquidity
     pub supports_unbalanced_liquidity: bool,
     /// Optional hook type
@@ -133,27 +133,27 @@ pub enum PoolStateOrBuffer {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SwapResult {
     /// Amount out (raw, not scaled)
-    pub amount_out_raw: BigInt,
+    pub amount_out_raw: U256,
     /// Fee amount (raw, not scaled)
-    pub fee_amount_raw: BigInt,
+    pub fee_amount_raw: U256,
 }
 
 /// Result of an add liquidity operation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AddLiquidityResult {
     /// BPT amount minted (raw, not scaled)
-    pub bpt_amount_out_raw: BigInt,
+    pub bpt_amount_out_raw: U256,
     /// Amounts added (raw, not scaled)
-    pub amounts_in_raw: Vec<BigInt>,
+    pub amounts_in_raw: Vec<U256>,
 }
 
 /// Result of a remove liquidity operation
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RemoveLiquidityResult {
     /// BPT amount burned (raw, not scaled)
-    pub bpt_amount_in_raw: BigInt,
+    pub bpt_amount_in_raw: U256,
     /// Amounts removed (raw, not scaled)
-    pub amounts_out_raw: Vec<BigInt>,
+    pub amounts_out_raw: Vec<U256>,
 }
 
 /// Swap parameters
@@ -166,9 +166,9 @@ pub struct SwapParams {
     /// Token out index
     pub token_out_index: usize,
     /// Amount (scaled 18)
-    pub amount_scaled_18: BigInt,
+    pub amount_scaled_18: U256,
     /// Balances (scaled 18)
-    pub balances_live_scaled_18: Vec<BigInt>,
+    pub balances_live_scaled_18: Vec<U256>,
 }
 
 /// Base hook state trait

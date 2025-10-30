@@ -2,8 +2,7 @@ use crate::common::maths::div_down_fixed;
 use crate::common::types::HookStateBase;
 use crate::hooks::types::{DynamicSwapFeeResult, HookState};
 use crate::hooks::{DefaultHook, HookBase, HookConfig};
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -50,7 +49,7 @@ impl HookBase for DirectionalFeeHook {
     fn on_compute_dynamic_swap_fee(
         &self,
         swap_params: &crate::common::types::SwapParams,
-        static_swap_fee_percentage: &BigInt,
+        static_swap_fee_percentage: &U256,
         _hook_state: &HookState,
     ) -> DynamicSwapFeeResult {
         let balance_in = &swap_params.balances_live_scaled_18[swap_params.token_in_index];
@@ -66,10 +65,10 @@ impl HookBase for DirectionalFeeHook {
             let total = final_balance_in + final_balance_out;
             match div_down_fixed(&diff, &total) {
                 Ok(v) => v,
-                Err(_) => BigInt::zero(),
+                Err(_) => U256::ZERO,
             }
         } else {
-            BigInt::zero()
+            U256::ZERO
         };
 
         let dynamic_swap_fee = if calculated > *static_swap_fee_percentage {
@@ -88,9 +87,9 @@ impl HookBase for DirectionalFeeHook {
     fn on_before_add_liquidity(
         &self,
         kind: crate::common::types::AddLiquidityKind,
-        max_amounts_in_scaled_18: &[BigInt],
-        min_bpt_amount_out: &BigInt,
-        balances_scaled_18: &[BigInt],
+        max_amounts_in_scaled_18: &[U256],
+        min_bpt_amount_out: &U256,
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeAddLiquidityResult {
         DefaultHook::new().on_before_add_liquidity(
@@ -104,10 +103,10 @@ impl HookBase for DirectionalFeeHook {
     fn on_after_add_liquidity(
         &self,
         kind: crate::common::types::AddLiquidityKind,
-        amounts_in_scaled_18: &[BigInt],
-        amounts_in_raw: &[BigInt],
-        bpt_amount_out: &BigInt,
-        balances_scaled_18: &[BigInt],
+        amounts_in_scaled_18: &[U256],
+        amounts_in_raw: &[U256],
+        bpt_amount_out: &U256,
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterAddLiquidityResult {
         DefaultHook::new().on_after_add_liquidity(
@@ -122,9 +121,9 @@ impl HookBase for DirectionalFeeHook {
     fn on_before_remove_liquidity(
         &self,
         kind: crate::common::types::RemoveLiquidityKind,
-        max_bpt_amount_in: &BigInt,
-        min_amounts_out_scaled_18: &[BigInt],
-        balances_scaled_18: &[BigInt],
+        max_bpt_amount_in: &U256,
+        min_amounts_out_scaled_18: &[U256],
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> crate::hooks::types::BeforeRemoveLiquidityResult {
         DefaultHook::new().on_before_remove_liquidity(
@@ -138,10 +137,10 @@ impl HookBase for DirectionalFeeHook {
     fn on_after_remove_liquidity(
         &self,
         kind: crate::common::types::RemoveLiquidityKind,
-        bpt_amount_in: &BigInt,
-        amounts_out_scaled_18: &[BigInt],
-        amounts_out_raw: &[BigInt],
-        balances_scaled_18: &[BigInt],
+        bpt_amount_in: &U256,
+        amounts_out_scaled_18: &[U256],
+        amounts_out_raw: &[U256],
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> crate::hooks::types::AfterRemoveLiquidityResult {
         DefaultHook::new().on_after_remove_liquidity(

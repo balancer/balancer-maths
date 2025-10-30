@@ -1,11 +1,10 @@
 //! Read and parse test data from JSON files
 
-use balancer_maths_rust::common::types::*;
+use alloy_primitives::{I256, U256};
+use balancer_maths_rust::common::types::BasePoolState;
 use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::hooks::{AkronHookState, ExitFeeHookState, StableSurgeHookState};
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
-use num_bigint::BigInt;
-use num_traits::Zero;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -21,26 +20,26 @@ pub struct StableState {
 /// Stable pool mutable state for test data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StableMutable {
-    pub amp: BigInt,
+    pub amp: U256,
 }
 
 /// Gyro ECLP immutable state for test data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GyroECLPImmutable {
-    pub alpha: BigInt,
-    pub beta: BigInt,
-    pub c: BigInt,
-    pub s: BigInt,
-    pub lambda: BigInt,
-    pub tau_alpha_x: BigInt,
-    pub tau_alpha_y: BigInt,
-    pub tau_beta_x: BigInt,
-    pub tau_beta_y: BigInt,
-    pub u: BigInt,
-    pub v: BigInt,
-    pub w: BigInt,
-    pub z: BigInt,
-    pub d_sq: BigInt,
+    pub alpha: I256,
+    pub beta: I256,
+    pub c: I256,
+    pub s: I256,
+    pub lambda: I256,
+    pub tau_alpha_x: I256,
+    pub tau_alpha_y: I256,
+    pub tau_beta_x: I256,
+    pub tau_beta_y: I256,
+    pub u: I256,
+    pub v: I256,
+    pub w: I256,
+    pub z: I256,
+    pub d_sq: I256,
 }
 
 /// Gyro ECLP state for test data
@@ -54,22 +53,22 @@ pub struct GyroECLPState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuantAmmMutable {
     #[serde(rename = "firstFourWeightsAndMultipliers")]
-    pub first_four_weights_and_multipliers: Vec<BigInt>,
+    pub first_four_weights_and_multipliers: Vec<I256>, // Can contain negative values
     #[serde(rename = "secondFourWeightsAndMultipliers")]
-    pub second_four_weights_and_multipliers: Vec<BigInt>,
+    pub second_four_weights_and_multipliers: Vec<I256>, // Can contain negative values
     #[serde(rename = "lastUpdateTime")]
-    pub last_update_time: BigInt,
+    pub last_update_time: U256,
     #[serde(rename = "lastInteropTime")]
-    pub last_interop_time: BigInt,
+    pub last_interop_time: U256,
     #[serde(rename = "currentTimestamp")]
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
 }
 
 /// QuantAmm immutable state for test data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuantAmmImmutable {
     #[serde(rename = "maxTradeSizeRatio")]
-    pub max_trade_size_ratio: BigInt,
+    pub max_trade_size_ratio: U256,
 }
 
 /// QuantAmm state for test data
@@ -85,7 +84,7 @@ pub struct LiquidityBootstrappingMutable {
     #[serde(rename = "isSwapEnabled")]
     pub is_swap_enabled: bool,
     #[serde(rename = "currentTimestamp")]
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,13 +94,13 @@ pub struct LiquidityBootstrappingImmutable {
     #[serde(rename = "isProjectTokenSwapInBlocked")]
     pub is_project_token_swap_in_blocked: bool,
     #[serde(rename = "startWeights")]
-    pub start_weights: Vec<BigInt>,
+    pub start_weights: Vec<U256>,
     #[serde(rename = "endWeights")]
-    pub end_weights: Vec<BigInt>,
+    pub end_weights: Vec<U256>,
     #[serde(rename = "startTime")]
-    pub start_time: BigInt,
+    pub start_time: U256,
     #[serde(rename = "endTime")]
-    pub end_time: BigInt,
+    pub end_time: U256,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,23 +114,23 @@ pub struct LiquidityBootstrappingState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReClammMutable {
     #[serde(rename = "lastVirtualBalances")]
-    pub last_virtual_balances: Vec<BigInt>,
+    pub last_virtual_balances: Vec<U256>,
     #[serde(rename = "dailyPriceShiftBase")]
-    pub daily_price_shift_base: BigInt,
+    pub daily_price_shift_base: U256,
     #[serde(rename = "lastTimestamp")]
-    pub last_timestamp: BigInt,
+    pub last_timestamp: U256,
     #[serde(rename = "currentTimestamp")]
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
     #[serde(rename = "centerednessMargin")]
-    pub centeredness_margin: BigInt,
+    pub centeredness_margin: U256,
     #[serde(rename = "startFourthRootPriceRatio")]
-    pub start_fourth_root_price_ratio: BigInt,
+    pub start_fourth_root_price_ratio: U256,
     #[serde(rename = "endFourthRootPriceRatio")]
-    pub end_fourth_root_price_ratio: BigInt,
+    pub end_fourth_root_price_ratio: U256,
     #[serde(rename = "priceRatioUpdateStartTime")]
-    pub price_ratio_update_start_time: BigInt,
+    pub price_ratio_update_start_time: U256,
     #[serde(rename = "priceRatioUpdateEndTime")]
-    pub price_ratio_update_end_time: BigInt,
+    pub price_ratio_update_end_time: U256,
 }
 
 /// ReClamm immutable state for test data
@@ -154,23 +153,23 @@ pub struct ReClammState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReClammV2Mutable {
     #[serde(rename = "lastVirtualBalances")]
-    pub last_virtual_balances: Vec<BigInt>,
+    pub last_virtual_balances: Vec<U256>,
     #[serde(rename = "dailyPriceShiftBase")]
-    pub daily_price_shift_base: BigInt,
+    pub daily_price_shift_base: U256,
     #[serde(rename = "lastTimestamp")]
-    pub last_timestamp: BigInt,
+    pub last_timestamp: U256,
     #[serde(rename = "currentTimestamp")]
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
     #[serde(rename = "centerednessMargin")]
-    pub centeredness_margin: BigInt,
+    pub centeredness_margin: U256,
     #[serde(rename = "startFourthRootPriceRatio")]
-    pub start_fourth_root_price_ratio: BigInt,
+    pub start_fourth_root_price_ratio: U256,
     #[serde(rename = "endFourthRootPriceRatio")]
-    pub end_fourth_root_price_ratio: BigInt,
+    pub end_fourth_root_price_ratio: U256,
     #[serde(rename = "priceRatioUpdateStartTime")]
-    pub price_ratio_update_start_time: BigInt,
+    pub price_ratio_update_start_time: U256,
     #[serde(rename = "priceRatioUpdateEndTime")]
-    pub price_ratio_update_end_time: BigInt,
+    pub price_ratio_update_end_time: U256,
 }
 
 /// ReClammV2 immutable state for test data
@@ -201,11 +200,11 @@ pub struct HookData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufferMutable {
-    pub rate: BigInt,
+    pub rate: U256,
     #[serde(rename = "maxDeposit")]
-    pub max_deposit: Option<BigInt>,
+    pub max_deposit: Option<U256>,
     #[serde(rename = "maxMint")]
-    pub max_mint: Option<BigInt>,
+    pub max_mint: Option<U256>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -320,8 +319,8 @@ pub enum SupportedPool {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Swap {
     pub swap_kind: u8,
-    pub amount_raw: BigInt,
-    pub output_raw: BigInt,
+    pub amount_raw: U256,
+    pub output_raw: U256,
     pub token_in: String,
     pub token_out: String,
     pub test: String,
@@ -331,8 +330,8 @@ pub struct Swap {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Add {
     pub kind: u8,
-    pub input_amounts_raw: Vec<BigInt>,
-    pub bpt_out_raw: BigInt,
+    pub input_amounts_raw: Vec<U256>,
+    pub bpt_out_raw: U256,
     pub test: String,
 }
 
@@ -340,8 +339,8 @@ pub struct Add {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Remove {
     pub kind: u8,
-    pub amounts_out_raw: Vec<BigInt>,
-    pub bpt_in_raw: BigInt,
+    pub amounts_out_raw: Vec<U256>,
+    pub bpt_in_raw: U256,
     pub test: String,
 }
 
@@ -583,7 +582,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                         .input_amounts_raw
                                         .into_iter()
                                         .map(|a| a.parse())
-                                        .collect::<Result<Vec<BigInt>, _>>()?,
+                                        .collect::<Result<Vec<U256>, _>>()?,
                                     bpt_out_raw: raw_add.bpt_out_raw.parse()?,
                                     test: filename.clone(),
                                 });
@@ -598,7 +597,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                         .amounts_out_raw
                                         .into_iter()
                                         .map(|a| a.parse())
-                                        .collect::<Result<Vec<BigInt>, _>>()?,
+                                        .collect::<Result<Vec<U256>, _>>()?,
                                     bpt_in_raw: raw_remove.bpt_in_raw.parse()?,
                                     test: filename.clone(),
                                 });
@@ -618,12 +617,12 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                             ["surgeThresholdPercentage"]
                                             .as_str()
                                             .unwrap_or("0")
-                                            .parse::<BigInt>()?;
+                                            .parse::<U256>()?;
                                         let max_surge_fee_percentage = dynamic_data
                                             ["maxSurgeFeePercentage"]
                                             .as_str()
                                             .unwrap_or("0")
-                                            .parse::<BigInt>()?;
+                                            .parse::<U256>()?;
 
                                         // Get the amp from the pool data if it's a stable pool
                                         let amp = if json_data.pool.pool_type == "STABLE" {
@@ -631,10 +630,10 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                                 .pool
                                                 .amp
                                                 .as_ref()
-                                                .and_then(|a| a.parse::<BigInt>().ok())
-                                                .unwrap_or_else(BigInt::zero)
+                                                .and_then(|a| a.parse::<U256>().ok())
+                                                .unwrap_or_else(|| U256::ZERO)
                                         } else {
-                                            BigInt::zero()
+                                            U256::ZERO
                                         };
 
                                         hook_state =
@@ -660,7 +659,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                             ["removeLiquidityHookFeePercentage"]
                                             .as_str()
                                             .unwrap_or("0")
-                                            .parse::<BigInt>()?;
+                                            .parse::<U256>()?;
 
                                         hook_state = Some(HookState::ExitFee(ExitFeeHookState {
                                             hook_type: "ExitFee".to_string(),
@@ -692,11 +691,11 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                             .as_ref()
                                             .ok_or("Akron hook requires weights in pool data")?
                                             .iter()
-                                            .map(|w_str| w_str.parse::<BigInt>())
-                                            .collect::<Result<Vec<BigInt>, _>>()?;
+                                            .map(|w_str| w_str.parse::<U256>())
+                                            .collect::<Result<Vec<U256>, _>>()?;
 
                                         let minimum_swap_fee_percentage =
-                                            json_data.pool.swap_fee.parse::<BigInt>()?;
+                                            json_data.pool.swap_fee.parse::<U256>()?;
 
                                         hook_state = Some(HookState::Akron(AkronHookState {
                                             hook_type: "Akron".to_string(),
@@ -752,8 +751,8 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
             let weights = match raw_pool.weights {
                 Some(w) => w
                     .into_iter()
-                    .map(|w_str| w_str.parse::<BigInt>())
-                    .collect::<Result<Vec<BigInt>, _>>()?,
+                    .map(|w_str| w_str.parse::<U256>())
+                    .collect::<Result<Vec<U256>, _>>()?,
                 None => {
                     return Err("Weighted pool missing weights".into());
                 }
@@ -766,24 +765,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -802,7 +801,7 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
         }
         "STABLE" => {
             let amp = match raw_pool.amp {
-                Some(a) => a.parse::<BigInt>()?,
+                Some(a) => a.parse::<U256>()?,
                 None => {
                     return Err("Stable pool missing amp".into());
                 }
@@ -815,24 +814,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -855,72 +854,72 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .params_alpha
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsAlpha")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let beta = raw_pool
                 .params_beta
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsBeta")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let c = raw_pool
                 .params_c
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsC")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let s = raw_pool
                 .params_s
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsS")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let lambda = raw_pool
                 .params_lambda
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing paramsLambda")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let tau_alpha_x = raw_pool
                 .tau_alpha_x
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing tauAlphaX")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let tau_alpha_y = raw_pool
                 .tau_alpha_y
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing tauAlphaY")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let tau_beta_x = raw_pool
                 .tau_beta_x
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing tauBetaX")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let tau_beta_y = raw_pool
                 .tau_beta_y
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing tauBetaY")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let u = raw_pool
                 .u
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing u")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let v = raw_pool
                 .v
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing v")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let w = raw_pool
                 .w
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing w")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let z = raw_pool
                 .z
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing z")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
             let d_sq = raw_pool
                 .d_sq
                 .as_ref()
                 .ok_or("Gyro ECLP pool missing dSq")?
-                .parse::<BigInt>()?;
+                .parse::<I256>()?;
 
             let gyro_eclp_state = GyroECLPState {
                 base: BasePoolState {
@@ -930,24 +929,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -986,40 +985,40 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .as_ref()
                 .ok_or("QuantAmm pool missing firstFourWeightsAndMultipliers")?
                 .iter()
-                .map(|w| w.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|w| w.parse::<I256>())
+                .collect::<Result<Vec<I256>, _>>()?;
 
             let second_four_weights_and_multipliers = raw_pool
                 .second_four_weights_and_multipliers
                 .as_ref()
                 .ok_or("QuantAmm pool missing secondFourWeightsAndMultipliers")?
                 .iter()
-                .map(|w| w.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|w| w.parse::<I256>())
+                .collect::<Result<Vec<I256>, _>>()?;
 
             let last_update_time = raw_pool
                 .last_update_time
                 .as_ref()
                 .ok_or("QuantAmm pool missing lastUpdateTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let last_interop_time = raw_pool
                 .last_interop_time
                 .as_ref()
                 .ok_or("QuantAmm pool missing lastInteropTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let current_timestamp = raw_pool
                 .current_timestamp
                 .as_ref()
                 .ok_or("QuantAmm pool missing currentTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let max_trade_size_ratio = raw_pool
                 .max_trade_size_ratio
                 .as_ref()
                 .ok_or("QuantAmm pool missing maxTradeSizeRatio")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let quant_amm_state = QuantAmmState {
                 base: BasePoolState {
@@ -1029,24 +1028,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -1091,28 +1090,28 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing startWeights")?
                 .iter()
-                .map(|w| w.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|w| w.parse::<U256>())
+                .collect::<Result<Vec<U256>, _>>()?;
 
             let end_weights = raw_pool
                 .end_weights
                 .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing endWeights")?
                 .iter()
-                .map(|w| w.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|w| w.parse::<U256>())
+                .collect::<Result<Vec<U256>, _>>()?;
 
             let start_time = raw_pool
                 .start_time
                 .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing startTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let end_time = raw_pool
                 .end_time
                 .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing endTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let is_swap_enabled = raw_pool
                 .is_swap_enabled
@@ -1122,7 +1121,7 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .current_timestamp
                 .as_ref()
                 .ok_or("Liquidity Bootstrapping pool missing currentTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let liquidity_bootstrapping_state = LiquidityBootstrappingState {
                 base: BasePoolState {
@@ -1132,24 +1131,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -1186,56 +1185,56 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .as_ref()
                 .ok_or("ReClamm pool missing lastVirtualBalances")?
                 .iter()
-                .map(|v| v.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|v| v.parse::<U256>())
+                .collect::<Result<Vec<U256>, _>>()?;
 
             let daily_price_shift_base = raw_pool
                 .daily_price_shift_base
                 .as_ref()
                 .ok_or("ReClamm pool missing dailyPriceShiftBase")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let last_timestamp = raw_pool
                 .last_timestamp
                 .as_ref()
                 .ok_or("ReClamm pool missing lastTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let current_timestamp = raw_pool
                 .current_timestamp
                 .as_ref()
                 .ok_or("ReClamm pool missing currentTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let centeredness_margin = raw_pool
                 .centeredness_margin
                 .as_ref()
                 .ok_or("ReClamm pool missing centerednessMargin")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let start_fourth_root_price_ratio = raw_pool
                 .start_fourth_root_price_ratio
                 .as_ref()
                 .ok_or("ReClamm pool missing startFourthRootPriceRatio")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let end_fourth_root_price_ratio = raw_pool
                 .end_fourth_root_price_ratio
                 .as_ref()
                 .ok_or("ReClamm pool missing endFourthRootPriceRatio")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let price_ratio_update_start_time = raw_pool
                 .price_ratio_update_start_time
                 .as_ref()
                 .ok_or("ReClamm pool missing priceRatioUpdateStartTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let price_ratio_update_end_time = raw_pool
                 .price_ratio_update_end_time
                 .as_ref()
                 .ok_or("ReClamm pool missing priceRatioUpdateEndTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let re_clamm_state = ReClammState {
                 base: BasePoolState {
@@ -1245,24 +1244,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -1300,56 +1299,56 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .as_ref()
                 .ok_or("ReClammV2 pool missing lastVirtualBalances")?
                 .iter()
-                .map(|v| v.parse::<BigInt>())
-                .collect::<Result<Vec<BigInt>, _>>()?;
+                .map(|v| v.parse::<U256>())
+                .collect::<Result<Vec<U256>, _>>()?;
 
             let daily_price_shift_base = raw_pool
                 .daily_price_shift_base
                 .as_ref()
                 .ok_or("ReClammV2 pool missing dailyPriceShiftBase")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let last_timestamp = raw_pool
                 .last_timestamp
                 .as_ref()
                 .ok_or("ReClammV2 pool missing lastTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let current_timestamp = raw_pool
                 .current_timestamp
                 .as_ref()
                 .ok_or("ReClammV2 pool missing currentTimestamp")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let centeredness_margin = raw_pool
                 .centeredness_margin
                 .as_ref()
                 .ok_or("ReClammV2 pool missing centerednessMargin")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let start_fourth_root_price_ratio = raw_pool
                 .start_fourth_root_price_ratio
                 .as_ref()
                 .ok_or("ReClammV2 pool missing startFourthRootPriceRatio")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let end_fourth_root_price_ratio = raw_pool
                 .end_fourth_root_price_ratio
                 .as_ref()
                 .ok_or("ReClammV2 pool missing endFourthRootPriceRatio")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let price_ratio_update_start_time = raw_pool
                 .price_ratio_update_start_time
                 .as_ref()
                 .ok_or("ReClammV2 pool missing priceRatioUpdateStartTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let price_ratio_update_end_time = raw_pool
                 .price_ratio_update_end_time
                 .as_ref()
                 .ok_or("ReClammV2 pool missing priceRatioUpdateEndTime")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let re_clamm_v2_state = ReClammV2State {
                 base: BasePoolState {
@@ -1359,24 +1358,24 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     scaling_factors: raw_pool
                         .scaling_factors
                         .into_iter()
-                        .map(|sf| sf.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    swap_fee: raw_pool.swap_fee.parse::<BigInt>()?,
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
                     balances_live_scaled_18: raw_pool
                         .balances_live_scaled_18
                         .into_iter()
-                        .map(|b| b.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
                     token_rates: raw_pool
                         .token_rates
                         .into_iter()
-                        .map(|r| r.parse::<BigInt>())
-                        .collect::<Result<Vec<BigInt>, _>>()?,
-                    total_supply: raw_pool.total_supply.parse::<BigInt>()?,
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
                     aggregate_swap_fee: raw_pool
                         .aggregate_swap_fee
                         .unwrap_or_else(|| "0".to_string())
-                        .parse::<BigInt>()?,
+                        .parse::<U256>()?,
                     supports_unbalanced_liquidity: raw_pool
                         .supports_unbalanced_liquidity
                         .unwrap_or(true),
@@ -1413,18 +1412,18 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .rate
                 .as_ref()
                 .ok_or("Buffer pool missing rate")?
-                .parse::<BigInt>()?;
+                .parse::<U256>()?;
 
             let max_deposit = raw_pool
                 .max_deposit
                 .as_ref()
-                .map(|d| d.parse::<BigInt>())
+                .map(|d| d.parse::<U256>())
                 .transpose()?;
 
             let max_mint = raw_pool
                 .max_mint
                 .as_ref()
-                .map(|m| m.parse::<BigInt>())
+                .map(|m| m.parse::<U256>())
                 .transpose()?;
 
             // Buffer pools have minimal required fields, use defaults for missing ones
@@ -1433,15 +1432,15 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     pool_address: raw_pool.pool_address.clone(),
                     pool_type: raw_pool.pool_type.clone(),
                     tokens: raw_pool.tokens.clone(),
-                    scaling_factors: vec![BigInt::from(1u64), BigInt::from(1u64)],
-                    swap_fee: BigInt::from(0u64),
-                    balances_live_scaled_18: vec![BigInt::from(0u64), BigInt::from(0u64)],
+                    scaling_factors: vec![U256::ONE, U256::ONE],
+                    swap_fee: U256::from(0u64),
+                    balances_live_scaled_18: vec![U256::from(0u64), U256::from(0u64)],
                     token_rates: vec![
-                        BigInt::from(1000000000000000000u64),
-                        BigInt::from(1000000000000000000u64),
+                        U256::from(1000000000000000000u64),
+                        U256::from(1000000000000000000u64),
                     ],
-                    total_supply: BigInt::from(0u64),
-                    aggregate_swap_fee: BigInt::from(0u64),
+                    total_supply: U256::from(0u64),
+                    aggregate_swap_fee: U256::from(0u64),
                     supports_unbalanced_liquidity: true,
                     hook_type: None,
                 },
