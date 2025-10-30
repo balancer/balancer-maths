@@ -28,11 +28,11 @@ pub fn calculate_block_normalised_weight(
     if multiplier > &I256::ZERO {
         weight.into_raw()
             + mul_down_fixed(&multiplier_scaled18.into_raw(), time_since_last_update)
-                .unwrap_or_else(|_| U256::ZERO)
+                .unwrap_or(U256::ZERO)
     } else {
         weight.into_raw()
             - mul_down_fixed(&(-multiplier_scaled18.into_raw()), time_since_last_update)
-                .unwrap_or_else(|_| U256::ZERO)
+                .unwrap_or(U256::ZERO)
     }
 }
 
@@ -54,14 +54,10 @@ pub fn get_first_four_weights_and_multipliers(
     let mut multipliers = vec![I256::ZERO; less_than_4_tokens_offset];
 
     // Convert I256 to U256 for weights
-    for i in 0..less_than_4_tokens_offset {
-        weights[i] = first_four_weights_and_multipliers[i];
-    }
+    weights[..less_than_4_tokens_offset].copy_from_slice(&first_four_weights_and_multipliers[..less_than_4_tokens_offset]);
 
     // Convert I256 to U256 for multipliers
-    for i in 0..less_than_4_tokens_offset {
-        multipliers[i] = first_four_weights_and_multipliers[less_than_4_tokens_offset + i];
-    }
+    multipliers[..less_than_4_tokens_offset].copy_from_slice(&first_four_weights_and_multipliers[less_than_4_tokens_offset..(less_than_4_tokens_offset + less_than_4_tokens_offset)]);
 
     (weights, multipliers)
 }
@@ -88,14 +84,10 @@ pub fn get_second_four_weights_and_multipliers(
     let mut multipliers = vec![I256::ZERO; more_than_4_tokens_offset];
 
     // Convert I256 to U256 for weights
-    for i in 0..more_than_4_tokens_offset {
-        weights[i] = second_four_weights_and_multipliers[i];
-    }
+    weights[..more_than_4_tokens_offset].copy_from_slice(&second_four_weights_and_multipliers[..more_than_4_tokens_offset]);
 
     // Convert I256 to U256 for multipliers
-    for i in 0..more_than_4_tokens_offset {
-        multipliers[i] = second_four_weights_and_multipliers[more_than_4_tokens_offset + i];
-    }
+    multipliers[..more_than_4_tokens_offset].copy_from_slice(&second_four_weights_and_multipliers[more_than_4_tokens_offset..(more_than_4_tokens_offset + more_than_4_tokens_offset)]);
 
     (weights, multipliers)
 }

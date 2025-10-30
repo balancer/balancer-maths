@@ -38,7 +38,7 @@ fn test_remove_liquidity() {
         let remove_liquidity_input = RemoveLiquidityInput {
             pool: get_pool_address(pool_data),
             min_amounts_out_raw: remove_test.amounts_out_raw.clone(),
-            max_bpt_amount_in_raw: remove_test.bpt_in_raw.clone(),
+            max_bpt_amount_in_raw: remove_test.bpt_in_raw,
             kind: match remove_test.kind {
                 0 => RemoveLiquidityKind::Proportional,
                 1 => RemoveLiquidityKind::SingleTokenExactIn,

@@ -28,7 +28,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
             let stable_state = StableState {
                 base: stable_pool.state.base.clone(),
                 mutable: StableMutable {
-                    amp: stable_pool.state.mutable.amp.clone(),
+                    amp: stable_pool.state.mutable.amp,
                 },
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::Stable(stable_state)))
@@ -69,16 +69,15 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .mutable
                         .second_four_weights_and_multipliers
                         .clone(),
-                    last_update_time: quant_amm_pool.state.mutable.last_update_time.clone(),
-                    last_interop_time: quant_amm_pool.state.mutable.last_interop_time.clone(),
-                    current_timestamp: quant_amm_pool.state.mutable.current_timestamp.clone(),
+                    last_update_time: quant_amm_pool.state.mutable.last_update_time,
+                    last_interop_time: quant_amm_pool.state.mutable.last_interop_time,
+                    current_timestamp: quant_amm_pool.state.mutable.current_timestamp,
                 },
                 immutable: QuantAmmImmutable {
                     max_trade_size_ratio: quant_amm_pool
                         .state
                         .immutable
-                        .max_trade_size_ratio
-                        .clone(),
+                        .max_trade_size_ratio,
                 },
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::QuantAmm(quant_amm_state)))
@@ -91,8 +90,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     current_timestamp: liquidity_bootstrapping_pool
                         .state
                         .mutable
-                        .current_timestamp
-                        .clone(),
+                        .current_timestamp,
                 },
                 immutable: LiquidityBootstrappingImmutable {
                     project_token_index: liquidity_bootstrapping_pool
@@ -116,13 +114,11 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     start_time: liquidity_bootstrapping_pool
                         .state
                         .immutable
-                        .start_time
-                        .clone(),
+                        .start_time,
                     end_time: liquidity_bootstrapping_pool
                         .state
                         .immutable
-                        .end_time
-                        .clone(),
+                        .end_time,
                 },
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::LiquidityBootstrapping(
@@ -141,31 +137,26 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     daily_price_shift_base: re_clamm_pool
                         .state
                         .mutable
-                        .daily_price_shift_base
-                        .clone(),
-                    last_timestamp: re_clamm_pool.state.mutable.last_timestamp.clone(),
-                    current_timestamp: re_clamm_pool.state.mutable.current_timestamp.clone(),
-                    centeredness_margin: re_clamm_pool.state.mutable.centeredness_margin.clone(),
+                        .daily_price_shift_base,
+                    last_timestamp: re_clamm_pool.state.mutable.last_timestamp,
+                    current_timestamp: re_clamm_pool.state.mutable.current_timestamp,
+                    centeredness_margin: re_clamm_pool.state.mutable.centeredness_margin,
                     start_fourth_root_price_ratio: re_clamm_pool
                         .state
                         .mutable
-                        .start_fourth_root_price_ratio
-                        .clone(),
+                        .start_fourth_root_price_ratio,
                     end_fourth_root_price_ratio: re_clamm_pool
                         .state
                         .mutable
-                        .end_fourth_root_price_ratio
-                        .clone(),
+                        .end_fourth_root_price_ratio,
                     price_ratio_update_start_time: re_clamm_pool
                         .state
                         .mutable
-                        .price_ratio_update_start_time
-                        .clone(),
+                        .price_ratio_update_start_time,
                     price_ratio_update_end_time: re_clamm_pool
                         .state
                         .mutable
-                        .price_ratio_update_end_time
-                        .clone(),
+                        .price_ratio_update_end_time,
                 },
                 immutable: ReClammImmutable {
                     pool_address: re_clamm_pool.state.immutable.pool_address.clone(),
@@ -186,31 +177,26 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     daily_price_shift_base: re_clamm_v2_pool
                         .state
                         .mutable
-                        .daily_price_shift_base
-                        .clone(),
-                    last_timestamp: re_clamm_v2_pool.state.mutable.last_timestamp.clone(),
-                    current_timestamp: re_clamm_v2_pool.state.mutable.current_timestamp.clone(),
-                    centeredness_margin: re_clamm_v2_pool.state.mutable.centeredness_margin.clone(),
+                        .daily_price_shift_base,
+                    last_timestamp: re_clamm_v2_pool.state.mutable.last_timestamp,
+                    current_timestamp: re_clamm_v2_pool.state.mutable.current_timestamp,
+                    centeredness_margin: re_clamm_v2_pool.state.mutable.centeredness_margin,
                     start_fourth_root_price_ratio: re_clamm_v2_pool
                         .state
                         .mutable
-                        .start_fourth_root_price_ratio
-                        .clone(),
+                        .start_fourth_root_price_ratio,
                     end_fourth_root_price_ratio: re_clamm_v2_pool
                         .state
                         .mutable
-                        .end_fourth_root_price_ratio
-                        .clone(),
+                        .end_fourth_root_price_ratio,
                     price_ratio_update_start_time: re_clamm_v2_pool
                         .state
                         .mutable
-                        .price_ratio_update_start_time
-                        .clone(),
+                        .price_ratio_update_start_time,
                     price_ratio_update_end_time: re_clamm_v2_pool
                         .state
                         .mutable
-                        .price_ratio_update_end_time
-                        .clone(),
+                        .price_ratio_update_end_time,
                 },
                 immutable: ReClammV2Immutable {
                     pool_address: re_clamm_v2_pool.state.immutable.pool_address.clone(),
@@ -223,9 +209,9 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
             let buffer_state = BufferState {
                 base: buffer_pool.state.base.clone(),
                 mutable: BufferMutable {
-                    rate: buffer_pool.state.mutable.rate.clone(),
-                    max_deposit: buffer_pool.state.mutable.max_deposit.clone(),
-                    max_mint: buffer_pool.state.mutable.max_mint.clone(),
+                    rate: buffer_pool.state.mutable.rate,
+                    max_deposit: buffer_pool.state.mutable.max_deposit,
+                    max_mint: buffer_pool.state.mutable.max_mint,
                 },
                 immutable: BufferImmutable {
                     pool_address: buffer_pool.state.immutable.pool_address.clone(),

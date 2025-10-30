@@ -40,7 +40,7 @@ pub fn get_normalized_weights(
     );
 
     // Calculate the normalized weight for the reserve token
-    normalized_weights[reserve_token_index] = &*WAD - &normalized_weights[project_token_index];
+    normalized_weights[reserve_token_index] = *WAD - normalized_weights[project_token_index];
 
     normalized_weights
 }
@@ -64,7 +64,7 @@ fn calculate_value_change_progress(
     end_time: &U256,
 ) -> U256 {
     if current_time >= end_time {
-        return WAD.clone(); // Fully completed
+        return *WAD; // Fully completed
     } else if current_time <= start_time {
         return U256::ZERO; // Not started
     }
@@ -72,26 +72,26 @@ fn calculate_value_change_progress(
     let total_seconds = end_time - start_time;
     let seconds_elapsed = current_time - start_time;
 
-    div_down_fixed(&seconds_elapsed, &total_seconds).unwrap_or_else(|_| U256::ZERO)
+    div_down_fixed(&seconds_elapsed, &total_seconds).unwrap_or(U256::ZERO)
 }
 
 /// Interpolate a value based on the progress of a change
 fn interpolate_value(start_value: &U256, end_value: &U256, pct_progress: &U256) -> U256 {
     if pct_progress >= &*WAD || start_value == end_value {
-        return end_value.clone();
+        return *end_value;
     }
 
     if pct_progress == &U256::ZERO {
-        return start_value.clone();
+        return *start_value;
     }
 
     if start_value > end_value {
         let delta =
-            mul_down_fixed(pct_progress, &(start_value - end_value)).unwrap_or_else(|_| U256::ZERO);
+            mul_down_fixed(pct_progress, &(start_value - end_value)).unwrap_or(U256::ZERO);
         start_value - delta
     } else {
         let delta =
-            mul_down_fixed(pct_progress, &(end_value - start_value)).unwrap_or_else(|_| U256::ZERO);
+            mul_down_fixed(pct_progress, &(end_value - start_value)).unwrap_or(U256::ZERO);
         start_value + delta
     }
 }

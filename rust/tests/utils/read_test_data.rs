@@ -631,7 +631,7 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                                 .amp
                                                 .as_ref()
                                                 .and_then(|a| a.parse::<U256>().ok())
-                                                .unwrap_or_else(|| U256::ZERO)
+                                                .unwrap_or(U256::ZERO)
                                         } else {
                                             U256::ZERO
                                         };

@@ -24,35 +24,35 @@ pub fn compute_invariant(
     }
 
     // Initial invariant and amplification
-    let mut invariant = total_balance.clone();
+    let mut invariant = total_balance;
     let amp_times_total = amplification_parameter * U256::from(num_tokens);
 
     // Iteratively compute the invariant
     for _ in 0..255 {
-        let mut d_p = invariant.clone();
+        let mut d_p = invariant;
 
         for balance in balances {
-            d_p = (&d_p * &invariant) / (balance * U256::from(num_tokens));
+            d_p = (d_p * invariant) / (balance * U256::from(num_tokens));
         }
 
-        let prev_invariant = invariant.clone();
+        let prev_invariant = invariant;
 
-        let numerator = (&amp_times_total * &total_balance) / U256::from(AMP_PRECISION);
-        let numerator = numerator + (d_p.clone() * U256::from(num_tokens));
-        let numerator = numerator * &invariant;
+        let numerator = (amp_times_total * total_balance) / U256::from(AMP_PRECISION);
+        let numerator = numerator + (d_p * U256::from(num_tokens));
+        let numerator = numerator * invariant;
 
-        let amp_minus_precision = &amp_times_total - U256::from(AMP_PRECISION);
-        let denominator = (amp_minus_precision * &invariant) / U256::from(AMP_PRECISION);
+        let amp_minus_precision = amp_times_total - U256::from(AMP_PRECISION);
+        let denominator = (amp_minus_precision * invariant) / U256::from(AMP_PRECISION);
         let denominator = denominator + (U256::from(num_tokens + 1) * d_p);
 
         invariant = numerator / denominator;
 
         // Check for convergence
         if invariant > prev_invariant {
-            if &invariant - &prev_invariant <= U256::ONE {
+            if invariant - prev_invariant <= U256::ONE {
                 return Ok(invariant);
             }
-        } else if &prev_invariant - &invariant <= U256::ONE {
+        } else if prev_invariant - invariant <= U256::ONE {
             return Ok(invariant);
         }
     }
@@ -83,7 +83,7 @@ pub fn compute_out_given_exact_in(
     )?;
 
     // Calculate and return the amount of tokens out, rounding down
-    Ok(&balances_copy[token_index_out] - &final_balance_out - U256::ONE)
+    Ok(balances_copy[token_index_out] - final_balance_out - U256::ONE)
 }
 
 /// Compute how many tokens must be sent to a pool to take out `token_amount_out`
@@ -113,7 +113,7 @@ pub fn compute_in_given_exact_out(
     )?;
 
     // Calculate and return the amount of tokens in, rounding up
-    Ok(&final_balance_in - &balances_copy[token_index_in] + U256::ONE)
+    Ok(final_balance_in - balances_copy[token_index_in] + U256::ONE)
 }
 
 /// Compute the balance of a token given the invariant
@@ -127,11 +127,11 @@ pub fn compute_balance(
     let amp_times_total = amplification_parameter * U256::from(num_tokens);
 
     // Calculate sum and P_D
-    let mut sum = balances[0].clone();
-    let mut p_d = &balances[0] * U256::from(num_tokens);
+    let mut sum = balances[0];
+    let mut p_d = balances[0] * U256::from(num_tokens);
 
     for balance in balances.iter().skip(1) {
-        p_d = (&p_d * balance * U256::from(num_tokens)) / invariant;
+        p_d = (p_d * balance * U256::from(num_tokens)) / invariant;
         sum += balance;
     }
 
@@ -140,29 +140,29 @@ pub fn compute_balance(
     // Calculate inv2 and c
     let inv2 = invariant * invariant;
     let c = div_up(
-        &(inv2.clone() * U256::from(AMP_PRECISION)),
-        &(amp_times_total.clone() * p_d),
-    )? * &balances[token_index];
+        &(inv2 * U256::from(AMP_PRECISION)),
+        &(amp_times_total * p_d),
+    )? * balances[token_index];
 
-    let b = sum + (invariant * U256::from(AMP_PRECISION)) / &amp_times_total;
+    let b = sum + (invariant * U256::from(AMP_PRECISION)) / amp_times_total;
 
     // Initial approximation
-    let mut token_balance = div_up(&(inv2 + c.clone()), &(invariant + b.clone()))?;
+    let mut token_balance = div_up(&(inv2 + c), &(invariant + b))?;
 
     // Iteratively solve for tokenBalance
     for _i in 0..255 {
-        let prev_token_balance = token_balance.clone();
+        let prev_token_balance = token_balance;
         token_balance = div_up(
-            &(token_balance.clone() * token_balance.clone() + c.clone()),
-            &(token_balance * U256::from(2) + b.clone() - invariant),
+            &(token_balance * token_balance + c),
+            &(token_balance * U256::from(2) + b - invariant),
         )?;
 
         // Check for convergence
         if token_balance > prev_token_balance {
-            if &token_balance - &prev_token_balance <= U256::ONE {
+            if token_balance - prev_token_balance <= U256::ONE {
                 return Ok(token_balance);
             }
-        } else if &prev_token_balance - &token_balance <= U256::ONE {
+        } else if prev_token_balance - token_balance <= U256::ONE {
             return Ok(token_balance);
         }
     }

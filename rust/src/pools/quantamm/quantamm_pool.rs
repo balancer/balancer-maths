@@ -63,13 +63,13 @@ impl QuantAmmPool {
         last_interop_time: &U256,
         current_timestamp: &U256,
     ) -> Vec<U256> {
-        let mut multiplier_time = current_timestamp.clone();
+        let mut multiplier_time = *current_timestamp;
 
         if current_timestamp >= last_interop_time {
-            multiplier_time = last_interop_time.clone();
+            multiplier_time = *last_interop_time;
         }
 
-        let time_since_last_update = &multiplier_time - last_update_time;
+        let time_since_last_update = multiplier_time - last_update_time;
 
         let mut normalized_weights = Vec::with_capacity(base_weights.len());
 
@@ -95,8 +95,8 @@ impl QuantAmmPool {
             return Err(PoolError::InvalidTokenIndex);
         }
 
-        let token_in_weight = self.normalized_weights[index_in].clone();
-        let token_out_weight = self.normalized_weights[index_out].clone();
+        let token_in_weight = self.normalized_weights[index_in];
+        let token_out_weight = self.normalized_weights[index_out];
 
         Ok((token_in_weight, token_out_weight))
     }
@@ -111,7 +111,7 @@ impl QuantAmmPool {
             balance_scaled_18,
             &self.state.immutable.max_trade_size_ratio,
         )
-        .unwrap_or_else(|_| U256::ZERO);
+        .unwrap_or(U256::ZERO);
 
         if amount_scaled_18 > &max_amount {
             return Err(PoolError::InvalidSwapParameters);
@@ -212,11 +212,11 @@ impl PoolBase for QuantAmmPool {
     }
 
     fn get_maximum_invariant_ratio(&self) -> U256 {
-        MAX_INVARIANT_RATIO.clone()
+        *MAX_INVARIANT_RATIO
     }
 
     fn get_minimum_invariant_ratio(&self) -> U256 {
-        MIN_INVARIANT_RATIO.clone()
+        *MIN_INVARIANT_RATIO
     }
 }
 

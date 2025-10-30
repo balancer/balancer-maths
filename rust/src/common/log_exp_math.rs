@@ -79,7 +79,7 @@ pub fn pow(x: &U256, y: &U256) -> Result<U256, PoolError> {
         // bring y_int256 to 36 decimal places, as it might overflow. Instead, we perform two 18 decimal
         // multiplications and add the results: one with the first 18 decimals of ln_36_x, and one with the
         // (downscaled) last 18 decimals.
-        (ln_36_x.clone() / *ONE_18) * y_int256 + ((ln_36_x.clone() % *ONE_18) * y_int256) / *ONE_18
+        (ln_36_x / *ONE_18) * y_int256 + ((ln_36_x % *ONE_18) * y_int256) / *ONE_18
     } else {
         ln(&x_int256)? * y_int256
     };
@@ -104,58 +104,58 @@ fn exp(x: &I256) -> Result<I256, PoolError> {
         // We only handle positive exponents: e^(-x) is computed as 1 / e^x. We can safely make x positive since it
         // fits in the signed 256 bit range (as it is larger than MIN_NATURAL_EXPONENT).
         // Fixed point division requires multiplying by ONE_18.
-        return Ok((*ONE_18 * *ONE_18) / exp(&(-x.clone()))?);
+        return Ok((*ONE_18 * *ONE_18) / exp(&(-*x))?);
     }
 
-    let mut x = x.clone();
+    let mut x = *x;
     let first_an = if x >= *X0 {
-        x = x - *X0;
-        A0.clone()
+        x -= *X0;
+        *A0
     } else if x >= *X1 {
-        x = x - *X1;
-        A1.clone()
+        x -= *X1;
+        *A1
     } else {
         I256::ONE
     };
 
     // We now transform x into a 20 decimal fixed point number, to have enhanced precision when computing the
     // smaller terms.
-    x = x * I256::from_str("100").unwrap();
+    x *= I256::from_str("100").unwrap();
 
     // `product` is the accumulated product of all a_n (except a0 and a1), which starts at 20 decimal fixed point
     // one. Recall that fixed point multiplication requires dividing by ONE_20.
-    let mut product = ONE_20.clone();
+    let mut product = *ONE_20;
 
     if x >= *X2 {
-        x = x - *X2;
+        x -= *X2;
         product = (product * *A2) / *ONE_20;
     }
     if x >= *X3 {
-        x = x - *X3;
+        x -= *X3;
         product = (product * *A3) / *ONE_20;
     }
     if x >= *X4 {
-        x = x - *X4;
+        x -= *X4;
         product = (product * *A4) / *ONE_20;
     }
     if x >= *X5 {
-        x = x - *X5;
+        x -= *X5;
         product = (product * *A5) / *ONE_20;
     }
     if x >= *X6 {
-        x = x - *X6;
+        x -= *X6;
         product = (product * *A6) / *ONE_20;
     }
     if x >= *X7 {
-        x = x - *X7;
+        x -= *X7;
         product = (product * *A7) / *ONE_20;
     }
     if x >= *X8 {
-        x = x - *X8;
+        x -= *X8;
         product = (product * *A8) / *ONE_20;
     }
     if x >= *X9 {
-        x = x - *X9;
+        x -= *X9;
         product = (product * *A9) / *ONE_20;
     }
 
@@ -164,8 +164,8 @@ fn exp(x: &I256) -> Result<I256, PoolError> {
     // Now we need to compute e^x, where x is small (in particular, it is smaller than x9). We use the Taylor series
     // expansion for e^x: 1 + x + (x^2 / 2!) + (x^3 / 3!) + ... + (x^n / n!).
 
-    let mut series_sum = ONE_20.clone(); // The initial one in the sum, with 20 decimal places.
-    let mut term = x.clone(); // Each term in the sum, where the nth term is (x^n / n!).
+    let mut series_sum = *ONE_20; // The initial one in the sum, with 20 decimal places.
+    let mut term = x; // Each term in the sum, where the nth term is (x^n / n!).
 
     // The first term is simply x.
     series_sum += term;
@@ -217,7 +217,7 @@ fn exp(x: &I256) -> Result<I256, PoolError> {
 
 /// Calculate natural logarithm ln(x) with signed 18 decimal fixed point argument
 fn ln(x: &I256) -> Result<I256, PoolError> {
-    let mut a = x.clone();
+    let mut a = *x;
 
     if a < *ONE_18 {
         // Since ln(a^k) = k * ln(a), we can compute ln(a) as ln(a) = ln((1/a)^(-1)) = - ln((1/a)). If a is less
@@ -319,10 +319,10 @@ fn ln(x: &I256) -> Result<I256, PoolError> {
     let z_squared = (z * z) / *ONE_20;
 
     // num is the numerator of the series: the z^(2 * n + 1) term
-    let mut num = z.clone();
+    let mut num = z;
 
     // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
-    let mut series_sum = num.clone();
+    let mut series_sum = num;
 
     // In each step, the numerator is multiplied by z^2
     num = (num * z_squared) / *ONE_20;
@@ -354,7 +354,7 @@ fn ln(x: &I256) -> Result<I256, PoolError> {
 
 /// Calculate natural logarithm with 36 decimal precision
 fn ln_36(x: &I256) -> Result<I256, PoolError> {
-    let mut x = x.clone();
+    let mut x = *x;
     // Since ln(1) = 0, a value of x close to one will yield a very small result, which makes using 36 digits
     // worthwhile.
 
@@ -370,10 +370,10 @@ fn ln_36(x: &I256) -> Result<I256, PoolError> {
     let z_squared = (z * z) / *RAY;
 
     // num is the numerator of the series: the z^(2 * n + 1) term
-    let mut num = z.clone();
+    let mut num = z;
 
     // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
-    let mut series_sum = num.clone();
+    let mut series_sum = num;
 
     // In each step, the numerator is multiplied by z^2
     num = (num * z_squared) / *RAY;

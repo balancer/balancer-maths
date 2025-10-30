@@ -92,11 +92,10 @@ impl HookBase for ExitFeeHook {
                             &amounts_out_raw[i],
                             &state.remove_liquidity_hook_fee_percentage,
                         )
-                        .unwrap_or_else(|_| U256::ZERO);
+                        .unwrap_or(U256::ZERO);
 
-                        accrued_fees[i] = hook_fee.clone();
-                        hook_adjusted_amounts_out_raw[i] =
-                            &hook_adjusted_amounts_out_raw[i] - &hook_fee;
+                        accrued_fees[i] = hook_fee;
+                        hook_adjusted_amounts_out_raw[i] -= hook_fee;
                         // Fees don't need to be transferred to the hook, because donation will reinsert them in the vault
                     }
 

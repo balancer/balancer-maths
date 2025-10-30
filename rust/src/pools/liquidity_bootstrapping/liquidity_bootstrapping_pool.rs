@@ -59,8 +59,8 @@ impl LiquidityBootstrappingPool {
             return Err(PoolError::InvalidTokenIndex);
         }
 
-        let token_in_weight = self.normalized_weights[index_in].clone();
-        let token_out_weight = self.normalized_weights[index_out].clone();
+        let token_in_weight = self.normalized_weights[index_in];
+        let token_out_weight = self.normalized_weights[index_out];
 
         Ok((token_in_weight, token_out_weight))
     }
@@ -156,11 +156,11 @@ impl PoolBase for LiquidityBootstrappingPool {
     }
 
     fn get_maximum_invariant_ratio(&self) -> U256 {
-        MAX_INVARIANT_RATIO.clone()
+        *MAX_INVARIANT_RATIO
     }
 
     fn get_minimum_invariant_ratio(&self) -> U256 {
-        MIN_INVARIANT_RATIO.clone()
+        *MIN_INVARIANT_RATIO
     }
 }
 

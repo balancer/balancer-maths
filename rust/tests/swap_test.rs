@@ -48,7 +48,7 @@ fn test_swaps() {
 
         // Create SwapInput
         let swap_input = SwapInput {
-            amount_raw: swap_test.amount_raw.clone(),
+            amount_raw: swap_test.amount_raw,
             token_in: swap_test.token_in.clone(),
             token_out: swap_test.token_out.clone(),
             swap_kind: match swap_test.swap_kind {

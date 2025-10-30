@@ -39,7 +39,7 @@ pub fn compute_invariant_down(
     normalized_weights: &[U256],
     balances: &[U256],
 ) -> Result<U256, PoolError> {
-    let mut invariant = WAD.clone();
+    let mut invariant = *WAD;
 
     for i in 0..normalized_weights.len() {
         let pow_result = pow_down_fixed(&balances[i], &normalized_weights[i])?;
@@ -67,7 +67,7 @@ pub fn compute_invariant_up(
     normalized_weights: &[U256],
     balances: &[U256],
 ) -> Result<U256, PoolError> {
-    let mut invariant = WAD.clone();
+    let mut invariant = *WAD;
 
     for i in 0..normalized_weights.len() {
         invariant = mul_up_fixed(
@@ -140,7 +140,7 @@ pub fn compute_in_given_exact_out(
 
     // Because the base is larger than one (and the power rounds up), the power should always be larger than one, so
     // the following subtraction should never revert.
-    let ratio = power - &*WAD;
+    let ratio = power - *WAD;
 
     mul_up_fixed(balance_in, &ratio)
 }

@@ -75,15 +75,15 @@ pub fn calculate_buffer_amounts(
 /// Convert assets to shares
 fn _convert_to_shares(assets: &U256, rate: &U256, rounding: Rounding) -> U256 {
     match rounding {
-        Rounding::RoundUp => div_up_fixed(assets, rate).unwrap_or_else(|_| U256::ZERO),
-        Rounding::RoundDown => div_down_fixed(assets, rate).unwrap_or_else(|_| U256::ZERO),
+        Rounding::RoundUp => div_up_fixed(assets, rate).unwrap_or(U256::ZERO),
+        Rounding::RoundDown => div_down_fixed(assets, rate).unwrap_or(U256::ZERO),
     }
 }
 
 /// Convert shares to assets
 fn _convert_to_assets(shares: &U256, rate: &U256, rounding: Rounding) -> U256 {
     match rounding {
-        Rounding::RoundUp => mul_up_fixed(shares, rate).unwrap_or_else(|_| U256::ZERO),
-        Rounding::RoundDown => mul_down_fixed(shares, rate).unwrap_or_else(|_| U256::ZERO),
+        Rounding::RoundUp => mul_up_fixed(shares, rate).unwrap_or(U256::ZERO),
+        Rounding::RoundDown => mul_down_fixed(shares, rate).unwrap_or(U256::ZERO),
     }
 }

@@ -12,7 +12,7 @@ lazy_static! {
 pub struct FixedPointError(pub &'static str);
 
 pub fn mul_down_mag(a: &I256, b: &I256) -> I256 {
-    (a.clone() * b.clone()) / *ONE
+    (*a * *b) / *ONE
 }
 
 pub fn mul_up_mag(a: &I256, b: &I256) -> I256 {

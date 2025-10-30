@@ -64,14 +64,14 @@ pub fn remove_liquidity(
             .iter()
             .enumerate()
         {
-            updated_balances_live_scaled18[i] = adjusted_balance.clone();
+            updated_balances_live_scaled18[i] = *adjusted_balance;
         }
     }
 
     let (bpt_amount_in, amounts_out_scaled18, swap_fee_amounts_scaled18) =
         match remove_liquidity_input.kind {
             RemoveLiquidityKind::Proportional => {
-                let bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw.clone();
+                let bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw;
                 let swap_fee_amounts_scaled18 = vec![U256::ZERO; base_state.tokens.len()];
                 let amounts_out_scaled18 = compute_proportional_amounts_out(
                     &updated_balances_live_scaled18,
@@ -86,7 +86,7 @@ pub fn remove_liquidity(
             }
             RemoveLiquidityKind::SingleTokenExactIn => {
                 require_unbalanced_liquidity_enabled(pool_state)?;
-                let bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw.clone();
+                let bpt_amount_in = remove_liquidity_input.max_bpt_amount_in_raw;
                 let mut amounts_out_scaled18 = min_amounts_out_scaled18.clone();
                 let token_out_index =
                     get_single_input_index(&remove_liquidity_input.min_amounts_out_raw)?;
@@ -151,8 +151,8 @@ pub fn remove_liquidity(
             i,
         )?;
 
-        updated_balances_live_scaled18[i] = &updated_balances_live_scaled18[i]
-            - (&amounts_out_scaled18[i] + &aggregate_swap_fee_amount_scaled18);
+        updated_balances_live_scaled18[i] -=
+            amounts_out_scaled18[i] + aggregate_swap_fee_amount_scaled18;
     }
 
     // Call after remove liquidity hook if needed
@@ -176,7 +176,7 @@ pub fn remove_liquidity(
         if hook_class.config().enable_hook_adjusted_amounts {
             for (i, adjusted_amount) in hook_return.hook_adjusted_amounts_out_raw.iter().enumerate()
             {
-                amounts_out_raw[i] = adjusted_amount.clone();
+                amounts_out_raw[i] = *adjusted_amount;
             }
         }
     }

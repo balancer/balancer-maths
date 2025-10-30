@@ -75,7 +75,7 @@ impl StableSurgeHook {
     ) -> Result<U256, PoolError> {
         // Create a temporary stable pool for swap simulation
         let stable_state = StableMutable {
-            amp: hook_state.amp.clone(),
+            amp: hook_state.amp,
         };
         let stable_pool = StablePool::new(stable_state);
 
@@ -85,22 +85,18 @@ impl StableSurgeHook {
 
         // Update balances based on swap kind
         if swap_params.swap_kind == GivenIn {
-            new_balances[swap_params.token_in_index] =
-                &new_balances[swap_params.token_in_index] + &swap_params.amount_scaled_18;
-            new_balances[swap_params.token_out_index] =
-                &new_balances[swap_params.token_out_index] - &amount_calculated_scaled_18;
+            new_balances[swap_params.token_in_index] += swap_params.amount_scaled_18;
+            new_balances[swap_params.token_out_index] -= amount_calculated_scaled_18;
         } else {
-            new_balances[swap_params.token_in_index] =
-                &new_balances[swap_params.token_in_index] + &amount_calculated_scaled_18;
-            new_balances[swap_params.token_out_index] =
-                &new_balances[swap_params.token_out_index] - &swap_params.amount_scaled_18;
+            new_balances[swap_params.token_in_index] += amount_calculated_scaled_18;
+            new_balances[swap_params.token_out_index] -= swap_params.amount_scaled_18;
         }
 
         let new_total_imbalance = self.calculate_imbalance(&new_balances)?;
 
         // If we are balanced, return the static fee percentage
         if new_total_imbalance.is_zero() {
-            return Ok(static_fee_percentage.clone());
+            return Ok(*static_fee_percentage);
         }
 
         let old_total_imbalance = self.calculate_imbalance(&swap_params.balances_live_scaled_18)?;
@@ -109,13 +105,13 @@ impl StableSurgeHook {
         if new_total_imbalance <= old_total_imbalance
             || new_total_imbalance <= *surge_threshold_percentage
         {
-            return Ok(static_fee_percentage.clone());
+            return Ok(*static_fee_percentage);
         }
 
         // Calculate dynamic surge fee
         // surgeFee = staticFee + (maxFee - staticFee) * (pctImbalance - pctThreshold) / (1 - pctThreshold)
         let fee_difference = max_surge_fee_percentage - static_fee_percentage;
-        let imbalance_excess = &new_total_imbalance - surge_threshold_percentage;
+        let imbalance_excess = new_total_imbalance - surge_threshold_percentage;
         let threshold_complement = complement_fixed(surge_threshold_percentage)?;
 
         let surge_multiplier = div_down_fixed(&imbalance_excess, &threshold_complement)?;
@@ -144,9 +140,9 @@ impl StableSurgeHook {
         let mid = sorted_balances.len() / 2;
 
         if sorted_balances.len().is_multiple_of(2) {
-            (&sorted_balances[mid - 1] + &sorted_balances[mid]) / U256::from(2)
+            (sorted_balances[mid - 1] + sorted_balances[mid]) / U256::from(2)
         } else {
-            sorted_balances[mid].clone()
+            sorted_balances[mid]
         }
     }
 
@@ -211,13 +207,13 @@ impl HookBase for StableSurgeHook {
                     },
                     Err(_) => DynamicSwapFeeResult {
                         success: false,
-                        dynamic_swap_fee: static_swap_fee_percentage.clone(),
+                        dynamic_swap_fee: *static_swap_fee_percentage,
                     },
                 }
             }
             _ => DynamicSwapFeeResult {
                 success: false,
-                dynamic_swap_fee: static_swap_fee_percentage.clone(),
+                dynamic_swap_fee: *static_swap_fee_percentage,
             },
         }
     }
@@ -254,7 +250,7 @@ impl HookBase for StableSurgeHook {
                 // Rebuild old balances before adding liquidity
                 let mut old_balances_scaled_18 = vec![U256::ZERO; balances_scaled_18.len()];
                 for i in 0..balances_scaled_18.len() {
-                    old_balances_scaled_18[i] = &balances_scaled_18[i] - &amounts_in_scaled_18[i];
+                    old_balances_scaled_18[i] = balances_scaled_18[i] - amounts_in_scaled_18[i];
                 }
 
                 let new_total_imbalance = match self.calculate_imbalance(balances_scaled_18) {
@@ -333,7 +329,7 @@ impl HookBase for StableSurgeHook {
                 // Rebuild old balances before removing liquidity
                 let mut old_balances_scaled_18 = vec![U256::ZERO; balances_scaled_18.len()];
                 for i in 0..balances_scaled_18.len() {
-                    old_balances_scaled_18[i] = &balances_scaled_18[i] + &amounts_out_scaled_18[i];
+                    old_balances_scaled_18[i] = balances_scaled_18[i] + amounts_out_scaled_18[i];
                 }
 
                 let new_total_imbalance = match self.calculate_imbalance(balances_scaled_18) {

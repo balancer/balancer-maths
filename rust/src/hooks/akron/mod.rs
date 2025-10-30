@@ -67,7 +67,7 @@ impl AkronHook {
 
         let numerator = mul_div_up_fixed(
             &balance_plus_amount,
-            &(power_with_fees.clone() - power_without_fees),
+            &(power_with_fees - power_without_fees),
             &power_with_fees,
         )?;
 
@@ -91,8 +91,8 @@ impl AkronHook {
         let power_without_fees =
             pow_up_fixed(&div_up_fixed(balance_out, &balance_minus_amount)?, exponent)?;
 
-        let numerator = power_with_fees.clone() - power_without_fees;
-        let denominator = power_with_fees.clone() - crate::common::constants::WAD.clone();
+        let numerator = power_with_fees - power_without_fees;
+        let denominator = power_with_fees - *crate::common::constants::WAD;
 
         div_up_fixed(&numerator, &denominator)
     }
@@ -120,33 +120,33 @@ impl HookBase for AkronHook {
                         &state.weights[swap_params.token_in_index],
                         &state.weights[swap_params.token_out_index],
                     )
-                    .unwrap_or_else(|_| U256::ZERO);
+                    .unwrap_or(U256::ZERO);
 
                     Self::compute_swap_fee_percentage_given_exact_in(
                         &swap_params.balances_live_scaled_18[swap_params.token_in_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
                     )
-                    .unwrap_or_else(|_| U256::ZERO)
+                    .unwrap_or(U256::ZERO)
                 } else {
                     let exponent = div_up_fixed(
                         &state.weights[swap_params.token_out_index],
                         &state.weights[swap_params.token_in_index],
                     )
-                    .unwrap_or_else(|_| U256::ZERO);
+                    .unwrap_or(U256::ZERO);
 
                     Self::compute_swap_fee_percentage_given_exact_out(
                         &swap_params.balances_live_scaled_18[swap_params.token_out_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
                     )
-                    .unwrap_or_else(|_| U256::ZERO)
+                    .unwrap_or(U256::ZERO)
                 };
 
                 // Charge the static or calculated fee, whichever is greater
                 let dynamic_swap_fee =
                     if state.minimum_swap_fee_percentage > calculated_swap_fee_percentage {
-                        state.minimum_swap_fee_percentage.clone()
+                        state.minimum_swap_fee_percentage
                     } else {
                         calculated_swap_fee_percentage
                     };

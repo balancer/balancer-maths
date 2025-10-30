@@ -7,12 +7,12 @@ use alloy_primitives::U256;
 pub fn sqrt(a: &U256) -> U256 {
     // Handle edge cases when a is 0 or 1
     if a <= &U256::ONE {
-        return a.clone();
+        return *a;
     }
 
     // Find an initial approximation using bit manipulation
     // This approximation is close to 2^(log2(a)/2)
-    let mut aa = a.clone();
+    let mut aa = *a;
     let mut xn = U256::ONE;
 
     // Check if aa >= 2^128
@@ -64,18 +64,18 @@ pub fn sqrt(a: &U256) -> U256 {
     }
 
     // Refine the initial approximation
-    xn = (&xn * U256::from(3)) >> 1;
+    xn = (xn * U256::from(3)) >> 1;
 
     // Apply Newton's method iterations
     // Each iteration approximately doubles the number of correct bits
-    xn = (&xn + &(a / &xn)) >> 1;
-    xn = (&xn + &(a / &xn)) >> 1;
-    xn = (&xn + &(a / &xn)) >> 1;
-    xn = (&xn + &(a / &xn)) >> 1;
-    xn = (&xn + &(a / &xn)) >> 1;
+    xn = (xn + (a / xn)) >> 1;
+    xn = (xn + (a / xn)) >> 1;
+    xn = (xn + (a / xn)) >> 1;
+    xn = (xn + (a / xn)) >> 1;
+    xn = (xn + (a / xn)) >> 1;
 
     // Final adjustment: if xn > sqrt(a), decrement by 1
-    if xn > (a / &xn) {
+    if xn > (a / xn) {
         xn - U256::ONE
     } else {
         xn

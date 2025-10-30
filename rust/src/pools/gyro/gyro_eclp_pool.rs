@@ -18,27 +18,27 @@ impl GyroECLPPool {
     /// Create a new Gyro ECLP pool
     pub fn new(immutable: GyroECLPImmutable) -> Self {
         let params = EclpParams {
-            alpha: immutable.alpha.clone(),
-            beta: immutable.beta.clone(),
-            c: immutable.c.clone(),
-            s: immutable.s.clone(),
-            lambda: immutable.lambda.clone(),
+            alpha: immutable.alpha,
+            beta: immutable.beta,
+            c: immutable.c,
+            s: immutable.s,
+            lambda: immutable.lambda,
         };
 
         let derived = DerivedEclpParams {
             tau_alpha: Vector2 {
-                x: immutable.tau_alpha_x.clone(),
-                y: immutable.tau_alpha_y.clone(),
+                x: immutable.tau_alpha_x,
+                y: immutable.tau_alpha_y,
             },
             tau_beta: Vector2 {
-                x: immutable.tau_beta_x.clone(),
-                y: immutable.tau_beta_y.clone(),
+                x: immutable.tau_beta_x,
+                y: immutable.tau_beta_y,
             },
-            u: immutable.u.clone(),
-            v: immutable.v.clone(),
-            w: immutable.w.clone(),
-            z: immutable.z.clone(),
-            d_sq: immutable.d_sq.clone(),
+            u: immutable.u,
+            v: immutable.v,
+            w: immutable.w,
+            z: immutable.z,
+            d_sq: immutable.d_sq,
         };
 
         Self { params, derived }
@@ -48,12 +48,12 @@ impl GyroECLPPool {
 impl PoolBase for GyroECLPPool {
     fn get_maximum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MAX_INVARIANT_RATIO;
-        MAX_INVARIANT_RATIO.clone()
+        *MAX_INVARIANT_RATIO
     }
 
     fn get_minimum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MIN_INVARIANT_RATIO;
-        MIN_INVARIANT_RATIO.clone()
+        *MIN_INVARIANT_RATIO
     }
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
@@ -100,8 +100,8 @@ impl PoolBase for GyroECLPPool {
         let (current_invariant, inv_err) =
             calculate_invariant_with_error(balances_live_scaled18, &self.params, &self.derived)?;
         match rounding {
-            Rounding::RoundDown => Ok((current_invariant - inv_err.clone()).into_raw()),
-            Rounding::RoundUp => Ok((current_invariant + inv_err.clone()).into_raw()),
+            Rounding::RoundDown => Ok((current_invariant - inv_err).into_raw()),
+            Rounding::RoundUp => Ok((current_invariant + inv_err).into_raw()),
         }
     }
 

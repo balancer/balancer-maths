@@ -35,9 +35,9 @@ pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> U256 {
         mul_down_fixed(&guess, &guess).unwrap_or_else(|_| panic!("mul_down_fixed failed"));
     let tolerance_bigint = U256::from(tolerance);
 
-    let upper_bound = x + &mul_up_fixed(&guess, &tolerance_bigint)
+    let upper_bound = x + mul_up_fixed(&guess, &tolerance_bigint)
         .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
-    let lower_bound = x - &mul_up_fixed(&guess, &tolerance_bigint)
+    let lower_bound = x - mul_up_fixed(&guess, &tolerance_bigint)
         .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
 
     if !(guess_squared <= upper_bound && guess_squared >= lower_bound) {
@@ -54,48 +54,48 @@ fn make_initial_guess(x: &U256) -> U256 {
         let log2_halved = int_log2_halved(&x_div_wad);
         (U256::ONE << log2_halved) * *WAD
     } else if x <= &U256::from(10u64) {
-        SQRT_1E_NEG_17.clone()
+        *SQRT_1E_NEG_17
     } else if x <= &U256::from(100u64) {
         U256::from(10_000_000_000u64)
     } else if x <= &U256::from(1000u64) {
-        SQRT_1E_NEG_15.clone()
+        *SQRT_1E_NEG_15
     } else if x <= &U256::from(10000u64) {
         U256::from(100_000_000_000u64)
     } else if x <= &U256::from(100000u64) {
-        SQRT_1E_NEG_13.clone()
+        *SQRT_1E_NEG_13
     } else if x <= &U256::from(1000000u64) {
         U256::from(1_000_000_000_000u64)
     } else if x <= &U256::from(10000000u64) {
-        SQRT_1E_NEG_11.clone()
+        *SQRT_1E_NEG_11
     } else if x <= &U256::from(100000000u64) {
         U256::from(10_000_000_000_000u64)
     } else if x <= &U256::from(1000000000u64) {
-        SQRT_1E_NEG_9.clone()
+        *SQRT_1E_NEG_9
     } else if x <= &U256::from(10000000000u64) {
         U256::from(100_000_000_000_000u64)
     } else if x <= &U256::from(100000000000u64) {
-        SQRT_1E_NEG_7.clone()
+        *SQRT_1E_NEG_7
     } else if x <= &U256::from(1000000000000u64) {
         U256::from(1_000_000_000_000_000u64)
     } else if x <= &U256::from(10000000000000u64) {
-        SQRT_1E_NEG_5.clone()
+        *SQRT_1E_NEG_5
     } else if x <= &U256::from(100000000000000u64) {
         U256::from(10_000_000_000_000_000u64)
     } else if x <= &U256::from(1000000000000000u64) {
-        SQRT_1E_NEG_3.clone()
+        *SQRT_1E_NEG_3
     } else if x <= &U256::from(10000000000000000u64) {
         U256::from(100_000_000_000_000_000u64)
     } else if x <= &U256::from(100000000000000000u64) {
-        SQRT_1E_NEG_1.clone()
+        *SQRT_1E_NEG_1
     } else {
-        x.clone()
+        *x
     }
 }
 
 /// Calculates the integer logarithm base 2 divided by 2
 fn int_log2_halved(x: &U256) -> u64 {
     let mut n = 0u64;
-    let mut local_x = x.clone();
+    let mut local_x = *x;
 
     if local_x >= U256::ONE << 128 {
         local_x >>= 128;

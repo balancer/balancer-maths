@@ -45,7 +45,7 @@ fn test_add_liquidity() {
         let add_input = AddLiquidityInput {
             pool: get_pool_address(pool),
             max_amounts_in_raw: add.input_amounts_raw.clone(),
-            min_bpt_amount_out_raw: add.bpt_out_raw.clone(),
+            min_bpt_amount_out_raw: add.bpt_out_raw,
             kind,
         };
 

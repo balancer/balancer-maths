@@ -53,7 +53,7 @@ pub fn compute_add_liquidity_unbalanced(
 
     // Loop through each token, updating the balance with the added amount
     for index in 0..current_balances.len() {
-        new_balances[index] = &current_balances[index] + &exact_amounts[index] - U256::ONE;
+        new_balances[index] = current_balances[index] + exact_amounts[index] - U256::ONE;
     }
 
     // Calculate current and new invariants
@@ -73,10 +73,10 @@ pub fn compute_add_liquidity_unbalanced(
         let proportional_token_balance =
             mul_down_fixed(&invariant_ratio, &current_balances[index])?;
         if new_balances[index] > proportional_token_balance {
-            let taxable_amount = &new_balances[index] - &proportional_token_balance;
+            let taxable_amount = new_balances[index] - proportional_token_balance;
             let fee_amount = mul_up_fixed(&taxable_amount, swap_fee_percentage)?;
-            swap_fee_amounts[index] = fee_amount.clone();
-            new_balances[index] = &new_balances[index] - &fee_amount;
+            swap_fee_amounts[index] = fee_amount;
+            new_balances[index] -= fee_amount;
         }
     }
 
@@ -85,7 +85,7 @@ pub fn compute_add_liquidity_unbalanced(
 
     // Calculate BPT amount out
     let bpt_amount_out =
-        (total_supply * (&invariant_with_fees_applied - &current_invariant)) / &current_invariant;
+        (total_supply * (invariant_with_fees_applied - current_invariant)) / current_invariant;
 
     Ok(AddLiquidityUnbalancedResult {
         bpt_amount_out,
@@ -114,7 +114,7 @@ pub fn compute_add_liquidity_single_token_exact_out(
 
     // Calculate new balance needed
     let new_balance = compute_balance(current_balances, token_in_index, &invariant_ratio)?;
-    let amount_in = &new_balance - &current_balances[token_in_index];
+    let amount_in = new_balance - current_balances[token_in_index];
 
     // Calculate non-taxable balance
     let non_taxable_balance = div_down_fixed(
@@ -122,17 +122,17 @@ pub fn compute_add_liquidity_single_token_exact_out(
         total_supply,
     )?;
 
-    let taxable_amount = &amount_in + &current_balances[token_in_index] - &non_taxable_balance;
+    let taxable_amount = amount_in + current_balances[token_in_index] - non_taxable_balance;
 
     // Calculate fee
     let fee =
-        div_up_fixed(&taxable_amount, &complement_fixed(swap_fee_percentage)?)? - &taxable_amount;
+        div_up_fixed(&taxable_amount, &complement_fixed(swap_fee_percentage)?)? - taxable_amount;
 
     // Create swap fees array
     let mut swap_fee_amounts = vec![U256::ZERO; current_balances.len()];
-    swap_fee_amounts[token_in_index] = fee.clone();
+    swap_fee_amounts[token_in_index] = fee;
 
-    let amount_in_with_fee = &amount_in + &fee;
+    let amount_in_with_fee = amount_in + fee;
     Ok(AddLiquiditySingleTokenExactOutResult {
         amount_in_with_fee,
         swap_fee_amounts,
@@ -180,7 +180,7 @@ pub fn compute_remove_liquidity_single_token_exact_in(
     let new_balance = compute_balance(current_balances, token_out_index, &invariant_ratio)?;
 
     // Compute the amount to be withdrawn from the pool
-    let amount_out = &current_balances[token_out_index] - &new_balance;
+    let amount_out = current_balances[token_out_index] - new_balance;
 
     let new_balance_before_tax = mul_div_up_fixed(
         &new_supply,
@@ -189,17 +189,17 @@ pub fn compute_remove_liquidity_single_token_exact_in(
     )?;
 
     // Compute the taxable amount: the difference between the non-taxable balance and actual withdrawal
-    let taxable_amount = &new_balance_before_tax - &new_balance;
+    let taxable_amount = new_balance_before_tax - new_balance;
 
     // Calculate the swap fee on the taxable amount
     let fee = mul_up_fixed(&taxable_amount, swap_fee_percentage)?;
 
     // Create swap fees array
     let mut swap_fee_amounts = vec![U256::ZERO; current_balances.len()];
-    swap_fee_amounts[token_out_index] = fee.clone();
+    swap_fee_amounts[token_out_index] = fee;
 
     // Return the net amount after subtracting the fee
-    let amount_out_with_fee = &amount_out - &fee;
+    let amount_out_with_fee = amount_out - fee;
     Ok(RemoveLiquiditySingleTokenExactInResult {
         amount_out_with_fee,
         swap_fee_amounts,
@@ -224,11 +224,11 @@ pub fn compute_remove_liquidity_single_token_exact_out(
 
     // Copy current_balances to new_balances
     for index in 0..current_balances.len() {
-        new_balances[index] = &current_balances[index] - U256::ONE;
+        new_balances[index] = current_balances[index] - U256::ONE;
     }
 
     // Update the balance of token_out_index with exact_amount_out
-    new_balances[token_out_index] = &new_balances[token_out_index] - exact_amount_out;
+    new_balances[token_out_index] -= exact_amount_out;
 
     // Calculate the invariant using the current balances
     let current_invariant = compute_invariant(current_balances, Rounding::RoundUp)?;
@@ -244,14 +244,14 @@ pub fn compute_remove_liquidity_single_token_exact_out(
     }
 
     // Taxable amount is proportional to invariant ratio
-    let taxable_amount = &mul_up_fixed(&invariant_ratio, &current_balances[token_out_index])?
-        - &new_balances[token_out_index];
+    let taxable_amount = mul_up_fixed(&invariant_ratio, &current_balances[token_out_index])?
+        - new_balances[token_out_index];
 
     let fee =
-        div_up_fixed(&taxable_amount, &complement_fixed(swap_fee_percentage)?)? - &taxable_amount;
+        div_up_fixed(&taxable_amount, &complement_fixed(swap_fee_percentage)?)? - taxable_amount;
 
     // Update new balances array with a fee
-    new_balances[token_out_index] = &new_balances[token_out_index] - &fee;
+    new_balances[token_out_index] -= fee;
 
     // Calculate the new invariant with fees applied
     let invariant_with_fees_applied = compute_invariant(&new_balances, Rounding::RoundDown)?;
@@ -263,7 +263,7 @@ pub fn compute_remove_liquidity_single_token_exact_out(
     // Calculate the amount of BPT to burn
     let bpt_amount_in = mul_div_up_fixed(
         total_supply,
-        &(&current_invariant - &invariant_with_fees_applied),
+        &(current_invariant - invariant_with_fees_applied),
         &current_invariant,
     )?;
 

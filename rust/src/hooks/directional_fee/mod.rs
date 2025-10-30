@@ -61,7 +61,7 @@ impl HookBase for DirectionalFeeHook {
         let final_balance_out = balance_out - amount;
 
         let calculated = if final_balance_in > final_balance_out {
-            let diff = &final_balance_in - &final_balance_out;
+            let diff = final_balance_in - final_balance_out;
             let total = final_balance_in + final_balance_out;
             match div_down_fixed(&diff, &total) {
                 Ok(v) => v,
@@ -74,7 +74,7 @@ impl HookBase for DirectionalFeeHook {
         let dynamic_swap_fee = if calculated > *static_swap_fee_percentage {
             calculated
         } else {
-            static_swap_fee_percentage.clone()
+            *static_swap_fee_percentage
         };
 
         DynamicSwapFeeResult {

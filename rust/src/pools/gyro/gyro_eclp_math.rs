@@ -119,11 +119,11 @@ fn virtual_offset1(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
     let b = if d.tau_alpha.x < I256::ZERO {
         mul_up_xp_to_np(
             &mul_up_mag(&mul_up_mag(&r.x, &p.lambda), &p.s),
-            &(-term_xp.clone()),
+            &(-term_xp),
         )
     } else {
         mul_up_xp_to_np(
-            &mul_down_mag(&mul_down_mag(&(-r.y.clone()), &p.lambda), &p.s),
+            &mul_down_mag(&mul_down_mag(&(-r.y), &p.lambda), &p.s),
             &term_xp,
         )
     };
@@ -132,8 +132,8 @@ fn virtual_offset1(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
 }
 
 fn max_balances0(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
-    let term_xp1 = div_xp_u(&(d.tau_beta.x.clone() - d.tau_alpha.x.clone()), &d.d_sq);
-    let term_xp2 = div_xp_u(&(d.tau_beta.y.clone() - d.tau_alpha.y.clone()), &d.d_sq);
+    let term_xp1 = div_xp_u(&(d.tau_beta.x - d.tau_alpha.x), &d.d_sq);
+    let term_xp2 = div_xp_u(&(d.tau_beta.y - d.tau_alpha.y), &d.d_sq);
 
     let xp = mul_down_xp_to_np(
         &mul_down_mag(&mul_down_mag(&r.y, &p.lambda), &p.c),
@@ -150,8 +150,8 @@ fn max_balances0(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
 }
 
 fn max_balances1(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
-    let term_xp1 = div_xp_u(&(d.tau_beta.x.clone() - d.tau_alpha.x.clone()), &d.d_sq);
-    let term_xp2 = div_xp_u(&(d.tau_alpha.y.clone() - d.tau_beta.y.clone()), &d.d_sq);
+    let term_xp1 = div_xp_u(&(d.tau_beta.x - d.tau_alpha.x), &d.d_sq);
+    let term_xp2 = div_xp_u(&(d.tau_alpha.y - d.tau_beta.y), &d.d_sq);
 
     let yp = mul_down_xp_to_np(
         &mul_down_mag(&mul_down_mag(&r.y, &p.lambda), &p.s),
@@ -171,7 +171,7 @@ fn calc_at_a_chi(x: &I256, y: &I256, p: &EclpParams, d: &DerivedEclpParams) -> I
     let d_sq2 = mul_xp_u(&d.d_sq, &d.d_sq);
 
     let term_xp = div_xp_u(
-        &div_down_mag(&(div_down_mag(&d.w, &p.lambda) + d.z.clone()), &p.lambda),
+        &div_down_mag(&(div_down_mag(&d.w, &p.lambda) + d.z), &p.lambda),
         &d_sq2,
     );
 
@@ -196,7 +196,7 @@ fn calc_a_chi_a_chi_in_xp(p: &EclpParams, d: &DerivedEclpParams) -> I256 {
     let mut val = mul_up_mag(
         &p.lambda,
         &div_xp_u(
-            &mul_xp_u(&(d.u.clone() * I256::from_str("2").unwrap()), &d.v),
+            &mul_xp_u(&(d.u * I256::from_str("2").unwrap()), &d.v),
             &d_sq3,
         ),
     );
@@ -204,7 +204,7 @@ fn calc_a_chi_a_chi_in_xp(p: &EclpParams, d: &DerivedEclpParams) -> I256 {
     val += mul_up_mag(
         &mul_up_mag(
             &div_xp_u(
-                &mul_xp_u(&(d.u.clone() + I256::ONE), &(d.u.clone() + I256::ONE)),
+                &mul_xp_u(&(d.u + I256::ONE), &(d.u + I256::ONE)),
                 &d_sq3,
             ),
             &p.lambda,
@@ -214,7 +214,7 @@ fn calc_a_chi_a_chi_in_xp(p: &EclpParams, d: &DerivedEclpParams) -> I256 {
 
     val += div_xp_u(&mul_xp_u(&d.v, &d.v), &d_sq3);
 
-    let term_xp = div_up_mag(&d.w, &p.lambda) + d.z.clone();
+    let term_xp = div_up_mag(&d.w, &p.lambda) + d.z;
     val += div_xp_u(&mul_xp_u(&term_xp, &term_xp), &d_sq3);
 
     val
@@ -253,7 +253,7 @@ fn calc_min_atx_a_chiy_sq_plus_atx_sq(
     let term3 = mul_down_mag(
         &mul_down_mag(
             &mul_down_mag(x, y),
-            &(p.c.clone() * I256::from_str("2").unwrap()),
+            &(p.c * I256::from_str("2").unwrap()),
         ),
         &p.s,
     );
@@ -261,7 +261,7 @@ fn calc_min_atx_a_chiy_sq_plus_atx_sq(
 
     let term_xp1 = mul_xp_u(&d.u, &d.u);
     let term_xp2 = div_down_mag(
-        &mul_xp_u(&(d.u.clone() * I256::from_str("2").unwrap()), &d.v),
+        &mul_xp_u(&(d.u * I256::from_str("2").unwrap()), &d.v),
         &p.lambda,
     );
     let term_xp3 = div_down_mag(&div_down_mag(&mul_xp_u(&d.v, &d.v), &p.lambda), &p.lambda);
@@ -270,13 +270,13 @@ fn calc_min_atx_a_chiy_sq_plus_atx_sq(
     let denominator = mul_xp_u(&mul_xp_u(&mul_xp_u(&d.d_sq, &d.d_sq), &d.d_sq), &d.d_sq);
     let term_xp = div_xp_u(&term_xp, &denominator);
 
-    let mut val = mul_down_xp_to_np(&(-term_np.clone()), &term_xp);
+    let mut val = mul_down_xp_to_np(&(-term_np), &term_xp);
 
     let term4 = div_down_mag(
-        &div_down_mag(&(term_np.clone() - I256::from_str("9").unwrap()), &p.lambda),
+        &div_down_mag(&(term_np - I256::from_str("9").unwrap()), &p.lambda),
         &p.lambda,
     );
-    let term5 = div_xp_u(&*ONE_XP, &d.d_sq);
+    let term5 = div_xp_u(&ONE_XP, &d.d_sq);
     val += mul_down_xp_to_np(&term4, &term5);
 
     val
@@ -286,12 +286,12 @@ fn calc_2_atx_aty_a_chix_a_chiy(x: &I256, y: &I256, p: &EclpParams, d: &DerivedE
     let term_np = mul_down_mag(
         &mul_down_mag(
             &(mul_down_mag(x, x) - mul_up_mag(y, y)),
-            &(p.c.clone() * I256::from_str("2").unwrap()),
+            &(p.c * I256::from_str("2").unwrap()),
         ),
         &p.s,
     );
 
-    let xy = mul_down_mag(y, &(x.clone() * I256::from_str("2").unwrap()));
+    let xy = mul_down_mag(y, &(*x * I256::from_str("2").unwrap()));
 
     let term_np = term_np + mul_down_mag(&mul_down_mag(&xy, &p.c), &p.c)
         - mul_down_mag(&mul_down_mag(&xy, &p.s), &p.s);
@@ -322,7 +322,7 @@ fn calc_min_aty_a_chix_sq_plus_aty_sq(
         + mul_up_mag(
             &mul_up_mag(
                 &mul_up_mag(x, y),
-                &(p.s.clone() * I256::from_str("2").unwrap()),
+                &(p.s * I256::from_str("2").unwrap()),
             ),
             &p.c,
         );
@@ -332,7 +332,7 @@ fn calc_min_aty_a_chix_sq_plus_aty_sq(
 
     let term_xp = term_xp
         + div_down_mag(
-            &mul_xp_u(&(d.z.clone() * I256::from_str("2").unwrap()), &d.w),
+            &mul_xp_u(&(d.z * I256::from_str("2").unwrap()), &d.w),
             &p.lambda,
         );
 
@@ -341,11 +341,11 @@ fn calc_min_aty_a_chix_sq_plus_aty_sq(
         &mul_xp_u(&mul_xp_u(&mul_xp_u(&d.d_sq, &d.d_sq), &d.d_sq), &d.d_sq),
     );
 
-    let mut val = mul_down_xp_to_np(&(-term_np.clone()), &term_xp);
+    let mut val = mul_down_xp_to_np(&(-term_np), &term_xp);
 
     val += mul_down_xp_to_np(
-        &(term_np.clone() - I256::from_str("9").unwrap()),
-        &div_xp_u(&*ONE_XP, &d.d_sq),
+        &(term_np - I256::from_str("9").unwrap()),
+        &div_xp_u(&ONE_XP, &d.d_sq),
     );
 
     val
@@ -450,13 +450,13 @@ pub fn calculate_invariant_with_error(
     }
 
     // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
-    err = ((params.lambda.clone() * (x + y)) / *ONE_XP + err + I256::ONE)
+    err = ((params.lambda * (x + y)) / *ONE_XP + err + I256::ONE)
         * I256::from_str("20").unwrap();
 
     let achiachi = calc_a_chi_a_chi_in_xp(params, derived);
     // A chi \cdot A chi > 1, so round it up to round denominator up.
     // Denominator uses extra precision, so we do * 1/denominator so we are sure the calculation doesn't overflow.
-    let mul_denominator = div_xp_u(&*ONE_XP, &(achiachi - *ONE_XP));
+    let mul_denominator = div_xp_u(&ONE_XP, &(achiachi - *ONE_XP));
 
     // As an alternative, could do, but could overflow:
     // invariant = (AtAChi.add(sqrt) - err).divXp(denominator)
@@ -474,7 +474,7 @@ pub fn calculate_invariant_with_error(
     // Error in denominator is lambda^2 * 2e-37 and scales relative to the result / denominator.
     // Scale by a constant to account for errors in the scaling factor itself and limited compounding.
     // Calculating lambda^2 without decimals so that the calculation will never overflow, the lost precision isn't important.
-    let lambda_squared_div_1e36 = (params.lambda.clone() * params.lambda.clone())
+    let lambda_squared_div_1e36 = (params.lambda * params.lambda)
         / I256::from_dec_str("1000000000000000000000000000000000000").unwrap();
     let numerator = mul_up_xp_to_np(&invariant, &mul_denominator)
         * lambda_squared_div_1e36
@@ -500,7 +500,7 @@ fn solve_quadratic_swap(
     tau_beta: &Vector2,
     d_sq: &I256,
 ) -> I256 {
-    let lam_bar_x_result = *ONE_XP - div_down_mag(&div_down_mag(&*ONE_XP, lambda), lambda);
+    let lam_bar_x_result = *ONE_XP - div_down_mag(&div_down_mag(&ONE_XP, lambda), lambda);
     let lam_bar = Vector2 {
         x: lam_bar_x_result,
         y: *ONE_XP - div_up_mag(&div_up_mag(&ONE_XP, lambda), lambda),
@@ -512,16 +512,16 @@ fn solve_quadratic_swap(
         c: I256::ZERO,
     };
 
-    let xp = x.clone() - ab.x;
+    let xp = *x - ab.x;
 
     if xp > I256::ZERO {
         q.b = mul_up_xp_to_np(
-            &mul_down_mag(&mul_down_mag(&(-xp.clone()), s), c),
+            &mul_down_mag(&mul_down_mag(&(-xp), s), c),
             &div_xp_u(&lam_bar.y, d_sq),
         );
     } else {
         q.b = mul_up_xp_to_np(
-            &mul_up_mag(&mul_up_mag(&(-xp.clone()), s), c),
+            &mul_up_mag(&mul_up_mag(&(-xp), s), c),
             &(div_xp_u(&lam_bar.x, d_sq) + I256::ONE),
         );
     }
@@ -531,7 +531,7 @@ fn solve_quadratic_swap(
         x: s_term_x_result,
         y: div_xp_u(
             &mul_up_mag(&mul_up_mag(&lam_bar.x, s), s),
-            &(d_sq.clone() + I256::ONE),
+            &(*d_sq + I256::ONE),
         ) + I256::ONE,
     };
 
@@ -539,7 +539,7 @@ fn solve_quadratic_swap(
     let s_term_y = *ONE_XP - s_term.y;
 
     q.c = -calc_xp_xp_div_lambda_lambda(x, r, lambda, s, c, tau_beta, d_sq);
-    q.c = q.c + mul_down_xp_to_np(&mul_down_mag(&r.y, &r.y), &s_term_y);
+    q.c += mul_down_xp_to_np(&mul_down_mag(&r.y, &r.y), &s_term_y);
 
     q.c = if q.c > I256::ZERO {
         let q_c_u256 = q.c.into_raw();
@@ -582,14 +582,14 @@ fn calc_xp_xp_div_lambda_lambda(
     let term_xp = div_xp_u(&mul_xp_u(&tau_beta.x, &tau_beta.y), &sq_vars.x);
 
     if term_xp > I256::ZERO {
-        q.a = mul_up_mag(&sq_vars.y, &(s.clone() * I256::from_str("2").unwrap()));
+        q.a = mul_up_mag(&sq_vars.y, &(*s * I256::from_str("2").unwrap()));
         q.a = mul_up_xp_to_np(
             &mul_up_mag(&q.a, c),
             &(term_xp + I256::from_str("7").unwrap()),
         );
     } else {
         q.a = mul_down_mag(&r.y, &r.y);
-        q.a = mul_down_mag(&q.a, &(s.clone() * I256::from_str("2").unwrap()));
+        q.a = mul_down_mag(&q.a, &(*s * I256::from_str("2").unwrap()));
         q.a = mul_up_xp_to_np(&mul_down_mag(&q.a, c), &term_xp);
     }
 
@@ -597,20 +597,20 @@ fn calc_xp_xp_div_lambda_lambda(
         q.b = mul_up_xp_to_np(
             &mul_up_mag(
                 &mul_up_mag(&r.x, x),
-                &(c.clone() * I256::from_str("2").unwrap()),
+                &(*c * I256::from_str("2").unwrap()),
             ),
             &(-div_xp_u(&tau_beta.x, d_sq) + I256::from_str("3").unwrap()),
         );
     } else {
         q.b = mul_up_xp_to_np(
             &mul_down_mag(
-                &mul_down_mag(&(-r.y.clone()), x),
-                &(c.clone() * I256::from_str("2").unwrap()),
+                &mul_down_mag(&(-r.y), x),
+                &(*c * I256::from_str("2").unwrap()),
             ),
             &div_xp_u(&tau_beta.x, d_sq),
         );
     }
-    q.a = q.a + q.b;
+    q.a += q.b;
 
     let term_xp2 =
         div_xp_u(&mul_xp_u(&tau_beta.y, &tau_beta.y), &sq_vars.x) + I256::from_str("7").unwrap();
@@ -620,8 +620,8 @@ fn calc_xp_xp_div_lambda_lambda(
 
     q.c = mul_up_xp_to_np(
         &mul_down_mag(
-            &mul_down_mag(&(-r.y.clone()), x),
-            &(s.clone() * I256::from_str("2").unwrap()),
+            &mul_down_mag(&(-r.y), x),
+            &(*s * I256::from_str("2").unwrap()),
         ),
         &div_xp_u(&tau_beta.y, d_sq),
     );
@@ -633,7 +633,7 @@ fn calc_xp_xp_div_lambda_lambda(
         div_down_mag(&q.b, lambda)
     };
 
-    q.a = q.a + q.b;
+    q.a += q.b;
     q.a = if q.a > I256::ZERO {
         div_up_mag(&q.a, lambda)
     } else {
@@ -677,8 +677,8 @@ fn calc_x_given_y(y: &I256, params: &EclpParams, d: &DerivedEclpParams, r: &Vect
         r,
         &ba,
         &Vector2 {
-            x: -d.tau_alpha.x.clone(),
-            y: d.tau_alpha.y.clone(),
+            x: -d.tau_alpha.x,
+            y: d.tau_alpha.y,
         },
         &d.d_sq,
     )
@@ -718,13 +718,13 @@ pub fn calc_out_given_in(
         check_asset_bounds(params, derived, invariant, &bal_in_new_signed, 0)?;
         let bal_out_new = calc_y_given_x(&bal_in_new_signed, params, derived, invariant);
         let bal_out_new_u256 = bal_out_new.into_raw();
-        &balances[1] - &bal_out_new_u256
+        balances[1] - bal_out_new_u256
     } else {
         let bal_in_new_signed = I256::from_raw(balances[1] + amount_in);
         check_asset_bounds(params, derived, invariant, &bal_in_new_signed, 1)?;
         let bal_out_new = calc_x_given_y(&bal_in_new_signed, params, derived, invariant);
         let bal_out_new_u256 = bal_out_new.into_raw();
-        &balances[0] - &bal_out_new_u256
+        balances[0] - bal_out_new_u256
     };
     Ok(bal_in_new)
 }
@@ -745,7 +745,7 @@ pub fn calc_in_given_out(
         let bal_in_new = calc_x_given_y(&bal_out_new_signed, params, derived, invariant);
         check_asset_bounds(params, derived, invariant, &bal_in_new, 0)?;
         let bal_in_new_u256 = bal_in_new.into_raw();
-        Ok(&bal_in_new_u256 - &balances[0])
+        Ok(bal_in_new_u256 - balances[0])
     } else {
         if amount_out > &balances[0] {
             return Err(PoolError::InvalidInput("Asset bounds exceeded".to_string()));
@@ -754,7 +754,7 @@ pub fn calc_in_given_out(
         let bal_in_new = calc_y_given_x(&bal_out_new_signed, params, derived, invariant);
         check_asset_bounds(params, derived, invariant, &bal_in_new, 1)?;
         let bal_in_new_u256 = bal_in_new.into_raw();
-        Ok(&bal_in_new_u256 - &balances[1])
+        Ok(bal_in_new_u256 - balances[1])
     }
 }
 
@@ -782,7 +782,7 @@ pub fn compute_balance(
     // the virtual offsets. Depending on tauAlpha and tauBeta values, we want to use the invariant rounded up
     // or rounded down to make sure we're conservative in the output.
     let invariant_x_result = mul_up_fixed(
-        &(current_invariant.clone() + inv_err.clone()).into_raw(),
+        &(current_invariant + inv_err).into_raw(),
         invariant_ratio,
     )?;
     let invariant_y_result =

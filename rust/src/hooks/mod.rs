@@ -219,7 +219,7 @@ impl HookBase for DefaultHook {
     ) -> DynamicSwapFeeResult {
         DynamicSwapFeeResult {
             success: true,
-            dynamic_swap_fee: static_swap_fee_percentage.clone(),
+            dynamic_swap_fee: *static_swap_fee_percentage,
         }
     }
 }
