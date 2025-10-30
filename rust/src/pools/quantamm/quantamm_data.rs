@@ -1,21 +1,21 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::{I256, U256};
 use serde::{Deserialize, Serialize};
 
 /// QuantAmm mutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct QuantAmmMutable {
-    pub first_four_weights_and_multipliers: Vec<BigInt>,
-    pub second_four_weights_and_multipliers: Vec<BigInt>,
-    pub last_update_time: BigInt,
-    pub last_interop_time: BigInt,
-    pub current_timestamp: BigInt,
+    pub first_four_weights_and_multipliers: Vec<I256>, // Can contain negative values
+    pub second_four_weights_and_multipliers: Vec<I256>, // Can contain negative values
+    pub last_update_time: U256,
+    pub last_interop_time: U256,
+    pub current_timestamp: U256,
 }
 
 /// QuantAmm immutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct QuantAmmImmutable {
-    pub max_trade_size_ratio: BigInt,
+    pub max_trade_size_ratio: U256,
 }
 
 /// QuantAmm pool state
