@@ -6,7 +6,7 @@ use crate::pools::gyro::gyro_eclp_math::{
     calc_in_given_out, calc_out_given_in, calculate_invariant_with_error, compute_balance,
     DerivedEclpParams, EclpParams, Vector2,
 };
-use num_bigint::BigInt;
+use alloy_primitives::{I256, U256};
 
 /// Gyro ECLP pool implementation
 pub struct GyroECLPPool {
@@ -46,17 +46,17 @@ impl GyroECLPPool {
 }
 
 impl PoolBase for GyroECLPPool {
-    fn get_maximum_invariant_ratio(&self) -> BigInt {
+    fn get_maximum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MAX_INVARIANT_RATIO;
         MAX_INVARIANT_RATIO.clone()
     }
 
-    fn get_minimum_invariant_ratio(&self) -> BigInt {
+    fn get_minimum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MIN_INVARIANT_RATIO;
         MIN_INVARIANT_RATIO.clone()
     }
 
-    fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
+    fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         // Calculate current invariant with error for swaps (matching Python pattern)
         let (current_invariant, inv_err) = calculate_invariant_with_error(
             &swap_params.balances_live_scaled_18,
@@ -64,8 +64,9 @@ impl PoolBase for GyroECLPPool {
             &self.derived,
         )?;
 
+        let invariant_x_result = current_invariant + inv_err * I256::try_from(2).unwrap();
         let invariant = Vector2 {
-            x: &current_invariant + &(&inv_err * BigInt::from(2u64)),
+            x: invariant_x_result,
             y: current_invariant,
         };
 
@@ -93,23 +94,23 @@ impl PoolBase for GyroECLPPool {
 
     fn compute_invariant(
         &self,
-        balances_live_scaled18: &[BigInt],
+        balances_live_scaled18: &[U256],
         rounding: Rounding,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         let (current_invariant, inv_err) =
             calculate_invariant_with_error(balances_live_scaled18, &self.params, &self.derived)?;
         match rounding {
-            Rounding::RoundDown => Ok(&current_invariant - &inv_err),
-            Rounding::RoundUp => Ok(&current_invariant + &inv_err),
+            Rounding::RoundDown => Ok((current_invariant - inv_err.clone()).into_raw()),
+            Rounding::RoundUp => Ok((current_invariant + inv_err.clone()).into_raw()),
         }
     }
 
     fn compute_balance(
         &self,
-        balances_live_scaled18: &[BigInt],
+        balances_live_scaled18: &[U256],
         token_in_index: usize,
-        invariant_ratio: &BigInt,
-    ) -> Result<BigInt, PoolError> {
+        invariant_ratio: &U256,
+    ) -> Result<U256, PoolError> {
         compute_balance(
             balances_live_scaled18,
             token_in_index,
