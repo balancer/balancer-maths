@@ -30,11 +30,7 @@ pub fn compute_current_virtual_balances(
     price_ratio_update_end_time: &U256,
 ) -> (U256, U256, bool) {
     if last_timestamp == current_timestamp {
-        return (
-            *last_virtual_balance_a,
-            *last_virtual_balance_b,
-            false,
-        );
+        return (*last_virtual_balance_a, *last_virtual_balance_b, false);
     }
 
     let mut current_virtual_balance_a = *last_virtual_balance_a;
@@ -155,8 +151,7 @@ fn compute_virtual_balances_updating_price_ratio(
         * (*WAD + centeredness + sqrt_result)
         / (U256::from(2) * (sqrt_price_ratio - *WAD));
 
-    let virtual_balance_overvalued = virtual_balance_undervalued
-        * last_virtual_balance_overvalued
+    let virtual_balance_overvalued = virtual_balance_undervalued * last_virtual_balance_overvalued
         / last_virtual_balance_undervalued;
 
     if is_pool_above_center {
@@ -227,15 +222,11 @@ fn compute_virtual_balances_updating_price_range(
     // +-----------------------------------------+
 
     // Cap the duration (time between operations) at 30 days, to ensure `pow_down` does not overflow.
-    let duration = std::cmp::min(
-        current_timestamp - last_timestamp,
-        *THIRTY_DAYS_SECONDS,
-    );
+    let duration = std::cmp::min(current_timestamp - last_timestamp, *THIRTY_DAYS_SECONDS);
 
     let mut virtual_balance_overvalued = mul_down_fixed(
         &virtual_balance_overvalued,
-        &pow_down_fixed(daily_price_shift_base, &(duration * *WAD))
-            .unwrap_or(*WAD),
+        &pow_down_fixed(daily_price_shift_base, &(duration * *WAD)).unwrap_or(*WAD),
     )
     .unwrap_or(U256::ZERO);
 
@@ -367,13 +358,11 @@ fn compute_centeredness(
     // The centeredness is defined between 0 and 1. If the numerator is greater than the denominator, we compute
     // the inverse ratio.
     if numerator <= denominator {
-        let pool_centeredness =
-            div_down_fixed(&numerator, &denominator).unwrap_or(U256::ZERO);
+        let pool_centeredness = div_down_fixed(&numerator, &denominator).unwrap_or(U256::ZERO);
         let is_pool_above_center = false;
         (pool_centeredness, is_pool_above_center)
     } else {
-        let pool_centeredness =
-            div_down_fixed(&denominator, &numerator).unwrap_or(U256::ZERO);
+        let pool_centeredness = div_down_fixed(&denominator, &numerator).unwrap_or(U256::ZERO);
         let is_pool_above_center = true;
         (pool_centeredness, is_pool_above_center)
     }

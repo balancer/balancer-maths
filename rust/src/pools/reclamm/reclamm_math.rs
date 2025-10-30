@@ -29,11 +29,7 @@ pub fn compute_current_virtual_balances(
     price_ratio_update_end_time: &U256,
 ) -> (U256, U256, bool) {
     if last_timestamp == current_timestamp {
-        return (
-            *last_virtual_balance_a,
-            *last_virtual_balance_b,
-            false,
-        );
+        return (*last_virtual_balance_a, *last_virtual_balance_b, false);
     }
 
     let mut current_virtual_balance_a = *last_virtual_balance_a;
@@ -194,8 +190,7 @@ fn compute_virtual_balances_updating_price_range(
     let time_difference = current_timestamp - last_timestamp;
     let time_difference_wad = time_difference * *WAD;
 
-    let shift_factor =
-        pow(daily_price_shift_base, &time_difference_wad).unwrap_or(*WAD);
+    let shift_factor = pow(daily_price_shift_base, &time_difference_wad).unwrap_or(*WAD);
     let virtual_balance_overvalued =
         mul_down_fixed(&virtual_balance_overvalued, &shift_factor).unwrap_or(U256::ZERO);
 
@@ -319,13 +314,11 @@ fn compute_centeredness(
     // The centeredness is defined between 0 and 1. If the numerator is greater than the denominator,
     // we compute the inverse ratio.
     if numerator <= denominator {
-        let pool_centeredness =
-            div_down_fixed(&numerator, &denominator).unwrap_or(U256::ZERO);
+        let pool_centeredness = div_down_fixed(&numerator, &denominator).unwrap_or(U256::ZERO);
         let is_pool_above_center = false;
         (pool_centeredness, is_pool_above_center)
     } else {
-        let pool_centeredness =
-            div_down_fixed(&denominator, &numerator).unwrap_or(U256::ZERO);
+        let pool_centeredness = div_down_fixed(&denominator, &numerator).unwrap_or(U256::ZERO);
         let is_pool_above_center = true;
         (pool_centeredness, is_pool_above_center)
     }
@@ -345,9 +338,7 @@ pub fn compute_invariant(
         Rounding::RoundDown => {
             mul_down_fixed(&total_balance_a, &total_balance_b).unwrap_or(U256::ZERO)
         }
-        Rounding::RoundUp => {
-            mul_up_fixed(&total_balance_a, &total_balance_b).unwrap_or(U256::ZERO)
-        }
+        Rounding::RoundUp => mul_up_fixed(&total_balance_a, &total_balance_b).unwrap_or(U256::ZERO),
     }
 }
 

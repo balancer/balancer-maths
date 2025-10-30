@@ -86,12 +86,10 @@ fn interpolate_value(start_value: &U256, end_value: &U256, pct_progress: &U256) 
     }
 
     if start_value > end_value {
-        let delta =
-            mul_down_fixed(pct_progress, &(start_value - end_value)).unwrap_or(U256::ZERO);
+        let delta = mul_down_fixed(pct_progress, &(start_value - end_value)).unwrap_or(U256::ZERO);
         start_value - delta
     } else {
-        let delta =
-            mul_down_fixed(pct_progress, &(end_value - start_value)).unwrap_or(U256::ZERO);
+        let delta = mul_down_fixed(pct_progress, &(end_value - start_value)).unwrap_or(U256::ZERO);
         start_value + delta
     }
 }

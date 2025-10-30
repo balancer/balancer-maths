@@ -54,10 +54,14 @@ pub fn get_first_four_weights_and_multipliers(
     let mut multipliers = vec![I256::ZERO; less_than_4_tokens_offset];
 
     // Convert I256 to U256 for weights
-    weights[..less_than_4_tokens_offset].copy_from_slice(&first_four_weights_and_multipliers[..less_than_4_tokens_offset]);
+    weights[..less_than_4_tokens_offset]
+        .copy_from_slice(&first_four_weights_and_multipliers[..less_than_4_tokens_offset]);
 
     // Convert I256 to U256 for multipliers
-    multipliers[..less_than_4_tokens_offset].copy_from_slice(&first_four_weights_and_multipliers[less_than_4_tokens_offset..(less_than_4_tokens_offset + less_than_4_tokens_offset)]);
+    multipliers[..less_than_4_tokens_offset].copy_from_slice(
+        &first_four_weights_and_multipliers
+            [less_than_4_tokens_offset..(less_than_4_tokens_offset + less_than_4_tokens_offset)],
+    );
 
     (weights, multipliers)
 }
@@ -84,10 +88,14 @@ pub fn get_second_four_weights_and_multipliers(
     let mut multipliers = vec![I256::ZERO; more_than_4_tokens_offset];
 
     // Convert I256 to U256 for weights
-    weights[..more_than_4_tokens_offset].copy_from_slice(&second_four_weights_and_multipliers[..more_than_4_tokens_offset]);
+    weights[..more_than_4_tokens_offset]
+        .copy_from_slice(&second_four_weights_and_multipliers[..more_than_4_tokens_offset]);
 
     // Convert I256 to U256 for multipliers
-    multipliers[..more_than_4_tokens_offset].copy_from_slice(&second_four_weights_and_multipliers[more_than_4_tokens_offset..(more_than_4_tokens_offset + more_than_4_tokens_offset)]);
+    multipliers[..more_than_4_tokens_offset].copy_from_slice(
+        &second_four_weights_and_multipliers
+            [more_than_4_tokens_offset..(more_than_4_tokens_offset + more_than_4_tokens_offset)],
+    );
 
     (weights, multipliers)
 }

@@ -117,10 +117,7 @@ fn virtual_offset1(p: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
     let term_xp = div_xp_u(&d.tau_alpha.x, &d.d_sq);
 
     let b = if d.tau_alpha.x < I256::ZERO {
-        mul_up_xp_to_np(
-            &mul_up_mag(&mul_up_mag(&r.x, &p.lambda), &p.s),
-            &(-term_xp),
-        )
+        mul_up_xp_to_np(&mul_up_mag(&mul_up_mag(&r.x, &p.lambda), &p.s), &(-term_xp))
     } else {
         mul_up_xp_to_np(
             &mul_down_mag(&mul_down_mag(&(-r.y), &p.lambda), &p.s),
@@ -203,10 +200,7 @@ fn calc_a_chi_a_chi_in_xp(p: &EclpParams, d: &DerivedEclpParams) -> I256 {
 
     val += mul_up_mag(
         &mul_up_mag(
-            &div_xp_u(
-                &mul_xp_u(&(d.u + I256::ONE), &(d.u + I256::ONE)),
-                &d_sq3,
-            ),
+            &div_xp_u(&mul_xp_u(&(d.u + I256::ONE), &(d.u + I256::ONE)), &d_sq3),
             &p.lambda,
         ),
         &p.lambda,
@@ -251,10 +245,7 @@ fn calc_min_atx_a_chiy_sq_plus_atx_sq(
     let term_np = term1 + term2;
 
     let term3 = mul_down_mag(
-        &mul_down_mag(
-            &mul_down_mag(x, y),
-            &(p.c * I256::from_str("2").unwrap()),
-        ),
+        &mul_down_mag(&mul_down_mag(x, y), &(p.c * I256::from_str("2").unwrap())),
         &p.s,
     );
     let term_np = term_np - term3;
@@ -320,10 +311,7 @@ fn calc_min_aty_a_chix_sq_plus_aty_sq(
 
     let term_np = term_np
         + mul_up_mag(
-            &mul_up_mag(
-                &mul_up_mag(x, y),
-                &(p.s * I256::from_str("2").unwrap()),
-            ),
+            &mul_up_mag(&mul_up_mag(x, y), &(p.s * I256::from_str("2").unwrap())),
             &p.c,
         );
 
@@ -450,8 +438,7 @@ pub fn calculate_invariant_with_error(
     }
 
     // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
-    err = ((params.lambda * (x + y)) / *ONE_XP + err + I256::ONE)
-        * I256::from_str("20").unwrap();
+    err = ((params.lambda * (x + y)) / *ONE_XP + err + I256::ONE) * I256::from_str("20").unwrap();
 
     let achiachi = calc_a_chi_a_chi_in_xp(params, derived);
     // A chi \cdot A chi > 1, so round it up to round denominator up.
@@ -595,10 +582,7 @@ fn calc_xp_xp_div_lambda_lambda(
 
     if tau_beta.x < I256::ZERO {
         q.b = mul_up_xp_to_np(
-            &mul_up_mag(
-                &mul_up_mag(&r.x, x),
-                &(*c * I256::from_str("2").unwrap()),
-            ),
+            &mul_up_mag(&mul_up_mag(&r.x, x), &(*c * I256::from_str("2").unwrap())),
             &(-div_xp_u(&tau_beta.x, d_sq) + I256::from_str("3").unwrap()),
         );
     } else {
@@ -781,10 +765,8 @@ pub fn compute_balance(
     // The invariant vector contains the rounded up and rounded down invariant. Both are needed when computing
     // the virtual offsets. Depending on tauAlpha and tauBeta values, we want to use the invariant rounded up
     // or rounded down to make sure we're conservative in the output.
-    let invariant_x_result = mul_up_fixed(
-        &(current_invariant + inv_err).into_raw(),
-        invariant_ratio,
-    )?;
+    let invariant_x_result =
+        mul_up_fixed(&(current_invariant + inv_err).into_raw(), invariant_ratio)?;
     let invariant_y_result =
         mul_up_fixed(&(current_invariant - inv_err).into_raw(), invariant_ratio)?;
 

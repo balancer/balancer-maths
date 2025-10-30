@@ -74,10 +74,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                     current_timestamp: quant_amm_pool.state.mutable.current_timestamp,
                 },
                 immutable: QuantAmmImmutable {
-                    max_trade_size_ratio: quant_amm_pool
-                        .state
-                        .immutable
-                        .max_trade_size_ratio,
+                    max_trade_size_ratio: quant_amm_pool.state.immutable.max_trade_size_ratio,
                 },
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::QuantAmm(quant_amm_state)))
@@ -87,10 +84,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                 base: liquidity_bootstrapping_pool.state.base.clone(),
                 mutable: LiquidityBootstrappingMutable {
                     is_swap_enabled: liquidity_bootstrapping_pool.state.mutable.is_swap_enabled,
-                    current_timestamp: liquidity_bootstrapping_pool
-                        .state
-                        .mutable
-                        .current_timestamp,
+                    current_timestamp: liquidity_bootstrapping_pool.state.mutable.current_timestamp,
                 },
                 immutable: LiquidityBootstrappingImmutable {
                     project_token_index: liquidity_bootstrapping_pool
@@ -111,14 +105,8 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .immutable
                         .end_weights
                         .clone(),
-                    start_time: liquidity_bootstrapping_pool
-                        .state
-                        .immutable
-                        .start_time,
-                    end_time: liquidity_bootstrapping_pool
-                        .state
-                        .immutable
-                        .end_time,
+                    start_time: liquidity_bootstrapping_pool.state.immutable.start_time,
+                    end_time: liquidity_bootstrapping_pool.state.immutable.end_time,
                 },
             };
             PoolStateOrBuffer::Pool(Box::new(PoolState::LiquidityBootstrapping(
@@ -134,10 +122,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .mutable
                         .last_virtual_balances
                         .clone(),
-                    daily_price_shift_base: re_clamm_pool
-                        .state
-                        .mutable
-                        .daily_price_shift_base,
+                    daily_price_shift_base: re_clamm_pool.state.mutable.daily_price_shift_base,
                     last_timestamp: re_clamm_pool.state.mutable.last_timestamp,
                     current_timestamp: re_clamm_pool.state.mutable.current_timestamp,
                     centeredness_margin: re_clamm_pool.state.mutable.centeredness_margin,
@@ -174,10 +159,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                         .mutable
                         .last_virtual_balances
                         .clone(),
-                    daily_price_shift_base: re_clamm_v2_pool
-                        .state
-                        .mutable
-                        .daily_price_shift_base,
+                    daily_price_shift_base: re_clamm_v2_pool.state.mutable.daily_price_shift_base,
                     last_timestamp: re_clamm_v2_pool.state.mutable.last_timestamp,
                     current_timestamp: re_clamm_v2_pool.state.mutable.current_timestamp,
                     centeredness_margin: re_clamm_v2_pool.state.mutable.centeredness_margin,
