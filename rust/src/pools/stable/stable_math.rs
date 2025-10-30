@@ -95,6 +95,9 @@ pub fn compute_in_given_exact_out(
     token_amount_out: &U256,
     invariant: &U256,
 ) -> Result<U256, PoolError> {
+    if &balances[token_index_out] <= token_amount_out {
+        return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
+    }
 
     let mut balances_copy = balances.to_vec();
 
