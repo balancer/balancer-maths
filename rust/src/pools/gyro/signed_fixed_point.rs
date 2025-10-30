@@ -1,234 +1,101 @@
+use alloy_primitives::I256;
 use lazy_static::lazy_static;
-use num_bigint::BigInt;
-use num_traits::{One, Signed, Zero};
 use std::str::FromStr;
 
 lazy_static! {
-    pub static ref ONE: BigInt = BigInt::from(1_000_000_000_000_000_000u64); // 1e18
-    pub static ref ONE_XP: BigInt = BigInt::from_str("100000000000000000000000000000000000000").unwrap(); // 1e38
+    pub static ref ONE: I256 = I256::from_str("1000000000000000000").unwrap(); // 1e18
+    pub static ref ONE_E_19: I256 = I256::from_str("10000000000000000000").unwrap(); // 1e19
+    pub static ref ONE_XP: I256 = I256::from_str("100000000000000000000000000000000000000").unwrap(); // 1e38
 }
 
 #[derive(Debug)]
 pub struct FixedPointError(pub &'static str);
 
-pub fn add(a: &BigInt, b: &BigInt) -> BigInt {
-    // Overflow check is not needed for BigInt
-    a + b
+pub fn mul_down_mag(a: &I256, b: &I256) -> I256 {
+    (a.clone() * b.clone()) / *ONE
 }
 
-pub fn sub(a: &BigInt, b: &BigInt) -> BigInt {
-    a - b
-}
-
-pub fn mul_up_fixed(a: &BigInt, b: &BigInt) -> BigInt {
-    let product = a * b;
-    if product.is_zero() {
-        BigInt::zero()
+pub fn mul_up_mag(a: &I256, b: &I256) -> I256 {
+    let product = *a * *b;
+    if product > I256::ZERO {
+        (product - I256::ONE) / *ONE + I256::ONE
+    } else if product < I256::ZERO {
+        (product + I256::ONE) / *ONE - I256::ONE
     } else {
-        (&product - BigInt::from(1u64)) / &*ONE + BigInt::from(1u64)
+        I256::ZERO
     }
 }
 
-pub fn mul_down_mag(a: &BigInt, b: &BigInt) -> BigInt {
-    (a * b) / &*ONE
-}
-
-pub fn mul_down_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
-    let product = a * b;
-    let result = product.abs() / &*ONE;
-    if product.is_negative() {
-        -result
-    } else {
-        result
-    }
-}
-
-pub fn mul_up_mag(a: &BigInt, b: &BigInt) -> BigInt {
-    let product = a * b;
-    if product > BigInt::zero() {
-        (&product - BigInt::from(1u64)) / &*ONE + BigInt::from(1u64)
-    } else if product < BigInt::zero() {
-        (&product + BigInt::from(1u64)) / &*ONE - BigInt::from(1u64)
-    } else {
-        BigInt::zero()
-    }
-}
-
-pub fn mul_up_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
-    let product = a * b;
-    if product > BigInt::zero() {
-        (&product - BigInt::from(1u64)) / &*ONE + BigInt::from(1u64)
-    } else if product < BigInt::zero() {
-        (&product + BigInt::from(1u64)) / &*ONE - BigInt::from(1u64)
-    } else {
-        BigInt::zero()
-    }
-}
-
-pub fn div_down_mag(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn div_down_mag(a: &I256, b: &I256) -> I256 {
     if b.is_zero() {
         panic!("ZeroDivision");
     }
     if a.is_zero() {
-        return BigInt::zero();
+        return I256::ZERO;
     }
-    let a_inflated = a * &*ONE;
-    a_inflated / b
+    let a_inflated = *a * *ONE;
+    a_inflated / *b
 }
 
-pub fn div_down_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
-    if b.is_zero() {
-        panic!("ZeroDivision");
-    }
-    let product = a * &*ONE;
-    let abs_result = product.abs() / b.abs();
-    if product.is_negative() != b.is_negative() {
-        -abs_result
-    } else {
-        abs_result
-    }
-}
-
-pub fn div_up_mag(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn div_up_mag(a: &I256, b: &I256) -> I256 {
     if b.is_zero() {
         panic!("ZeroDivision");
     }
     if a.is_zero() {
-        return BigInt::zero();
+        return I256::ZERO;
     }
-    let mut local_a = a.clone();
-    let mut local_b = b.clone();
-    if b < &BigInt::zero() {
+    let mut local_a = *a;
+    let mut local_b = *b;
+    if b < &I256::ZERO {
         local_b = -local_b;
         local_a = -local_a;
     }
-    let a_inflated = local_a * &*ONE;
-    if a_inflated > BigInt::zero() {
-        (&a_inflated - BigInt::from(1u64)) / &local_b + BigInt::from(1u64)
+    let a_inflated = local_a * *ONE;
+    if a_inflated > I256::ZERO {
+        (a_inflated - I256::ONE) / local_b + I256::ONE
     } else {
-        (&a_inflated + BigInt::from(1u64)) / &local_b - BigInt::from(1u64)
+        (a_inflated + I256::ONE) / local_b - I256::ONE
     }
 }
 
-pub fn div_up_mag_u(a: &BigInt, b: &BigInt) -> BigInt {
+// Signed versions of XP functions
+pub fn mul_xp_u(a: &I256, b: &I256) -> I256 {
+    (*a * *b) / *ONE_XP
+}
+
+pub fn div_xp_u(a: &I256, b: &I256) -> I256 {
     if b.is_zero() {
         panic!("ZeroDivision");
     }
-    if a.is_zero() {
-        return BigInt::zero();
-    }
-    let mut local_a = a.clone();
-    let mut local_b = b.clone();
-    if b < &BigInt::zero() {
-        local_b = -local_b;
-        local_a = -local_a;
-    }
-    let a_inflated = local_a * &*ONE;
-    if a_inflated > BigInt::zero() {
-        (&a_inflated - BigInt::from(1u64)) / &local_b + BigInt::from(1u64)
+    (*a * *ONE_XP) / *b
+}
+
+pub fn mul_down_xp_to_np(a: &I256, b: &I256) -> I256 {
+    let b1 = *b / *ONE_E_19;
+    let b2 = *b % *ONE_E_19;
+    let prod1 = *a * b1;
+    let prod2 = *a * b2;
+
+    if prod1 >= I256::ZERO && prod2 >= I256::ZERO {
+        let prod2_div_e19 = prod2 / *ONE_E_19;
+        (prod1 + prod2_div_e19) / *ONE_E_19
     } else {
-        (&a_inflated + BigInt::from(1u64)) / &local_b - BigInt::from(1u64)
+        let prod2_div_e19 = prod2 / *ONE_E_19;
+        (prod1 + prod2_div_e19 + I256::ONE) / *ONE_E_19 - I256::ONE
     }
 }
 
-pub fn mul_xp(a: &BigInt, b: &BigInt) -> BigInt {
-    (a * b) / &*ONE_XP
-}
+pub fn mul_up_xp_to_np(a: &I256, b: &I256) -> I256 {
+    let b1 = *b / *ONE_E_19;
+    let b2 = *b % *ONE_E_19;
+    let prod1 = *a * b1;
+    let prod2 = *a * b2;
 
-pub fn mul_xp_u(a: &BigInt, b: &BigInt) -> BigInt {
-    (a * b) / &*ONE_XP
-}
-
-pub fn div_xp(a: &BigInt, b: &BigInt) -> BigInt {
-    if b.is_zero() {
-        panic!("ZeroDivision");
-    }
-    (a * &*ONE_XP) / b
-}
-
-pub fn div_xp_u(a: &BigInt, b: &BigInt) -> BigInt {
-    if b.is_zero() {
-        panic!("ZeroDivision");
-    }
-    (a * &*ONE_XP) / b
-}
-
-// These functions are used for extended precision math (XP to NP)
-pub fn mul_down_xp_to_np(a: &BigInt, b: &BigInt) -> BigInt {
-    let e_19 = BigInt::from(10_000_000_000_000_000_000u64);
-    let b1 = b / &e_19;
-    let prod1 = a * &b1;
-    if a != &BigInt::zero() && &prod1 / a != b1 {
-        panic!("MulOverflow");
-    }
-    let b2 = b % &e_19;
-    let prod2 = a * &b2;
-    if a != &BigInt::zero() && &prod2 / a != b2 {
-        panic!("MulOverflow");
-    }
-    (prod1 / &*ONE) * &e_19 + (prod2 / &*ONE)
-}
-
-pub fn mul_down_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {
-    let e_19 = BigInt::from(10_000_000_000_000_000_000u64);
-    let b1 = b / &e_19;
-    let b2 = b % &e_19;
-    let prod1 = a * &b1;
-    let prod2 = a * &b2;
-
-    if prod1 >= BigInt::zero() && prod2 >= BigInt::zero() {
-        let prod2_div_e19 = &prod2 / &e_19;
-        (&prod1 + &prod2_div_e19) / &e_19
+    if prod1 <= I256::ZERO && prod2 <= I256::ZERO {
+        let prod2_div_e19 = prod2 / *ONE_E_19;
+        (prod1 + prod2_div_e19) / *ONE_E_19
     } else {
-        let prod2_div_e19 = &prod2 / &e_19;
-        (&prod1 + &prod2_div_e19 + BigInt::from(1u64)) / &e_19 - BigInt::from(1u64)
-    }
-}
-
-pub fn mul_up_xp_to_np(a: &BigInt, b: &BigInt) -> BigInt {
-    let e_19 = BigInt::from(10_000_000_000_000_000_000u64);
-    let b1 = b / &e_19;
-    let b2 = b % &e_19;
-    let prod1 = a * &b1;
-    let prod2 = a * &b2;
-    let mut result = (&prod1 / &*ONE) * &e_19 + (&prod2 / &*ONE);
-    if (&prod1 % &*ONE != BigInt::zero()) || (&prod2 % &*ONE != BigInt::zero()) {
-        result += BigInt::one();
-    }
-    result
-}
-
-pub fn mul_up_xp_to_np_u(a: &BigInt, b: &BigInt) -> BigInt {
-    let e_19 = BigInt::from(10_000_000_000_000_000_000u64);
-    let b1 = b / &e_19;
-    let b2 = b % &e_19;
-    let prod1 = a * &b1;
-    let prod2 = a * &b2;
-
-    // For division, implement truncation toward zero (like Solidity)
-    let trunc_div = |x: &BigInt, y: &BigInt| -> BigInt {
-        let abs_result = x.abs() / y.abs();
-        if (x < &BigInt::zero()) != (y < &BigInt::zero()) {
-            -abs_result
-        } else {
-            abs_result
-        }
-    };
-
-    if prod1 <= BigInt::zero() && prod2 <= BigInt::zero() {
-        trunc_div(&(&prod1 + &trunc_div(&prod2, &e_19)), &e_19)
-    } else {
-        trunc_div(
-            &(&prod1 + &trunc_div(&prod2, &e_19) - BigInt::from(1u64)),
-            &e_19,
-        ) + BigInt::from(1u64)
-    }
-}
-
-pub fn complement(x: &BigInt) -> BigInt {
-    if x < &*ONE {
-        &*ONE - x
-    } else {
-        BigInt::zero()
+        let prod2_div_e19 = prod2 / *ONE_E_19;
+        (prod1 + prod2_div_e19 - I256::ONE) / *ONE_E_19 + I256::ONE
     }
 }
