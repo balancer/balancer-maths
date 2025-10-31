@@ -60,11 +60,6 @@ pub fn pow(x: &U256, y: &U256) -> Result<U256, PoolError> {
         return Ok(U256::ZERO);
     }
 
-    // The ln function takes a signed value, so we need to make sure x fits in the signed 256 bit range.
-    let max_u256 = U256::MAX;
-    if x >= &max_u256 {
-        return Err(PoolError::MathOverflow);
-    }
     let x_int256 = I256::from_raw(*x);
 
     // This prevents y * ln(x) from overflowing, and at the same time guarantees y fits in the signed 256 bit range.

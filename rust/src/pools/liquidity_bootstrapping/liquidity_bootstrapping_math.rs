@@ -1,9 +1,6 @@
+use crate::common::constants::WAD;
 use crate::common::maths::{div_down_fixed, mul_down_fixed};
 use alloy_primitives::U256;
-
-lazy_static::lazy_static! {
-    static ref WAD: U256 = U256::from(1000000000000000000u64); // 1e18
-}
 
 /// Calculate the normalized weights for a liquidity bootstrapping pool
 ///

@@ -1,3 +1,4 @@
+use crate::common::errors::PoolError;
 use crate::common::maths::{div_down_fixed, div_up_fixed, mul_div_up_fixed, pow_up_fixed};
 use crate::common::types::{HookStateBase, SwapKind};
 use crate::hooks::types::{DynamicSwapFeeResult, HookState};
@@ -53,7 +54,7 @@ impl AkronHook {
         balance_in: &U256,
         exponent: &U256,
         amount_in: &U256,
-    ) -> Result<U256, crate::common::errors::PoolError> {
+    ) -> Result<U256, PoolError> {
         // swap fee is equal to outGivenExactIn(grossAmountIn) - outGivenExactInWithFees(grossAmountIn)
         let balance_plus_amount = balance_in + amount_in;
         let balance_plus_amount_times_2 = balance_in + amount_in * U256::from(2);
@@ -79,7 +80,7 @@ impl AkronHook {
         balance_out: &U256,
         exponent: &U256,
         amount_out: &U256,
-    ) -> Result<U256, crate::common::errors::PoolError> {
+    ) -> Result<U256, PoolError> {
         // swap fee is equal to inGivenExactOutWithFees(grossAmountIn) - inGivenExactOut(grossAmountIn)
         let balance_minus_amount = balance_out - amount_out;
         let balance_minus_amount_times_2 = balance_out - amount_out * U256::from(2);

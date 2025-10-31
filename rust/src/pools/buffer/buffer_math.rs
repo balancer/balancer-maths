@@ -3,10 +3,6 @@ use crate::common::types::{Rounding, SwapKind};
 use crate::pools::buffer::enums::WrappingDirection;
 use alloy_primitives::U256;
 
-lazy_static::lazy_static! {
-    static ref MAX_UINT256: U256 = U256::from(2u64).pow(U256::from(256)) - U256::ONE;
-}
-
 /// Calculate buffer amounts for wrap/unwrap operations
 ///
 /// # Arguments
@@ -33,7 +29,7 @@ pub fn calculate_buffer_amounts(
             match kind {
                 SwapKind::GivenIn => {
                     // previewDeposit
-                    let max_assets = max_deposit.unwrap_or(&*MAX_UINT256);
+                    let max_assets = max_deposit.unwrap_or(&U256::MAX);
                     if amount_raw > max_assets {
                         return Err(format!(
                             "ERC4626ExceededMaxDeposit {} {}",
@@ -44,7 +40,7 @@ pub fn calculate_buffer_amounts(
                 }
                 SwapKind::GivenOut => {
                     // previewMint
-                    let max_shares = max_mint.unwrap_or(&*MAX_UINT256);
+                    let max_shares = max_mint.unwrap_or(&U256::MAX);
                     if amount_raw > max_shares {
                         return Err(format!(
                             "ERC4626ExceededMaxMint {} {}",
