@@ -11,7 +11,7 @@ pub fn mul_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
     if product.is_zero() {
         return Ok(U256::ZERO);
     }
-    let result = (product - U256::ONE) / *WAD + U256::ONE;
+    let result = (product - U256::ONE) / WAD + U256::ONE;
     Ok(result)
 }
 
@@ -24,7 +24,7 @@ pub fn div_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
         return Err(PoolError::MathOverflow);
     }
 
-    let a_inflated = a * *WAD;
+    let a_inflated = a * WAD;
     let result = (a_inflated - U256::ONE) / b + U256::ONE;
     Ok(result)
 }
@@ -32,7 +32,7 @@ pub fn div_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
 /// Multiply two U256s and round down
 pub fn mul_down_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
     let product = a * b;
-    let result = product / *WAD;
+    let result = product / WAD;
     Ok(result)
 }
 
@@ -45,7 +45,7 @@ pub fn div_down_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
         return Err(PoolError::MathOverflow);
     }
 
-    let a_inflated = a * *WAD;
+    let a_inflated = a * WAD;
     let result = a_inflated / b;
     Ok(result)
 }
@@ -77,13 +77,13 @@ pub fn pow_down_fixed_with_version(
     exponent: &U256,
     version: u32,
 ) -> Result<U256, PoolError> {
-    if *exponent == *WAD && version != 1 {
+    if *exponent == WAD && version != 1 {
         return Ok(*base);
     }
-    if *exponent == *TWO_WAD && version != 1 {
+    if *exponent == TWO_WAD && version != 1 {
         return mul_up_fixed(base, base);
     }
-    if *exponent == *FOUR_WAD && version != 1 {
+    if *exponent == FOUR_WAD && version != 1 {
         let square = mul_up_fixed(base, base)?;
         return mul_up_fixed(&square, &square);
     }
@@ -109,13 +109,13 @@ pub fn pow_up_fixed_with_version(
     exponent: &U256,
     version: u32,
 ) -> Result<U256, PoolError> {
-    if *exponent == *WAD && version != 1 {
+    if *exponent == WAD && version != 1 {
         return Ok(*base);
     }
-    if *exponent == *TWO_WAD && version != 1 {
+    if *exponent == TWO_WAD && version != 1 {
         return mul_up_fixed(base, base);
     }
-    if *exponent == *FOUR_WAD && version != 1 {
+    if *exponent == FOUR_WAD && version != 1 {
         let square = mul_up_fixed(base, base)?;
         return mul_up_fixed(&square, &square);
     }
@@ -128,8 +128,8 @@ pub fn pow_up_fixed_with_version(
 
 /// Calculate complement (1 - x) with fixed-point arithmetic
 pub fn complement_fixed(x: &U256) -> Result<U256, PoolError> {
-    if *x < *WAD {
-        Ok(*WAD - x)
+    if *x < WAD {
+        Ok(WAD - x)
     } else {
         Ok(U256::ZERO)
     }

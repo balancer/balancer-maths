@@ -5,30 +5,28 @@ use crate::pools::gyro::signed_fixed_point::{
     div_down_mag, div_up_mag, div_xp_u, mul_down_mag, mul_down_xp_to_np, mul_up_mag,
     mul_up_xp_to_np, mul_xp_u, ONE_XP,
 };
-use alloy_primitives::{I256, U256};
-use lazy_static::lazy_static;
+use alloy_primitives::{uint, I256, U256};
 use std::str::FromStr;
 
-lazy_static! {
-    // Constants matching Python implementation
-    static ref _ONEHALF: U256 = U256::from(500000000000000000u64); // 0.5e18
-    static ref _ONE: U256 = U256::from(1000000000000000000u64); // 1e18
+// Constants matching Python implementation
+pub const _ONEHALF: U256 = uint!(500000000000000000_U256); // 0.5e18
+pub const _ONE: U256 = uint!(1000000000000000000_U256); // 1e18
 
-    // Anti-overflow limits: Params and DerivedParams
-    static ref _ROTATION_VECTOR_NORM_ACCURACY: U256 = U256::from(1000u64); // 1e3 (1e-15 in normal precision)
-    static ref _MAX_STRETCH_FACTOR: U256 = U256::from_str("100000000000000000000000000").unwrap(); // 1e26 (1e8 in normal precision)
-    static ref _DERIVED_TAU_NORM_ACCURACY_XP: U256 = U256::from_str("100000000000000000000000").unwrap(); // 1e23
-    static ref _MAX_INV_INVARIANT_DENOMINATOR_XP: U256 = U256::from_str("10000000000000000000000000000000000000000000").unwrap(); // 1e43
-    static ref _DERIVED_DSQ_NORM_ACCURACY_XP: U256 = U256::from_str("100000000000000000000000").unwrap(); // 1e23
+// Anti-overflow limits: Params and DerivedParams
+pub const _ROTATION_VECTOR_NORM_ACCURACY: U256 = uint!(1000_U256); // 1e3 (1e-15 in normal precision)
+pub const _MAX_STRETCH_FACTOR: U256 = uint!(100000000000000000000000000_U256); // 1e26 (1e8 in normal precision)
+pub const _DERIVED_TAU_NORM_ACCURACY_XP: U256 = uint!(100000000000000000000000_U256); // 1e23
+pub const _MAX_INV_INVARIANT_DENOMINATOR_XP: U256 =
+    uint!(10000000000000000000000000000000000000000000_U256); // 1e43
+pub const _DERIVED_DSQ_NORM_ACCURACY_XP: U256 = uint!(100000000000000000000000_U256); // 1e23
 
-    // Anti-overflow limits: Dynamic values
-    static ref _MAX_BALANCES: I256 = I256::from_str("10000000000000000000000000000000000").unwrap(); // 1e34
-    static ref _MAX_INVARIANT: I256 = I256::from_str("3000000000000000000000000000000000000").unwrap(); // 3e37
+// Anti-overflow limits: Dynamic values
+pub const _MAX_BALANCES: I256 = I256::from_raw(uint!(10000000000000000000000000000000000_U256)); // 1e34
+pub const _MAX_INVARIANT: I256 = I256::from_raw(uint!(3000000000000000000000000000000000000_U256)); // 3e37
 
-    // Invariant ratio limits
-    pub static ref MIN_INVARIANT_RATIO: U256 = U256::from(600000000000000000u64); // 60e16 (60%)
-    pub static ref MAX_INVARIANT_RATIO: U256 = U256::from(5000000000000000000u64); // 500e16 (500%)
-}
+// Invariant ratio limits
+pub const MIN_INVARIANT_RATIO: U256 = uint!(600000000000000000_U256); // 60e16 (60%)
+pub const MAX_INVARIANT_RATIO: U256 = uint!(5000000000000000000_U256); // 500e16 (500%)
 
 #[derive(Debug, Clone)]
 pub struct Vector2 {
@@ -220,7 +218,7 @@ fn calc_invariant_sqrt(x: &I256, y: &I256, p: &EclpParams, d: &DerivedEclpParams
     let val3 = calc_min_aty_a_chix_sq_plus_aty_sq(x, y, p, d);
     let val = val1 + val2 + val3;
 
-    let err = (mul_up_mag(x, x) + mul_up_mag(y, y)) / *ONE_XP;
+    let err = (mul_up_mag(x, x) + mul_up_mag(y, y)) / ONE_XP;
 
     let val = if val > I256::ZERO {
         // Convert to U256 for sqrt, then back to I256
@@ -373,7 +371,7 @@ pub fn calc_spot_price0in1(
 
     let pc = Vector2 {
         x: div_down_mag(&transformed_vec.x, &transformed_vec.y),
-        y: *ONE_XP,
+        y: ONE_XP,
     };
 
     let pgx = scalar_prod(
@@ -381,7 +379,7 @@ pub fn calc_spot_price0in1(
         &mul_a(
             params,
             &Vector2 {
-                x: *ONE_XP,
+                x: ONE_XP,
                 y: zero_signed,
             },
         ),
@@ -393,7 +391,7 @@ pub fn calc_spot_price0in1(
             params,
             &Vector2 {
                 x: zero_signed,
-                y: *ONE_XP,
+                y: ONE_XP,
             },
         ),
     );
@@ -412,7 +410,7 @@ pub fn calculate_invariant_with_error(
     let x = I256::from_raw(balances[0]);
     let y = I256::from_raw(balances[1]);
 
-    if x + y > *_MAX_BALANCES {
+    if x + y > _MAX_BALANCES {
         return Err(PoolError::InvalidInput("Max assets exceeded".to_string()));
     }
 
@@ -438,12 +436,12 @@ pub fn calculate_invariant_with_error(
     }
 
     // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
-    err = ((params.lambda * (x + y)) / *ONE_XP + err + I256::ONE) * I256::from_str("20").unwrap();
+    err = ((params.lambda * (x + y)) / ONE_XP + err + I256::ONE) * I256::from_str("20").unwrap();
 
     let achiachi = calc_a_chi_a_chi_in_xp(params, derived);
     // A chi \cdot A chi > 1, so round it up to round denominator up.
     // Denominator uses extra precision, so we do * 1/denominator so we are sure the calculation doesn't overflow.
-    let mul_denominator = div_xp_u(&ONE_XP, &(achiachi - *ONE_XP));
+    let mul_denominator = div_xp_u(&ONE_XP, &(achiachi - ONE_XP));
 
     // As an alternative, could do, but could overflow:
     // invariant = (AtAChi.add(sqrt) - err).divXp(denominator)
@@ -466,9 +464,9 @@ pub fn calculate_invariant_with_error(
     let numerator = mul_up_xp_to_np(&invariant, &mul_denominator)
         * lambda_squared_div_1e36
         * I256::from_str("40").unwrap();
-    err = err + (numerator / *ONE_XP) + I256::ONE;
+    err = err + (numerator / ONE_XP) + I256::ONE;
 
-    if invariant + err > *_MAX_INVARIANT {
+    if invariant + err > _MAX_INVARIANT {
         return Err(PoolError::InvalidInput(
             "Max invariant exceeded".to_string(),
         ));
@@ -487,10 +485,10 @@ fn solve_quadratic_swap(
     tau_beta: &Vector2,
     d_sq: &I256,
 ) -> I256 {
-    let lam_bar_x_result = *ONE_XP - div_down_mag(&div_down_mag(&ONE_XP, lambda), lambda);
+    let lam_bar_x_result = ONE_XP - div_down_mag(&div_down_mag(&ONE_XP, lambda), lambda);
     let lam_bar = Vector2 {
         x: lam_bar_x_result,
-        y: *ONE_XP - div_up_mag(&div_up_mag(&ONE_XP, lambda), lambda),
+        y: ONE_XP - div_up_mag(&div_up_mag(&ONE_XP, lambda), lambda),
     };
 
     let mut q = QParams {
@@ -522,8 +520,8 @@ fn solve_quadratic_swap(
         ) + I256::ONE,
     };
 
-    let s_term_x = *ONE_XP - s_term.x;
-    let s_term_y = *ONE_XP - s_term.y;
+    let s_term_x = ONE_XP - s_term.x;
+    let s_term_y = ONE_XP - s_term.y;
 
     q.c = -calc_xp_xp_div_lambda_lambda(x, r, lambda, s, c, tau_beta, d_sq);
     q.c += mul_down_xp_to_np(&mul_down_mag(&r.y, &r.y), &s_term_y);
@@ -677,12 +675,12 @@ fn check_asset_bounds(
 ) -> Result<(), PoolError> {
     if asset_index == 0 {
         let x_plus = max_balances0(params, derived, invariant);
-        if new_bal > &*_MAX_BALANCES || new_bal > &x_plus {
+        if new_bal > &_MAX_BALANCES || new_bal > &x_plus {
             return Err(PoolError::InvalidInput("Asset bounds exceeded".to_string()));
         }
     } else {
         let y_plus = max_balances1(params, derived, invariant);
-        if new_bal > &*_MAX_BALANCES || new_bal > &y_plus {
+        if new_bal > &_MAX_BALANCES || new_bal > &y_plus {
             return Err(PoolError::InvalidInput("Asset bounds exceeded".to_string()));
         }
     }
@@ -777,7 +775,7 @@ pub fn compute_balance(
 
     // Edge case check. Should never happen except for insane tokens. If this is hit, actually adding the
     // tokens would lead to a revert or (if it went through) a deadlock downstream, so we catch it here.
-    if invariant.x > *_MAX_INVARIANT {
+    if invariant.x > _MAX_INVARIANT {
         return Err(PoolError::InvalidInput(
             "GyroECLPMath.MaxInvariantExceeded".to_string(),
         ));

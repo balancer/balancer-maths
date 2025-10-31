@@ -1,12 +1,8 @@
-use std::str::FromStr;
-
 use crate::common::maths::mul_down_fixed;
-use alloy_primitives::{I256, U256};
+use alloy_primitives::{uint, I256, U256};
 
-lazy_static::lazy_static! {
-    static ref ONE: U256 = U256::from(1000000000000000000u64); // 1e18
-    static ref ONE_SIGNED: I256 = I256::from_str("1000000000000000000").unwrap(); // 1e18
-}
+pub const ONE: U256 = uint!(1000000000000000000_U256); // 1e18
+pub const ONE_SIGNED: I256 = I256::from_raw(uint!(1000000000000000000_U256)); // 1e18
 
 /// Calculate the current block weight based on time interpolation
 ///
@@ -23,7 +19,7 @@ pub fn calculate_block_normalised_weight(
     time_since_last_update: &U256,
 ) -> U256 {
     // multiplier is always below 1, we multiply by 1e18 for rounding
-    let multiplier_scaled18 = *multiplier * *ONE_SIGNED;
+    let multiplier_scaled18 = *multiplier * ONE_SIGNED;
 
     if multiplier > &I256::ZERO {
         weight.into_raw()

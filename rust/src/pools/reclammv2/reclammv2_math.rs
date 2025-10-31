@@ -5,14 +5,12 @@ use crate::common::maths::{
 };
 use crate::common::oz_math::sqrt;
 use crate::common::types::Rounding;
-use alloy_primitives::U256;
+use alloy_primitives::{uint, U256};
 
 // Constants
 const A: usize = 0;
 const B: usize = 1;
-lazy_static::lazy_static! {
-    static ref THIRTY_DAYS_SECONDS: U256 = U256::from(30 * 24 * 60 * 60u64); // 2,592,000 seconds
-}
+pub const THIRTY_DAYS_SECONDS: U256 = uint!(2592000_U256); // 30 * 24 * 60 * 60 seconds
 
 /// Compute current virtual balances for ReClammV2 pool
 #[allow(clippy::too_many_arguments)]
@@ -144,12 +142,12 @@ fn compute_virtual_balances_updating_price_ratio(
     // Using FixedPoint math as little as possible to improve the precision of the result.
     // Note: The input of sqrt must be a 36-decimal number, so that the final result is 18 decimals.
     let sqrt_input =
-        centeredness * (centeredness + (U256::from(4) * sqrt_price_ratio) - *TWO_WAD) + *RAY;
+        centeredness * (centeredness + (U256::from(4) * sqrt_price_ratio) - TWO_WAD) + RAY;
     let sqrt_result = sqrt(&sqrt_input);
 
     let virtual_balance_undervalued = balance_token_undervalued
-        * (*WAD + centeredness + sqrt_result)
-        / (U256::from(2) * (sqrt_price_ratio - *WAD));
+        * (WAD + centeredness + sqrt_result)
+        / (U256::from(2) * (sqrt_price_ratio - WAD));
 
     let virtual_balance_overvalued = virtual_balance_undervalued * last_virtual_balance_overvalued
         / last_virtual_balance_undervalued;
@@ -222,18 +220,18 @@ fn compute_virtual_balances_updating_price_range(
     // +-----------------------------------------+
 
     // Cap the duration (time between operations) at 30 days, to ensure `pow_down` does not overflow.
-    let duration = std::cmp::min(current_timestamp - last_timestamp, *THIRTY_DAYS_SECONDS);
+    let duration = std::cmp::min(current_timestamp - last_timestamp, THIRTY_DAYS_SECONDS);
 
     let mut virtual_balance_overvalued = mul_down_fixed(
         &virtual_balance_overvalued,
-        &pow_down_fixed(daily_price_shift_base, &(duration * *WAD)).unwrap_or(*WAD),
+        &pow_down_fixed(daily_price_shift_base, &(duration * WAD)).unwrap_or(WAD),
     )
     .unwrap_or(U256::ZERO);
 
     // Ensure that Vo does not go below the minimum allowed value (corresponding to centeredness == 1).
     let min_virtual_balance_overvalued = div_down_fixed(
         &balances_scaled_overvalued,
-        &(sqrt_scaled_18(&sqrt_price_ratio) - *WAD),
+        &(sqrt_scaled_18(&sqrt_price_ratio) - WAD),
     )
     .unwrap_or(U256::ZERO);
 
@@ -243,7 +241,7 @@ fn compute_virtual_balances_updating_price_range(
 
     let virtual_balance_undervalued = balances_scaled_undervalued
         * (virtual_balance_overvalued + balances_scaled_overvalued)
-        / (mul_down_fixed(&(sqrt_price_ratio - *WAD), &virtual_balance_overvalued)
+        / (mul_down_fixed(&(sqrt_price_ratio - WAD), &virtual_balance_overvalued)
             .unwrap_or(U256::ZERO)
             - balances_scaled_overvalued);
 
@@ -325,7 +323,7 @@ fn compute_fourth_root_price_ratio(
                     .unwrap_or(U256::ZERO),
                 &exponent,
             )
-            .unwrap_or(*WAD),
+            .unwrap_or(WAD),
         )
         .unwrap_or(U256::ZERO);
 
@@ -450,5 +448,5 @@ pub fn compute_in_given_out(
 
 /// Calculate the square root of a value scaled by 18 decimals
 fn sqrt_scaled_18(value_scaled_18: &U256) -> U256 {
-    sqrt(&(value_scaled_18 * *WAD))
+    sqrt(&(value_scaled_18 * WAD))
 }

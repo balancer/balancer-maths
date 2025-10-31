@@ -100,11 +100,11 @@ impl PoolBase for WeightedPool {
     }
 
     fn get_maximum_invariant_ratio(&self) -> U256 {
-        *MAX_INVARIANT_RATIO
+        MAX_INVARIANT_RATIO
     }
 
     fn get_minimum_invariant_ratio(&self) -> U256 {
-        *MIN_INVARIANT_RATIO
+        MIN_INVARIANT_RATIO
     }
 }
 

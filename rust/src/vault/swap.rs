@@ -12,13 +12,10 @@ use crate::common::utils::{
 };
 use crate::hooks::types::{AfterSwapParams, HookState};
 use crate::hooks::HookBase;
-use alloy_primitives::U256;
-use lazy_static::lazy_static;
+use alloy_primitives::{uint, U256};
 
-lazy_static! {
-    /// Minimum trade amount (scaled 18)
-    static ref MINIMUM_TRADE_AMOUNT: U256 = U256::from(1000000i64); // 1e6
-}
+/// Minimum trade amount (scaled 18)
+pub const MINIMUM_TRADE_AMOUNT: U256 = uint!(1000000_U256); // 1e6
 
 /// Perform a swap operation
 pub fn swap(
@@ -215,7 +212,7 @@ pub fn compute_amount_given_scaled_18(
 
 /// Compute rate rounded up
 pub fn compute_rate_round_up(rate: &U256) -> U256 {
-    let rounded_rate = (rate / *WAD) * *WAD;
+    let rounded_rate = (rate / WAD) * WAD;
     if &rounded_rate == rate {
         *rate
     } else {
@@ -225,7 +222,7 @@ pub fn compute_rate_round_up(rate: &U256) -> U256 {
 
 /// Ensure valid swap amount
 pub fn ensure_valid_swap_amount(trade_amount: &U256) -> Result<(), PoolError> {
-    if trade_amount < &*MINIMUM_TRADE_AMOUNT {
+    if trade_amount < &MINIMUM_TRADE_AMOUNT {
         return Err(PoolError::TradeAmountTooSmall);
     }
     Ok(())

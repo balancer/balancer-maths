@@ -93,7 +93,7 @@ impl AkronHook {
             pow_up_fixed(&div_up_fixed(balance_out, &balance_minus_amount)?, exponent)?;
 
         let numerator = power_with_fees - power_without_fees;
-        let denominator = power_with_fees - *crate::common::constants::WAD;
+        let denominator = power_with_fees - crate::common::constants::WAD;
 
         div_up_fixed(&numerator, &denominator)
     }

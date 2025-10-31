@@ -4,26 +4,23 @@ use crate::common::maths::{
     complement_fixed, div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed, pow_down_fixed,
     pow_up_fixed,
 };
-use alloy_primitives::U256;
-use lazy_static::lazy_static;
+use alloy_primitives::{uint, U256};
 
-lazy_static! {
-    // A minimum normalized weight imposes a maximum weight ratio. We need this due to limitations in the
-    // implementation of the power function, as these ratios are often exponents.
-    pub static ref MIN_WEIGHT: U256 = U256::from(10000000000000000u64); // 0.01e18
+// A minimum normalized weight imposes a maximum weight ratio. We need this due to limitations in the
+// implementation of the power function, as these ratios are often exponents.
+pub const MIN_WEIGHT: U256 = uint!(10000000000000000_U256); // 0.01e18
 
-    // Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
-    // ratio).
+// Pool limits that arise from limitations in the fixed point power function (and the imposed 1:100 maximum weight
+// ratio).
 
-    // Swap limits: amounts swapped may not be larger than this percentage of the total balance.
-    pub static ref MAX_IN_RATIO: U256 = U256::from(300000000000000000u64); // 0.3e18
-    pub static ref MAX_OUT_RATIO: U256 = U256::from(300000000000000000u64); // 0.3e18
+// Swap limits: amounts swapped may not be larger than this percentage of the total balance.
+pub const MAX_IN_RATIO: U256 = uint!(300000000000000000_U256); // 0.3e18
+pub const MAX_OUT_RATIO: U256 = uint!(300000000000000000_U256); // 0.3e18
 
-    // Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
-    pub static ref MAX_INVARIANT_RATIO: U256 = U256::from(3000000000000000000u64); // 3e18
-    // Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
-    pub static ref MIN_INVARIANT_RATIO: U256 = U256::from(700000000000000000u64); // 0.7e18
-}
+// Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio.
+pub const MAX_INVARIANT_RATIO: U256 = uint!(3000000000000000000_U256); // 3e18
+                                                                       // Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio.
+pub const MIN_INVARIANT_RATIO: U256 = uint!(700000000000000000_U256); // 0.7e18
 
 /// Compute the invariant, rounding down.
 ///
@@ -39,7 +36,7 @@ pub fn compute_invariant_down(
     normalized_weights: &[U256],
     balances: &[U256],
 ) -> Result<U256, PoolError> {
-    let mut invariant = *WAD;
+    let mut invariant = WAD;
 
     for i in 0..normalized_weights.len() {
         let pow_result = pow_down_fixed(&balances[i], &normalized_weights[i])?;
@@ -67,7 +64,7 @@ pub fn compute_invariant_up(
     normalized_weights: &[U256],
     balances: &[U256],
 ) -> Result<U256, PoolError> {
-    let mut invariant = *WAD;
+    let mut invariant = WAD;
 
     for i in 0..normalized_weights.len() {
         invariant = mul_up_fixed(
@@ -140,7 +137,7 @@ pub fn compute_in_given_exact_out(
 
     // Because the base is larger than one (and the power rounds up), the power should always be larger than one, so
     // the following subtraction should never revert.
-    let ratio = power - *WAD;
+    let ratio = power - WAD;
 
     mul_up_fixed(balance_in, &ratio)
 }

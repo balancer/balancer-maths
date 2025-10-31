@@ -1,20 +1,17 @@
 use crate::common::constants::WAD;
 use crate::common::maths::{mul_down_fixed, mul_up_fixed};
-use alloy_primitives::U256;
-use lazy_static::lazy_static;
+use alloy_primitives::{uint, U256};
 
-lazy_static! {
-    // Square root constants for different precision levels
-    static ref SQRT_1E_NEG_1: U256 = U256::from(316227766016837933u64);
-    static ref SQRT_1E_NEG_3: U256 = U256::from(31622776601683793u64);
-    static ref SQRT_1E_NEG_5: U256 = U256::from(3162277660168379u64);
-    static ref SQRT_1E_NEG_7: U256 = U256::from(316227766016837u64);
-    static ref SQRT_1E_NEG_9: U256 = U256::from(31622776601683u64);
-    static ref SQRT_1E_NEG_11: U256 = U256::from(3162277660168u64);
-    static ref SQRT_1E_NEG_13: U256 = U256::from(316227766016u64);
-    static ref SQRT_1E_NEG_15: U256 = U256::from(31622776601u64);
-    static ref SQRT_1E_NEG_17: U256 = U256::from(3162277660u64);
-}
+// Square root constants for different precision levels
+pub const SQRT_1E_NEG_1: U256 = uint!(316227766016837933_U256);
+pub const SQRT_1E_NEG_3: U256 = uint!(31622776601683793_U256);
+pub const SQRT_1E_NEG_5: U256 = uint!(3162277660168379_U256);
+pub const SQRT_1E_NEG_7: U256 = uint!(316227766016837_U256);
+pub const SQRT_1E_NEG_9: U256 = uint!(31622776601683_U256);
+pub const SQRT_1E_NEG_11: U256 = uint!(3162277660168_U256);
+pub const SQRT_1E_NEG_13: U256 = uint!(316227766016_U256);
+pub const SQRT_1E_NEG_15: U256 = uint!(31622776601_U256);
+pub const SQRT_1E_NEG_17: U256 = uint!(3162277660_U256);
 
 /// Implements a square root algorithm using Newton's method and a first-guess optimization.
 /// Based on the Python implementation in gyro_pool_math.py
@@ -27,7 +24,7 @@ pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> U256 {
 
     // Perform Newton's method iterations
     for _ in 0..7 {
-        guess = (guess + (x * *WAD) / guess) / U256::from(2u64);
+        guess = (guess + (x * WAD) / guess) / U256::from(2u64);
     }
 
     // Check that squaredGuess (guess * guess) is close enough from input
@@ -49,44 +46,44 @@ pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> U256 {
 
 /// Makes an initial guess for the square root calculation
 fn make_initial_guess(x: &U256) -> U256 {
-    if x >= &*WAD {
-        let x_div_wad = x / *WAD;
+    if x >= &WAD {
+        let x_div_wad = x / WAD;
         let log2_halved = int_log2_halved(&x_div_wad);
-        (U256::ONE << log2_halved) * *WAD
+        (U256::ONE << log2_halved) * WAD
     } else if x <= &U256::from(10u64) {
-        *SQRT_1E_NEG_17
+        SQRT_1E_NEG_17
     } else if x <= &U256::from(100u64) {
         U256::from(10_000_000_000u64)
     } else if x <= &U256::from(1000u64) {
-        *SQRT_1E_NEG_15
+        SQRT_1E_NEG_15
     } else if x <= &U256::from(10000u64) {
         U256::from(100_000_000_000u64)
     } else if x <= &U256::from(100000u64) {
-        *SQRT_1E_NEG_13
+        SQRT_1E_NEG_13
     } else if x <= &U256::from(1000000u64) {
         U256::from(1_000_000_000_000u64)
     } else if x <= &U256::from(10000000u64) {
-        *SQRT_1E_NEG_11
+        SQRT_1E_NEG_11
     } else if x <= &U256::from(100000000u64) {
         U256::from(10_000_000_000_000u64)
     } else if x <= &U256::from(1000000000u64) {
-        *SQRT_1E_NEG_9
+        SQRT_1E_NEG_9
     } else if x <= &U256::from(10000000000u64) {
         U256::from(100_000_000_000_000u64)
     } else if x <= &U256::from(100000000000u64) {
-        *SQRT_1E_NEG_7
+        SQRT_1E_NEG_7
     } else if x <= &U256::from(1000000000000u64) {
         U256::from(1_000_000_000_000_000u64)
     } else if x <= &U256::from(10000000000000u64) {
-        *SQRT_1E_NEG_5
+        SQRT_1E_NEG_5
     } else if x <= &U256::from(100000000000000u64) {
         U256::from(10_000_000_000_000_000u64)
     } else if x <= &U256::from(1000000000000000u64) {
-        *SQRT_1E_NEG_3
+        SQRT_1E_NEG_3
     } else if x <= &U256::from(10000000000000000u64) {
         U256::from(100_000_000_000_000_000u64)
     } else if x <= &U256::from(100000000000000000u64) {
-        *SQRT_1E_NEG_1
+        SQRT_1E_NEG_1
     } else {
         *x
     }

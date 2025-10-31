@@ -48,12 +48,12 @@ impl GyroECLPPool {
 impl PoolBase for GyroECLPPool {
     fn get_maximum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MAX_INVARIANT_RATIO;
-        *MAX_INVARIANT_RATIO
+        MAX_INVARIANT_RATIO
     }
 
     fn get_minimum_invariant_ratio(&self) -> U256 {
         use crate::pools::gyro::gyro_eclp_math::MIN_INVARIANT_RATIO;
-        *MIN_INVARIANT_RATIO
+        MIN_INVARIANT_RATIO
     }
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {

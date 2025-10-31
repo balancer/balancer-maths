@@ -9,9 +9,6 @@ use alloy_primitives::U256;
 // Constants
 const A: usize = 0;
 const B: usize = 1;
-lazy_static::lazy_static! {
-    static ref INITIALIZATION_MAX_BALANCE_A: U256 = U256::from(1_000_000u64) * *WAD;
-}
 
 /// Compute current virtual balances for ReClamm pool
 #[allow(clippy::too_many_arguments)]
@@ -141,13 +138,13 @@ fn calculate_virtual_balances_updating_price_ratio(
     // Using FixedPoint math as little as possible to improve the precision of the result.
     // Note: The input of sqrt must be a 36-decimal number, so that the final result is 18 decimals.
     let sqrt_input = pool_centeredness
-        * (pool_centeredness + (U256::from(4) * sqrt_price_ratio) - *TWO_WAD)
-        + *RAY;
+        * (pool_centeredness + (U256::from(4) * sqrt_price_ratio) - TWO_WAD)
+        + RAY;
     let sqrt_result = sqrt(&sqrt_input);
 
     let virtual_balance_undervalued = balance_token_undervalued
-        * (*WAD + pool_centeredness + sqrt_result)
-        / (U256::from(2) * (sqrt_price_ratio - *WAD));
+        * (WAD + pool_centeredness + sqrt_result)
+        / (U256::from(2) * (sqrt_price_ratio - WAD));
 
     let virtual_balance_overvalued = (virtual_balance_undervalued
         * last_virtual_balance_overvalued)
@@ -171,7 +168,7 @@ fn compute_virtual_balances_updating_price_range(
     last_timestamp: &U256,
 ) -> (U256, U256) {
     let sqrt_price_ratio = sqrt(
-        &(compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b) * *WAD),
+        &(compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b) * WAD),
     );
 
     let (balances_scaled_undervalued, balances_scaled_overvalued) = if is_pool_above_center {
@@ -188,14 +185,14 @@ fn compute_virtual_balances_updating_price_range(
 
     // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
     let time_difference = current_timestamp - last_timestamp;
-    let time_difference_wad = time_difference * *WAD;
+    let time_difference_wad = time_difference * WAD;
 
-    let shift_factor = pow(daily_price_shift_base, &time_difference_wad).unwrap_or(*WAD);
+    let shift_factor = pow(daily_price_shift_base, &time_difference_wad).unwrap_or(WAD);
     let virtual_balance_overvalued =
         mul_down_fixed(&virtual_balance_overvalued, &shift_factor).unwrap_or(U256::ZERO);
 
     // Va = (Ra * (Vb + Rb)) / (((priceRatio - 1) * Vb) - Rb)
-    let price_ratio_minus_one = sqrt_price_ratio - *WAD;
+    let price_ratio_minus_one = sqrt_price_ratio - WAD;
     let denominator = mul_down_fixed(&price_ratio_minus_one, &virtual_balance_overvalued)
         .unwrap_or(U256::ZERO)
         - balances_scaled_overvalued;
