@@ -436,7 +436,8 @@ pub fn calculate_invariant_with_error(
     }
 
     // Calculate the error in the numerator, scale the error by 20 to be sure all possible terms accounted for
-    err = ((params.lambda * (x + y)) / ONE_XP + err + I256::ONE) * I256::from_str("20").unwrap();
+    err = ((mul_up_mag(&params.lambda, &(x + y))) / ONE_XP + err + I256::ONE)
+        * I256::from_str("20").unwrap();
 
     let achiachi = calc_a_chi_a_chi_in_xp(params, derived);
     // A chi \cdot A chi > 1, so round it up to round denominator up.
