@@ -1,9 +1,10 @@
+use alloy_primitives::U256;
 use balancer_maths_rust::common::types::{BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind};
 use balancer_maths_rust::hooks::stable_surge::StableSurgeHookState;
 use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
-use num_bigint::BigInt;
+use std::str::FromStr;
 
 /// Helper function to create the common pool state for these tests
 fn create_test_pool_state() -> StableState {
@@ -16,29 +17,29 @@ fn create_test_pool_state() -> StableState {
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
         ],
         scaling_factors: vec![
-            BigInt::from(10000000000u64),
-            BigInt::from(1000000000000u64),
-            BigInt::from(1u64),
+            U256::from(10000000000u64),
+            U256::from(1000000000000u64),
+            U256::ONE,
         ],
         token_rates: vec![
-            BigInt::parse_bytes(b"109906780000000000000000", 10).unwrap(),
-            BigInt::from(1000000000000000000u64),
-            BigInt::parse_bytes(b"2682207000000000000000", 10).unwrap(),
+            U256::from_str("109906780000000000000000").unwrap(),
+            U256::from(1000000000000000000u64),
+            U256::from_str("2682207000000000000000").unwrap(),
         ],
         balances_live_scaled_18: vec![
-            BigInt::parse_bytes(b"48623858539800000000", 10).unwrap(),
-            BigInt::parse_bytes(b"37690904000000000000", 10).unwrap(),
-            BigInt::parse_bytes(b"41886483864325323440", 10).unwrap(),
+            U256::from_str("48623858539800000000").unwrap(),
+            U256::from_str("37690904000000000000").unwrap(),
+            U256::from_str("41886483864325323440").unwrap(),
         ],
-        swap_fee: BigInt::from(1000000000000000u64),
-        aggregate_swap_fee: BigInt::from(500000000000000000u64),
-        total_supply: BigInt::parse_bytes(b"150055175718346624897", 10).unwrap(),
+        swap_fee: U256::from(1000000000000000u64),
+        aggregate_swap_fee: U256::from(500000000000000000u64),
+        total_supply: U256::from_str("150055175718346624897").unwrap(),
         supports_unbalanced_liquidity: true,
         hook_type: Some("StableSurge".to_string()),
     };
 
     let stable_mutable = StableMutable {
-        amp: BigInt::from(500000u64),
+        amp: U256::from(500000u64),
     };
 
     StableState {
@@ -51,9 +52,9 @@ fn create_test_pool_state() -> StableState {
 fn create_test_hook_state() -> StableSurgeHookState {
     StableSurgeHookState {
         hook_type: "StableSurge".to_string(),
-        amp: BigInt::from(500000u64),
-        surge_threshold_percentage: BigInt::from(5000000000000000u64),
-        max_surge_fee_percentage: BigInt::from(30000000000000000u64),
+        amp: U256::from(500000u64),
+        surge_threshold_percentage: U256::from(5000000000000000u64),
+        max_surge_fee_percentage: U256::from(30000000000000000u64),
     }
 }
 
@@ -68,7 +69,7 @@ fn test_stable_surge_ts3_match_tenderly_simulation() {
 
     let swap_input = SwapInput {
         swap_kind: SwapKind::GivenIn,
-        amount_raw: BigInt::from(20000000000000000u64),
+        amount_raw: U256::from(20000000000000000u64),
         token_in: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
         token_out: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".to_string(),
     };
@@ -81,7 +82,7 @@ fn test_stable_surge_ts3_match_tenderly_simulation() {
         )
         .expect("Swap failed");
 
-    assert_eq!(output_amount, BigInt::from(37594448u64));
+    assert_eq!(output_amount, U256::from(37594448u64));
 }
 
 #[test]
@@ -95,7 +96,7 @@ fn test_stable_surge_ts3_should_throw_error() {
 
     let swap_input = SwapInput {
         swap_kind: SwapKind::GivenOut,
-        amount_raw: BigInt::from(37690905u64),
+        amount_raw: U256::from(37690905u64),
         token_in: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
         token_out: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".to_string(),
     };

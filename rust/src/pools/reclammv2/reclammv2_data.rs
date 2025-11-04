@@ -1,28 +1,28 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// ReClammV2 mutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ReClammV2Mutable {
     #[serde(rename = "lastVirtualBalances")]
-    pub last_virtual_balances: Vec<BigInt>,
+    pub last_virtual_balances: Vec<U256>,
     #[serde(rename = "dailyPriceShiftBase")]
-    pub daily_price_shift_base: BigInt,
+    pub daily_price_shift_base: U256,
     #[serde(rename = "lastTimestamp")]
-    pub last_timestamp: BigInt,
+    pub last_timestamp: U256,
     #[serde(rename = "currentTimestamp")]
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
     #[serde(rename = "centerednessMargin")]
-    pub centeredness_margin: BigInt,
+    pub centeredness_margin: U256,
     #[serde(rename = "startFourthRootPriceRatio")]
-    pub start_fourth_root_price_ratio: BigInt,
+    pub start_fourth_root_price_ratio: U256,
     #[serde(rename = "endFourthRootPriceRatio")]
-    pub end_fourth_root_price_ratio: BigInt,
+    pub end_fourth_root_price_ratio: U256,
     #[serde(rename = "priceRatioUpdateStartTime")]
-    pub price_ratio_update_start_time: BigInt,
+    pub price_ratio_update_start_time: U256,
     #[serde(rename = "priceRatioUpdateEndTime")]
-    pub price_ratio_update_end_time: BigInt,
+    pub price_ratio_update_end_time: U256,
 }
 
 /// ReClammV2 immutable state

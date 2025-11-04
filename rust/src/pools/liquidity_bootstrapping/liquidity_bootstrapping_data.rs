@@ -1,12 +1,12 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// Liquidity Bootstrapping mutable state
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LiquidityBootstrappingMutable {
     pub is_swap_enabled: bool,
-    pub current_timestamp: BigInt,
+    pub current_timestamp: U256,
 }
 
 /// Liquidity Bootstrapping immutable state
@@ -14,10 +14,10 @@ pub struct LiquidityBootstrappingMutable {
 pub struct LiquidityBootstrappingImmutable {
     pub project_token_index: usize,
     pub is_project_token_swap_in_blocked: bool,
-    pub start_weights: Vec<BigInt>,
-    pub end_weights: Vec<BigInt>,
-    pub start_time: BigInt,
-    pub end_time: BigInt,
+    pub start_weights: Vec<U256>,
+    pub end_weights: Vec<U256>,
+    pub start_time: U256,
+    pub end_time: U256,
 }
 
 /// Liquidity Bootstrapping pool state

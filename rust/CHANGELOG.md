@@ -2,9 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.2] - 2025-10-09
+## [0.3.0] - 2025-10-30
 
 ### Changed
+- Remove BigInt in favour of Alloy Primitives.
 - Use mul_up_mag_u instead of *.
 
 ## [0.2.1] - 2025-01-27

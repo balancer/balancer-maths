@@ -1,7 +1,7 @@
 //! Weighted pool data structures
 
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::U256;
 use serde::{Deserialize, Serialize};
 
 /// Weighted pool state (extends BasePoolState with weighted-specific fields)
@@ -11,12 +11,12 @@ pub struct WeightedState {
     #[serde(flatten)]
     pub base: BasePoolState,
     /// Normalized weights (scaled 18)
-    pub weights: Vec<BigInt>,
+    pub weights: Vec<U256>,
 }
 
 impl WeightedState {
     /// Create a new weighted pool state
-    pub fn new(base: BasePoolState, weights: Vec<BigInt>) -> Self {
+    pub fn new(base: BasePoolState, weights: Vec<U256>) -> Self {
         Self { base, weights }
     }
 
@@ -26,7 +26,7 @@ impl WeightedState {
     }
 
     /// Get the weights
-    pub fn weights(&self) -> &[BigInt] {
+    pub fn weights(&self) -> &[U256] {
         &self.weights
     }
 }

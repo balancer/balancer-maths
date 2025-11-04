@@ -17,8 +17,7 @@ use crate::hooks::types::{
     BeforeAddLiquidityResult, BeforeRemoveLiquidityResult, BeforeSwapResult, DynamicSwapFeeResult,
     HookState,
 };
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Hook configuration flags
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -53,9 +52,9 @@ pub trait HookBase {
     fn on_before_add_liquidity(
         &self,
         kind: AddLiquidityKind,
-        max_amounts_in_scaled_18: &[BigInt],
-        min_bpt_amount_out: &BigInt,
-        balances_scaled_18: &[BigInt],
+        max_amounts_in_scaled_18: &[U256],
+        min_bpt_amount_out: &U256,
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> BeforeAddLiquidityResult;
 
@@ -63,10 +62,10 @@ pub trait HookBase {
     fn on_after_add_liquidity(
         &self,
         kind: AddLiquidityKind,
-        amounts_in_scaled_18: &[BigInt],
-        amounts_in_raw: &[BigInt],
-        bpt_amount_out: &BigInt,
-        balances_scaled_18: &[BigInt],
+        amounts_in_scaled_18: &[U256],
+        amounts_in_raw: &[U256],
+        bpt_amount_out: &U256,
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> AfterAddLiquidityResult;
 
@@ -74,9 +73,9 @@ pub trait HookBase {
     fn on_before_remove_liquidity(
         &self,
         kind: RemoveLiquidityKind,
-        max_bpt_amount_in: &BigInt,
-        min_amounts_out_scaled_18: &[BigInt],
-        balances_scaled_18: &[BigInt],
+        max_bpt_amount_in: &U256,
+        min_amounts_out_scaled_18: &[U256],
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> BeforeRemoveLiquidityResult;
 
@@ -84,10 +83,10 @@ pub trait HookBase {
     fn on_after_remove_liquidity(
         &self,
         kind: RemoveLiquidityKind,
-        bpt_amount_in: &BigInt,
-        amounts_out_scaled_18: &[BigInt],
-        amounts_out_raw: &[BigInt],
-        balances_scaled_18: &[BigInt],
+        bpt_amount_in: &U256,
+        amounts_out_scaled_18: &[U256],
+        amounts_out_raw: &[U256],
+        balances_scaled_18: &[U256],
         hook_state: &HookState,
     ) -> AfterRemoveLiquidityResult;
 
@@ -105,7 +104,7 @@ pub trait HookBase {
     fn on_compute_dynamic_swap_fee(
         &self,
         swap_params: &SwapParams,
-        static_swap_fee_percentage: &BigInt,
+        static_swap_fee_percentage: &U256,
         hook_state: &HookState,
     ) -> DynamicSwapFeeResult;
 }
@@ -135,9 +134,9 @@ impl HookBase for DefaultHook {
     fn on_before_add_liquidity(
         &self,
         _kind: AddLiquidityKind,
-        _max_amounts_in_scaled_18: &[BigInt],
-        _min_bpt_amount_out: &BigInt,
-        balances_scaled_18: &[BigInt],
+        _max_amounts_in_scaled_18: &[U256],
+        _min_bpt_amount_out: &U256,
+        balances_scaled_18: &[U256],
         _hook_state: &HookState,
     ) -> BeforeAddLiquidityResult {
         BeforeAddLiquidityResult {
@@ -149,10 +148,10 @@ impl HookBase for DefaultHook {
     fn on_after_add_liquidity(
         &self,
         _kind: AddLiquidityKind,
-        _amounts_in_scaled_18: &[BigInt],
-        amounts_in_raw: &[BigInt],
-        _bpt_amount_out: &BigInt,
-        _balances_scaled_18: &[BigInt],
+        _amounts_in_scaled_18: &[U256],
+        amounts_in_raw: &[U256],
+        _bpt_amount_out: &U256,
+        _balances_scaled_18: &[U256],
         _hook_state: &HookState,
     ) -> AfterAddLiquidityResult {
         AfterAddLiquidityResult {
@@ -164,9 +163,9 @@ impl HookBase for DefaultHook {
     fn on_before_remove_liquidity(
         &self,
         _kind: RemoveLiquidityKind,
-        _max_bpt_amount_in: &BigInt,
-        _min_amounts_out_scaled_18: &[BigInt],
-        balances_scaled_18: &[BigInt],
+        _max_bpt_amount_in: &U256,
+        _min_amounts_out_scaled_18: &[U256],
+        balances_scaled_18: &[U256],
         _hook_state: &HookState,
     ) -> BeforeRemoveLiquidityResult {
         BeforeRemoveLiquidityResult {
@@ -178,10 +177,10 @@ impl HookBase for DefaultHook {
     fn on_after_remove_liquidity(
         &self,
         _kind: RemoveLiquidityKind,
-        _bpt_amount_in: &BigInt,
-        _amounts_out_scaled_18: &[BigInt],
-        amounts_out_raw: &[BigInt],
-        _balances_scaled_18: &[BigInt],
+        _bpt_amount_in: &U256,
+        _amounts_out_scaled_18: &[U256],
+        amounts_out_raw: &[U256],
+        _balances_scaled_18: &[U256],
         _hook_state: &HookState,
     ) -> AfterRemoveLiquidityResult {
         AfterRemoveLiquidityResult {
@@ -208,19 +207,19 @@ impl HookBase for DefaultHook {
     ) -> AfterSwapResult {
         AfterSwapResult {
             success: true,
-            hook_adjusted_amount_calculated_raw: BigInt::zero(),
+            hook_adjusted_amount_calculated_raw: U256::ZERO,
         }
     }
 
     fn on_compute_dynamic_swap_fee(
         &self,
         _swap_params: &SwapParams,
-        static_swap_fee_percentage: &BigInt,
+        static_swap_fee_percentage: &U256,
         _hook_state: &HookState,
     ) -> DynamicSwapFeeResult {
         DynamicSwapFeeResult {
             success: true,
-            dynamic_swap_fee: static_swap_fee_percentage.clone(),
+            dynamic_swap_fee: *static_swap_fee_percentage,
         }
     }
 }

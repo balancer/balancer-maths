@@ -1,6 +1,6 @@
 [package]
 name = "balancer-maths-rust"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 description = "Balancer V3 mathematics library in Rust"
 license = "MIT"
@@ -9,10 +9,7 @@ repository = "https://github.com/balancer/balancer-maths"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# Big integers - essential for financial calculations
-num-bigint = { version = "0.4", features = ["serde"] }
-num-traits = "0.2"
-lazy_static = "1.4"
+alloy-primitives = { version = "0.5", features = ["serde"] }
 
 # Serialization - for data structures
 serde = { version = "1.0", features = ["derive"] }

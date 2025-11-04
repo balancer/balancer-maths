@@ -10,13 +10,12 @@ use crate::pools::quantamm::quantamm_math::{
     get_second_four_weights_and_multipliers,
 };
 use crate::pools::weighted::weighted_math::{MAX_INVARIANT_RATIO, MIN_INVARIANT_RATIO, *};
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::{I256, U256};
 
 /// QuantAmm pool implementation
 pub struct QuantAmmPool {
     /// Current normalized weights (scaled 18) based on time interpolation
-    normalized_weights: Vec<BigInt>,
+    normalized_weights: Vec<U256>,
     /// Pool state
     state: QuantAmmState,
 }
@@ -58,19 +57,19 @@ impl QuantAmmPool {
 
     /// Calculate normalized weights based on time interpolation
     fn calculate_normalized_weights(
-        base_weights: &[BigInt],
-        multipliers: &[BigInt],
-        last_update_time: &BigInt,
-        last_interop_time: &BigInt,
-        current_timestamp: &BigInt,
-    ) -> Vec<BigInt> {
-        let mut multiplier_time = current_timestamp.clone();
+        base_weights: &[I256],
+        multipliers: &[I256],
+        last_update_time: &U256,
+        last_interop_time: &U256,
+        current_timestamp: &U256,
+    ) -> Vec<U256> {
+        let mut multiplier_time = *current_timestamp;
 
         if current_timestamp >= last_interop_time {
-            multiplier_time = last_interop_time.clone();
+            multiplier_time = *last_interop_time;
         }
 
-        let time_since_last_update = &multiplier_time - last_update_time;
+        let time_since_last_update = multiplier_time - last_update_time;
 
         let mut normalized_weights = Vec::with_capacity(base_weights.len());
 
@@ -91,13 +90,13 @@ impl QuantAmmPool {
         &self,
         index_in: usize,
         index_out: usize,
-    ) -> Result<(BigInt, BigInt), PoolError> {
+    ) -> Result<(U256, U256), PoolError> {
         if index_in >= self.normalized_weights.len() || index_out >= self.normalized_weights.len() {
             return Err(PoolError::InvalidTokenIndex);
         }
 
-        let token_in_weight = self.normalized_weights[index_in].clone();
-        let token_out_weight = self.normalized_weights[index_out].clone();
+        let token_in_weight = self.normalized_weights[index_in];
+        let token_out_weight = self.normalized_weights[index_out];
 
         Ok((token_in_weight, token_out_weight))
     }
@@ -105,14 +104,14 @@ impl QuantAmmPool {
     /// Check if trade size exceeds max trade size ratio
     fn check_max_trade_size(
         &self,
-        amount_scaled_18: &BigInt,
-        balance_scaled_18: &BigInt,
+        amount_scaled_18: &U256,
+        balance_scaled_18: &U256,
     ) -> Result<(), PoolError> {
         let max_amount = mul_down_fixed(
             balance_scaled_18,
             &self.state.immutable.max_trade_size_ratio,
         )
-        .unwrap_or_else(|_| BigInt::zero());
+        .unwrap_or(U256::ZERO);
 
         if amount_scaled_18 > &max_amount {
             return Err(PoolError::InvalidSwapParameters);
@@ -123,7 +122,7 @@ impl QuantAmmPool {
 }
 
 impl PoolBase for QuantAmmPool {
-    fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
+    fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         let token_in_index = swap_params.token_in_index;
         let token_out_index = swap_params.token_out_index;
 
@@ -180,9 +179,9 @@ impl PoolBase for QuantAmmPool {
 
     fn compute_invariant(
         &self,
-        balances_live_scaled_18: &[BigInt],
+        balances_live_scaled_18: &[U256],
         rounding: Rounding,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         match rounding {
             Rounding::RoundDown => {
                 compute_invariant_down(&self.normalized_weights, balances_live_scaled_18)
@@ -195,10 +194,10 @@ impl PoolBase for QuantAmmPool {
 
     fn compute_balance(
         &self,
-        balances_live_scaled_18: &[BigInt],
+        balances_live_scaled_18: &[U256],
         token_in_index: usize,
-        invariant_ratio: &BigInt,
-    ) -> Result<BigInt, PoolError> {
+        invariant_ratio: &U256,
+    ) -> Result<U256, PoolError> {
         if token_in_index >= balances_live_scaled_18.len()
             || token_in_index >= self.normalized_weights.len()
         {
@@ -212,12 +211,12 @@ impl PoolBase for QuantAmmPool {
         compute_balance_out_given_invariant(current_balance, weight, invariant_ratio)
     }
 
-    fn get_maximum_invariant_ratio(&self) -> BigInt {
-        MAX_INVARIANT_RATIO.clone()
+    fn get_maximum_invariant_ratio(&self) -> U256 {
+        MAX_INVARIANT_RATIO
     }
 
-    fn get_minimum_invariant_ratio(&self) -> BigInt {
-        MIN_INVARIANT_RATIO.clone()
+    fn get_minimum_invariant_ratio(&self) -> U256 {
+        MIN_INVARIANT_RATIO
     }
 }
 
