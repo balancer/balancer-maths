@@ -11,6 +11,9 @@ fn test_add_liquidity() {
     let vault = Vault::new();
 
     for add in test_data.adds {
+        // if add.test != "1-22524240-QuantAMM.json" {
+        //     continue;
+        // }
         println!("Testing add liquidity: {} (kind: {})", add.test, add.kind);
 
         // Get the pool data for this test
@@ -42,7 +45,7 @@ fn test_add_liquidity() {
         let add_input = AddLiquidityInput {
             pool: get_pool_address(pool),
             max_amounts_in_raw: add.input_amounts_raw.clone(),
-            min_bpt_amount_out_raw: add.bpt_out_raw.clone(),
+            min_bpt_amount_out_raw: add.bpt_out_raw,
             kind,
         };
 

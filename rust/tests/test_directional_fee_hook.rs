@@ -1,3 +1,4 @@
+use alloy_primitives::U256;
 use balancer_maths_rust::common::types::{
     BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind, SwapParams,
 };
@@ -6,7 +7,7 @@ use balancer_maths_rust::hooks::{DirectionalFeeHook, DirectionalFeeHookState};
 use balancer_maths_rust::pools::stable::stable_data::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
 use balancer_maths_rust::HookBase;
-use num_bigint::BigInt;
+use std::str::FromStr;
 
 fn create_stable_pool_state_with_hook() -> StableState {
     let base = BasePoolState {
@@ -16,23 +17,23 @@ fn create_stable_pool_state_with_hook() -> StableState {
             "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0".to_string(),
             "0xFF34B3d4Aee8ddCd6F9AFFFB6Fe49bD371b8a357".to_string(),
         ],
-        scaling_factors: vec![BigInt::from(1000000000000u64), BigInt::from(1u64)],
+        scaling_factors: vec![U256::from(1000000000000u64), U256::ONE],
         token_rates: vec![
-            BigInt::from(1000000000000000000u64),
-            BigInt::from(1000000000000000000u64),
+            U256::from(1000000000000000000u64),
+            U256::from(1000000000000000000u64),
         ],
         balances_live_scaled_18: vec![
-            BigInt::parse_bytes(b"20000000000000000000000", 10).unwrap(),
-            BigInt::parse_bytes(b"20000000000000000000000", 10).unwrap(),
+            U256::from_str("20000000000000000000000").unwrap(),
+            U256::from_str("20000000000000000000000").unwrap(),
         ],
-        swap_fee: BigInt::from(1000000000000000u64),
-        aggregate_swap_fee: BigInt::from(0u64),
-        total_supply: BigInt::parse_bytes(b"40000000000000000000000", 10).unwrap(),
+        swap_fee: U256::from(1000000000000000u64),
+        aggregate_swap_fee: U256::from(0u64),
+        total_supply: U256::from_str("40000000000000000000000").unwrap(),
         supports_unbalanced_liquidity: true,
         hook_type: Some("DirectionalFee".to_string()),
     };
     let mutable = StableMutable {
-        amp: BigInt::from(1000000u64),
+        amp: U256::from(1000000u64),
     };
     StableState { base, mutable }
 }
@@ -46,7 +47,7 @@ fn create_stable_pool_state_without_hook() -> StableState {
 fn create_swap_input() -> SwapInput {
     SwapInput {
         swap_kind: SwapKind::GivenIn,
-        amount_raw: BigInt::from(100000000u64),
+        amount_raw: U256::from(100000000u64),
         token_in: "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0".to_string(),
         token_out: "0xFF34B3d4Aee8ddCd6F9AFFFB6Fe49bD371b8a357".to_string(),
     }
@@ -59,7 +60,7 @@ fn test_directional_fee_computes_fee() {
 
     // Build swap params equivalent via vault swap pathway: call hook directly here
     let balances = pool_state.base.balances_live_scaled_18.clone();
-    let amount_scaled_18 = BigInt::parse_bytes(b"100000000000000000000", 10).unwrap();
+    let amount_scaled_18 = U256::from_str("100000000000000000000").unwrap();
     let params = SwapParams {
         swap_kind: SwapKind::GivenIn,
         token_in_index: 0,
@@ -70,11 +71,11 @@ fn test_directional_fee_computes_fee() {
 
     let res = hook.on_compute_dynamic_swap_fee(
         &params,
-        &BigInt::from(0u64),
+        &U256::from(0u64),
         &HookState::DirectionalFee(DirectionalFeeHookState::default()),
     );
     assert!(res.success);
-    assert!(res.dynamic_swap_fee > BigInt::from(0u64));
+    assert!(res.dynamic_swap_fee > U256::from(0u64));
 }
 
 #[test]
@@ -86,10 +87,10 @@ fn test_directional_fee_uses_static_when_lower() {
         swap_kind: SwapKind::GivenIn,
         token_in_index: 0,
         token_out_index: 1,
-        amount_scaled_18: BigInt::from(1u64),
+        amount_scaled_18: U256::ONE,
         balances_live_scaled_18: balances,
     };
-    let static_fee = BigInt::from(1000000000000000u64);
+    let static_fee = U256::from(1000000000000000u64);
     let res = hook.on_compute_dynamic_swap_fee(
         &params,
         &static_fee,
@@ -104,7 +105,7 @@ fn test_directional_fee_specific_value_given_out_path() {
     let hook = DirectionalFeeHook::new();
     let pool_state = create_stable_pool_state_with_hook();
     let balances = pool_state.base.balances_live_scaled_18.clone();
-    let amount_scaled_18 = BigInt::parse_bytes(b"100000000000000000000", 10).unwrap();
+    let amount_scaled_18 = U256::from_str("100000000000000000000").unwrap();
     let params = SwapParams {
         swap_kind: SwapKind::GivenIn,
         token_in_index: 0,
@@ -112,14 +113,14 @@ fn test_directional_fee_specific_value_given_out_path() {
         amount_scaled_18,
         balances_live_scaled_18: balances,
     };
-    let static_fee = BigInt::from(1000000000000000u64);
+    let static_fee = U256::from(1000000000000000u64);
     let res = hook.on_compute_dynamic_swap_fee(
         &params,
         &static_fee,
         &HookState::DirectionalFee(DirectionalFeeHookState::default()),
     );
     assert!(res.success);
-    assert_eq!(res.dynamic_swap_fee, BigInt::from(5000000000000000u64));
+    assert_eq!(res.dynamic_swap_fee, U256::from(5000000000000000u64));
 }
 
 #[test]

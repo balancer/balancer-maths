@@ -1,9 +1,10 @@
+use alloy_primitives::U256;
 use balancer_maths_rust::common::types::{BasePoolState, PoolStateOrBuffer, SwapInput, SwapKind};
 use balancer_maths_rust::hooks::stable_surge::StableSurgeHookState;
 use balancer_maths_rust::hooks::types::HookState;
 use balancer_maths_rust::pools::stable::{StableMutable, StableState};
 use balancer_maths_rust::vault::Vault;
-use num_bigint::BigInt;
+use std::str::FromStr;
 
 /// Helper function to create the common pool state for these tests
 fn create_test_pool_state() -> StableState {
@@ -16,29 +17,29 @@ fn create_test_pool_state() -> StableState {
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
         ],
         scaling_factors: vec![
-            BigInt::from(10000000000u64),
-            BigInt::from(1000000000000u64),
-            BigInt::from(1u64),
+            U256::from(10000000000u64),
+            U256::from(1000000000000u64),
+            U256::ONE,
         ],
         token_rates: vec![
-            BigInt::parse_bytes(b"85446472000000000000000", 10).unwrap(),
-            BigInt::from(1000000000000000000u64),
-            BigInt::parse_bytes(b"2021120000000000000000", 10).unwrap(),
+            U256::from_str("85446472000000000000000").unwrap(),
+            U256::from(1000000000000000000u64),
+            U256::from_str("2021120000000000000000").unwrap(),
         ],
         balances_live_scaled_18: vec![
-            BigInt::parse_bytes(b"2865435476013920000000", 10).unwrap(),
-            BigInt::parse_bytes(b"2537601715000000000000", 10).unwrap(),
-            BigInt::parse_bytes(b"3266208348800096988780", 10).unwrap(),
+            U256::from_str("2865435476013920000000").unwrap(),
+            U256::from_str("2537601715000000000000").unwrap(),
+            U256::from_str("3266208348800096988780").unwrap(),
         ],
-        swap_fee: BigInt::from(1000000000000000u64),
-        aggregate_swap_fee: BigInt::from(500000000000000000u64),
-        total_supply: BigInt::parse_bytes(b"9332159723859490160669", 10).unwrap(),
+        swap_fee: U256::from(1000000000000000u64),
+        aggregate_swap_fee: U256::from(500000000000000000u64),
+        total_supply: U256::from_str("9332159723859490160669").unwrap(),
         supports_unbalanced_liquidity: true,
         hook_type: Some("StableSurge".to_string()),
     };
 
     let stable_mutable = StableMutable {
-        amp: BigInt::from(500000u64),
+        amp: U256::from(500000u64),
     };
 
     StableState {
@@ -51,9 +52,9 @@ fn create_test_pool_state() -> StableState {
 fn create_test_hook_state() -> StableSurgeHookState {
     StableSurgeHookState {
         hook_type: "StableSurge".to_string(),
-        amp: BigInt::from(500000u64),
-        surge_threshold_percentage: BigInt::from(5000000000000000u64),
-        max_surge_fee_percentage: BigInt::from(30000000000000000u64),
+        amp: U256::from(500000u64),
+        surge_threshold_percentage: U256::from(5000000000000000u64),
+        max_surge_fee_percentage: U256::from(30000000000000000u64),
     }
 }
 
@@ -68,7 +69,7 @@ fn test_stable_surge_ts2_below_threshold_static_fee() {
 
     let swap_input = SwapInput {
         swap_kind: SwapKind::GivenIn,
-        amount_raw: BigInt::from(100000000u64),
+        amount_raw: U256::from(100000000u64),
         token_in: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".to_string(),
         token_out: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
     };
@@ -81,7 +82,7 @@ fn test_stable_surge_ts2_below_threshold_static_fee() {
         )
         .expect("Swap failed");
 
-    assert_eq!(output_amount, BigInt::from(49449850642484030u64));
+    assert_eq!(output_amount, U256::from(49449850642484030u64));
 }
 
 #[test]
@@ -95,7 +96,7 @@ fn test_stable_surge_ts2_above_threshold_surge_fee() {
 
     let swap_input = SwapInput {
         swap_kind: SwapKind::GivenIn,
-        amount_raw: BigInt::from(1000000000000000000u64),
+        amount_raw: U256::from(1000000000000000000u64),
         token_in: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string(),
         token_out: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48".to_string(),
     };
@@ -108,5 +109,5 @@ fn test_stable_surge_ts2_above_threshold_surge_fee() {
         )
         .expect("Swap failed");
 
-    assert_eq!(output_amount, BigInt::from(1976459205u64));
+    assert_eq!(output_amount, U256::from(1976459205u64));
 }

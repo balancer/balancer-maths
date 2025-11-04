@@ -7,12 +7,11 @@ use crate::pools::stable::stable_math::{
     compute_balance, compute_in_given_exact_out, compute_invariant, compute_out_given_exact_in,
     _MAX_INVARIANT_RATIO, _MIN_INVARIANT_RATIO,
 };
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Stable pool implementation
 pub struct StablePool {
-    pub amp: BigInt,
+    pub amp: U256,
 }
 
 impl StablePool {
@@ -25,15 +24,15 @@ impl StablePool {
 }
 
 impl PoolBase for StablePool {
-    fn get_maximum_invariant_ratio(&self) -> BigInt {
-        BigInt::from(_MAX_INVARIANT_RATIO)
+    fn get_maximum_invariant_ratio(&self) -> U256 {
+        U256::from(_MAX_INVARIANT_RATIO)
     }
 
-    fn get_minimum_invariant_ratio(&self) -> BigInt {
-        BigInt::from(_MIN_INVARIANT_RATIO)
+    fn get_minimum_invariant_ratio(&self) -> U256 {
+        U256::from(_MIN_INVARIANT_RATIO)
     }
 
-    fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
+    fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         let invariant = compute_invariant(&self.amp, &swap_params.balances_live_scaled_18)?;
 
         let result = match swap_params.swap_kind {
@@ -60,16 +59,16 @@ impl PoolBase for StablePool {
 
     fn compute_invariant(
         &self,
-        balances_live_scaled18: &[BigInt],
+        balances_live_scaled18: &[U256],
         rounding: Rounding,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         let mut invariant = compute_invariant(&self.amp, balances_live_scaled18)?;
 
-        if invariant > BigInt::zero() {
+        if invariant > U256::ZERO {
             match rounding {
                 Rounding::RoundDown => {}
                 Rounding::RoundUp => {
-                    invariant += BigInt::from(1u64);
+                    invariant += U256::ONE;
                 }
             }
         }
@@ -79,10 +78,10 @@ impl PoolBase for StablePool {
 
     fn compute_balance(
         &self,
-        balances_live_scaled18: &[BigInt],
+        balances_live_scaled18: &[U256],
         token_in_index: usize,
-        invariant_ratio: &BigInt,
-    ) -> Result<BigInt, PoolError> {
+        invariant_ratio: &U256,
+    ) -> Result<U256, PoolError> {
         let invariant = self.compute_invariant(balances_live_scaled18, Rounding::RoundUp)?;
         let scaled_invariant = mul_down_fixed(&invariant, invariant_ratio)?;
 

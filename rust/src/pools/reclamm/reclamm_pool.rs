@@ -5,8 +5,7 @@ use crate::pools::reclamm::reclamm_data::ReClammState;
 use crate::pools::reclamm::reclamm_math::{
     compute_current_virtual_balances, compute_in_given_out, compute_out_given_in,
 };
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// ReClamm pool implementation
 pub struct ReClammPool {
@@ -22,10 +21,7 @@ impl ReClammPool {
     }
 
     /// Compute current virtual balances
-    fn _compute_current_virtual_balances(
-        &self,
-        balances_scaled_18: &[BigInt],
-    ) -> (BigInt, BigInt, bool) {
+    fn _compute_current_virtual_balances(&self, balances_scaled_18: &[U256]) -> (U256, U256, bool) {
         compute_current_virtual_balances(
             &self.re_clamm_state.mutable.current_timestamp,
             balances_scaled_18,
@@ -43,19 +39,19 @@ impl ReClammPool {
 }
 
 impl PoolBase for ReClammPool {
-    fn get_maximum_invariant_ratio(&self) -> BigInt {
+    fn get_maximum_invariant_ratio(&self) -> U256 {
         // The invariant ratio bounds are required by `IBasePool`, but are unused in this pool type, as liquidity can
         // only be added or removed proportionally.
-        BigInt::zero()
+        U256::ZERO
     }
 
-    fn get_minimum_invariant_ratio(&self) -> BigInt {
+    fn get_minimum_invariant_ratio(&self) -> U256 {
         // The invariant ratio bounds are required by `IBasePool`, but are unused in this pool type, as liquidity can
         // only be added or removed proportionally.
-        BigInt::zero()
+        U256::ZERO
     }
 
-    fn on_swap(&self, swap_params: &SwapParams) -> Result<BigInt, PoolError> {
+    fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         let compute_result =
             self._compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
 
@@ -91,20 +87,20 @@ impl PoolBase for ReClammPool {
 
     fn compute_invariant(
         &self,
-        _balances_live_scaled18: &[BigInt],
+        _balances_live_scaled18: &[U256],
         _rounding: Rounding,
-    ) -> Result<BigInt, PoolError> {
+    ) -> Result<U256, PoolError> {
         // Only needed for unbalanced liquidity and thats not possible in this pool
-        Ok(BigInt::zero())
+        Ok(U256::ZERO)
     }
 
     fn compute_balance(
         &self,
-        _balances_live_scaled18: &[BigInt],
+        _balances_live_scaled18: &[U256],
         _token_in_index: usize,
-        _invariant_ratio: &BigInt,
-    ) -> Result<BigInt, PoolError> {
+        _invariant_ratio: &U256,
+    ) -> Result<U256, PoolError> {
         // Only needed for unbalanced liquidity and thats not possible in this pool
-        Ok(BigInt::zero())
+        Ok(U256::ZERO)
     }
 }

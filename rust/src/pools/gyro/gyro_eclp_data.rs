@@ -1,23 +1,23 @@
 use crate::common::types::BasePoolState;
-use num_bigint::BigInt;
+use alloy_primitives::I256;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GyroECLPImmutable {
-    pub alpha: BigInt,
-    pub beta: BigInt,
-    pub c: BigInt,
-    pub s: BigInt,
-    pub lambda: BigInt,
-    pub tau_alpha_x: BigInt,
-    pub tau_alpha_y: BigInt,
-    pub tau_beta_x: BigInt,
-    pub tau_beta_y: BigInt,
-    pub u: BigInt,
-    pub v: BigInt,
-    pub w: BigInt,
-    pub z: BigInt,
-    pub d_sq: BigInt,
+    pub alpha: I256,
+    pub beta: I256,
+    pub c: I256,
+    pub s: I256,
+    pub lambda: I256,
+    pub tau_alpha_x: I256,
+    pub tau_alpha_y: I256,
+    pub tau_beta_x: I256,
+    pub tau_beta_y: I256,
+    pub u: I256,
+    pub v: I256,
+    pub w: I256,
+    pub z: I256,
+    pub d_sq: I256,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

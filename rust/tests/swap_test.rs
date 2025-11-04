@@ -1,13 +1,13 @@
+use alloy_primitives::U256;
 use balancer_maths_rust::common::types::PoolStateOrBuffer;
 use balancer_maths_rust::common::types::*;
 use balancer_maths_rust::vault::Vault;
-use num_bigint::BigInt;
 mod utils;
 use utils::convert_to_pool_state;
 use utils::read_test_data;
 
-/// Check if two BigInts are within a percentage tolerance (for Buffer pools)
-fn are_big_ints_within_percent(value1: &BigInt, value2: &BigInt, percent: f64) -> bool {
+/// Check if two U256s are within a percentage tolerance (for Buffer pools)
+fn are_big_ints_within_percent(value1: &U256, value2: &U256, percent: f64) -> bool {
     if percent < 0.0 {
         panic!("Percent must be non-negative");
     }
@@ -21,7 +21,7 @@ fn are_big_ints_within_percent(value1: &BigInt, value2: &BigInt, percent: f64) -
     // Convert percent to basis points (1% = 100 basis points) multiplied by 1e6
     // This maintains precision similar to the TypeScript version
     let percent_factor = (percent * 1e8) as i64;
-    let tolerance = (value2 * BigInt::from(percent_factor)) / BigInt::from(10000000000i64);
+    let tolerance = (value2 * U256::from(percent_factor)) / U256::from(10000000000i64);
 
     difference <= tolerance
 }
@@ -33,6 +33,9 @@ fn test_swaps() {
 
     for swap_test in test_data.swaps {
         println!("Swap Test: {}", swap_test.test);
+        // if swap_test.test != "8453-32641745-ReClamm-V2-Out-Of-Range.json" {
+        //     continue;
+        // }
 
         // Get the pool data for this test
         let pool_data = test_data
@@ -45,7 +48,7 @@ fn test_swaps() {
 
         // Create SwapInput
         let swap_input = SwapInput {
-            amount_raw: swap_test.amount_raw.clone(),
+            amount_raw: swap_test.amount_raw,
             token_in: swap_test.token_in.clone(),
             token_out: swap_test.token_out.clone(),
             swap_kind: match swap_test.swap_kind {

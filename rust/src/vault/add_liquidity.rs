@@ -9,8 +9,7 @@ use crate::common::utils::{
 };
 use crate::hooks::types::HookState;
 use crate::hooks::HookBase;
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::U256;
 
 /// Add liquidity to a pool
 pub fn add_liquidity(
@@ -56,12 +55,12 @@ pub fn add_liquidity(
             .iter()
             .enumerate()
         {
-            updated_balances_live_scaled18[i] = adjusted_balance.clone();
+            updated_balances_live_scaled18[i] = *adjusted_balance;
         }
     }
 
     // Initialize amounts_in_scaled18
-    let mut amounts_in_scaled18 = vec![BigInt::zero(); base_state.tokens.len()];
+    let mut amounts_in_scaled18 = vec![U256::ZERO; base_state.tokens.len()];
 
     let (bpt_amount_out, swap_fee_amounts_scaled18) = match add_liquidity_input.kind {
         AddLiquidityKind::Unbalanced => {
@@ -80,7 +79,7 @@ pub fn add_liquidity(
         AddLiquidityKind::SingleTokenExactOut => {
             require_unbalanced_liquidity_enabled(pool_state)?;
             let token_index = get_single_input_index(&max_amounts_in_scaled18)?;
-            let bpt_amount_out = add_liquidity_input.min_bpt_amount_out_raw.clone();
+            let bpt_amount_out = add_liquidity_input.min_bpt_amount_out_raw;
             let computed =
                 crate::vault::base_pool_math::compute_add_liquidity_single_token_exact_out(
                     &updated_balances_live_scaled18,
@@ -99,7 +98,7 @@ pub fn add_liquidity(
     };
 
     // Initialize amountsInRaw as a list with the same length as the tokens in the pool
-    let mut amounts_in_raw = vec![BigInt::zero(); base_state.tokens.len()];
+    let mut amounts_in_raw = vec![U256::ZERO; base_state.tokens.len()];
 
     for i in 0..base_state.tokens.len() {
         // amountsInRaw are amounts actually entering the Pool, so we round up.
@@ -120,9 +119,9 @@ pub fn add_liquidity(
         )?;
 
         // Update the balances with the incoming amounts and subtract the swap fees
-        updated_balances_live_scaled18[i] = &updated_balances_live_scaled18[i]
-            + &max_amounts_in_scaled18[i]
-            - &aggregate_swap_fee_amount_scaled_18;
+        updated_balances_live_scaled18[i] = updated_balances_live_scaled18[i]
+            + max_amounts_in_scaled18[i]
+            - aggregate_swap_fee_amount_scaled_18;
     }
 
     // Call after add liquidity hook if needed
@@ -146,7 +145,7 @@ pub fn add_liquidity(
         if hook_class.config().enable_hook_adjusted_amounts {
             for (i, adjusted_amount) in hook_return.hook_adjusted_amounts_in_raw.iter().enumerate()
             {
-                amounts_in_raw[i] = adjusted_amount.clone();
+                amounts_in_raw[i] = *adjusted_amount;
             }
         }
     }

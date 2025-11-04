@@ -23,5 +23,5 @@ pub use utils::{
     copy_to_scaled18_apply_rate_round_up_array, find_case_insensitive_index_in_list,
     get_single_input_index, is_same_address, require_unbalanced_liquidity_enabled,
     to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down,
-    to_scaled_18_apply_rate_round_up, MAX_UINT256,
+    to_scaled_18_apply_rate_round_up,
 };

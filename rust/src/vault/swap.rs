@@ -12,14 +12,10 @@ use crate::common::utils::{
 };
 use crate::hooks::types::{AfterSwapParams, HookState};
 use crate::hooks::HookBase;
-use lazy_static::lazy_static;
-use num_bigint::BigInt;
-use num_traits::Zero;
+use alloy_primitives::{uint, U256};
 
-lazy_static! {
-    /// Minimum trade amount (scaled 18)
-    static ref MINIMUM_TRADE_AMOUNT: BigInt = BigInt::from(1000000i64); // 1e6
-}
+/// Minimum trade amount (scaled 18)
+pub const MINIMUM_TRADE_AMOUNT: U256 = uint!(1000000_U256); // 1e6
 
 /// Perform a swap operation
 pub fn swap(
@@ -28,9 +24,9 @@ pub fn swap(
     pool_class: &dyn PoolBase,
     hook_class: &dyn HookBase,
     hook_state: Option<&HookState>,
-) -> Result<BigInt, PoolError> {
+) -> Result<U256, PoolError> {
     if swap_input.amount_raw.is_zero() {
-        return Ok(BigInt::zero());
+        return Ok(U256::ZERO);
     }
 
     let base_state = pool_state.base();
@@ -61,7 +57,7 @@ pub fn swap(
         swap_kind: swap_input.swap_kind.clone(),
         token_in_index: input_index,
         token_out_index: output_index,
-        amount_scaled_18: amount_given_scaled_18.clone(),
+        amount_scaled_18: amount_given_scaled_18,
         balances_live_scaled_18: updated_balances.clone(),
     };
 
@@ -73,13 +69,13 @@ pub fn swap(
         }
         // Update balances with hook-adjusted balances
         for (i, adjusted_balance) in result.hook_adjusted_balances_scaled_18.iter().enumerate() {
-            updated_balances[i] = adjusted_balance.clone();
+            updated_balances[i] = *adjusted_balance;
         }
         swap_params.balances_live_scaled_18 = updated_balances.clone();
     }
 
     // Apply swap fees
-    let mut swap_fee = base_state.swap_fee.clone();
+    let mut swap_fee = base_state.swap_fee;
     if hook_class.config().should_call_compute_dynamic_swap_fee {
         let result =
             hook_class.on_compute_dynamic_swap_fee(&swap_params, &swap_fee, hook_state.unwrap());
@@ -88,12 +84,11 @@ pub fn swap(
         }
     }
 
-    let mut total_swap_fee_amount_scaled_18 = BigInt::zero();
+    let mut total_swap_fee_amount_scaled_18 = U256::ZERO;
     if swap_params.swap_kind == SwapKind::GivenIn {
         // Round up to avoid losses during precision loss
         total_swap_fee_amount_scaled_18 = mul_up_fixed(&swap_params.amount_scaled_18, &swap_fee)?;
-        swap_params.amount_scaled_18 =
-            &swap_params.amount_scaled_18 - &total_swap_fee_amount_scaled_18;
+        swap_params.amount_scaled_18 -= total_swap_fee_amount_scaled_18
     }
 
     ensure_valid_swap_amount(&swap_params.amount_scaled_18)?;
@@ -121,7 +116,7 @@ pub fn swap(
                 &swap_fee,
                 &complement_fixed(&swap_fee)?,
             )?;
-            let amount_with_fee = &amount_calculated_scaled_18 + &total_swap_fee_amount_scaled_18;
+            let amount_with_fee = amount_calculated_scaled_18 + total_swap_fee_amount_scaled_18;
 
             // For ExactOut the amount calculated is entering the Vault, so we round up
             to_raw_undo_rate_round_up(
@@ -144,31 +139,31 @@ pub fn swap(
     // Update balances
     let (balance_in_increment, balance_out_decrement) = match swap_input.swap_kind {
         SwapKind::GivenIn => (
-            &amount_given_scaled_18 - &aggregate_swap_fee_amount_scaled_18,
-            amount_calculated_scaled_18.clone(),
+            amount_given_scaled_18 - aggregate_swap_fee_amount_scaled_18,
+            amount_calculated_scaled_18,
         ),
         SwapKind::GivenOut => (
-            &amount_calculated_scaled_18 - &aggregate_swap_fee_amount_scaled_18,
-            amount_given_scaled_18.clone(),
+            amount_calculated_scaled_18 - aggregate_swap_fee_amount_scaled_18,
+            amount_given_scaled_18,
         ),
     };
 
-    updated_balances[input_index] = &updated_balances[input_index] + &balance_in_increment;
-    updated_balances[output_index] = &updated_balances[output_index] - &balance_out_decrement;
+    updated_balances[input_index] += balance_in_increment;
+    updated_balances[output_index] -= balance_out_decrement;
 
     // Call after swap hook if needed
-    let mut final_amount_calculated_raw = amount_calculated_raw.clone();
+    let mut final_amount_calculated_raw = amount_calculated_raw;
     if hook_class.config().should_call_after_swap {
         let after_swap_params = AfterSwapParams {
             kind: swap_input.swap_kind.clone(),
             token_in: swap_input.token_in.clone(),
             token_out: swap_input.token_out.clone(),
-            amount_in_scaled_18: amount_given_scaled_18.clone(),
-            amount_out_scaled_18: amount_calculated_scaled_18.clone(),
-            token_in_balance_scaled_18: updated_balances[input_index].clone(),
-            token_out_balance_scaled_18: updated_balances[output_index].clone(),
-            amount_calculated_scaled_18: amount_calculated_scaled_18.clone(),
-            amount_calculated_raw: amount_calculated_raw.clone(),
+            amount_in_scaled_18: amount_given_scaled_18,
+            amount_out_scaled_18: amount_calculated_scaled_18,
+            token_in_balance_scaled_18: updated_balances[input_index],
+            token_out_balance_scaled_18: updated_balances[output_index],
+            amount_calculated_scaled_18,
+            amount_calculated_raw,
         };
 
         let result = hook_class.on_after_swap(&after_swap_params, hook_state.unwrap());
@@ -187,13 +182,13 @@ pub fn swap(
 
 /// Compute amount given scaled to 18 decimals
 pub fn compute_amount_given_scaled_18(
-    amount_given_raw: &BigInt,
+    amount_given_raw: &U256,
     swap_kind: SwapKind,
     index_in: usize,
     index_out: usize,
-    scaling_factors: &[BigInt],
-    token_rates: &[BigInt],
-) -> Result<BigInt, PoolError> {
+    scaling_factors: &[U256],
+    token_rates: &[U256],
+) -> Result<U256, PoolError> {
     match swap_kind {
         SwapKind::GivenIn => {
             // If the amountGiven is entering the pool math (ExactIn), round down
@@ -216,18 +211,18 @@ pub fn compute_amount_given_scaled_18(
 }
 
 /// Compute rate rounded up
-pub fn compute_rate_round_up(rate: &BigInt) -> BigInt {
-    let rounded_rate = (rate / &*WAD) * &*WAD;
+pub fn compute_rate_round_up(rate: &U256) -> U256 {
+    let rounded_rate = (rate / WAD) * WAD;
     if &rounded_rate == rate {
-        rate.clone()
+        *rate
     } else {
-        rate + BigInt::from(1)
+        rate + U256::ONE
     }
 }
 
 /// Ensure valid swap amount
-pub fn ensure_valid_swap_amount(trade_amount: &BigInt) -> Result<(), PoolError> {
-    if trade_amount < &*MINIMUM_TRADE_AMOUNT {
+pub fn ensure_valid_swap_amount(trade_amount: &U256) -> Result<(), PoolError> {
+    if trade_amount < &MINIMUM_TRADE_AMOUNT {
         return Err(PoolError::TradeAmountTooSmall);
     }
     Ok(())
