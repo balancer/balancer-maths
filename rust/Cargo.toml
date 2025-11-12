@@ -17,6 +17,7 @@ serde_json = "1.0"
 
 [dev-dependencies]
 # Only for testing
+paste = "1.0"
 
 [lib]
 name = "balancer_maths_rust"
