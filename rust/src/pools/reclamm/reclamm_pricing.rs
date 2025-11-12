@@ -63,8 +63,8 @@ pub fn swap_reclamm_to_price(
     balances_live_scaled_18: &[U256],
     current_virtual_balances: &[U256],
     swap_fee_percentage: &U256,
-    protocol_fee_percentage: &U256,
-    pool_creator_fee_percentage: &U256,
+    _protocol_fee_percentage: &U256,
+    _pool_creator_fee_percentage: &U256,
     decimals_a: u8,
     decimals_b: u8,
     target_price_scaled_27: &U256,
@@ -83,8 +83,8 @@ pub fn swap_reclamm_to_price(
     let virtual_a = u256_to_f64(&current_virtual_balances[0]) / 1e18;
     let virtual_b = u256_to_f64(&current_virtual_balances[1]) / 1e18;
     let swap_fee = u256_to_f64(swap_fee_percentage) / 1e18;
-    let protocol_fee: f64 = u256_to_f64(protocol_fee_percentage) / 1e18;
-    let pool_creator_fee = u256_to_f64(pool_creator_fee_percentage) / 1e18;
+    // Note: protocol_fee and pool_creator_fee are not used in the calculation
+    // They affect fee distribution but not the swap amounts needed to reach target price
     let rate_a = u256_to_f64(&token_rates[0]) / 1e18;
     let rate_b = u256_to_f64(&token_rates[1]) / 1e18;
     let target_price = u256_to_f64(target_price_scaled_27) / 1e27;
@@ -105,15 +105,16 @@ pub fn swap_reclamm_to_price(
     let current_price = (balance_b + virtual_b) / (balance_a + virtual_a);
     let target_price_scaled = target_price * rate_a / rate_b;
 
-    // Calculate fee impact
-    let amount_in_fees = (swap_fee - protocol_fee) * (1.0 - pool_creator_fee);
-
     if target_price_scaled > current_price {
         // tokenB in, tokenA out
         let amount_out_scaled = balance_a + virtual_a - (invariant / target_price_scaled).sqrt();
-        let amount_in_scaled =
-            ((invariant / (balance_a - amount_out_scaled + virtual_a)) - balance_b - virtual_b)
-                / (1.0 + amount_in_fees);
+
+        // Calculate amount needed in the invariant math (after swap fee is removed)
+        let amount_in_scaled_net =
+            (invariant / (balance_a - amount_out_scaled + virtual_a)) - balance_b - virtual_b;
+
+        // Convert to gross amount (before swap fee) - this is what the user provides
+        let amount_in_scaled = amount_in_scaled_net / (1.0 - swap_fee);
 
         // Validate amounts
         if amount_out_scaled < 0.0 || amount_in_scaled < 0.0 {
@@ -136,9 +137,13 @@ pub fn swap_reclamm_to_price(
     } else {
         // tokenA in, tokenB out
         let amount_out_scaled = balance_b + virtual_b - (invariant * target_price_scaled).sqrt();
-        let amount_in_scaled =
-            ((invariant / (balance_b - amount_out_scaled + virtual_b)) - balance_a - virtual_a)
-                / (1.0 + amount_in_fees);
+
+        // Calculate amount needed in the invariant math (after swap fee is removed)
+        let amount_in_scaled_net =
+            (invariant / (balance_b - amount_out_scaled + virtual_b)) - balance_a - virtual_a;
+
+        // Convert to gross amount (before swap fee) - this is what the user provides
+        let amount_in_scaled = amount_in_scaled_net / (1.0 - swap_fee);
 
         // Validate amounts
         if amount_out_scaled < 0.0 || amount_in_scaled < 0.0 {
