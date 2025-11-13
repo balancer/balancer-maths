@@ -1,6 +1,6 @@
 [package]
 name = "balancer-maths-rust"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "Balancer V3 mathematics library in Rust"
 license = "MIT"
