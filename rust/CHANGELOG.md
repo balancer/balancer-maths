@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-11-13
+
+### Changed
+- Update alloy-primitives to 1.3.0.
+
 ## [0.3.0] - 2025-10-30
 
 ### Changed
