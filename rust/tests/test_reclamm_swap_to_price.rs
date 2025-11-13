@@ -204,12 +204,22 @@ fn prices_equal_within_tolerance(actual: f64, expected: f64) -> bool {
     (actual - expected).abs() <= tolerance
 }
 
+// Helper to check if two U256 amounts are within tolerance (0.01%)
+fn amounts_equal_within_tolerance(actual: U256, expected: U256) -> bool {
+    let diff = if actual > expected {
+        actual - expected
+    } else {
+        expected - actual
+    };
+    let tolerance = expected / U256::from(10000u128); // 0.01%
+    diff <= tolerance
+}
+
 // Macro to generate similar tests for different price multipliers
 macro_rules! generate_tests {
     ($multiplier:expr, $suffix:ident) => {
         paste::paste! {
             #[test]
-            #[ignore]
             fn [<test_price_accuracy_ $suffix>]() {
                 let test_pool = TestPool::new();
                 let mut balances_live_scaled_18 = test_pool.balances_live_scaled_18.clone();
@@ -232,7 +242,6 @@ macro_rules! generate_tests {
                     &target_price_scaled_27,
                 )
                 .unwrap();
-                println!("result: {:?}", result);
 
                 update_balances(
                     &mut balances_live_scaled_18,
@@ -257,7 +266,6 @@ macro_rules! generate_tests {
             }
 
             #[test]
-            // #[ignore]
             fn [<test_amount_validation_ $suffix>]() {
                 let test_pool = TestPool::new();
 
@@ -278,8 +286,6 @@ macro_rules! generate_tests {
                 )
                 .unwrap();
 
-                println!("result: {:?}", price_result);
-
                 // Create pool state for vault.swap
                 let pool_state_or_buffer = create_pool_state_or_buffer(&test_pool);
 
@@ -293,24 +299,14 @@ macro_rules! generate_tests {
                     swap_kind: SwapKind::GivenIn,
                 };
 
-                println!("swap_input: {:?}", swap_input);
                 // Perform swap using vault
                 let vault = Vault::new();
                 let computed_out_raw = vault
                     .swap(&swap_input, &pool_state_or_buffer, None)
                     .expect("Swap failed");
 
-                println!("computed_out_raw: {:?}", computed_out_raw);
-
-                let diff = if computed_out_raw > price_result.amount_out_raw {
-                    computed_out_raw - price_result.amount_out_raw
-                } else {
-                    price_result.amount_out_raw - computed_out_raw
-                };
-                let tolerance = computed_out_raw / U256::from(10000u128);
-
                 assert!(
-                    diff <= tolerance,
+                    amounts_equal_within_tolerance(computed_out_raw, price_result.amount_out_raw),
                     "Computed amount out {} should match result amount out {} within tolerance",
                     computed_out_raw,
                     price_result.amount_out_raw
@@ -319,7 +315,93 @@ macro_rules! generate_tests {
         }
     };
 }
-
 // Generate tests for price multipliers
+generate_tests!(0.95, x095);
+generate_tests!(0.96, x096);
+generate_tests!(0.97, x097);
+generate_tests!(0.98, x098);
+generate_tests!(0.99, x099);
 generate_tests!(1.0, x100);
 generate_tests!(1.01, x101);
+generate_tests!(1.02, x102);
+generate_tests!(1.03, x103);
+generate_tests!(1.04, x104);
+generate_tests!(1.05, x105);
+
+#[test]
+fn test_amount_out_exceeds_balance_greater() {
+    let test_pool = TestPool::new();
+
+    let current_price_scaled_18 = calculate_reclamm_price(
+        &test_pool.balances_live_scaled_18,
+        &test_pool.current_virtual_balances,
+    );
+
+    // Target price 90% greater than current price
+    let target_price = (u256_e18_to_f64(current_price_scaled_18) * 1.9 * 1e27) as u128;
+    let target_price_scaled_27 = U256::from(target_price);
+
+    let result = swap_reclamm_to_price(
+        &test_pool.token_rates,
+        &test_pool.balances_live_scaled_18,
+        &test_pool.current_virtual_balances,
+        &test_pool.swap_fee_percentage,
+        &test_pool.protocol_fee_percentage,
+        &test_pool.pool_creator_fee_percentage,
+        test_pool.decimals_a,
+        test_pool.decimals_b,
+        &target_price_scaled_27,
+    );
+
+    assert!(
+        result.is_err(),
+        "Expected error for 90% greater price, but got result: {:?}",
+        result
+    );
+
+    let error_msg = result.unwrap_err();
+    assert!(
+        error_msg.contains("amount out exceeds balance"),
+        "Expected 'amount out exceeds balance' error, but got: {}",
+        error_msg
+    );
+}
+
+#[test]
+fn test_amount_out_exceeds_balance_less() {
+    let test_pool = TestPool::new();
+
+    let current_price_scaled_18 = calculate_reclamm_price(
+        &test_pool.balances_live_scaled_18,
+        &test_pool.current_virtual_balances,
+    );
+
+    // Target price 50% less than current price
+    let target_price = (u256_e18_to_f64(current_price_scaled_18) * 0.5 * 1e27) as u128;
+    let target_price_scaled_27 = U256::from(target_price);
+
+    let result = swap_reclamm_to_price(
+        &test_pool.token_rates,
+        &test_pool.balances_live_scaled_18,
+        &test_pool.current_virtual_balances,
+        &test_pool.swap_fee_percentage,
+        &test_pool.protocol_fee_percentage,
+        &test_pool.pool_creator_fee_percentage,
+        test_pool.decimals_a,
+        test_pool.decimals_b,
+        &target_price_scaled_27,
+    );
+
+    assert!(
+        result.is_err(),
+        "Expected error for 50% less price, but got result: {:?}",
+        result
+    );
+
+    let error_msg = result.unwrap_err();
+    assert!(
+        error_msg.contains("amount out exceeds balance"),
+        "Expected 'amount out exceeds balance' error, but got: {}",
+        error_msg
+    );
+}
