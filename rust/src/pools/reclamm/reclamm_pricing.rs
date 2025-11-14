@@ -53,7 +53,7 @@ pub fn calculate_reclamm_price(
 /// * `pool_creator_fee_percentage` - Pool creator fee percentage in e18
 /// * `decimals_a` - Decimals for token A
 /// * `decimals_b` - Decimals for token B
-/// * `target_price_scaled_27` - Target price in e27 format
+/// * `target_price_scaled_18` - Target price in e18 format
 ///
 /// # Returns
 /// Result containing token indices and raw amounts for the swap
@@ -67,7 +67,7 @@ pub fn swap_reclamm_to_price(
     _pool_creator_fee_percentage: &U256,
     decimals_a: u8,
     decimals_b: u8,
-    target_price_scaled_27: &U256,
+    target_price_scaled_18: &U256,
 ) -> Result<SwapToTargetPriceResult, String> {
     // Input validation
     if balances_live_scaled_18.len() != 2
@@ -87,7 +87,7 @@ pub fn swap_reclamm_to_price(
     // They affect fee distribution but not the swap amounts needed to reach target price
     let rate_a = u256_to_f64(&token_rates[0]) / 1e18;
     let rate_b = u256_to_f64(&token_rates[1]) / 1e18;
-    let target_price = u256_to_f64(target_price_scaled_27) / 1e27;
+    let target_price = u256_to_f64(target_price_scaled_18) / 1e18;
 
     // Validate non-zero values
     if balance_a + virtual_a == 0.0 || balance_b + virtual_b == 0.0 {
