@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2025-11-20
+
+### Changed
+- Update reCLAMM pricing functions to use scaling factors instead of decimals.
+
 ## [0.4.1] - 2025-11-13
 
 ### Changed
