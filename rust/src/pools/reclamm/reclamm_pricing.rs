@@ -128,11 +128,9 @@ pub fn swap_reclamm_to_price(
         Ok(SwapToTargetPriceResult {
             token_in_index: 1,
             token_out_index: 0,
-            amount_in_raw: U256::from(
-                (amount_in_scaled / scaling_factor_b * rate_b).ceil() as u128,
-            ),
+            amount_in_raw: U256::from((amount_in_scaled / scaling_factor_b * rate_b).ceil() as u128),
             amount_out_raw: U256::from(
-                (amount_out_scaled / scaling_factor_a * rate_a).floor() as u128,
+                (amount_out_scaled / scaling_factor_a * rate_a).floor() as u128
             ),
         })
     } else {
@@ -157,11 +155,9 @@ pub fn swap_reclamm_to_price(
         Ok(SwapToTargetPriceResult {
             token_in_index: 0,
             token_out_index: 1,
-            amount_in_raw: U256::from(
-                (amount_in_scaled / scaling_factor_a * rate_a).ceil() as u128,
-            ),
+            amount_in_raw: U256::from((amount_in_scaled / scaling_factor_a * rate_a).ceil() as u128),
             amount_out_raw: U256::from(
-                (amount_out_scaled / scaling_factor_b * rate_b).floor() as u128,
+                (amount_out_scaled / scaling_factor_b * rate_b).floor() as u128
             ),
         })
     }
