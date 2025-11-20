@@ -60,13 +60,12 @@ pub fn calculate_reclamm_price(
 #[allow(clippy::too_many_arguments)]
 pub fn swap_reclamm_to_price(
     token_rates: &[U256],
+    scaling_factors: &[U256],
     balances_live_scaled_18: &[U256],
     current_virtual_balances: &[U256],
     swap_fee_percentage: &U256,
     _protocol_fee_percentage: &U256,
     _pool_creator_fee_percentage: &U256,
-    decimals_a: u8,
-    decimals_b: u8,
     target_price_scaled_18: &U256,
 ) -> Result<SwapToTargetPriceResult, String> {
     // Input validation
@@ -88,6 +87,8 @@ pub fn swap_reclamm_to_price(
     let rate_a = u256_to_f64(&token_rates[0]) / 1e18;
     let rate_b = u256_to_f64(&token_rates[1]) / 1e18;
     let target_price = u256_to_f64(target_price_scaled_18) / 1e18;
+    let scaling_factor_a = u256_to_f64(&scaling_factors[0]) / 1e18;
+    let scaling_factor_b = u256_to_f64(&scaling_factors[1]) / 1e18;
 
     // Validate non-zero values
     if balance_a + virtual_a == 0.0 || balance_b + virtual_b == 0.0 {
@@ -128,10 +129,10 @@ pub fn swap_reclamm_to_price(
             token_in_index: 1,
             token_out_index: 0,
             amount_in_raw: U256::from(
-                (amount_in_scaled * 10f64.powi(decimals_b as i32) / rate_b).ceil() as u128,
+                (amount_in_scaled / scaling_factor_b * rate_b).ceil() as u128,
             ),
             amount_out_raw: U256::from(
-                (amount_out_scaled * 10f64.powi(decimals_a as i32) / rate_a).floor() as u128,
+                (amount_out_scaled / scaling_factor_a * rate_a).floor() as u128,
             ),
         })
     } else {
@@ -157,10 +158,10 @@ pub fn swap_reclamm_to_price(
             token_in_index: 0,
             token_out_index: 1,
             amount_in_raw: U256::from(
-                (amount_in_scaled * 10f64.powi(decimals_a as i32) / rate_a).ceil() as u128,
+                (amount_in_scaled / scaling_factor_a * rate_a).ceil() as u128,
             ),
             amount_out_raw: U256::from(
-                (amount_out_scaled * 10f64.powi(decimals_b as i32) / rate_b).floor() as u128,
+                (amount_out_scaled / scaling_factor_b * rate_b).floor() as u128,
             ),
         })
     }

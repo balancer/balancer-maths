@@ -14,8 +14,6 @@ struct TestPool {
     // Token information
     tokens: Vec<String>,
     token_rates: Vec<U256>,
-    decimals_a: u8,
-    decimals_b: u8,
 
     // Pool balances
     balances_live_scaled_18: Vec<U256>,
@@ -62,8 +60,6 @@ impl TestPool {
                 U256::from_str_radix("1000000000000000000", 10).unwrap(),
                 U256::from_str_radix("1000000000000000000", 10).unwrap(),
             ],
-            decimals_a: 18,
-            decimals_b: 18,
             balances_live_scaled_18: vec![
                 U256::from_str_radix("122255177411753308470", 10).unwrap(),
                 U256::from_str_radix("13599963412925271409", 10).unwrap(),
@@ -161,28 +157,14 @@ fn get_swap_tokens(
 // Helper to apply swap to balances
 fn update_balances(
     balances: &mut [U256],
+    scaling_factors: &[U256],
     token_in_index: usize,
     token_out_index: usize,
     amount_in_raw: U256,
     amount_out_raw: U256,
-    decimals_a: u8,
-    decimals_b: u8,
 ) {
-    // Convert raw amounts to scaled18
-    let scaling_factor_in = if token_in_index == 0 {
-        U256::from(10u128.pow((18 - decimals_a) as u32))
-    } else {
-        U256::from(10u128.pow((18 - decimals_b) as u32))
-    };
-
-    let scaling_factor_out = if token_out_index == 0 {
-        U256::from(10u128.pow((18 - decimals_a) as u32))
-    } else {
-        U256::from(10u128.pow((18 - decimals_b) as u32))
-    };
-
-    let amount_in_scaled = amount_in_raw * scaling_factor_in;
-    let amount_out_scaled = amount_out_raw * scaling_factor_out;
+    let amount_in_scaled = amount_in_raw * scaling_factors[token_in_index];
+    let amount_out_scaled = amount_out_raw * scaling_factors[token_out_index];
 
     balances[token_in_index] += amount_in_scaled;
     balances[token_out_index] -= amount_out_scaled;
@@ -213,25 +195,23 @@ macro_rules! generate_tests {
 
                 let result = swap_reclamm_to_price(
                     &test_pool.token_rates,
+                    &test_pool.scaling_factors,
                     &balances_live_scaled_18,
                     &test_pool.current_virtual_balances,
                     &test_pool.swap_fee_percentage,
                     &test_pool.protocol_fee_percentage,
                     &test_pool.pool_creator_fee_percentage,
-                    test_pool.decimals_a,
-                    test_pool.decimals_b,
                     &target_price_scaled_18,
                 )
                 .unwrap();
 
                 update_balances(
                     &mut balances_live_scaled_18,
+                    &test_pool.scaling_factors,
                     result.token_in_index,
                     result.token_out_index,
                     result.amount_in_raw,
                     result.amount_out_raw,
-                    test_pool.decimals_a,
-                    test_pool.decimals_b,
                 );
 
                 let new_price_scaled_18 = calculate_reclamm_price(&balances_live_scaled_18, &test_pool.current_virtual_balances);
@@ -253,13 +233,12 @@ macro_rules! generate_tests {
 
                 let price_result = swap_reclamm_to_price(
                     &test_pool.token_rates,
+                    &test_pool.scaling_factors,
                     &test_pool.balances_live_scaled_18,
                     &test_pool.current_virtual_balances,
                     &test_pool.swap_fee_percentage,
                     &test_pool.protocol_fee_percentage,
                     &test_pool.pool_creator_fee_percentage,
-                    test_pool.decimals_a,
-                    test_pool.decimals_b,
                     &target_price_scaled_18
                 )
                 .unwrap();
@@ -320,13 +299,12 @@ fn test_amount_out_exceeds_balance_greater() {
 
     let result = swap_reclamm_to_price(
         &test_pool.token_rates,
+        &test_pool.scaling_factors,
         &test_pool.balances_live_scaled_18,
         &test_pool.current_virtual_balances,
         &test_pool.swap_fee_percentage,
         &test_pool.protocol_fee_percentage,
         &test_pool.pool_creator_fee_percentage,
-        test_pool.decimals_a,
-        test_pool.decimals_b,
         &target_price_scaled_18,
     );
 
@@ -359,13 +337,12 @@ fn test_amount_out_exceeds_balance_less() {
 
     let result = swap_reclamm_to_price(
         &test_pool.token_rates,
+        &test_pool.scaling_factors,
         &test_pool.balances_live_scaled_18,
         &test_pool.current_virtual_balances,
         &test_pool.swap_fee_percentage,
         &test_pool.protocol_fee_percentage,
         &test_pool.pool_creator_fee_percentage,
-        test_pool.decimals_a,
-        test_pool.decimals_b,
         &target_price_scaled_18,
     );
 
