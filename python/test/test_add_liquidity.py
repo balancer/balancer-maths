@@ -1,4 +1,7 @@
-from test.utils.map_pool_state import map_pool_state, transform_strings_to_ints
+from test.utils.map_pool_state import (
+    map_pool_and_hook_state,
+    transform_strings_to_ints,
+)
 from test.utils.read_test_data import read_test_data
 from typing import cast
 
@@ -19,6 +22,7 @@ def test_add_liquidity():
             raise ValueError("Buffer pools do not support addLiquidity")
         # note any amounts must be passed as ints not strings
         pool_with_ints = transform_strings_to_ints(pool)
+        pool_state, hook_state = map_pool_and_hook_state(pool_with_ints)
         calculated_amount = vault.add_liquidity(
             add_liquidity_input=AddLiquidityInput(
                 pool=pool["poolAddress"],
@@ -26,7 +30,8 @@ def test_add_liquidity():
                 min_bpt_amount_out_raw=int(add_test["bptOutRaw"]),
                 kind=AddLiquidityKind(add_test["kind"]),
             ),
-            pool_state=cast(PoolState, map_pool_state(pool_with_ints)),
+            pool_state=cast(PoolState, pool_state),
+            hook_state=hook_state,
         )
         assert calculated_amount.bpt_amount_out_raw == int(add_test["bptOutRaw"])
         assert calculated_amount.amounts_in_raw == list(
