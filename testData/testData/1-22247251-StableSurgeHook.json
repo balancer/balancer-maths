@@ -1,0 +1,120 @@
+{
+    "swaps": [
+        {
+            "swapKind": 0,
+            "amountRaw": "100000000000000000000",
+            "tokenIn": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+            "tokenOut": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+            "outputRaw": "99421485300490934156"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "100000000000000000000",
+            "tokenIn": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+            "tokenOut": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+            "outputRaw": "100582702044529367163"
+        },
+        {
+            "swapKind": 0,
+            "amountRaw": "100000000000000000000",
+            "tokenIn": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+            "tokenOut": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+            "outputRaw": "97512073758568262972"
+        },
+        {
+            "swapKind": 1,
+            "amountRaw": "100000000000000000000",
+            "tokenIn": "0xd11c452fc99cf405034ee446803b6f6c1f6d5ed8",
+            "tokenOut": "0x775f661b0bd1739349b9a2a3ef60be277c5d2d29",
+            "outputRaw": "102569112280113497187"
+        }
+    ],
+    "adds": [
+        {
+            "kind": "Unbalanced",
+            "inputAmountsRaw": [
+                "100000000000000000000",
+                "100000000000000000000"
+            ],
+            "bptOutRaw": "239168417342243757040"
+        },
+        {
+            "kind": "SingleToken",
+            "inputAmountsRaw": [
+                "83600161661006597546",
+                "0"
+            ],
+            "bptOutRaw": "100000000000000000000"
+        }
+    ],
+    "removes": [
+        {
+            "kind": "Proportional",
+            "amountsOutRaw": [
+                "36164838441247143503",
+                "47464832816115683530"
+            ],
+            "bptInRaw": "100000000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactIn",
+            "amountsOutRaw": [
+                "0",
+                "83651917809625229979"
+            ],
+            "bptInRaw": "100000000000000000000"
+        },
+        {
+            "kind": "SingleTokenExactOut",
+            "amountsOutRaw": [
+                "0",
+                "100000000000000000000"
+            ],
+            "bptInRaw": "119551570556976104719"
+        }
+    ],
+    "pool": {
+        "chainId": "1",
+        "blockNumber": "22247251",
+        "poolType": "STABLE",
+        "poolAddress": "0x9ed5175aecb6653c1bdaa19793c16fd74fbeeb37",
+        "tokens": [
+            "0x775F661b0bD1739349b9A2A3EF60be277c5d2D29",
+            "0xD11c452fc99cF405034ee446803b6F6c1F6d5ED8"
+        ],
+        "scalingFactors": [
+            "1",
+            "1"
+        ],
+        "swapFee": "500000000000000",
+        "totalSupply": "717342064432930816122",
+        "balancesLiveScaled18": [
+            "311845355307990821859",
+            "409096377821670037730"
+        ],
+        "tokenRates": [
+            "1202060848670267307",
+            "1201509974239215142"
+        ],
+        "amp": "200000",
+        "aggregateSwapFee": "500000000000000000",
+        "hook": {
+            "address": "0xb18fA0cb5DE8cecB8899AAE6e38b1B7ed77885dA",
+            "type": "STABLE_SURGE",
+            "enableHookAdjustedAmounts": false,
+            "shouldCallAfterSwap": false,
+            "shouldCallBeforeSwap": false,
+            "shouldCallAfterInitialize": false,
+            "shouldCallBeforeInitialize": false,
+            "shouldCallAfterAddLiquidity": true,
+            "shouldCallBeforeAddLiquidity": false,
+            "shouldCallAfterRemoveLiquidity": true,
+            "shouldCallBeforeRemoveLiquidity": false,
+            "shouldCallComputeDynamicSwapFee": true,
+            "dynamicData": {
+                "surgeThresholdPercentage": "100000000000000000",
+                "maxSurgeFeePercentage": "50000000000000000"
+            }
+        }
+    }
+}
