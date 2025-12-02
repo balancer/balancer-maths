@@ -25,6 +25,7 @@ describe('addLiqudity tests', () => {
                     kind,
                 },
                 pool,
+                pool.hook,
             );
             expect(calculatedAmounts.bptAmountOutRaw).toEqual(bptOutRaw);
             expect(calculatedAmounts.amountsInRaw).toEqual(inputAmountsRaw);

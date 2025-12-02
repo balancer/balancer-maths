@@ -96,7 +96,23 @@ export class Vault {
         const hookClass = this.hookClasses[hookName];
         if (!hookClass) throw new Error(`Unsupported Hook Type: ${hookName}`);
         if (!hookState) throw new Error(`No state for Hook: ${hookName}`);
-        return new hookClass(hookState);
+
+        const hook = new hookClass(hookState);
+
+        // Override the hook's flags with those from HookState (if present)
+        if (hookState && typeof hookState === 'object' && 'shouldCallComputeDynamicSwapFee' in hookState) {
+            const state = hookState as HookState;
+            hook.shouldCallComputeDynamicSwapFee = state.shouldCallComputeDynamicSwapFee;
+            hook.shouldCallBeforeSwap = state.shouldCallBeforeSwap;
+            hook.shouldCallAfterSwap = state.shouldCallAfterSwap;
+            hook.shouldCallBeforeAddLiquidity = state.shouldCallBeforeAddLiquidity;
+            hook.shouldCallAfterAddLiquidity = state.shouldCallAfterAddLiquidity;
+            hook.shouldCallBeforeRemoveLiquidity = state.shouldCallBeforeRemoveLiquidity;
+            hook.shouldCallAfterRemoveLiquidity = state.shouldCallAfterRemoveLiquidity;
+            hook.enableHookAdjustedAmounts = state.enableHookAdjustedAmounts;
+        }
+
+        return hook;
     }
 
     /**

@@ -24,6 +24,7 @@ describe('swap tests', () => {
                     swapKind,
                 },
                 pool,
+                pool.hook,
             );
             if (pool.poolType === 'Buffer') {
                 const isOk = areBigIntsWithinPercent(
