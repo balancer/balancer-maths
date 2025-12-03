@@ -1,5 +1,8 @@
 from src.hooks.exit_fee.types import ExitFeeHookState, map_exit_fee_hook_state
-from src.hooks.stable_surge.types import StableSurgeHookState, map_stable_surge_hook_state
+from src.hooks.stable_surge.types import (
+    StableSurgeHookState,
+    map_stable_surge_hook_state,
+)
 from src.hooks.types import HookState
 
 
