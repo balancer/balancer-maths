@@ -206,10 +206,11 @@ def _compute_amount_given_scaled18(
             token_rates[index_in],
         )
     else:
+        rate_rounded_up = _compute_rate_round_up(token_rates[index_out])
         amount_given_scaled_18 = _to_scaled_18_apply_rate_round_up(
             amount_given_raw,
             scaling_factors[index_out],
-            token_rates[index_out],
+            rate_rounded_up,
         )
 
     return amount_given_scaled_18

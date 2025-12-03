@@ -1,6 +1,6 @@
 from typing import List
 
-from src.common.maths import Rounding, mul_down_fixed
+from src.common.maths import Rounding, mul_up_fixed
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
 from src.common.types import SwapKind
@@ -67,7 +67,7 @@ class Stable(PoolBase):
         return compute_balance(
             self.amp,
             balances_live_scaled18,
-            mul_down_fixed(
+            mul_up_fixed(
                 self.compute_invariant(balances_live_scaled18, Rounding.ROUND_UP),
                 invariant_ratio,
             ),
