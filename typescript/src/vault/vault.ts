@@ -100,16 +100,13 @@ export class Vault {
         const hook = new hookClass(hookState);
 
         // Override the hook's flags with those from HookState (if present)
-        if (hookState && typeof hookState === 'object' && 'shouldCallComputeDynamicSwapFee' in hookState) {
+        if (
+            hookState &&
+            typeof hookState === 'object' &&
+            'shouldCallComputeDynamicSwapFee' in hookState
+        ) {
             const state = hookState as HookState;
-            hook.shouldCallComputeDynamicSwapFee = state.shouldCallComputeDynamicSwapFee;
-            hook.shouldCallBeforeSwap = state.shouldCallBeforeSwap;
-            hook.shouldCallAfterSwap = state.shouldCallAfterSwap;
-            hook.shouldCallBeforeAddLiquidity = state.shouldCallBeforeAddLiquidity;
-            hook.shouldCallAfterAddLiquidity = state.shouldCallAfterAddLiquidity;
-            hook.shouldCallBeforeRemoveLiquidity = state.shouldCallBeforeRemoveLiquidity;
-            hook.shouldCallAfterRemoveLiquidity = state.shouldCallAfterRemoveLiquidity;
-            hook.enableHookAdjustedAmounts = state.enableHookAdjustedAmounts;
+            Object.assign(hook, state);
         }
 
         return hook;
