@@ -463,7 +463,7 @@ export class Vault {
 
             // A Pool's token balance always decreases after an exit
             // Computes protocol and pool creator fee which is eventually taken from pool balance
-            const aggregateSwapFeeAmountScaled18 =
+            const aggregateSwapFeeAmountRaw =
                 this._computeAndChargeAggregateSwapFees(
                     swapFeeAmountsScaled18[i],
                     poolState.aggregateSwapFee,
@@ -471,6 +471,12 @@ export class Vault {
                     poolState.tokenRates,
                     i,
                 );
+
+            const aggregateSwapFeeAmountScaled18 = toScaled18ApplyRateRoundDown(
+                aggregateSwapFeeAmountRaw,
+                poolState.scalingFactors[i],
+                poolState.tokenRates[i],
+            );
 
             updatedBalancesLiveScaled18[i] =
                 updatedBalancesLiveScaled18[i] +
