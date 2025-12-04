@@ -1,6 +1,5 @@
 import type { Address } from 'viem';
-
-export type HookType = 'FEE_TAKING' | 'EXIT_FEE' | 'STABLE_SURGE' | 'MEV_TAX' | 'UNKNOWN';
+import { HookType } from './config';
 
 export type HookData = {
     address: Address;

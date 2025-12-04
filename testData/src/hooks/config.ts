@@ -1,5 +1,11 @@
 import type { Address } from 'viem';
-import type { HookType } from './types';
+
+export type HookType =
+    | 'FEE_TAKING'
+    | 'EXIT_FEE'
+    | 'STABLE_SURGE'
+    | 'MEV_TAX'
+    | 'UNKNOWN';
 
 export const HOOK_CONFIG: Record<number, Record<string, HookType>> = {
     // Sepolia
