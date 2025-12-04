@@ -7,7 +7,7 @@ export type HookType =
     | 'MEV_TAX'
     | 'UNKNOWN';
 
-export const HOOK_CONFIG: Record<number, Record<string, HookType>> = {
+export const HOOK_CONFIG: Record<number, Record<Address, HookType>> = {
     // Sepolia
     11155111: {
         '0xbb1761af481364a6bd7fdbdb8cfa23abd85f0263': 'FEE_TAKING',
@@ -35,5 +35,5 @@ export const HOOK_CONFIG: Record<number, Record<string, HookType>> = {
 export function getHookType(chainId: number, address: Address): HookType {
     const chainConfig = HOOK_CONFIG[chainId];
     if (!chainConfig) return 'UNKNOWN';
-    return chainConfig[address.toLowerCase()] || 'UNKNOWN';
+    return chainConfig[address.toLowerCase() as Address] || 'UNKNOWN';
 }
