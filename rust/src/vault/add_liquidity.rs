@@ -60,7 +60,7 @@ pub fn add_liquidity(
     }
 
     // Initialize amounts_in_scaled18
-    let mut amounts_in_scaled18 = vec![U256::ZERO; base_state.tokens.len()];
+    let mut amounts_in_scaled18 = Vec::with_capacity(base_state.tokens.len());
 
     let (bpt_amount_out, swap_fee_amounts_scaled18) = match add_liquidity_input.kind {
         AddLiquidityKind::Unbalanced => {

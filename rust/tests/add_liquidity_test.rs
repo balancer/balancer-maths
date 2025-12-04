@@ -51,7 +51,7 @@ fn test_add_liquidity() {
         };
 
         // Perform add liquidity
-        match vault.add_liquidity(&add_input, pool_state, None) {
+        match vault.add_liquidity(&add_input, pool_state, test_data.hook_state.as_ref()) {
             Ok(calculated_amounts) => {
                 /*
                  * Relax test assertion to accept off-by-1 error because testData might

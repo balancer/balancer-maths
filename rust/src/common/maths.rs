@@ -17,15 +17,7 @@ pub fn mul_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
 
 /// Divide two U256s and round up
 pub fn div_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
-    if a.is_zero() {
-        return Ok(U256::ZERO);
-    }
-    if b.is_zero() {
-        return Err(PoolError::MathOverflow);
-    }
-
-    let a_inflated = a * WAD;
-    let result = (a_inflated - U256::ONE) / b + U256::ONE;
+    let result = mul_div_up_fixed(a, &WAD, b)?;
     Ok(result)
 }
 
@@ -62,6 +54,9 @@ pub fn div_up(a: &U256, b: &U256) -> Result<U256, PoolError> {
 /// Multiply and divide with up rounding
 pub fn mul_div_up_fixed(a: &U256, b: &U256, c: &U256) -> Result<U256, PoolError> {
     let product = a * b;
+    if product.is_zero() {
+        return Ok(U256::ZERO);
+    }
     let result = (product - U256::ONE) / c + U256::ONE;
     Ok(result)
 }
