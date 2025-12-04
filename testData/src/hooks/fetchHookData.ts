@@ -1,5 +1,5 @@
 import type { Address, Chain } from 'viem';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, isAddressEqual, zeroAddress } from 'viem';
 import type { HookData } from './types';
 import { getHookType } from './config';
 import { vaultExplorerAbi } from '../abi/vaultExplorer';
@@ -34,8 +34,8 @@ export async function fetchHookData(
     // If no hook address, return undefined
     if (
         !hookConfig.hooksContract ||
-        hookConfig.hooksContract ===
-            '0x0000000000000000000000000000000000000000'
+        isAddressEqual(hookConfig.hooksContract, zeroAddress) ||
+        isAddressEqual(hookConfig.hooksContract, poolAddress)
     ) {
         return undefined;
     }
