@@ -1,5 +1,6 @@
+from test.utils.map_hook_state import map_hook_state
+
 from src.common.types import PoolState
-from src.hooks.map_hook_state import map_hook_state
 from src.hooks.types import HookState
 from src.pools.buffer.buffer_data import BufferState, map_buffer_state
 from src.pools.gyro.gyro_2clp_data import map_gyro_2clp_state
