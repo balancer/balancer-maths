@@ -1,6 +1,6 @@
-import { HookState } from './types';
-import { HookStateExitFee } from './exitFeeHook';
-import { HookStateStableSurge } from './stableSurgeHook';
+import { HookState } from '../../src/hooks/types';
+import { HookStateExitFee } from '../../src/hooks/exitFeeHook';
+import { HookStateStableSurge } from '../../src/hooks/stableSurgeHook';
 
 type HookData = {
     address: string;

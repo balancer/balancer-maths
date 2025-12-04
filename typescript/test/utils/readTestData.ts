@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { QuantAmmState } from '@/quantAmm/quantAmmData';
 import { ReClammV2State } from '@/reClammV2';
 import { type HookState } from '../../src/hooks/types';
-import { mapHookState } from '../../src/hooks/mapHookState';
+import { mapHookState } from './mapHookState';
 
 type HookData = {
     address: string;
