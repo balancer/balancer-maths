@@ -1,5 +1,5 @@
 use crate::common::errors::PoolError;
-use crate::common::maths::mul_down_fixed;
+use crate::common::maths::mul_up_fixed;
 use crate::common::pool_base::PoolBase;
 use crate::common::types::{Rounding, SwapKind, SwapParams};
 use crate::pools::stable::stable_data::StableMutable;
@@ -83,7 +83,7 @@ impl PoolBase for StablePool {
         invariant_ratio: &U256,
     ) -> Result<U256, PoolError> {
         let invariant = self.compute_invariant(balances_live_scaled18, Rounding::RoundUp)?;
-        let scaled_invariant = mul_down_fixed(&invariant, invariant_ratio)?;
+        let scaled_invariant = mul_up_fixed(&invariant, invariant_ratio)?;
 
         compute_balance(
             &self.amp,
