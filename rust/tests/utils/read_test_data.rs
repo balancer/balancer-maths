@@ -641,14 +641,17 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                 };
 
                                 // Map hook state using helper function
-                                hook_state = Some(crate::utils::map_hook_state(hook_data, &pool_data)?);
+                                hook_state =
+                                    Some(crate::utils::map_hook_state(hook_data, &pool_data)?);
 
                                 // Update the pool's hook_type field to match the hook
                                 // This is needed for the vault to recognize the hook type
                                 if let Some(pool) = pools.get_mut(&filename) {
                                     let hook_type_name = match &hook_state {
                                         Some(HookState::ExitFee(_)) => Some("ExitFee".to_string()),
-                                        Some(HookState::StableSurge(_)) => Some("StableSurge".to_string()),
+                                        Some(HookState::StableSurge(_)) => {
+                                            Some("StableSurge".to_string())
+                                        }
                                         Some(HookState::Akron(_)) => Some("Akron".to_string()),
                                         _ => None,
                                     };
@@ -656,7 +659,8 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                                     if let Some(hook_type) = hook_type_name {
                                         match pool {
                                             SupportedPool::Weighted(weighted_pool) => {
-                                                weighted_pool.state.base.hook_type = Some(hook_type);
+                                                weighted_pool.state.base.hook_type =
+                                                    Some(hook_type);
                                             }
                                             SupportedPool::Stable(stable_pool) => {
                                                 stable_pool.state.base.hook_type = Some(hook_type);
