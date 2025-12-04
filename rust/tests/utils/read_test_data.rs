@@ -3,7 +3,6 @@
 use alloy_primitives::{I256, U256};
 use balancer_maths_rust::common::types::BasePoolState;
 use balancer_maths_rust::hooks::types::HookState;
-use balancer_maths_rust::hooks::{AkronHookState, ExitFeeHookState, StableSurgeHookState};
 use balancer_maths_rust::pools::weighted::weighted_data::WeightedState;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -610,109 +609,61 @@ pub fn read_test_data() -> Result<TestData, Box<dyn std::error::Error>> {
                         // Parse hook state if present (only for the first file with hook data)
                         if hook_state.is_none() {
                             if let Some(hook_data) = &json_data.pool.hook {
-                                match hook_data.hook_type.as_str() {
-                                    "STABLE_SURGE" => {
-                                        let dynamic_data = &hook_data.dynamic_data;
-                                        let surge_threshold_percentage = dynamic_data
-                                            ["surgeThresholdPercentage"]
-                                            .as_str()
-                                            .unwrap_or("0")
-                                            .parse::<U256>()?;
-                                        let max_surge_fee_percentage = dynamic_data
-                                            ["maxSurgeFeePercentage"]
-                                            .as_str()
-                                            .unwrap_or("0")
-                                            .parse::<U256>()?;
+                                // Prepare pool data for hook state mapping
+                                let amp = if json_data.pool.pool_type == "STABLE" {
+                                    json_data
+                                        .pool
+                                        .amp
+                                        .as_ref()
+                                        .and_then(|a| a.parse::<U256>().ok())
+                                } else {
+                                    None
+                                };
 
-                                        // Get the amp from the pool data if it's a stable pool
-                                        let amp = if json_data.pool.pool_type == "STABLE" {
-                                            json_data
-                                                .pool
-                                                .amp
-                                                .as_ref()
-                                                .and_then(|a| a.parse::<U256>().ok())
-                                                .unwrap_or(U256::ZERO)
-                                        } else {
-                                            U256::ZERO
-                                        };
-
-                                        hook_state =
-                                            Some(HookState::StableSurge(StableSurgeHookState {
-                                                hook_type: "StableSurge".to_string(),
-                                                amp,
-                                                surge_threshold_percentage,
-                                                max_surge_fee_percentage,
-                                            }));
-
-                                        // Update the pool's hook_type field to match the hook
-                                        // This is needed for the vault to recognize the hook type
-                                        if let Some(SupportedPool::Stable(stable_pool)) =
-                                            pools.get_mut(&filename)
-                                        {
-                                            stable_pool.state.base.hook_type =
-                                                Some("StableSurge".to_string());
-                                        }
-                                    }
-                                    "EXIT_FEE" => {
-                                        let dynamic_data = &hook_data.dynamic_data;
-                                        let remove_liquidity_hook_fee_percentage = dynamic_data
-                                            ["removeLiquidityHookFeePercentage"]
-                                            .as_str()
-                                            .unwrap_or("0")
-                                            .parse::<U256>()?;
-
-                                        hook_state = Some(HookState::ExitFee(ExitFeeHookState {
-                                            hook_type: "ExitFee".to_string(),
-                                            tokens: json_data.pool.tokens.clone(),
-                                            remove_liquidity_hook_fee_percentage,
-                                        }));
-
-                                        // Update the pool's hook_type field to match the hook
-                                        // This is needed for the vault to recognize the hook type
-                                        if let Some(pool) = pools.get_mut(&filename) {
-                                            match pool {
-                                                SupportedPool::Weighted(weighted_pool) => {
-                                                    weighted_pool.state.base.hook_type =
-                                                        Some("ExitFee".to_string());
-                                                }
-                                                SupportedPool::Stable(stable_pool) => {
-                                                    stable_pool.state.base.hook_type =
-                                                        Some("ExitFee".to_string());
-                                                }
-                                                _ => {}
-                                            }
-                                        }
-                                    }
-                                    "AKRON" => {
-                                        // For Akron hook, we need to extract weights and minimum swap fee from pool data
-                                        let weights = json_data
-                                            .pool
-                                            .weights
-                                            .as_ref()
-                                            .ok_or("Akron hook requires weights in pool data")?
-                                            .iter()
+                                let weights = json_data
+                                    .pool
+                                    .weights
+                                    .as_ref()
+                                    .map(|w| {
+                                        w.iter()
                                             .map(|w_str| w_str.parse::<U256>())
-                                            .collect::<Result<Vec<U256>, _>>()?;
+                                            .collect::<Result<Vec<U256>, _>>()
+                                    })
+                                    .transpose()?;
 
-                                        let minimum_swap_fee_percentage =
-                                            json_data.pool.swap_fee.parse::<U256>()?;
+                                let swap_fee = json_data.pool.swap_fee.parse::<U256>()?;
 
-                                        hook_state = Some(HookState::Akron(AkronHookState {
-                                            hook_type: "Akron".to_string(),
-                                            weights,
-                                            minimum_swap_fee_percentage,
-                                        }));
+                                let pool_data = crate::utils::PoolData {
+                                    tokens: json_data.pool.tokens.clone(),
+                                    amp,
+                                    weights,
+                                    swap_fee,
+                                };
 
-                                        // Update the pool's hook_type field to match the hook
-                                        // This is needed for the vault to recognize the hook type
-                                        if let Some(SupportedPool::Weighted(weighted_pool)) =
-                                            pools.get_mut(&filename)
-                                        {
-                                            weighted_pool.state.base.hook_type =
-                                                Some("Akron".to_string());
+                                // Map hook state using helper function
+                                hook_state = Some(crate::utils::map_hook_state(hook_data, &pool_data)?);
+
+                                // Update the pool's hook_type field to match the hook
+                                // This is needed for the vault to recognize the hook type
+                                if let Some(pool) = pools.get_mut(&filename) {
+                                    let hook_type_name = match &hook_state {
+                                        Some(HookState::ExitFee(_)) => Some("ExitFee".to_string()),
+                                        Some(HookState::StableSurge(_)) => Some("StableSurge".to_string()),
+                                        Some(HookState::Akron(_)) => Some("Akron".to_string()),
+                                        _ => None,
+                                    };
+
+                                    if let Some(hook_type) = hook_type_name {
+                                        match pool {
+                                            SupportedPool::Weighted(weighted_pool) => {
+                                                weighted_pool.state.base.hook_type = Some(hook_type);
+                                            }
+                                            SupportedPool::Stable(stable_pool) => {
+                                                stable_pool.state.base.hook_type = Some(hook_type);
+                                            }
+                                            _ => {}
                                         }
                                     }
-                                    _ => {}
                                 }
                             }
                         }
