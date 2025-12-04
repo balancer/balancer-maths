@@ -126,7 +126,7 @@ pub fn add_liquidity(
 
         // Update the balances with the incoming amounts and subtract the swap fees
         updated_balances_live_scaled18[i] = updated_balances_live_scaled18[i]
-            + max_amounts_in_scaled18[i]
+            + amounts_in_scaled18[i]
             - aggregate_swap_fee_amount_scaled_18;
     }
 
@@ -134,7 +134,7 @@ pub fn add_liquidity(
     if hook_class.config().should_call_after_add_liquidity {
         let hook_return = hook_class.on_after_add_liquidity(
             add_liquidity_input.kind.clone(),
-            &max_amounts_in_scaled18,
+            &amounts_in_scaled18,
             &amounts_in_raw,
             &bpt_amount_out,
             &updated_balances_live_scaled18,
