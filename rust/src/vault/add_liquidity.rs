@@ -2,11 +2,11 @@
 
 use crate::common::errors::PoolError;
 use crate::common::pool_base::PoolBase;
-use crate::common::types::*;
 use crate::common::utils::{
     compute_and_charge_aggregate_swap_fees, copy_to_scaled18_apply_rate_round_down_array,
     get_single_input_index, require_unbalanced_liquidity_enabled, to_raw_undo_rate_round_up,
 };
+use crate::common::{to_scaled_18_apply_rate_round_down, types::*};
 use crate::hooks::types::HookState;
 use crate::hooks::HookBase;
 use alloy_primitives::U256;
@@ -110,12 +110,18 @@ pub fn add_liquidity(
 
         // A Pool's token balance always decreases after an exit
         // Computes protocol and pool creator fee which is eventually taken from pool balance
-        let aggregate_swap_fee_amount_scaled_18 = compute_and_charge_aggregate_swap_fees(
+        let aggregate_swap_fee_amount_raw = compute_and_charge_aggregate_swap_fees(
             &swap_fee_amounts_scaled18[i],
             &base_state.aggregate_swap_fee,
             &base_state.scaling_factors,
             &base_state.token_rates,
             i,
+        )?;
+
+        let aggregate_swap_fee_amount_scaled_18 = to_scaled_18_apply_rate_round_down(
+            &aggregate_swap_fee_amount_raw,
+            &base_state.scaling_factors[i],
+            &base_state.token_rates[i],
         )?;
 
         // Update the balances with the incoming amounts and subtract the swap fees
