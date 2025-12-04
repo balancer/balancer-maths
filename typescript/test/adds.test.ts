@@ -27,7 +27,18 @@ describe('addLiqudity tests', () => {
                 pool,
                 pool.hook,
             );
-            expect(calculatedAmounts.bptAmountOutRaw).toEqual(bptOutRaw);
+            /**
+             * Relax test assertion to accept off-by-1 error because testData might
+             * return amounts off-by-1 when compared to actual implementations.
+             * e.g. getCurrentLiveBalances rounds pools balances down, while solidity
+             * rounds pool balances up when loading pool data within add liquidity operations
+             */
+            expect(calculatedAmounts.bptAmountOutRaw).toBeGreaterThanOrEqual(
+                bptOutRaw - 1n,
+            );
+            expect(calculatedAmounts.bptAmountOutRaw).toBeLessThanOrEqual(
+                bptOutRaw + 1n,
+            );
             expect(calculatedAmounts.amountsInRaw).toEqual(inputAmountsRaw);
         },
     );
