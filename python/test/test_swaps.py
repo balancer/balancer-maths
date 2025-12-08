@@ -22,7 +22,7 @@ def test_swaps():
         # note any amounts must be passed as ints not strings
         pool_with_ints = transform_strings_to_ints(pool)
         pool_state, hook_state = map_pool_and_hook_state(pool_with_ints)
-        calculated_amount = vault.swap(
+        swap_result = vault.swap(
             swap_input=SwapInput(
                 amount_raw=int(swap_test["amountRaw"]),
                 token_in=swap_test["tokenIn"],
@@ -34,10 +34,10 @@ def test_swaps():
         )
         if pool["poolType"] == "Buffer":
             assert are_big_ints_within_percent(
-                calculated_amount, int(swap_test["outputRaw"]), 0.01
+                swap_result.amount_out_raw, int(swap_test["outputRaw"]), 0.01
             )
         else:
-            assert calculated_amount == int(swap_test["outputRaw"])
+            assert swap_result.amount_out_raw == int(swap_test["outputRaw"])
 
 
 def are_big_ints_within_percent(value1: int, value2: int, percent: float) -> bool:

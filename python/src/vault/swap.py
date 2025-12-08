@@ -1,8 +1,10 @@
+from dataclasses import replace
+
 from src.common.constants import WAD
 from src.common.maths import complement_fixed, mul_div_up_fixed, mul_up_fixed
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
-from src.common.types import PoolState, SwapInput, SwapKind
+from src.common.types import PoolState, SwapInput, SwapKind, SwapResult
 from src.common.utils import (
     _compute_and_charge_aggregate_swap_fees,
     _to_raw_undo_rate_round_down,
@@ -22,7 +24,7 @@ def swap(
     pool_class: PoolBase,
     hook_class: HookBase,
     hook_state: HookState | object | None,
-) -> int:
+) -> SwapResult:
     input_index = find_case_insensitive_index_in_list(
         pool_state.tokens, swap_input.token_in
     )
@@ -185,7 +187,14 @@ def swap(
                 after_swap_result.hook_adjusted_amount_calculated_raw
             )
 
-    return amount_calculated_raw
+    # Create updated pool state with new balances
+    updated_pool_state = replace(
+        pool_state, balances_live_scaled18=updated_balances_live_scaled18
+    )
+
+    return SwapResult(
+        amount_out_raw=amount_calculated_raw, updated_pool_state=updated_pool_state
+    )
 
 
 def _compute_amount_given_scaled18(

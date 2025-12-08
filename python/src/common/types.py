@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
 from src.common.base_pool_state import BasePoolState
+from src.pools.buffer.buffer_data import BufferState
 from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
 from src.pools.gyro.gyro_eclp_data import GyroECLPState
 from src.pools.quantamm.quantamm_data import QuantAmmState
@@ -28,6 +31,7 @@ class AddLiquidityInput:
 class AddLiquidityResult:
     bpt_amount_out_raw: int
     amounts_in_raw: list[int]
+    updated_pool_state: PoolState
 
 
 class RemoveLiquidityKind(Enum):
@@ -48,6 +52,7 @@ class RemoveLiquidityInput:
 class RemoveLiquidityResult:
     bpt_amount_in_raw: int
     amounts_out_raw: list[int]
+    updated_pool_state: PoolState
 
 
 class SwapKind(Enum):
@@ -66,6 +71,7 @@ class SwapInput:
 @dataclass
 class SwapResult:
     amount_out_raw: int
+    updated_pool_state: PoolState | BufferState
 
 
 PoolState = (

@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from src.common.base_pool_math import (
     compute_proportional_amounts_out,
     compute_remove_liquidity_single_token_exact_in,
@@ -163,7 +165,15 @@ def remove_liquidity(
             for i, a in enumerate(after_remove_result.hook_adjusted_amounts_out_raw):
                 amounts_out_raw[i] = a
 
+    # Create updated pool state with new balances and total supply
+    updated_pool_state = replace(
+        pool_state,
+        balances_live_scaled18=updated_balances_live_scaled18,
+        total_supply=pool_state.total_supply - bpt_amount_in,
+    )
+
     return RemoveLiquidityResult(
         bpt_amount_in_raw=bpt_amount_in,
         amounts_out_raw=amounts_out_raw,
+        updated_pool_state=updated_pool_state,
     )

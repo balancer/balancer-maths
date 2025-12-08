@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from src.common.base_pool_math import (
     compute_add_liquidity_single_token_exact_out,
     compute_add_liquidity_unbalanced,
@@ -149,7 +151,15 @@ def add_liquidity(
             for i, a in enumerate(after_add_result.hook_adjusted_amounts_in_raw):
                 amounts_in_raw[i] = a
 
+    # Create updated pool state with new balances and total supply
+    updated_pool_state = replace(
+        pool_state,
+        balances_live_scaled18=updated_balances_live_scaled18,
+        total_supply=pool_state.total_supply + bpt_amount_out,
+    )
+
     return AddLiquidityResult(
         bpt_amount_out_raw=bpt_amount_out,
         amounts_in_raw=amounts_in_raw,
+        updated_pool_state=updated_pool_state,
     )
