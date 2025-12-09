@@ -12,7 +12,6 @@ Usage:
 
 import random
 from test.utils.map_pool_state import transform_strings_to_ints
-from test.utils.read_test_data import read_test_data
 
 from src.common.types import SwapInput, SwapKind
 from src.common.utils import _to_raw_undo_rate_round_down
@@ -22,7 +21,12 @@ from src.pools.weighted.weighted_data import WeightedState
 from src.pools.weighted.weighted_math import (
     compute_invariant_down as compute_weighted_invariant,
 )
-from tools.simulator import ExecutionMode, PoolSimulator, StateLoader
+from tools.simulator import (
+    ExecutionMode,
+    PoolSimulator,
+    StateLoader,
+    read_simulation_data,
+)
 
 
 def calculate_invariant(pool_state):
@@ -58,19 +62,19 @@ def main():
 
     # Load simulation data
     print("Loading simulation data...")
-    test_data = read_test_data(use_simulation_data=True)
+    pools = read_simulation_data()
 
     # Find first non-buffer pool
     pool_dict = None
     pool_name = None
-    for name, pool in test_data["pools"].items():
+    for name, pool in pools.items():
         if pool.get("poolType") != "Buffer":
             pool_dict = pool
             pool_name = name
             break
 
     if not pool_dict:
-        print("ERROR: No suitable pool found in testData")
+        print("ERROR: No suitable pool found in simulation data")
         return
 
     print(f"Selected pool: {pool_name}")

@@ -2,22 +2,9 @@ import json
 import os
 
 
-def read_test_data(use_simulation_data: bool = False):
-    """Read test data from testData or simulationData directory.
-
-    Args:
-        use_simulation_data: If True, read from simulationData instead of testData.
-                           Defaults to False for backward compatibility.
-
-    Returns:
-        Dictionary containing pools, swaps, adds, and removes data.
-    """
+def read_test_data():
     # Define the directory containing JSON test files
-    if use_simulation_data:
-        relative_path = "../../../testData/simulationData"
-    else:
-        relative_path = "../../../testData/testData"
-
+    relative_path = "../../../testData/testData"
     absolute_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), relative_path)
     )
