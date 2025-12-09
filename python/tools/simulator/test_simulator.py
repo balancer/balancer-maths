@@ -3,9 +3,9 @@
 from copy import deepcopy
 from test.utils.map_pool_state import transform_strings_to_ints
 from test.utils.read_test_data import read_test_data
-from simulator.utils import map_state
 
 import pytest
+from simulator.utils import map_state
 
 from src.common.types import (
     AddLiquidityInput,

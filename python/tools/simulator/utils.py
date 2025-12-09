@@ -1,7 +1,8 @@
 from test.utils.map_hook_state import map_hook_state
 from test.utils.map_pool_state import map_pool_state
-from hooks.types import HookState
+
 from common.types import PoolState
+from hooks.types import HookState
 
 
 def map_state(
