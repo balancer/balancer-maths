@@ -4,13 +4,30 @@ A stateful security testing tool for Balancer V3 pools that enables sequential o
 
 ## Overview
 
-The Pool Simulator provides a stateful wrapper around balancer-maths operations, designed specifically for security analysis and vulnerability testing. It supports:
+The Pool Simulator provides a stateful wrapper around balancer-maths operations, designed specifically for security analysis and vulnerability testing. It uses a separate data directory (`simulationData`) to avoid interfering with the test suite. It supports:
 
 - Sequential swaps, add/remove liquidity operations
 - COMMIT vs SIMULATE execution modes
 - State snapshots and rollback
 - Operation history tracking
 - Invariant monitoring across operations
+
+## Directory Structure
+
+The simulator uses a separate configuration and data directory to avoid conflicts with the test suite:
+
+```
+testData/
+├── config.json              # Test suite configuration
+├── config_simulator.json    # Simulator configuration (add pools here)
+├── testData/                # Test suite data (generated from config.json)
+└── simulationData/          # Simulator data (generated from config_simulator.json)
+```
+
+**To add pools for simulation:**
+1. Edit `testData/config_simulator.json` to include your desired pools
+2. Run the data generation script to populate `testData/simulationData/`
+3. The simulator will automatically load from `simulationData`
 
 ## Quick Start
 
@@ -19,9 +36,15 @@ The Pool Simulator provides a stateful wrapper around balancer-maths operations,
 ```python
 from tools.simulator import PoolSimulator, StateLoader, ExecutionMode
 from src.common.types import SwapInput, SwapKind
+from test.utils.read_test_data import read_test_data
 
-# Load pool state from testData JSON
-pool_state, hook_state = StateLoader.from_json_file("path/to/pool.json")
+# Load pool data from simulationData
+test_data = read_test_data(use_simulation_data=True)
+pool_dict = test_data["pools"]["11155111-7439300-Weighted-USDC-DAI.json"]
+pool_state, hook_state = StateLoader.from_pool_dict(pool_dict)
+
+# Or load directly from a JSON file
+# pool_state, hook_state = StateLoader.from_json_file("path/to/pool.json")
 
 # Initialize simulator
 simulator = PoolSimulator(pool_state, hook_state)

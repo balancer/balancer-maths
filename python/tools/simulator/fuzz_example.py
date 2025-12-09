@@ -56,9 +56,9 @@ def main():
     print("=" * 80)
     print()
 
-    # Load test data
-    print("Loading test data...")
-    test_data = read_test_data()
+    # Load simulation data
+    print("Loading simulation data...")
+    test_data = read_test_data(use_simulation_data=True)
 
     # Find first non-buffer pool
     pool_dict = None
@@ -120,15 +120,15 @@ def main():
         token_in = current_state.tokens[token_in_idx]
         token_out = current_state.tokens[token_out_idx]
 
-        # Calculate swap amount (5-20% of current balance for safety)
+        # Calculate swap amount (1-30% of current balance for safety)
         # Note: balance_in is scaled18 with rates applied
         balance_in_scaled18 = current_state.balances_live_scaled18[token_in_idx]
 
-        # Calculate 5-20% of the scaled balance
+        # Calculate 1-30% of the scaled balance
         max_amount_scaled18 = int(balance_in_scaled18 * 0.30)
-        min_amount_scaled18 = int(balance_in_scaled18 * 0.01)  # At least 5%
+        min_amount_scaled18 = int(balance_in_scaled18 * 0.01)  # At least 1%
 
-        # Random amount between 5% and 20% (in scaled18)
+        # Random amount between 1% and 30% (in scaled18)
         amount_scaled18 = random.randint(min_amount_scaled18, max_amount_scaled18)
 
         # Convert back to raw amount (undo scaling and rate)
