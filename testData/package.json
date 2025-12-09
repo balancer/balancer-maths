@@ -22,6 +22,8 @@
   "scripts": {
     "generate": "bun index.ts false",
     "generate:overwrite": "bun index.ts true",
+    "generate:simulator": "bun index_simulator.ts false",
+    "generate:simulator:overwrite": "bun index_simulator.ts true",
     "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "lint": "eslint ./src --ext .ts",
     "lint:fix": "eslint ./src --ext .ts --fix",
