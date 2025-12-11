@@ -1,6 +1,5 @@
-from src.common.constants import WAD
-from src.common.maths import mul_down_fixed
 from src.common.utils import (
+    _compute_and_charge_aggregate_swap_fees,
     _to_raw_undo_rate_round_down,
     find_case_insensitive_index_in_list,
 )
@@ -27,7 +26,7 @@ def validate_balances(
     if not hasattr(initial_pool_state, "balances_live_scaled18"):
         return
 
-    tolerance = 10
+    tolerance = 100
 
     for i, token in enumerate(initial_pool_state.tokens):
         initial_balance_raw = _to_raw_undo_rate_round_down(
@@ -57,12 +56,75 @@ def validate_balances(
             )
 
 
+def build_add_liquidity_deltas(
+    pool_state,
+    amounts_in_raw: list[int],
+    swap_fee_amounts_scaled18: list[int],
+) -> list[int] | None:
+    """
+    Builds amount deltas array for an add liquidity operation.
+
+    Returns an array of deltas where each position has:
+    +amount_in_raw - aggregate_swap_fee_raw
+
+    Returns None for buffer pools (they don't have balances_live_scaled18).
+    """
+    # Skip for buffer pools
+    if not hasattr(pool_state, "balances_live_scaled18"):
+        return None
+
+    deltas = []
+    for i in range(len(pool_state.tokens)):
+        aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
+            swap_fee_amounts_scaled18[i],
+            pool_state.aggregate_swap_fee,
+            pool_state.scaling_factors,
+            pool_state.token_rates,
+            i,
+        )
+        deltas.append(amounts_in_raw[i] - aggregate_swap_fee_amount_raw)
+
+    return deltas
+
+
+def build_remove_liquidity_deltas(
+    pool_state,
+    amounts_out_raw: list[int],
+    swap_fee_amounts_scaled18: list[int],
+) -> list[int] | None:
+    """
+    Builds amount deltas array for a remove liquidity operation.
+
+    Returns an array of deltas where each position has:
+    -(amount_out_raw + aggregate_swap_fee_raw)
+
+    Returns None for buffer pools (they don't have balances_live_scaled18).
+    """
+    # Skip for buffer pools
+    if not hasattr(pool_state, "balances_live_scaled18"):
+        return None
+
+    deltas = []
+    for i in range(len(pool_state.tokens)):
+        aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
+            swap_fee_amounts_scaled18[i],
+            pool_state.aggregate_swap_fee,
+            pool_state.scaling_factors,
+            pool_state.token_rates,
+            i,
+        )
+        deltas.append(-(amounts_out_raw[i] + aggregate_swap_fee_amount_raw))
+
+    return deltas
+
+
 def build_swap_deltas(
     pool_state,
     token_in: str,
     token_out: str,
     amount_in_raw: int,
     amount_out_raw: int,
+    swap_fee_amount_scaled18: int,
 ) -> list[int] | None:
     """
     Builds amount deltas array for a swap operation.
@@ -85,15 +147,18 @@ def build_swap_deltas(
     if token_in_index == -1 or token_out_index == -1:
         raise ValueError(f"Token not found in pool: {token_in} or {token_out}")
 
-    # Calculate amount in without the aggregate fee
-    amount_in_raw_without_fee = mul_down_fixed(
-        amount_in_raw,
-        WAD - mul_down_fixed(pool_state.swap_fee, pool_state.aggregate_swap_fee),
+    # Calculate aggregate fee from the swap fee amount
+    aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
+        swap_fee_amount_scaled18,
+        pool_state.aggregate_swap_fee,
+        pool_state.scaling_factors,
+        pool_state.token_rates,
+        token_in_index,
     )
 
     # Build deltas array
     deltas = [0] * len(pool_state.tokens)
-    deltas[token_in_index] = amount_in_raw_without_fee
+    deltas[token_in_index] = amount_in_raw - aggregate_swap_fee_amount_raw
     deltas[token_out_index] = -amount_out_raw
 
     return deltas

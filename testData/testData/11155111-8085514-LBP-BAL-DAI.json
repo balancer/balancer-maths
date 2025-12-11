@@ -72,6 +72,7 @@
         "isPoolPaused": false,
         "isPoolInRecoveryMode": false,
         "isSwapEnabled": true,
+        "aggregateSwapFee": "500000000000000000",
         "currentTimestamp": "1744221012"
     }
 }

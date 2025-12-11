@@ -3,7 +3,7 @@ from test.utils.map_pool_state import (
     transform_strings_to_ints,
 )
 from test.utils.read_test_data import read_test_data
-from test.utils.validate_balances import validate_balances
+from test.utils.validate_balances import build_remove_liquidity_deltas, validate_balances
 from typing import cast
 
 from src.common.base_pool_state import BasePoolState
@@ -48,10 +48,14 @@ def test_remove_liquidity():
             should_validate = not hook.should_call_compute_dynamic_swap_fee
 
         if should_validate:
-            # Negate amounts_out to represent balance decreases
-            amount_deltas = [-amount for amount in calculated_amount.amounts_out_raw]
-            validate_balances(
-                initial_pool_state=pool_state,
-                updated_pool_state=calculated_amount.updated_pool_state,
-                amount_deltas_raw=amount_deltas,
+            deltas = build_remove_liquidity_deltas(
+                pool_state=pool_state,
+                amounts_out_raw=calculated_amount.amounts_out_raw,
+                swap_fee_amounts_scaled18=calculated_amount.swap_fee_amounts_scaled18,
             )
+            if deltas is not None:
+                validate_balances(
+                    initial_pool_state=pool_state,
+                    updated_pool_state=calculated_amount.updated_pool_state,
+                    amount_deltas_raw=deltas,
+                )

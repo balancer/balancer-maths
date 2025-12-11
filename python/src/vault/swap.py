@@ -198,7 +198,11 @@ def swap(
         pool_state, balances_live_scaled18=updated_balances_live_scaled18
     )
 
-    return SwapResult(amount_calculated_raw, updated_pool_state=updated_pool_state)
+    return SwapResult(
+        amount_calculated_raw=amount_calculated_raw,
+        updated_pool_state=updated_pool_state,
+        swap_fee_amount_scaled18=total_swap_fee_amount_scaled18,
+    )
 
 
 def _compute_amount_given_scaled18(

@@ -32,6 +32,7 @@ class AddLiquidityResult:
     bpt_amount_out_raw: int
     amounts_in_raw: list[int]
     updated_pool_state: PoolState
+    swap_fee_amounts_scaled18: list[int]
 
 
 class RemoveLiquidityKind(Enum):
@@ -53,6 +54,7 @@ class RemoveLiquidityResult:
     bpt_amount_in_raw: int
     amounts_out_raw: list[int]
     updated_pool_state: PoolState
+    swap_fee_amounts_scaled18: list[int]
 
 
 class SwapKind(Enum):
@@ -72,6 +74,7 @@ class SwapInput:
 class SwapResult:
     amount_calculated_raw: int
     updated_pool_state: PoolState | BufferState
+    swap_fee_amount_scaled18: int
 
 
 PoolState = (

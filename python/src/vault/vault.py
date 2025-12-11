@@ -64,14 +64,20 @@ class Vault:
         hook_state: HookState | object | None = None,
     ) -> SwapResult:
         if swap_input.amount_raw == 0:
-            return SwapResult(amount_calculated_raw=0, updated_pool_state=pool_state)
+            return SwapResult(
+                amount_calculated_raw=0,
+                updated_pool_state=pool_state,
+                swap_fee_amount_scaled18=0,
+            )
 
         # buffer is handled separately than a "normal" pool
         if isinstance(pool_state, BufferState):
             amount_out = erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
             # Buffer state doesn't change in the same way, but we still return it
             return SwapResult(
-                amount_calculated_raw=amount_out, updated_pool_state=pool_state
+                amount_calculated_raw=amount_out,
+                updated_pool_state=pool_state,
+                swap_fee_amount_scaled18=0,
             )
         pool_class = self._get_pool(pool_state=pool_state)
         hook_class = self._get_hook(

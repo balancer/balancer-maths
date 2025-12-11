@@ -162,4 +162,5 @@ def add_liquidity(
         bpt_amount_out_raw=bpt_amount_out,
         amounts_in_raw=amounts_in_raw,
         updated_pool_state=updated_pool_state,
+        swap_fee_amounts_scaled18=swap_fee_amounts_scaled18,
     )
