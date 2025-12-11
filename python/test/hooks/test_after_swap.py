@@ -141,7 +141,7 @@ def test_hook_after_swap_no_fee():
         pool_state=custom_state_no_fee,
         hook_state=input_hook_state,
     )
-    assert swap_result.amount_out_raw == 1
+    assert swap_result.amount_calculated_raw == 1
 
 
 def test_hook_after_swap_with_fee():
@@ -165,4 +165,4 @@ def test_hook_after_swap_with_fee():
         pool_state=custom_state_with_fee,
         hook_state=input_hook_state,
     )
-    assert swap_result.amount_out_raw == 1
+    assert swap_result.amount_calculated_raw == 1

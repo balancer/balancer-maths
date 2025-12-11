@@ -125,12 +125,18 @@ def swap(
             pool_state.token_rates[input_index],
         )
 
-    aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
+    aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
         total_swap_fee_amount_scaled18,
         pool_state.aggregate_swap_fee,
         pool_state.scaling_factors,
         pool_state.token_rates,
         input_index,
+    )
+
+    aggregate_swap_fee_amount_scaled18 = _to_scaled_18_apply_rate_round_down(
+        aggregate_swap_fee_amount_raw,
+        pool_state.scaling_factors[input_index],
+        pool_state.token_rates[input_index],
     )
 
     # For ExactIn, we increase the tokenIn balance by `amountIn`,
@@ -192,9 +198,7 @@ def swap(
         pool_state, balances_live_scaled18=updated_balances_live_scaled18
     )
 
-    return SwapResult(
-        amount_out_raw=amount_calculated_raw, updated_pool_state=updated_pool_state
-    )
+    return SwapResult(amount_calculated_raw, updated_pool_state=updated_pool_state)
 
 
 def _compute_amount_given_scaled18(

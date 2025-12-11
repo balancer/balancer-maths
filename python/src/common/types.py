@@ -70,7 +70,7 @@ class SwapInput:
 
 @dataclass
 class SwapResult:
-    amount_out_raw: int
+    amount_calculated_raw: int
     updated_pool_state: PoolState | BufferState
 
 

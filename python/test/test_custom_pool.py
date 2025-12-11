@@ -64,7 +64,7 @@ def test_custom_pool():
         ),
         pool_state=custom_pool_state,
     )
-    assert swap_result.amount_out_raw == custom_pool_state.randoms[0]
+    assert swap_result.amount_calculated_raw == custom_pool_state.randoms[0]
 
 
 class CustomPool(PoolBase):

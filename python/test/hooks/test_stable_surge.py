@@ -44,7 +44,7 @@ def test_below_surge_threshold_static_swap_fee_case1():
     swap_result = vault.swap(
         swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
-    assert swap_result.amount_out_raw == 78522716365403684
+    assert swap_result.amount_calculated_raw == 78522716365403684
 
 
 def test_below_surge_threshold_static_swap_fee_case2():
@@ -57,7 +57,7 @@ def test_below_surge_threshold_static_swap_fee_case2():
     swap_result = vault.swap(
         swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
-    assert swap_result.amount_out_raw == 452983383563178802
+    assert swap_result.amount_calculated_raw == 452983383563178802
 
 
 def test_above_surge_threshold_uses_surge_fee():
@@ -70,4 +70,4 @@ def test_above_surge_threshold_uses_surge_fee():
     swap_result = vault.swap(
         swap_input=swap_input, pool_state=stable_state, hook_state=hook_state
     )
-    assert swap_result.amount_out_raw == 3252130027531260
+    assert swap_result.amount_calculated_raw == 3252130027531260

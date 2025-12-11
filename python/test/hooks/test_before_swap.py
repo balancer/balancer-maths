@@ -92,4 +92,4 @@ def test_before_swap():
         pool_state=weighted_state,
         hook_state=input_hook_state,
     )
-    assert swap_result.amount_out_raw == 89999999
+    assert swap_result.amount_calculated_raw == 89999999
