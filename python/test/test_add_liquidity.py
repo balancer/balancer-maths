@@ -49,7 +49,9 @@ def test_add_liquidity():
         # Skip validation if hook has shouldCallComputeDynamicSwapFee enabled
         should_validate = True
         if isinstance(pool_state, BasePoolState):
-            hook = vault._get_hook(hook_name=pool_state.hook_type, hook_state=hook_state)
+            hook = vault._get_hook(
+                hook_name=pool_state.hook_type, hook_state=hook_state
+            )
             should_validate = not hook.should_call_compute_dynamic_swap_fee
 
         if should_validate:
