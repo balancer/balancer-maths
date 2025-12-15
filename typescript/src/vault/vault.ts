@@ -96,7 +96,20 @@ export class Vault {
         const hookClass = this.hookClasses[hookName];
         if (!hookClass) throw new Error(`Unsupported Hook Type: ${hookName}`);
         if (!hookState) throw new Error(`No state for Hook: ${hookName}`);
-        return new hookClass(hookState);
+
+        const hook = new hookClass(hookState);
+
+        // Override the hook's flags with those from HookState (if present)
+        if (
+            hookState &&
+            typeof hookState === 'object' &&
+            'shouldCallComputeDynamicSwapFee' in hookState
+        ) {
+            const state = hookState as HookState;
+            Object.assign(hook, state);
+        }
+
+        return hook;
     }
 
     /**
@@ -447,7 +460,7 @@ export class Vault {
 
             // A Pool's token balance always decreases after an exit
             // Computes protocol and pool creator fee which is eventually taken from pool balance
-            const aggregateSwapFeeAmountScaled18 =
+            const aggregateSwapFeeAmountRaw =
                 this._computeAndChargeAggregateSwapFees(
                     swapFeeAmountsScaled18[i],
                     poolState.aggregateSwapFee,
@@ -455,6 +468,12 @@ export class Vault {
                     poolState.tokenRates,
                     i,
                 );
+
+            const aggregateSwapFeeAmountScaled18 = toScaled18ApplyRateRoundDown(
+                aggregateSwapFeeAmountRaw,
+                poolState.scalingFactors[i],
+                poolState.tokenRates[i],
+            );
 
             updatedBalancesLiveScaled18[i] =
                 updatedBalancesLiveScaled18[i] +

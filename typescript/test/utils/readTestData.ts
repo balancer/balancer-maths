@@ -8,11 +8,31 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { QuantAmmState } from '@/quantAmm/quantAmmData';
 import { ReClammV2State } from '@/reClammV2';
+import { type HookState } from '../../src/hooks/types';
+import { mapHookState } from './mapHookState';
+
+type HookData = {
+    address: string;
+    type: string;
+    enableHookAdjustedAmounts: boolean;
+    shouldCallAfterSwap: boolean;
+    shouldCallBeforeSwap: boolean;
+    shouldCallAfterInitialize: boolean;
+    shouldCallBeforeInitialize: boolean;
+    shouldCallAfterAddLiquidity: boolean;
+    shouldCallBeforeAddLiquidity: boolean;
+    shouldCallAfterRemoveLiquidity: boolean;
+    shouldCallBeforeRemoveLiquidity: boolean;
+    shouldCallComputeDynamicSwapFee: boolean;
+    dynamicData?: Record<string, string>;
+};
 
 type PoolBase = {
     chainId: number;
     blockNumber: number;
     poolAddress: string;
+    hookType?: string;
+    hook?: HookState;
 };
 
 type WeightedPool = PoolBase & WeightedState;
@@ -159,10 +179,10 @@ type TransformBigintToString<T> = {
 };
 
 function mapPool(
-    pool: TransformBigintToString<SupportedPools>,
+    pool: TransformBigintToString<SupportedPools> & { hook?: HookData },
 ): SupportedPools {
     if (pool.poolType === 'WEIGHTED') {
-        return {
+        const weightedPool = {
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
             swapFee: BigInt(pool.swapFee),
@@ -180,9 +200,23 @@ function mapPool(
                     ? true
                     : pool.supportsUnbalancedLiquidity,
         };
+
+        // Map hook data to HookState if present
+        if (pool.hook) {
+            const hookState = mapHookState(pool.hook as HookData, {
+                tokens: pool.tokens,
+            });
+            return {
+                ...weightedPool,
+                hookType: hookState.hookType,
+                hook: hookState,
+            };
+        }
+
+        return weightedPool;
     }
     if (pool.poolType === 'STABLE') {
-        return {
+        const stablePool = {
             ...pool,
             scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
             swapFee: BigInt(pool.swapFee),
@@ -198,6 +232,21 @@ function mapPool(
                     ? true
                     : pool.supportsUnbalancedLiquidity,
         };
+
+        // Map hook data to HookState if present
+        if (pool.hook) {
+            const hookState = mapHookState(pool.hook as HookData, {
+                tokens: pool.tokens,
+                amp: stablePool.amp,
+            });
+            return {
+                ...stablePool,
+                hookType: hookState.hookType,
+                hook: hookState,
+            };
+        }
+
+        return stablePool;
     }
     if (pool.poolType === 'Buffer') {
         return {

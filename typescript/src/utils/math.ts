@@ -52,6 +52,10 @@ export class MathSol {
         // Multiple overflow protection is done by Solidity 0.8x
         const product = a * b;
 
+        if (product === 0n) {
+            return 0n;
+        }
+
         // The traditional divUp formula is:
         // divUp(x, y) := (x + y - 1) / y
         // To avoid intermediate overflow in the addition, we distribute the division and get:
@@ -72,16 +76,12 @@ export class MathSol {
     }
 
     static divUpFixed(a: bigint, b: bigint): bigint {
-        if (a === 0n) {
-            return 0n;
-        }
-        const aInflated = a * WAD;
-        return (aInflated - 1n) / b + 1n;
+        return this.mulDivUpFixed(a, WAD, b);
     }
 
     // also called divUpRaw in stable maths
     static divUp(a: bigint, b: bigint): bigint {
-        if (b === 0n) {
+        if (a === 0n || b === 0n) {
             return 0n;
         }
         return 1n + (a - 1n) / b;

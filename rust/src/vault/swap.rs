@@ -201,10 +201,12 @@ pub fn compute_amount_given_scaled_18(
         }
         SwapKind::GivenOut => {
             // For ExactOut, round up to favor the pool
+            // Round up the rate to ensure consistency with TypeScript implementation
+            let rate_rounded_up = compute_rate_round_up(&token_rates[index_out]);
             Ok(to_scaled_18_apply_rate_round_up(
                 amount_given_raw,
                 &scaling_factors[index_out],
-                &token_rates[index_out],
+                &rate_rounded_up,
             )?)
         }
     }

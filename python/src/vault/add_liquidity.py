@@ -15,6 +15,7 @@ from src.common.utils import (
     _get_single_input_index,
     _require_unbalanced_liquidity_enabled,
     _to_raw_undo_rate_round_up,
+    _to_scaled_18_apply_rate_round_down,
 )
 from src.hooks.types import HookBase, HookState
 
@@ -103,12 +104,18 @@ def add_liquidity(
 
         # A Pool's token balance always decreases after an exit
         # Computes protocol and pool creator fee which is eventually taken from pool balance
-        aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
+        aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
             swap_fee_amounts_scaled18[i],
             pool_state.aggregate_swap_fee,
             pool_state.scaling_factors,
             pool_state.token_rates,
             i,
+        )
+
+        aggregate_swap_fee_amount_scaled18 = _to_scaled_18_apply_rate_round_down(
+            aggregate_swap_fee_amount_raw,
+            pool_state.scaling_factors[i],
+            pool_state.token_rates[i],
         )
 
         # Update the balances with the incoming amounts and subtract the swap fees

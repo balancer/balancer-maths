@@ -23,6 +23,7 @@ describe('removeLiqudity tests', () => {
                     kind,
                 },
                 pool,
+                pool.hook,
             );
             expect(calculatedAmounts.bptAmountInRaw).toEqual(bptInRaw);
             expect(calculatedAmounts.amountsOutRaw).toEqual(amountsOutRaw);

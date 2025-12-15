@@ -1,12 +1,13 @@
 import type { Address } from 'viem';
 import { WeightedPool } from './weightedPool';
 import { StablePool } from './stablePool';
-import type { PoolBase } from './types';
+import type { PoolBase, HookData } from './types';
 import { BufferPool } from './buffer';
 import { GyroECLPPool } from './gyroECLP';
 import { ReClammPool } from './reClamm';
 import { LiquidityBootstrappingPool } from './liquidityBootstrappingPool';
 import { QuantAmmPool } from './quantAmm';
+import { fetchHookData } from './hooks/fetchHookData';
 
 export async function getPool(
     rpcUrl: string,
@@ -52,6 +53,14 @@ export async function getPool(
     );
     console.log('Done');
 
+    // Fetch hook data for all pools except Buffer pools (which don't support hooks)
+    let hook: HookData | undefined;
+    if (poolType !== 'Buffer') {
+        console.log('Fetching hook data...');
+        hook = await fetchHookData(rpcUrl, chainId, poolAddress, blockNumber);
+        console.log('Done');
+    }
+
     return {
         chainId,
         blockNumber,
@@ -59,5 +68,6 @@ export async function getPool(
         poolAddress,
         ...immutable,
         ...mutable,
+        ...(hook && { hook }), // Only include if hook exists
     };
 }

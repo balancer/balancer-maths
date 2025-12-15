@@ -3,11 +3,15 @@ import type { AddLiquidityResult, AddTestInput } from './getAdds';
 import type { SwapResult, SwapInput } from './getSwaps';
 import type { RemoveLiquidityResult, RemoveTestInput } from './getRemoves';
 
+// Re-export HookData for convenience
+export type { HookData } from './hooks/types';
+
 export type PoolBase = {
     chainId: number;
     blockNumber: bigint;
     poolType: string;
     poolAddress: Address;
+    hook?: HookData; // Optional - only present if pool has hooks
 };
 
 // Read from main test config file
