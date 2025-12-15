@@ -179,7 +179,7 @@ def main():
                 f"  Amount In:  {format_balance(amount_scaled18)} (Token {token_in_idx})"
             )
             print(
-                f"  Amount Out: {format_balance(result.amount_out_raw)} (Token {token_out_idx})"
+                f"  Amount Out: {format_balance(result.amount_calculated_raw)} (Token {token_out_idx})"
             )
             print(
                 f"  Balance In:  {format_balance(balance_in_scaled18)} → {format_balance(balance_in_after)}"
