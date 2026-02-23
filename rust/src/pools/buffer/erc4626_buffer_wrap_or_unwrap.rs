@@ -49,7 +49,7 @@ pub fn erc4626_buffer_wrap_or_unwrap(
     };
 
     let result = calculate_buffer_amounts(
-        wrapping_direction.clone(),
+        wrapping_direction,
         swap_input.swap_kind.clone(),
         &amount_for_calc,
         &pool_state.mutable.rate,
