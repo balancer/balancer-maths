@@ -58,8 +58,7 @@ pub fn erc4626_buffer_wrap_or_unwrap(
     )?;
 
     // Scale results back down to underlying decimals
-    if (wrapping_direction == WrappingDirection::Wrap
-        && swap_input.swap_kind == SwapKind::GivenOut)
+    if (wrapping_direction == WrappingDirection::Wrap && swap_input.swap_kind == SwapKind::GivenOut)
         || (wrapping_direction == WrappingDirection::Unwrap
             && swap_input.swap_kind == SwapKind::GivenIn)
     {
