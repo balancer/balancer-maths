@@ -1,4 +1,4 @@
-from src.common.types import SwapInput
+from src.common.types import SwapInput, SwapKind
 from src.common.utils import is_same_address
 from src.pools.buffer.buffer_data import BufferState
 from src.pools.buffer.buffer_math import calculate_buffer_amounts
@@ -20,9 +20,34 @@ def erc4626_buffer_wrap_or_unwrap(swap_input: SwapInput, pool_state: BufferState
         else WrappingDirection.WRAP
     )
 
-    return calculate_buffer_amounts(
+    scaling_factor = pool_state.scaling_factor
+
+    # Scale underlying amounts up before 18-decimal math
+    amount_for_calc = swap_input.amount_raw
+    if (
+        wrapping_direction == WrappingDirection.WRAP
+        and swap_input.swap_kind == SwapKind.GIVENIN
+    ) or (
+        wrapping_direction == WrappingDirection.UNWRAP
+        and swap_input.swap_kind == SwapKind.GIVENOUT
+    ):
+        amount_for_calc = swap_input.amount_raw * scaling_factor
+
+    result = calculate_buffer_amounts(
         wrapping_direction,
         swap_input.swap_kind,
-        swap_input.amount_raw,
+        amount_for_calc,
         pool_state.rate,
     )
+
+    # Scale results back down to underlying decimals
+    if (
+        wrapping_direction == WrappingDirection.WRAP
+        and swap_input.swap_kind == SwapKind.GIVENOUT
+    ) or (
+        wrapping_direction == WrappingDirection.UNWRAP
+        and swap_input.swap_kind == SwapKind.GIVENIN
+    ):
+        return result // scaling_factor
+
+    return result

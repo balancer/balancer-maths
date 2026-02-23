@@ -7,6 +7,7 @@ class BufferState:
     # Immutable fields
     pool_address: str
     tokens: List[str]
+    scaling_factor: int
     # Mutable fields
     rate: int
     max_deposit: Optional[int] = None
@@ -19,5 +20,6 @@ def map_buffer_state(pool_state: dict) -> BufferState:
     return BufferState(
         pool_address=pool_state["poolAddress"],
         tokens=pool_state["tokens"],
+        scaling_factor=pool_state["scalingFactor"],
         rate=pool_state["rate"],
     )
