@@ -14,6 +14,7 @@ describe('buffer pool', () => {
                 '0xd4fa2d31b7968e448877f69a96de69f5de8cd23e',
                 '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
             ],
+            scalingFactor: 1n,
             maxDeposit: 1900471418535512n,
             maxMint: 1692675790387594n,
         };
@@ -40,6 +41,7 @@ describe('buffer pool', () => {
                 '0xd4fa2d31b7968e448877f69a96de69f5de8cd23e',
                 '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
             ],
+            scalingFactor: 1n,
             maxDeposit: 1900471418535512n,
             maxMint: 1692675790387594n,
         };
@@ -68,6 +70,7 @@ describe('buffer pool', () => {
                 '0xd4fa2d31b7968e448877f69a96de69f5de8cd23e',
                 '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
             ],
+            scalingFactor: 1n,
             maxDeposit: 1900471418535512n,
             maxMint: 1692675790387594n,
         };
@@ -94,6 +97,7 @@ describe('buffer pool', () => {
                 '0xd4fa2d31b7968e448877f69a96de69f5de8cd23e',
                 '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
             ],
+            scalingFactor: 1n,
             maxDeposit: 1900471418535512n,
             maxMint: 1692675790387594n,
         };

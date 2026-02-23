@@ -1,6 +1,6 @@
 import { BufferState } from '../buffer/data';
 import { isSameAddress } from '../vault/utils';
-import { SwapInput } from '../vault/types';
+import { SwapInput, SwapKind } from '../vault/types';
 import { calculateBufferAmounts } from './bufferMath';
 import { WrappingDirection } from './types';
 
@@ -23,12 +23,37 @@ export function erc4626BufferWrapOrUnwrap(
         ? WrappingDirection.UNWRAP
         : WrappingDirection.WRAP;
 
-    return calculateBufferAmounts(
+    const { scalingFactor } = poolState;
+
+    // Scale underlying amounts up before 18-decimal math
+    let amountForCalc = input.amountRaw;
+    if (
+        (wrappingDirection === WrappingDirection.WRAP &&
+            input.swapKind === SwapKind.GivenIn) ||
+        (wrappingDirection === WrappingDirection.UNWRAP &&
+            input.swapKind === SwapKind.GivenOut)
+    ) {
+        amountForCalc = input.amountRaw * scalingFactor;
+    }
+
+    const result = calculateBufferAmounts(
         wrappingDirection,
         input.swapKind,
-        input.amountRaw,
+        amountForCalc,
         poolState.rate,
         poolState.maxDeposit,
         poolState.maxMint,
     );
+
+    // Scale results back down to underlying decimals
+    if (
+        (wrappingDirection === WrappingDirection.WRAP &&
+            input.swapKind === SwapKind.GivenOut) ||
+        (wrappingDirection === WrappingDirection.UNWRAP &&
+            input.swapKind === SwapKind.GivenIn)
+    ) {
+        return result / scalingFactor;
+    }
+
+    return result;
 }

@@ -9,6 +9,7 @@ export type BufferMutable = {
 export type BufferImmutable = {
     poolAddress: string;
     tokens: string[];
+    scalingFactor: bigint;
 };
 
 /**

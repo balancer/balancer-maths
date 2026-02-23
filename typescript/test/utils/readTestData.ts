@@ -252,6 +252,7 @@ function mapPool(
         return {
             ...pool,
             rate: BigInt(pool.rate),
+            scalingFactor: BigInt(pool.scalingFactor),
         };
     }
     if (pool.poolType === 'GYROE') {
