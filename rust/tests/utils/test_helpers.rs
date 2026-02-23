@@ -198,6 +198,7 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                 immutable: BufferImmutable {
                     pool_address: buffer_pool.state.immutable.pool_address.clone(),
                     tokens: buffer_pool.state.immutable.tokens.clone(),
+                    scaling_factor: buffer_pool.state.immutable.scaling_factor,
                 },
             };
             PoolStateOrBuffer::Buffer(Box::new(buffer_state))

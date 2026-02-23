@@ -211,6 +211,8 @@ pub struct BufferImmutable {
     #[serde(rename = "poolAddress")]
     pub pool_address: String,
     pub tokens: Vec<String>,
+    #[serde(rename = "scalingFactor")]
+    pub scaling_factor: U256,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -483,6 +485,8 @@ struct RawPool {
     pub max_deposit: Option<String>,
     #[serde(rename = "maxMint")]
     pub max_mint: Option<String>,
+    #[serde(rename = "scalingFactor")]
+    pub scaling_factor_buffer: Option<String>,
     // ReClamm specific fields
     #[serde(rename = "lastVirtualBalances")]
     pub last_virtual_balances: Option<Vec<String>>,
@@ -1381,6 +1385,12 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 .map(|m| m.parse::<U256>())
                 .transpose()?;
 
+            let scaling_factor = raw_pool
+                .scaling_factor_buffer
+                .as_ref()
+                .ok_or("Buffer pool missing scalingFactor")?
+                .parse::<U256>()?;
+
             // Buffer pools have minimal required fields, use defaults for missing ones
             let buffer_state = BufferState {
                 base: BasePoolState {
@@ -1407,6 +1417,7 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                 immutable: BufferImmutable {
                     pool_address: raw_pool.pool_address.clone(),
                     tokens: raw_pool.tokens.clone(),
+                    scaling_factor,
                 },
             };
             Ok(SupportedPool::Buffer(BufferPool {

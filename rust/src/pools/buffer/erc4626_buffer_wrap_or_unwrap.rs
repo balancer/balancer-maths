@@ -1,6 +1,6 @@
 //! ERC4626 Buffer wrap or unwrap function
 
-use crate::common::types::SwapInput;
+use crate::common::types::{SwapInput, SwapKind};
 use crate::pools::buffer::buffer_data::BufferState;
 use crate::pools::buffer::buffer_math::calculate_buffer_amounts;
 use crate::pools::buffer::enums::WrappingDirection;
@@ -35,14 +35,38 @@ pub fn erc4626_buffer_wrap_or_unwrap(
             WrappingDirection::Wrap
         };
 
-    calculate_buffer_amounts(
-        wrapping_direction,
+    let scaling_factor = &pool_state.immutable.scaling_factor;
+
+    // Scale underlying amounts up before 18-decimal math
+    let amount_for_calc = if (wrapping_direction == WrappingDirection::Wrap
+        && swap_input.swap_kind == SwapKind::GivenIn)
+        || (wrapping_direction == WrappingDirection::Unwrap
+            && swap_input.swap_kind == SwapKind::GivenOut)
+    {
+        swap_input.amount_raw * *scaling_factor
+    } else {
+        swap_input.amount_raw
+    };
+
+    let result = calculate_buffer_amounts(
+        wrapping_direction.clone(),
         swap_input.swap_kind.clone(),
-        &swap_input.amount_raw,
+        &amount_for_calc,
         &pool_state.mutable.rate,
         pool_state.mutable.max_deposit.as_ref(),
         pool_state.mutable.max_mint.as_ref(),
-    )
+    )?;
+
+    // Scale results back down to underlying decimals
+    if (wrapping_direction == WrappingDirection::Wrap
+        && swap_input.swap_kind == SwapKind::GivenOut)
+        || (wrapping_direction == WrappingDirection::Unwrap
+            && swap_input.swap_kind == SwapKind::GivenIn)
+    {
+        Ok(result / *scaling_factor)
+    } else {
+        Ok(result)
+    }
 }
 
 /// Check if two addresses are the same (case-insensitive)

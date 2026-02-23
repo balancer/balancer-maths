@@ -15,6 +15,7 @@ pub struct BufferMutable {
 pub struct BufferImmutable {
     pub pool_address: String,
     pub tokens: Vec<String>,
+    pub scaling_factor: U256,
 }
 
 /// Buffer pool state
