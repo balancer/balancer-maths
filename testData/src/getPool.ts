@@ -47,10 +47,17 @@ export async function getPool(
         poolAddress,
         blockNumber,
     );
-    const mutable = await poolData[poolType].fetchMutableData(
-        poolAddress,
-        blockNumber,
-    );
+    const mutable =
+        poolType === 'Buffer'
+            ? await (poolData[poolType] as BufferPool).fetchMutableData(
+                  poolAddress,
+                  blockNumber,
+                  BigInt(immutable.scalingFactor),
+              )
+            : await poolData[poolType].fetchMutableData(
+                  poolAddress,
+                  blockNumber,
+              );
     console.log('Done');
 
     // Fetch hook data for all pools except Buffer pools (which don't support hooks)

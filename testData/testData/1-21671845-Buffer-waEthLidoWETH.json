@@ -24,6 +24,7 @@
             "0x0FE906e030a44eF24CA8c7dC7B7c53A6C4F00ce9",
             "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
         ],
+        "scalingFactor": "1",
         "rate": "1010169874970004409"
     }
 }
