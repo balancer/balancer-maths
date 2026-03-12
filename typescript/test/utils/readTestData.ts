@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { QuantAmmState } from '@/quantAmm/quantAmmData';
 import { ReClammV2State } from '@/reClammV2';
+import { FixedPriceLBPState } from '@/fixedPriceLBP';
 import { type HookState } from '../../src/hooks/types';
 import { mapHookState } from './mapHookState';
 
@@ -51,6 +52,8 @@ type LiquidityBootstrappingPool = PoolBase & LiquidityBootstrappingState;
 
 type QuantAmmPool = PoolBase & QuantAmmState;
 
+type FixedPriceLBPPool = PoolBase & FixedPriceLBPState;
+
 type SupportedPools =
     | WeightedPool
     | StablePool
@@ -59,7 +62,8 @@ type SupportedPools =
     | ReClammPool
     | ReClammPoolV2
     | LiquidityBootstrappingPool
-    | QuantAmmPool;
+    | QuantAmmPool
+    | FixedPriceLBPPool;
 
 type PoolsMap = Map<string, SupportedPools>;
 
@@ -355,6 +359,24 @@ function mapPool(
             currentTimestamp: BigInt(pool.currentTimestamp),
             lastInteropTime: BigInt(pool.lastInteropTime),
             lastUpdateTime: BigInt(pool.lastUpdateTime),
+        };
+    }
+    if (pool.poolType === 'FIXED_PRICE_LBP') {
+        return {
+            ...pool,
+            scalingFactors: pool.scalingFactors.map((sf) => BigInt(sf)),
+            swapFee: BigInt(pool.swapFee),
+            balancesLiveScaled18: pool.balancesLiveScaled18.map((b) =>
+                BigInt(b),
+            ),
+            tokenRates: pool.tokenRates.map((r) => BigInt(r)),
+            totalSupply: BigInt(pool.totalSupply),
+            aggregateSwapFee: BigInt(pool.aggregateSwapFee ?? '0'),
+            supportsUnbalancedLiquidity: false,
+            projectTokenRate: BigInt(pool.projectTokenRate),
+            startTime: BigInt(pool.startTime),
+            endTime: BigInt(pool.endTime),
+            currentTimestamp: BigInt(pool.currentTimestamp),
         };
     }
     console.log(pool);
