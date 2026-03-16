@@ -13,6 +13,7 @@ import { ReClamm } from '../reClamm';
 import { ReClammV2 } from '../reClammV2';
 import { QuantAmm } from '../quantAmm';
 import { LiquidityBootstrapping } from '../liquidityBootstrapping';
+import { FixedPriceLBP } from '../fixedPriceLBP';
 
 import { BufferState, erc4626BufferWrapOrUnwrap } from '../buffer';
 import {
@@ -68,6 +69,7 @@ export class Vault {
             RECLAMM_V2: ReClammV2,
             LIQUIDITY_BOOTSTRAPPING: LiquidityBootstrapping,
             QUANT_AMM_WEIGHTED: QuantAmm,
+            FIXED_PRICE_LBP: FixedPriceLBP,
             // custom add liquidity types take precedence over base types
             ...customPoolClasses,
         };

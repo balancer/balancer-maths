@@ -9,3 +9,4 @@ export * from './reClamm';
 export * from './reClammV2';
 export * from './quantAmm';
 export * from './liquidityBootstrapping';
+export * from './fixedPriceLBP';

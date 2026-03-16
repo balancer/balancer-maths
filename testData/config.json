@@ -478,6 +478,27 @@
             ]
         },
         {
+            "testName": "FixedPriceLBP-MTK-USDC",
+            "chainId": "11155111",
+            "blockNumber": "10434442",
+            "poolAddress": "0x398a13d3d44e4825f997cc7aee4c7016878ba244",
+            "poolType": "FIXED_PRICE_LBP",
+            "swaps": [
+                {
+                    "swapKind": 0,
+                    "amountRaw": "10000000",
+                    "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "tokenOut": "0x212f34a319d901f6958e6df2b7d295d5a82635ba"
+                },
+                {
+                    "swapKind": 1,
+                    "amountRaw": "10000000000000000000",
+                    "tokenIn": "0x80d6d3946ed8a1da4e226aa21ccddc32bd127d1a",
+                    "tokenOut": "0x212f34a319d901f6958e6df2b7d295d5a82635ba"
+                }
+            ]
+        },
+        {
             "testName": "QuantAMM",
             "chainId": "1",
             "blockNumber": "22524240",
