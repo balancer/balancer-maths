@@ -21,6 +21,7 @@ export interface QuantAmmImmutableData {
     maxTradeSizeRatio: bigint;
     scalingFactors: bigint[];
     swapFee: bigint;
+    aggregateSwapFee: bigint;
 }
 
 export class QuantAmmPool {
@@ -64,11 +65,20 @@ export class QuantAmmPool {
             blockNumber,
         } as const;
 
+        // TODO: check if it makes more sense to move this to mutable data queries
+        const poolConfigCall = {
+            address: this.vault,
+            abi: vaultExplorerAbi,
+            functionName: 'getPoolConfig',
+            args: [address],
+        } as const;
+
         const multicallResult = await this.client.multicall({
             contracts: [
                 immutableDataCall,
                 scalingFactorsCall,
                 staticSwapFeePercentageCall,
+                poolConfigCall,
             ],
             allowFailure: false,
             blockNumber,
@@ -81,6 +91,8 @@ export class QuantAmmPool {
             maxTradeSizeRatio: multicallResult[0].maxTradeSizeRatio.toString(),
             scalingFactors: multicallResult[1][0].map((sf) => sf.toString()),
             swapFee: multicallResult[2].toString(),
+            aggregateSwapFee:
+                multicallResult[3].aggregateSwapFeePercentage.toString(),
         };
     }
 

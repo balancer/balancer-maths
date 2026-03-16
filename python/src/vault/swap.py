@@ -1,8 +1,10 @@
+from dataclasses import replace
+
 from src.common.constants import WAD
 from src.common.maths import complement_fixed, mul_div_up_fixed, mul_up_fixed
 from src.common.pool_base import PoolBase
 from src.common.swap_params import SwapParams
-from src.common.types import PoolState, SwapInput, SwapKind
+from src.common.types import PoolState, SwapInput, SwapKind, SwapResult
 from src.common.utils import (
     _compute_and_charge_aggregate_swap_fees,
     _to_raw_undo_rate_round_down,
@@ -22,7 +24,7 @@ def swap(
     pool_class: PoolBase,
     hook_class: HookBase,
     hook_state: HookState | object | None,
-) -> int:
+) -> SwapResult:
     input_index = find_case_insensitive_index_in_list(
         pool_state.tokens, swap_input.token_in
     )
@@ -123,12 +125,18 @@ def swap(
             pool_state.token_rates[input_index],
         )
 
-    aggregate_swap_fee_amount_scaled18 = _compute_and_charge_aggregate_swap_fees(
+    aggregate_swap_fee_amount_raw = _compute_and_charge_aggregate_swap_fees(
         total_swap_fee_amount_scaled18,
         pool_state.aggregate_swap_fee,
         pool_state.scaling_factors,
         pool_state.token_rates,
         input_index,
+    )
+
+    aggregate_swap_fee_amount_scaled18 = _to_scaled_18_apply_rate_round_down(
+        aggregate_swap_fee_amount_raw,
+        pool_state.scaling_factors[input_index],
+        pool_state.token_rates[input_index],
     )
 
     # For ExactIn, we increase the tokenIn balance by `amountIn`,
@@ -185,7 +193,16 @@ def swap(
                 after_swap_result.hook_adjusted_amount_calculated_raw
             )
 
-    return amount_calculated_raw
+    # Create updated pool state with new balances
+    updated_pool_state = replace(
+        pool_state, balances_live_scaled18=updated_balances_live_scaled18
+    )
+
+    return SwapResult(
+        amount_calculated_raw=amount_calculated_raw,
+        updated_pool_state=updated_pool_state,
+        swap_fee_amount_scaled18=total_swap_fee_amount_scaled18,
+    )
 
 
 def _compute_amount_given_scaled18(

@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Dict, Optional, Type
 
 from src.common.pool_base import PoolBase
@@ -8,6 +9,7 @@ from src.common.types import (
     RemoveLiquidityInput,
     RemoveLiquidityResult,
     SwapInput,
+    SwapResult,
 )
 from src.hooks.default_hook import DefaultHook
 from src.hooks.exit_fee.exit_fee_hook import ExitFeeHook
@@ -60,13 +62,23 @@ class Vault:
         swap_input: SwapInput,
         pool_state: PoolState | BufferState,
         hook_state: HookState | object | None = None,
-    ) -> int:
+    ) -> SwapResult:
         if swap_input.amount_raw == 0:
-            return 0
+            return SwapResult(
+                amount_calculated_raw=0,
+                updated_pool_state=pool_state,
+                swap_fee_amount_scaled18=0,
+            )
 
         # buffer is handled separately than a "normal" pool
         if isinstance(pool_state, BufferState):
-            return erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
+            amount_out = erc4626_buffer_wrap_or_unwrap(swap_input, pool_state)
+            # Buffer state doesn't change in the same way, but we still return it
+            return SwapResult(
+                amount_calculated_raw=amount_out,
+                updated_pool_state=pool_state,
+                swap_fee_amount_scaled18=0,
+            )
         pool_class = self._get_pool(pool_state=pool_state)
         hook_class = self._get_hook(
             hook_name=pool_state.hook_type, hook_state=hook_state

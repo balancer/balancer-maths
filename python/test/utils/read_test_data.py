@@ -44,7 +44,7 @@ def read_test_data():
                         test_data["removes"].append(
                             {
                                 **remove,
-                                "kind": mapRemoveKind(remove["kind"]),
+                                "kind": map_remove_kind(remove["kind"]),
                                 "test": filename,
                             }
                         )
@@ -54,7 +54,7 @@ def read_test_data():
     return test_data
 
 
-def mapRemoveKind(kind):
+def map_remove_kind(kind):
     if kind == "Proportional":
         return 0
     elif kind == "SingleTokenExactIn":

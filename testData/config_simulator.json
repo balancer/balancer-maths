@@ -1,0 +1,11 @@
+{
+    "poolTests": [
+        {
+            "testName": "Weighted-USDC-DAI",
+            "chainId": "11155111",
+            "blockNumber": "7439300",
+            "poolAddress": "0x86fde41ff01b35846eb2f27868fb2938addd44c4",
+            "poolType": "WEIGHTED"
+        }
+    ]
+}

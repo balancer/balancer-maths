@@ -7,8 +7,9 @@ import { getRemoveLiquiditys } from './getRemoves';
 export async function generatePoolTestData(
     input: TestInput,
     overwrite = false,
+    outputDir = './testData',
 ) {
-    const path = `./testData/${input.chainId}-${input.blockNumber}-${input.testName}.json`;
+    const path = `${outputDir}/${input.chainId}-${input.blockNumber}-${input.testName}.json`;
     if (!overwrite) {
         const file = Bun.file(path);
         if (await file.exists()) {

@@ -136,12 +136,12 @@ def test_hook_after_swap_no_fee():
         ]
     )
     custom_state_no_fee = map_custom_pool_state({**pool, "aggregateSwapFee": 0})
-    test = vault.swap(
+    swap_result = vault.swap(
         swap_input=swap_input,
         pool_state=custom_state_no_fee,
         hook_state=input_hook_state,
     )
-    assert test == 1
+    assert swap_result.amount_calculated_raw == 1
 
 
 def test_hook_after_swap_with_fee():
@@ -160,9 +160,9 @@ def test_hook_after_swap_with_fee():
     custom_state_with_fee = map_custom_pool_state(
         {**pool, "aggregateSwapFee": 500000000000000000}
     )
-    test = vault.swap(
+    swap_result = vault.swap(
         swap_input=swap_input,
         pool_state=custom_state_with_fee,
         hook_state=input_hook_state,
     )
-    assert test == 1
+    assert swap_result.amount_calculated_raw == 1

@@ -9,6 +9,7 @@ import { CHAINS } from '@balancer/sdk';
 import { VAULT_V3, vaultExtensionAbi_V3 } from '@balancer/sdk';
 import { liquidityBootstrappingAbi } from './abi/liquidityBootstrapping';
 import { TransformBigintToString } from './types';
+import { vaultExplorerAbi } from './abi/vaultExplorer';
 
 export type LBPoolImmutableData = {
     tokens: string[];
@@ -99,6 +100,7 @@ export class LiquidityBootstrappingPool {
                 weights: string[];
                 swapFee: string;
                 tokenRates: string[];
+                aggregateSwapFee: string;
                 currentTimestamp: string;
             }
         >
@@ -116,8 +118,15 @@ export class LiquidityBootstrappingPool {
             args: [address],
         } as const;
 
+        const poolConfigCall = {
+            address: this.vault,
+            abi: vaultExplorerAbi,
+            functionName: 'getPoolConfig',
+            args: [address],
+        } as const;
+
         const multicallResult = await this.client.multicall({
-            contracts: [dynamicDataCall, tokenRatesCall],
+            contracts: [dynamicDataCall, tokenRatesCall, poolConfigCall],
             allowFailure: false,
             blockNumber,
         });
@@ -135,6 +144,9 @@ export class LiquidityBootstrappingPool {
 
         const tokenRates = multicallResult[1][1] as bigint[];
 
+        const aggregateSwapFee =
+            multicallResult[2].aggregateSwapFeePercentage.toString();
+
         const { timestamp } = await this.client.getBlock({ blockNumber });
 
         return {
@@ -147,6 +159,7 @@ export class LiquidityBootstrappingPool {
             isPoolPaused,
             isPoolInRecoveryMode,
             isSwapEnabled,
+            aggregateSwapFee,
             currentTimestamp: timestamp.toString(),
         };
     }

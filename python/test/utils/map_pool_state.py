@@ -15,10 +15,8 @@ from src.pools.stable.stable_data import map_stable_state
 from src.pools.weighted.weighted_data import map_weighted_state
 
 
-def map_pool_state(pool_state: dict) -> PoolState | BufferState:
-    if pool_state["poolType"] == "Buffer":
-        return map_buffer_state(pool_state)
-    elif pool_state["poolType"] == "GYRO":
+def map_pool_state(pool_state: dict) -> PoolState:
+    if pool_state["poolType"] == "GYRO":
         return map_gyro_2clp_state(pool_state)
     elif pool_state["poolType"] == "GYROE":
         return map_gyro_eclp_state(pool_state)
@@ -36,6 +34,13 @@ def map_pool_state(pool_state: dict) -> PoolState | BufferState:
         return map_re_clamm_v2_state(pool_state)
     else:
         raise ValueError(f"Unsupported pool type: {pool_state['poolType']}")
+
+
+def map_pool_and_buffer_state(pool_state: dict) -> PoolState | BufferState:
+    if pool_state["poolType"] == "Buffer":
+        return map_buffer_state(pool_state)
+    else:
+        return map_pool_state(pool_state)
 
 
 def transform_strings_to_ints(pool_with_strings):
@@ -68,10 +73,6 @@ def map_pool_and_hook_state(
     """
     Maps pool data to pool state and hook state (if present).
 
-    This function maps both the pool state and any associated hook state from
-    the raw pool dictionary. Hook data is extracted and mapped only for pool
-    types that support hooks (STABLE and WEIGHTED).
-
     Args:
         pool: Pool dict from JSON (already converted to ints via transform_strings_to_ints)
 
@@ -81,7 +82,7 @@ def map_pool_and_hook_state(
         - hook_state: Mapped HookState if hook exists and pool supports it, None otherwise
     """
     # First, map the pool state
-    pool_state = map_pool_state(pool)
+    pool_state = map_pool_and_buffer_state(pool)
 
     # Check if pool has hook data
     hook_data = pool.get("hook")

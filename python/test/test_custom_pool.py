@@ -55,7 +55,7 @@ def test_custom_pool():
     }
     custom_pool_state = map_custom_pool_state(pool_state)
     vault = Vault(custom_pool_classes={"CustomPool": CustomPool})
-    calculated_amount = vault.swap(
+    swap_result = vault.swap(
         swap_input=SwapInput(
             amount_raw=1000000000000000000,
             token_in="0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
@@ -64,7 +64,7 @@ def test_custom_pool():
         ),
         pool_state=custom_pool_state,
     )
-    assert calculated_amount == custom_pool_state.randoms[0]
+    assert swap_result.amount_calculated_raw == custom_pool_state.randoms[0]
 
 
 class CustomPool(PoolBase):
