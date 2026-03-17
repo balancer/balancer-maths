@@ -5,15 +5,6 @@ import { HookStateAkron } from './akron/akronHook';
 
 export type HookStateBase = {
     hookType: string;
-    // Configuration flags from hook contract
-    shouldCallComputeDynamicSwapFee: boolean;
-    shouldCallBeforeSwap: boolean;
-    shouldCallAfterSwap: boolean;
-    shouldCallBeforeAddLiquidity: boolean;
-    shouldCallAfterAddLiquidity: boolean;
-    shouldCallBeforeRemoveLiquidity: boolean;
-    shouldCallAfterRemoveLiquidity: boolean;
-    enableHookAdjustedAmounts: boolean;
 };
 
 export type HookState =
