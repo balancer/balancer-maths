@@ -101,16 +101,6 @@ export class Vault {
 
         const hook = new hookClass(hookState);
 
-        // Override the hook's flags with those from HookState (if present)
-        if (
-            hookState &&
-            typeof hookState === 'object' &&
-            'shouldCallComputeDynamicSwapFee' in hookState
-        ) {
-            const state = hookState as HookState;
-            Object.assign(hook, state);
-        }
-
         return hook;
     }
 

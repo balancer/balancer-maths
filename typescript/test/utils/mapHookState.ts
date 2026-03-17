@@ -46,29 +46,8 @@ function mapExitFeeHookState(
         );
     }
 
-    const {
-        shouldCallComputeDynamicSwapFee,
-        shouldCallBeforeSwap,
-        shouldCallAfterSwap,
-        shouldCallBeforeAddLiquidity,
-        shouldCallAfterAddLiquidity,
-        shouldCallBeforeRemoveLiquidity,
-        shouldCallAfterRemoveLiquidity,
-        enableHookAdjustedAmounts,
-    } = hookData;
-
     return {
         hookType: 'ExitFee',
-        // Configuration flags
-        shouldCallComputeDynamicSwapFee,
-        shouldCallBeforeSwap,
-        shouldCallAfterSwap,
-        shouldCallBeforeAddLiquidity,
-        shouldCallAfterAddLiquidity,
-        shouldCallBeforeRemoveLiquidity,
-        shouldCallAfterRemoveLiquidity,
-        enableHookAdjustedAmounts,
-        // Hook-specific data
         tokens,
         removeLiquidityHookFeePercentage: BigInt(
             hookData.dynamicData.removeLiquidityHookFeePercentage,
@@ -94,29 +73,8 @@ function mapStableSurgeHookState(
         throw new Error('STABLE_SURGE hook requires amp from pool data');
     }
 
-    const {
-        shouldCallComputeDynamicSwapFee,
-        shouldCallBeforeSwap,
-        shouldCallAfterSwap,
-        shouldCallBeforeAddLiquidity,
-        shouldCallAfterAddLiquidity,
-        shouldCallBeforeRemoveLiquidity,
-        shouldCallAfterRemoveLiquidity,
-        enableHookAdjustedAmounts,
-    } = hookData;
-
     return {
         hookType: 'StableSurge',
-        // Configuration flags
-        shouldCallComputeDynamicSwapFee,
-        shouldCallBeforeSwap,
-        shouldCallAfterSwap,
-        shouldCallBeforeAddLiquidity,
-        shouldCallAfterAddLiquidity,
-        shouldCallBeforeRemoveLiquidity,
-        shouldCallAfterRemoveLiquidity,
-        enableHookAdjustedAmounts,
-        // Hook-specific data
         amp: poolData.amp,
         surgeThresholdPercentage: BigInt(
             hookData.dynamicData.surgeThresholdPercentage,
