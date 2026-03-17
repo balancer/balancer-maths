@@ -21,6 +21,7 @@ from .hooks.stable_surge.stable_surge_hook import StableSurgeHook
 
 # Pool types - these are the actual class names from the codebase
 from .pools.buffer.buffer_data import BufferState
+from .pools.fixed_price_lbp.fixed_price_lbp import FixedPriceLBP
 from .pools.gyro.gyro_2clp import Gyro2CLP
 from .pools.gyro.gyro_eclp import GyroECLP
 from .pools.liquidity_bootstrapping.liquidity_bootstrapping import (
@@ -54,6 +55,7 @@ __all__ = [
     "LiquidityBootstrapping",
     "QuantAmm",
     "BufferState",
+    "FixedPriceLBP",
     # Hook types
     "ExitFeeHook",
     "StableSurgeHook",

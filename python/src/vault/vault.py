@@ -15,6 +15,7 @@ from src.hooks.stable_surge.stable_surge_hook import StableSurgeHook
 from src.hooks.types import HookBase, HookState
 from src.pools.buffer.buffer_data import BufferState
 from src.pools.buffer.erc4626_buffer_wrap_or_unwrap import erc4626_buffer_wrap_or_unwrap
+from src.pools.fixed_price_lbp.fixed_price_lbp import FixedPriceLBP
 from src.pools.gyro.gyro_2clp import Gyro2CLP
 from src.pools.gyro.gyro_eclp import GyroECLP
 from src.pools.liquidity_bootstrapping.liquidity_bootstrapping import (
@@ -44,6 +45,7 @@ class Vault:
             "RECLAMM": ReClamm,
             "QUANT_AMM_WEIGHTED": QuantAmm,
             "LIQUIDITY_BOOTSTRAPPING": LiquidityBootstrapping,
+            "FIXED_PRICE_LBP": FixedPriceLBP,
             "RECLAMM_V2": ReClammV2,
         }
         default_hook_classes: Dict[str, Type[HookBase]] = {
