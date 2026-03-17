@@ -109,6 +109,35 @@ pub struct LiquidityBootstrappingState {
     pub immutable: LiquidityBootstrappingImmutable,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixedPriceLBPMutable {
+    #[serde(rename = "isSwapEnabled")]
+    pub is_swap_enabled: bool,
+    #[serde(rename = "currentTimestamp")]
+    pub current_timestamp: U256,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixedPriceLBPImmutable {
+    #[serde(rename = "projectTokenIndex")]
+    pub project_token_index: usize,
+    #[serde(rename = "reserveTokenIndex")]
+    pub reserve_token_index: usize,
+    #[serde(rename = "projectTokenRate")]
+    pub project_token_rate: U256,
+    #[serde(rename = "startTime")]
+    pub start_time: U256,
+    #[serde(rename = "endTime")]
+    pub end_time: U256,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixedPriceLBPState {
+    pub base: BasePoolState,
+    pub mutable: FixedPriceLBPMutable,
+    pub immutable: FixedPriceLBPImmutable,
+}
+
 /// ReClamm mutable state for test data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReClammMutable {
@@ -273,6 +302,15 @@ pub struct LiquidityBootstrappingPool {
     pub state: LiquidityBootstrappingState,
 }
 
+/// FixedPriceLBP pool with base information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FixedPriceLBPPool {
+    #[serde(flatten)]
+    pub base: PoolBase,
+    #[serde(flatten)]
+    pub state: FixedPriceLBPState,
+}
+
 /// Buffer pool with base information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufferPool {
@@ -308,6 +346,7 @@ pub enum SupportedPool {
     GyroECLP(GyroECLPPool),
     QuantAmm(QuantAmmPool),
     LiquidityBootstrapping(LiquidityBootstrappingPool),
+    FixedPriceLBP(FixedPriceLBPPool),
     Buffer(BufferPool),
     ReClamm(ReClammPool),
     ReClammV2(ReClammV2Pool),
@@ -477,6 +516,11 @@ struct RawPool {
     pub end_time: Option<String>,
     #[serde(rename = "isSwapEnabled")]
     pub is_swap_enabled: Option<bool>,
+    // FixedPriceLBP specific fields
+    #[serde(rename = "reserveTokenIndex")]
+    pub reserve_token_index: Option<serde_json::Value>,
+    #[serde(rename = "projectTokenRate")]
+    pub project_token_rate: Option<String>,
     // Buffer specific fields
     pub rate: Option<String>,
     #[serde(rename = "maxDeposit")]
@@ -1132,6 +1176,103 @@ fn map_pool(raw_pool: RawPool) -> Result<SupportedPool, Box<dyn std::error::Erro
                     state: liquidity_bootstrapping_state,
                 },
             ))
+        }
+        "FIXED_PRICE_LBP" => {
+            let project_token_index = raw_pool
+                .project_token_index
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing projectTokenIndex")?
+                .as_u64()
+                .ok_or("projectTokenIndex must be a number")?
+                as usize;
+
+            let reserve_token_index = raw_pool
+                .reserve_token_index
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing reserveTokenIndex")?
+                .as_u64()
+                .ok_or("reserveTokenIndex must be a number")?
+                as usize;
+
+            let project_token_rate = raw_pool
+                .project_token_rate
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing projectTokenRate")?
+                .parse::<U256>()?;
+
+            let start_time = raw_pool
+                .start_time
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing startTime")?
+                .parse::<U256>()?;
+
+            let end_time = raw_pool
+                .end_time
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing endTime")?
+                .parse::<U256>()?;
+
+            let is_swap_enabled = raw_pool
+                .is_swap_enabled
+                .ok_or("FixedPriceLBP pool missing isSwapEnabled")?;
+
+            let current_timestamp = raw_pool
+                .current_timestamp
+                .as_ref()
+                .ok_or("FixedPriceLBP pool missing currentTimestamp")?
+                .parse::<U256>()?;
+
+            let fixed_price_lbp_state = FixedPriceLBPState {
+                base: BasePoolState {
+                    pool_address: raw_pool.pool_address.clone(),
+                    pool_type: raw_pool.pool_type.clone(),
+                    tokens: raw_pool.tokens.clone(),
+                    scaling_factors: raw_pool
+                        .scaling_factors
+                        .into_iter()
+                        .map(|sf| sf.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    swap_fee: raw_pool.swap_fee.parse::<U256>()?,
+                    balances_live_scaled_18: raw_pool
+                        .balances_live_scaled_18
+                        .into_iter()
+                        .map(|b| b.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    token_rates: raw_pool
+                        .token_rates
+                        .into_iter()
+                        .map(|r| r.parse::<U256>())
+                        .collect::<Result<Vec<U256>, _>>()?,
+                    total_supply: raw_pool.total_supply.parse::<U256>()?,
+                    aggregate_swap_fee: raw_pool
+                        .aggregate_swap_fee
+                        .unwrap_or_else(|| "0".to_string())
+                        .parse::<U256>()?,
+                    supports_unbalanced_liquidity: raw_pool
+                        .supports_unbalanced_liquidity
+                        .unwrap_or(false),
+                    hook_type: None,
+                },
+                mutable: FixedPriceLBPMutable {
+                    is_swap_enabled,
+                    current_timestamp,
+                },
+                immutable: FixedPriceLBPImmutable {
+                    project_token_index,
+                    reserve_token_index,
+                    project_token_rate,
+                    start_time,
+                    end_time,
+                },
+            };
+            Ok(SupportedPool::FixedPriceLBP(FixedPriceLBPPool {
+                base: PoolBase {
+                    chain_id: raw_pool.chain_id.parse()?,
+                    block_number: raw_pool.block_number.parse()?,
+                    pool_address: raw_pool.pool_address,
+                },
+                state: fixed_price_lbp_state,
+            }))
         }
         "RECLAMM" => {
             // Parse ReClamm parameters
