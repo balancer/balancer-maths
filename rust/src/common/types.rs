@@ -120,6 +120,8 @@ pub enum PoolState {
     QuantAmm(crate::pools::quantamm::quantamm_data::QuantAmmState),
     /// Liquidity bootstrapping pool state
     LiquidityBootstrapping(crate::pools::liquidity_bootstrapping::liquidity_bootstrapping_data::LiquidityBootstrappingState),
+    /// FixedPriceLBP pool state
+    FixedPriceLBP(crate::pools::fixed_price_lbp::fixed_price_lbp_data::FixedPriceLBPState),
 }
 
 /// Union type for pool states - can be either a normal pool or a buffer pool
@@ -198,6 +200,7 @@ impl PoolState {
             PoolState::LiquidityBootstrapping(liquidity_bootstrapping) => {
                 &liquidity_bootstrapping.base
             }
+            PoolState::FixedPriceLBP(fixed_price_lbp) => &fixed_price_lbp.base,
         }
     }
 

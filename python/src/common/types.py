@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from src.common.base_pool_state import BasePoolState
+from src.pools.fixed_price_lbp.fixed_price_lbp_data import FixedPriceLBPState
 from src.pools.gyro.gyro_2clp_data import Gyro2CLPState
 from src.pools.gyro.gyro_eclp_data import GyroECLPState
 from src.pools.quantamm.quantamm_data import QuantAmmState
@@ -77,4 +78,5 @@ PoolState = (
     | ReClammState
     | ReClammV2State
     | QuantAmmState
+    | FixedPriceLBPState
 )

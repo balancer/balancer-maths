@@ -3,6 +3,9 @@
 use crate::utils::read_test_data::SupportedPool;
 use balancer_maths_rust::common::types::{PoolState, PoolStateOrBuffer};
 use balancer_maths_rust::pools::buffer::{BufferImmutable, BufferMutable, BufferState};
+use balancer_maths_rust::pools::fixed_price_lbp::{
+    FixedPriceLBPImmutable, FixedPriceLBPMutable, FixedPriceLBPState,
+};
 use balancer_maths_rust::pools::gyro::{GyroECLPImmutable, GyroECLPState};
 use balancer_maths_rust::pools::liquidity_bootstrapping::{
     LiquidityBootstrappingImmutable, LiquidityBootstrappingMutable, LiquidityBootstrappingState,
@@ -113,6 +116,23 @@ pub fn convert_to_pool_state(pool: &SupportedPool) -> PoolStateOrBuffer {
                 liquidity_bootstrapping_state,
             )))
         }
+        SupportedPool::FixedPriceLBP(fixed_price_lbp_pool) => {
+            let fixed_price_lbp_state = FixedPriceLBPState {
+                base: fixed_price_lbp_pool.state.base.clone(),
+                mutable: FixedPriceLBPMutable {
+                    is_swap_enabled: fixed_price_lbp_pool.state.mutable.is_swap_enabled,
+                    current_timestamp: fixed_price_lbp_pool.state.mutable.current_timestamp,
+                },
+                immutable: FixedPriceLBPImmutable {
+                    project_token_index: fixed_price_lbp_pool.state.immutable.project_token_index,
+                    reserve_token_index: fixed_price_lbp_pool.state.immutable.reserve_token_index,
+                    project_token_rate: fixed_price_lbp_pool.state.immutable.project_token_rate,
+                    start_time: fixed_price_lbp_pool.state.immutable.start_time,
+                    end_time: fixed_price_lbp_pool.state.immutable.end_time,
+                },
+            };
+            PoolStateOrBuffer::Pool(Box::new(PoolState::FixedPriceLBP(fixed_price_lbp_state)))
+        }
         SupportedPool::ReClamm(re_clamm_pool) => {
             let re_clamm_state = ReClammState {
                 base: re_clamm_pool.state.base.clone(),
@@ -215,6 +235,9 @@ pub fn get_pool_address(pool: &SupportedPool) -> String {
         SupportedPool::QuantAmm(quant_amm_pool) => quant_amm_pool.base.pool_address.clone(),
         SupportedPool::LiquidityBootstrapping(liquidity_bootstrapping_pool) => {
             liquidity_bootstrapping_pool.base.pool_address.clone()
+        }
+        SupportedPool::FixedPriceLBP(fixed_price_lbp_pool) => {
+            fixed_price_lbp_pool.base.pool_address.clone()
         }
         SupportedPool::ReClamm(re_clamm_pool) => re_clamm_pool.base.pool_address.clone(),
         SupportedPool::ReClammV2(re_clamm_v2_pool) => re_clamm_v2_pool.base.pool_address.clone(),

@@ -102,6 +102,11 @@ impl Vault {
                             liquidity_bootstrapping_state.clone(),
                         ),
                     ),
+                    PoolState::FixedPriceLBP(fixed_price_lbp_state) => {
+                        Box::new(crate::pools::fixed_price_lbp::FixedPriceLBPPool::from(
+                            fixed_price_lbp_state.clone(),
+                        ))
+                    }
                     PoolState::ReClamm(re_clamm_state) => Box::new(
                         crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
                     ),
@@ -161,6 +166,11 @@ impl Vault {
                     liquidity_bootstrapping_state.clone(),
                 ),
             ),
+            PoolState::FixedPriceLBP(fixed_price_lbp_state) => {
+                Box::new(crate::pools::fixed_price_lbp::FixedPriceLBPPool::from(
+                    fixed_price_lbp_state.clone(),
+                ))
+            }
             PoolState::ReClamm(re_clamm_state) => Box::new(
                 crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
             ),
@@ -213,6 +223,11 @@ impl Vault {
                     liquidity_bootstrapping_state.clone(),
                 ),
             ),
+            PoolState::FixedPriceLBP(fixed_price_lbp_state) => {
+                Box::new(crate::pools::fixed_price_lbp::FixedPriceLBPPool::from(
+                    fixed_price_lbp_state.clone(),
+                ))
+            }
             PoolState::ReClamm(re_clamm_state) => Box::new(
                 crate::pools::reclamm::ReClammPool::new(re_clamm_state.clone()),
             ),

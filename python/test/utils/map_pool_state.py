@@ -3,6 +3,7 @@ from test.utils.map_hook_state import map_hook_state
 from src.common.types import PoolState
 from src.hooks.types import HookState
 from src.pools.buffer.buffer_data import BufferState, map_buffer_state
+from src.pools.fixed_price_lbp.fixed_price_lbp_data import map_fixed_price_lbp_state
 from src.pools.gyro.gyro_2clp_data import map_gyro_2clp_state
 from src.pools.gyro.gyro_eclp_data import map_gyro_eclp_state
 from src.pools.liquidity_bootstrapping.liquidity_bootstrapping_data import (
@@ -34,6 +35,8 @@ def map_pool_state(pool_state: dict) -> PoolState | BufferState:
         return map_weighted_state(pool_state)
     elif pool_state["poolType"] == "RECLAMM_V2":
         return map_re_clamm_v2_state(pool_state)
+    elif pool_state["poolType"] == "FIXED_PRICE_LBP":
+        return map_fixed_price_lbp_state(pool_state)
     else:
         raise ValueError(f"Unsupported pool type: {pool_state['poolType']}")
 

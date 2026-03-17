@@ -1,6 +1,7 @@
 //! Pool implementations for different Balancer pool types
 
 pub mod buffer;
+pub mod fixed_price_lbp;
 pub mod gyro;
 pub mod liquidity_bootstrapping;
 pub mod quantamm;
@@ -12,6 +13,9 @@ pub mod weighted;
 // Re-export pool traits and types
 pub use buffer::{
     erc4626_buffer_wrap_or_unwrap, BufferImmutable, BufferMutable, BufferState, WrappingDirection,
+};
+pub use fixed_price_lbp::{
+    FixedPriceLBPImmutable, FixedPriceLBPMutable, FixedPriceLBPPool, FixedPriceLBPState,
 };
 pub use gyro::{GyroECLPImmutable, GyroECLPPool, GyroECLPState};
 pub use liquidity_bootstrapping::{
