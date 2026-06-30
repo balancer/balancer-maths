@@ -1,15 +1,21 @@
+import { MathSol } from '../utils/math';
 import {
     MaxSwapParams,
     type PoolBase,
     SwapKind,
     type SwapParams,
 } from '../vault/types';
+import { toRawUndoRateRoundDown } from '../vault/utils';
 import { ReClammV2Mutable } from './reClammV2Data';
 import {
     computeCurrentVirtualBalances,
     computeInGivenOut,
     computeOutGivenIn,
 } from './reClammV2Math';
+
+// Apply a 99% safety margin to the token out balance, consistent with other pool types, to avoid
+// edge-case reverts caused by rounding/curve constraints when swapping at the theoretical max.
+const _MAX_TOKEN_OUT_RATIO = 990000000000000000n;
 
 export class ReClammV2 implements PoolBase {
     public reClammState: ReClammV2Mutable;
@@ -35,8 +41,20 @@ export class ReClammV2 implements PoolBase {
      * @returns GivenIn: Returns the max amount in. GivenOut: Returns the max amount out.
      */
     getMaxSwapAmount(maxSwapParams: MaxSwapParams): bigint {
-        const { balancesLiveScaled18, indexIn, indexOut, swapKind } =
-            maxSwapParams;
+        const {
+            balancesLiveScaled18,
+            indexIn,
+            indexOut,
+            tokenRates,
+            scalingFactors,
+            swapKind,
+        } = maxSwapParams;
+
+        // 99% of token out balance
+        const maxAmountOutScaled18 = MathSol.mulDownFixed(
+            _MAX_TOKEN_OUT_RATIO,
+            balancesLiveScaled18[indexOut],
+        );
 
         if (swapKind === SwapKind.GivenIn) {
             const computeResult =
@@ -47,15 +65,21 @@ export class ReClammV2 implements PoolBase {
                 computeResult.currentVirtualBalanceB,
                 indexIn,
                 indexOut,
-                balancesLiveScaled18[indexOut],
+                maxAmountOutScaled18,
             );
-            const maxAmountInWithTolerance = maxAmountIn - 10n; // 10 is a tolerance for rounding
-            return maxAmountInWithTolerance < 0n
-                ? 0n
-                : maxAmountInWithTolerance;
+            // Scale to token in (and remove rate)
+            return toRawUndoRateRoundDown(
+                maxAmountIn,
+                scalingFactors[indexIn],
+                tokenRates[indexIn],
+            );
         }
-        const maxAmountOutWithTolerance = balancesLiveScaled18[indexOut] - 10n; // 10 is a tolerance for rounding
-        return maxAmountOutWithTolerance < 0n ? 0n : maxAmountOutWithTolerance;
+        // Scale to token out (and remove rate)
+        return toRawUndoRateRoundDown(
+            maxAmountOutScaled18,
+            scalingFactors[indexOut],
+            tokenRates[indexOut],
+        );
     }
 
     getMaxSingleTokenAddAmount(): bigint {
