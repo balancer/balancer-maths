@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- reCLAMM (v1 + v2) no longer panics on off-centre pools with small balances that truncate the invariant to zero; the swap path now returns `PoolError::ZeroInvariant`.
+
+### Changed (BREAKING)
+- `compute_current_virtual_balances` and reCLAMM math helpers now return `Result<_, PoolError>` instead of bare tuples.
+
 ## [0.4.1] - 2025-11-20
 
 ### Changed
