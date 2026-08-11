@@ -88,11 +88,15 @@ impl HookBase for ExitFeeHook {
                 if state.remove_liquidity_hook_fee_percentage > U256::ZERO {
                     // Charge fees proportional to amounts out of each token
                     for i in 0..amounts_out_raw.len() {
-                        let hook_fee = mul_down_fixed(
+                        let Ok(hook_fee) = mul_down_fixed(
                             &amounts_out_raw[i],
                             &state.remove_liquidity_hook_fee_percentage,
-                        )
-                        .unwrap_or(U256::ZERO);
+                        ) else {
+                            return AfterRemoveLiquidityResult {
+                                success: false,
+                                hook_adjusted_amounts_out_raw: amounts_out_raw.to_vec(),
+                            };
+                        };
 
                         accrued_fees[i] = hook_fee;
                         hook_adjusted_amounts_out_raw[i] -= hook_fee;

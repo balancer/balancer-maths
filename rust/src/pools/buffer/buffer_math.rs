@@ -36,7 +36,8 @@ pub fn calculate_buffer_amounts(
                             amount_raw, max_assets
                         ));
                     }
-                    Ok(_convert_to_shares(amount_raw, rate, Rounding::RoundDown))
+                    _convert_to_shares(amount_raw, rate, Rounding::RoundDown)
+                        .map_err(|e| e.to_string())
                 }
                 SwapKind::GivenOut => {
                     // previewMint
@@ -48,7 +49,8 @@ pub fn calculate_buffer_amounts(
                             max_mint.unwrap_or(&U256::ZERO)
                         ));
                     }
-                    Ok(_convert_to_assets(amount_raw, rate, Rounding::RoundUp))
+                    _convert_to_assets(amount_raw, rate, Rounding::RoundUp)
+                        .map_err(|e| e.to_string())
                 }
             }
         }
@@ -57,11 +59,13 @@ pub fn calculate_buffer_amounts(
             match kind {
                 SwapKind::GivenIn => {
                     // previewRedeem
-                    Ok(_convert_to_assets(amount_raw, rate, Rounding::RoundDown))
+                    _convert_to_assets(amount_raw, rate, Rounding::RoundDown)
+                        .map_err(|e| e.to_string())
                 }
                 SwapKind::GivenOut => {
                     // previewWithdraw
-                    Ok(_convert_to_shares(amount_raw, rate, Rounding::RoundUp))
+                    _convert_to_shares(amount_raw, rate, Rounding::RoundUp)
+                        .map_err(|e| e.to_string())
                 }
             }
         }
@@ -69,17 +73,25 @@ pub fn calculate_buffer_amounts(
 }
 
 /// Convert assets to shares
-fn _convert_to_shares(assets: &U256, rate: &U256, rounding: Rounding) -> U256 {
+fn _convert_to_shares(
+    assets: &U256,
+    rate: &U256,
+    rounding: Rounding,
+) -> Result<U256, crate::common::errors::PoolError> {
     match rounding {
-        Rounding::RoundUp => div_up_fixed(assets, rate).unwrap_or(U256::ZERO),
-        Rounding::RoundDown => div_down_fixed(assets, rate).unwrap_or(U256::ZERO),
+        Rounding::RoundUp => div_up_fixed(assets, rate),
+        Rounding::RoundDown => div_down_fixed(assets, rate),
     }
 }
 
 /// Convert shares to assets
-fn _convert_to_assets(shares: &U256, rate: &U256, rounding: Rounding) -> U256 {
+fn _convert_to_assets(
+    shares: &U256,
+    rate: &U256,
+    rounding: Rounding,
+) -> Result<U256, crate::common::errors::PoolError> {
     match rounding {
-        Rounding::RoundUp => mul_up_fixed(shares, rate).unwrap_or(U256::ZERO),
-        Rounding::RoundDown => mul_down_fixed(shares, rate).unwrap_or(U256::ZERO),
+        Rounding::RoundUp => mul_up_fixed(shares, rate),
+        Rounding::RoundDown => mul_down_fixed(shares, rate),
     }
 }

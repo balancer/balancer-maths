@@ -6,9 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - reCLAMM (v1 + v2) no longer panics on off-centre pools with small balances that truncate the invariant to zero; the swap path now returns `PoolError::ZeroInvariant`.
+- Fixed-point math helpers (`mul_*_fixed`, `div_*_fixed`, `mul_div_up_fixed`) now detect `U256` overflow via `checked_mul` and return `Err(PoolError::MathOverflow)` instead of panicking or silently producing masked values.
+- Removed crate-wide `.unwrap_or(U256::ZERO)` / `.unwrap_or(WAD)` (and related panic-on-err) masking of math-helper `Result`s; failures now propagate as `Err`.
 
 ### Changed (BREAKING)
 - `compute_current_virtual_balances` and reCLAMM math helpers now return `Result<_, PoolError>` instead of bare tuples.
+- Several helpers changed from bare return types to `Result<_, PoolError>`: `compute_fourth_root_price_ratio`, `compute_centeredness`, `compute_invariant` (reCLAMM v1/v2), `_convert_to_shares` / `_convert_to_assets`, `calculate_value_change_progress` / `interpolate_value` / `get_normalized_weights` (LBP), `calculate_block_normalised_weight` (QuantAMM, **pub**), and `gyro_pool_math_sqrt`.
+- Behavioural change: inputs that previously produced wrong numeric values (via zero/WAD fallbacks) now surface as `Err`. Callers using `?` are unaffected; callers doing `.unwrap()` will crash where they previously consumed wrong data.
 
 ## [0.4.1] - 2025-11-20
 

@@ -47,7 +47,7 @@ impl QuantAmmPool {
             &state.mutable.last_update_time,
             &state.mutable.last_interop_time,
             &state.mutable.current_timestamp,
-        );
+        )?;
 
         Ok(Self {
             normalized_weights,
@@ -62,7 +62,7 @@ impl QuantAmmPool {
         last_update_time: &U256,
         last_interop_time: &U256,
         current_timestamp: &U256,
-    ) -> Vec<U256> {
+    ) -> Result<Vec<U256>, PoolError> {
         let mut multiplier_time = *current_timestamp;
 
         if current_timestamp >= last_interop_time {
@@ -78,11 +78,11 @@ impl QuantAmmPool {
                 &base_weights[i],
                 &multipliers[i],
                 &time_since_last_update,
-            );
+            )?;
             normalized_weights.push(normalized_weight);
         }
 
-        normalized_weights
+        Ok(normalized_weights)
     }
 
     /// Get normalized weights for a specific token pair
@@ -110,8 +110,7 @@ impl QuantAmmPool {
         let max_amount = mul_down_fixed(
             balance_scaled_18,
             &self.state.immutable.max_trade_size_ratio,
-        )
-        .unwrap_or(U256::ZERO);
+        )?;
 
         if amount_scaled_18 > &max_amount {
             return Err(PoolError::InvalidSwapParameters);

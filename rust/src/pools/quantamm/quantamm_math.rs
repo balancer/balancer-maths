@@ -1,3 +1,4 @@
+use crate::common::errors::PoolError;
 use crate::common::maths::mul_down_fixed;
 use alloy_primitives::{uint, I256, U256};
 
@@ -17,18 +18,16 @@ pub fn calculate_block_normalised_weight(
     weight: &I256,
     multiplier: &I256,
     time_since_last_update: &U256,
-) -> U256 {
+) -> Result<U256, PoolError> {
     // multiplier is always below 1, we multiply by 1e18 for rounding
     let multiplier_scaled18 = *multiplier * ONE_SIGNED;
 
     if multiplier > &I256::ZERO {
-        weight.into_raw()
-            + mul_down_fixed(&multiplier_scaled18.into_raw(), time_since_last_update)
-                .unwrap_or(U256::ZERO)
+        Ok(weight.into_raw()
+            + mul_down_fixed(&multiplier_scaled18.into_raw(), time_since_last_update)?)
     } else {
-        weight.into_raw()
-            - mul_down_fixed(&(-multiplier_scaled18.into_raw()), time_since_last_update)
-                .unwrap_or(U256::ZERO)
+        Ok(weight.into_raw()
+            - mul_down_fixed(&(-multiplier_scaled18.into_raw()), time_since_last_update)?)
     }
 }
 

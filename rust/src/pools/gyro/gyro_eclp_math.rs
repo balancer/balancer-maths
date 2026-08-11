@@ -212,7 +212,12 @@ fn calc_a_chi_a_chi_in_xp(p: &EclpParams, d: &DerivedEclpParams) -> I256 {
     val
 }
 
-fn calc_invariant_sqrt(x: &I256, y: &I256, p: &EclpParams, d: &DerivedEclpParams) -> (I256, I256) {
+fn calc_invariant_sqrt(
+    x: &I256,
+    y: &I256,
+    p: &EclpParams,
+    d: &DerivedEclpParams,
+) -> Result<(I256, I256), PoolError> {
     let val1 = calc_min_atx_a_chiy_sq_plus_atx_sq(x, y, p, d);
     let val2 = calc_2_atx_aty_a_chix_a_chiy(x, y, p, d);
     let val3 = calc_min_aty_a_chix_sq_plus_aty_sq(x, y, p, d);
@@ -223,13 +228,13 @@ fn calc_invariant_sqrt(x: &I256, y: &I256, p: &EclpParams, d: &DerivedEclpParams
     let val = if val > I256::ZERO {
         // Convert to U256 for sqrt, then back to I256
         let val_u256 = val.into_raw();
-        let sqrt_result = gyro_pool_math_sqrt(&val_u256, 5);
+        let sqrt_result = gyro_pool_math_sqrt(&val_u256, 5)?;
         I256::from_raw(sqrt_result)
     } else {
         I256::ZERO
     };
 
-    (val, err)
+    Ok((val, err))
 }
 
 fn calc_min_atx_a_chiy_sq_plus_atx_sq(
@@ -415,7 +420,7 @@ pub fn calculate_invariant_with_error(
     }
 
     let at_a_chi = calc_at_a_chi(&x, &y, params, derived);
-    let invariant_result = calc_invariant_sqrt(&x, &y, params, derived);
+    let invariant_result = calc_invariant_sqrt(&x, &y, params, derived)?;
     let sqrt = invariant_result.0;
     let mut err = invariant_result.1;
 
@@ -428,7 +433,7 @@ pub fn calculate_invariant_with_error(
         // O(1e-18)
         err = if err > I256::ZERO {
             let err_u256 = err.into_raw();
-            let sqrt_result = gyro_pool_math_sqrt(&err_u256, 5);
+            let sqrt_result = gyro_pool_math_sqrt(&err_u256, 5)?;
             I256::from_raw(sqrt_result)
         } else {
             I256::from_str("1000000000").unwrap()
@@ -485,7 +490,7 @@ fn solve_quadratic_swap(
     ab: &Vector2,
     tau_beta: &Vector2,
     d_sq: &I256,
-) -> I256 {
+) -> Result<I256, PoolError> {
     let lam_bar_x_result = ONE_XP - div_down_mag(&div_down_mag(&ONE_XP, lambda), lambda);
     let lam_bar = Vector2 {
         x: lam_bar_x_result,
@@ -529,7 +534,7 @@ fn solve_quadratic_swap(
 
     q.c = if q.c > I256::ZERO {
         let q_c_u256 = q.c.into_raw();
-        let sqrt_result = gyro_pool_math_sqrt(&q_c_u256, 5);
+        let sqrt_result = gyro_pool_math_sqrt(&q_c_u256, 5)?;
         I256::from_raw(sqrt_result)
     } else {
         I256::ZERO
@@ -541,7 +546,7 @@ fn solve_quadratic_swap(
         q.a = mul_up_xp_to_np(&(q.b - q.c), &div_xp_u(&ONE_XP, &s_term_x));
     }
 
-    q.a + ab.y
+    Ok(q.a + ab.y)
 }
 
 fn calc_xp_xp_div_lambda_lambda(
@@ -630,7 +635,12 @@ fn calc_xp_xp_div_lambda_lambda(
     mul_up_xp_to_np(&val, &term_xp2) + q.a
 }
 
-fn calc_y_given_x(x: &I256, params: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
+fn calc_y_given_x(
+    x: &I256,
+    params: &EclpParams,
+    d: &DerivedEclpParams,
+    r: &Vector2,
+) -> Result<I256, PoolError> {
     let ab = Vector2 {
         x: virtual_offset0(params, d, r),
         y: virtual_offset1(params, d, r),
@@ -647,7 +657,12 @@ fn calc_y_given_x(x: &I256, params: &EclpParams, d: &DerivedEclpParams, r: &Vect
     )
 }
 
-fn calc_x_given_y(y: &I256, params: &EclpParams, d: &DerivedEclpParams, r: &Vector2) -> I256 {
+fn calc_x_given_y(
+    y: &I256,
+    params: &EclpParams,
+    d: &DerivedEclpParams,
+    r: &Vector2,
+) -> Result<I256, PoolError> {
     let ba = Vector2 {
         x: virtual_offset1(params, d, r),
         y: virtual_offset0(params, d, r),
@@ -699,13 +714,13 @@ pub fn calc_out_given_in(
     let bal_in_new = if token_in_is_token0 {
         let bal_in_new_signed = I256::from_raw(balances[0] + amount_in);
         check_asset_bounds(params, derived, invariant, &bal_in_new_signed, 0)?;
-        let bal_out_new = calc_y_given_x(&bal_in_new_signed, params, derived, invariant);
+        let bal_out_new = calc_y_given_x(&bal_in_new_signed, params, derived, invariant)?;
         let bal_out_new_u256 = bal_out_new.into_raw();
         balances[1] - bal_out_new_u256
     } else {
         let bal_in_new_signed = I256::from_raw(balances[1] + amount_in);
         check_asset_bounds(params, derived, invariant, &bal_in_new_signed, 1)?;
-        let bal_out_new = calc_x_given_y(&bal_in_new_signed, params, derived, invariant);
+        let bal_out_new = calc_x_given_y(&bal_in_new_signed, params, derived, invariant)?;
         let bal_out_new_u256 = bal_out_new.into_raw();
         balances[0] - bal_out_new_u256
     };
@@ -725,7 +740,7 @@ pub fn calc_in_given_out(
             return Err(PoolError::InvalidInput("Asset bounds exceeded".to_string()));
         }
         let bal_out_new_signed = I256::from_raw(balances[1] - amount_out);
-        let bal_in_new = calc_x_given_y(&bal_out_new_signed, params, derived, invariant);
+        let bal_in_new = calc_x_given_y(&bal_out_new_signed, params, derived, invariant)?;
         check_asset_bounds(params, derived, invariant, &bal_in_new, 0)?;
         let bal_in_new_u256 = bal_in_new.into_raw();
         Ok(bal_in_new_u256 - balances[0])
@@ -734,7 +749,7 @@ pub fn calc_in_given_out(
             return Err(PoolError::InvalidInput("Asset bounds exceeded".to_string()));
         }
         let bal_out_new_signed = I256::from_raw(balances[0] - amount_out);
-        let bal_in_new = calc_y_given_x(&bal_out_new_signed, params, derived, invariant);
+        let bal_in_new = calc_y_given_x(&bal_out_new_signed, params, derived, invariant)?;
         check_asset_bounds(params, derived, invariant, &bal_in_new, 1)?;
         let bal_in_new_u256 = bal_in_new.into_raw();
         Ok(bal_in_new_u256 - balances[1])
@@ -784,11 +799,11 @@ pub fn compute_balance(
 
     if token_index == 0 {
         let balance1_signed = I256::from_raw(balances[1]);
-        let result = calc_x_given_y(&balance1_signed, params, derived, &invariant);
+        let result = calc_x_given_y(&balance1_signed, params, derived, &invariant)?;
         Ok(result.into_raw())
     } else {
         let balance0_signed = I256::from_raw(balances[0]);
-        let result = calc_y_given_x(&balance0_signed, params, derived, &invariant);
+        let result = calc_y_given_x(&balance0_signed, params, derived, &invariant)?;
         Ok(result.into_raw())
     }
 }
