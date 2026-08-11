@@ -87,6 +87,9 @@ pub enum PoolError {
     /// Stable invariant didn't converge
     StableInvariantDidntConverge,
 
+    /// Stable math received a zero token balance (invariant undefined unless all balances are zero)
+    StableZeroBalance,
+
     TokenAmountOutIsGreaterThanBalance,
 }
 
@@ -131,6 +134,9 @@ impl fmt::Display for PoolError {
             PoolError::NoStateForHook(hook_name) => write!(f, "No state for Hook: {}", hook_name),
             PoolError::StableInvariantDidntConverge => {
                 write!(f, "Stable invariant didn't converge")
+            }
+            PoolError::StableZeroBalance => {
+                write!(f, "Stable math undefined for zero token balance")
             }
             PoolError::TokenAmountOutIsGreaterThanBalance => {
                 write!(f, "Token amount out is greater than balance")

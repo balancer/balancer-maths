@@ -11,6 +11,11 @@ pub const _MIN_INVARIANT_RATIO: u64 = 60e16 as u64; // 60%
 pub const _MAX_INVARIANT_RATIO: u64 = 500e16 as u64; // 500%
 
 /// Calculate the invariant for the stable swap curve.
+///
+/// Returns `Ok(0)` when every balance is zero (empty/uninitialized pool), matching the
+/// Solidity/TS/Python reference. A single zero balance among non-zero others makes the
+/// invariant undefined; those inputs return `Err(PoolError::StableZeroBalance)` instead of
+/// panicking on divide-by-zero (Solidity would revert with `Panic(0x12)`).
 pub fn compute_invariant(
     amplification_parameter: &U256,
     balances: &[U256],
@@ -21,6 +26,11 @@ pub fn compute_invariant(
 
     if total_balance == U256::ZERO {
         return Ok(U256::ZERO);
+    }
+
+    // Any individual zero balance would divide by zero in the D_P product below.
+    if balances.iter().any(|b| b.is_zero()) {
+        return Err(PoolError::StableZeroBalance);
     }
 
     // Initial invariant and amplification
@@ -116,13 +126,23 @@ pub fn compute_in_given_exact_out(
     Ok(final_balance_in - balances_copy[token_index_in] + U256::ONE)
 }
 
-/// Compute the balance of a token given the invariant
+/// Compute the balance of a token given the invariant.
+///
+/// Zero balances (or a zero invariant) make the stable balance equation undefined; return
+/// a typed error rather than panicking on divide-by-zero.
 pub fn compute_balance(
     amplification_parameter: &U256,
     balances: &[U256],
     invariant: &U256,
     token_index: usize,
 ) -> Result<U256, PoolError> {
+    if invariant.is_zero() {
+        return Err(PoolError::ZeroInvariant);
+    }
+    if balances.iter().any(|b| b.is_zero()) {
+        return Err(PoolError::StableZeroBalance);
+    }
+
     let num_tokens = balances.len() as u64;
     let amp_times_total = amplification_parameter * U256::from(num_tokens);
 
@@ -168,4 +188,46 @@ pub fn compute_balance(
     }
 
     Err(PoolError::StableInvariantDidntConverge)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn compute_invariant_all_zero_balances_returns_zero() {
+        let result = compute_invariant(&U256::from(1000u64), &[U256::ZERO, U256::ZERO]);
+        assert_eq!(result, Ok(U256::ZERO));
+    }
+
+    #[test]
+    fn compute_invariant_partial_zero_balance_errors() {
+        // 3-token pool with one drained balance — previously panic'd on / 0.
+        let balances = [
+            U256::from(1_000_000u64),
+            U256::ZERO,
+            U256::from(1_000_000u64),
+        ];
+        let result = compute_invariant(&U256::from(1000u64), &balances);
+        assert!(matches!(result, Err(PoolError::StableZeroBalance)));
+    }
+
+    #[test]
+    fn compute_balance_zero_balance_errors() {
+        let balances = [U256::from(1_000_000u64), U256::ZERO, U256::from(1_000_000u64)];
+        let result = compute_balance(
+            &U256::from(1000u64),
+            &balances,
+            &U256::from(2_000_000u64),
+            0,
+        );
+        assert!(matches!(result, Err(PoolError::StableZeroBalance)));
+    }
+
+    #[test]
+    fn compute_balance_zero_invariant_errors() {
+        let balances = [U256::from(1_000_000u64), U256::from(1_000_000u64)];
+        let result = compute_balance(&U256::from(1000u64), &balances, &U256::ZERO, 0);
+        assert!(matches!(result, Err(PoolError::ZeroInvariant)));
+    }
 }

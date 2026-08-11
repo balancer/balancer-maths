@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - reCLAMM (v1 + v2) no longer panics on off-centre pools with small balances that truncate the invariant to zero; the swap path now returns `PoolError::ZeroInvariant`.
 - Fixed-point math helpers (`mul_*_fixed`, `div_*_fixed`, `mul_div_up_fixed`) now detect `U256` overflow via `checked_mul` and return `Err(PoolError::MathOverflow)` instead of panicking or silently producing masked values.
 - Removed crate-wide `.unwrap_or(U256::ZERO)` / `.unwrap_or(WAD)` (and related panic-on-err) masking of math-helper `Result`s; failures now propagate as `Err`.
+- Stable `compute_invariant` / `compute_balance` no longer panic on a zero token balance (or zero invariant); they return `Err(PoolError::StableZeroBalance)` / `Err(PoolError::ZeroInvariant)`. All-zero balances still return `Ok(0)` to match the reference implementations.
 
 ### Changed (BREAKING)
 - Renamed `compute_and_charge_aggregate_swap_fees` → `compute_and_charge_aggregate_swap_fees_raw` to make clear it returns the fee in the token's raw units (not scaled-18).
