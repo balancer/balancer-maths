@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Removed crate-wide `.unwrap_or(U256::ZERO)` / `.unwrap_or(WAD)` (and related panic-on-err) masking of math-helper `Result`s; failures now propagate as `Err`.
 
 ### Changed (BREAKING)
+- Renamed `compute_and_charge_aggregate_swap_fees` → `compute_and_charge_aggregate_swap_fees_raw` to make clear it returns the fee in the token's raw units (not scaled-18).
 - `compute_current_virtual_balances` and reCLAMM math helpers now return `Result<_, PoolError>` instead of bare tuples.
 - Several helpers changed from bare return types to `Result<_, PoolError>`: `compute_fourth_root_price_ratio`, `compute_centeredness`, `compute_invariant` (reCLAMM v1/v2), `_convert_to_shares` / `_convert_to_assets`, `calculate_value_change_progress` / `interpolate_value` / `get_normalized_weights` (LBP), `calculate_block_normalised_weight` (QuantAMM, **pub**), and `gyro_pool_math_sqrt`.
 - Behavioural change: inputs that previously produced wrong numeric values (via zero/WAD fallbacks) now surface as `Err`. Callers using `?` are unaffected; callers doing `.unwrap()` will crash where they previously consumed wrong data.
