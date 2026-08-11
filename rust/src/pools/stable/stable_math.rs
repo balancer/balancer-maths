@@ -214,7 +214,11 @@ mod tests {
 
     #[test]
     fn compute_balance_zero_balance_errors() {
-        let balances = [U256::from(1_000_000u64), U256::ZERO, U256::from(1_000_000u64)];
+        let balances = [
+            U256::from(1_000_000u64),
+            U256::ZERO,
+            U256::from(1_000_000u64),
+        ];
         let result = compute_balance(
             &U256::from(1000u64),
             &balances,
