@@ -91,6 +91,9 @@ pub enum PoolError {
     StableZeroBalance,
 
     TokenAmountOutIsGreaterThanBalance,
+
+    /// Quoting at a timestamp before the pool's last update (e.g. backfill / reorg)
+    TimestampBeforeLastUpdate,
 }
 
 impl fmt::Display for PoolError {
@@ -140,6 +143,9 @@ impl fmt::Display for PoolError {
             }
             PoolError::TokenAmountOutIsGreaterThanBalance => {
                 write!(f, "Token amount out is greater than balance")
+            }
+            PoolError::TimestampBeforeLastUpdate => {
+                write!(f, "Timestamp is before the pool's last update")
             }
         }
     }

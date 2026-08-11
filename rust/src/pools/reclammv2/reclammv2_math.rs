@@ -181,6 +181,14 @@ fn compute_virtual_balances_updating_price_range(
     current_timestamp: &U256,
     last_timestamp: &U256,
 ) -> Result<(U256, U256), PoolError> {
+    // Fail before price-ratio math when quoting a block older than the last update.
+    let duration = std::cmp::min(
+        current_timestamp
+            .checked_sub(*last_timestamp)
+            .ok_or(PoolError::TimestampBeforeLastUpdate)?,
+        THIRTY_DAYS_SECONDS,
+    );
+
     let sqrt_price_ratio = sqrt_scaled_18(&compute_price_ratio(
         balances_scaled_18,
         virtual_balance_a,
@@ -230,14 +238,6 @@ fn compute_virtual_balances_updating_price_range(
     // |    Ro = Real balance overvalued         |
     // |    Qo = Square root of price ratio      |
     // +-----------------------------------------+
-
-    // Cap the duration (time between operations) at 30 days, to ensure `pow_down` does not overflow.
-    let duration = std::cmp::min(
-        current_timestamp
-            .checked_sub(*last_timestamp)
-            .ok_or(PoolError::MathOverflow)?,
-        THIRTY_DAYS_SECONDS,
-    );
 
     let mut virtual_balance_overvalued = mul_down_fixed(
         &virtual_balance_overvalued,

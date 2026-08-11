@@ -178,6 +178,12 @@ fn compute_virtual_balances_updating_price_range(
     current_timestamp: &U256,
     last_timestamp: &U256,
 ) -> Result<(U256, U256), PoolError> {
+    // Fail before price-ratio math when quoting a block older than the last update.
+    let time_difference = current_timestamp
+        .checked_sub(*last_timestamp)
+        .ok_or(PoolError::TimestampBeforeLastUpdate)?;
+    let time_difference_wad = time_difference * WAD;
+
     let sqrt_price_ratio = sqrt(
         &(compute_price_ratio(balances_scaled_18, virtual_balance_a, virtual_balance_b)? * WAD),
     );
@@ -195,11 +201,6 @@ fn compute_virtual_balances_updating_price_range(
     };
 
     // Vb = Vb * (dailyPriceShiftBase)^(T_curr - T_last)
-    let time_difference = current_timestamp
-        .checked_sub(*last_timestamp)
-        .ok_or(PoolError::MathOverflow)?;
-    let time_difference_wad = time_difference * WAD;
-
     let shift_factor = pow(daily_price_shift_base, &time_difference_wad)?;
     let virtual_balance_overvalued = mul_down_fixed(&virtual_balance_overvalued, &shift_factor)?;
 
