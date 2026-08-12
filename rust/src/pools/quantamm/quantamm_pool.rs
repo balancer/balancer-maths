@@ -69,7 +69,9 @@ impl QuantAmmPool {
             multiplier_time = *last_interop_time;
         }
 
-        let time_since_last_update = multiplier_time - last_update_time;
+        let time_since_last_update = multiplier_time
+            .checked_sub(*last_update_time)
+            .ok_or(PoolError::TimestampBeforeLastUpdate)?;
 
         let mut normalized_weights = Vec::with_capacity(base_weights.len());
 

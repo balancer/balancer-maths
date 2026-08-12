@@ -67,8 +67,7 @@ impl PoolBase for ReClammPool {
                     swap_params.token_in_index,
                     swap_params.token_out_index,
                     &swap_params.amount_scaled_18,
-                )
-                .map_err(|_| PoolError::InvalidSwapParameters)?;
+                )?;
 
                 Ok(amount_calculated_scaled_18)
             }
@@ -80,8 +79,7 @@ impl PoolBase for ReClammPool {
                     swap_params.token_in_index,
                     swap_params.token_out_index,
                     &swap_params.amount_scaled_18,
-                )
-                .map_err(|_| PoolError::InvalidSwapParameters)?;
+                )?;
 
                 Ok(amount_calculated_scaled_18)
             }
