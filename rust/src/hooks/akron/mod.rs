@@ -117,31 +117,53 @@ impl HookBase for AkronHook {
         match hook_state {
             HookState::Akron(state) => {
                 let calculated_swap_fee_percentage = if swap_params.swap_kind == SwapKind::GivenIn {
-                    let exponent = div_down_fixed(
+                    let Ok(exponent) = div_down_fixed(
                         &state.weights[swap_params.token_in_index],
                         &state.weights[swap_params.token_out_index],
-                    )
-                    .unwrap_or(U256::ZERO);
+                    ) else {
+                        return DynamicSwapFeeResult {
+                            success: false,
+                            dynamic_swap_fee: U256::ZERO,
+                        };
+                    };
 
-                    Self::compute_swap_fee_percentage_given_exact_in(
+                    match Self::compute_swap_fee_percentage_given_exact_in(
                         &swap_params.balances_live_scaled_18[swap_params.token_in_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
-                    )
-                    .unwrap_or(U256::ZERO)
+                    ) {
+                        Ok(fee) => fee,
+                        Err(_) => {
+                            return DynamicSwapFeeResult {
+                                success: false,
+                                dynamic_swap_fee: U256::ZERO,
+                            };
+                        }
+                    }
                 } else {
-                    let exponent = div_up_fixed(
+                    let Ok(exponent) = div_up_fixed(
                         &state.weights[swap_params.token_out_index],
                         &state.weights[swap_params.token_in_index],
-                    )
-                    .unwrap_or(U256::ZERO);
+                    ) else {
+                        return DynamicSwapFeeResult {
+                            success: false,
+                            dynamic_swap_fee: U256::ZERO,
+                        };
+                    };
 
-                    Self::compute_swap_fee_percentage_given_exact_out(
+                    match Self::compute_swap_fee_percentage_given_exact_out(
                         &swap_params.balances_live_scaled_18[swap_params.token_out_index],
                         &exponent,
                         &swap_params.amount_scaled_18,
-                    )
-                    .unwrap_or(U256::ZERO)
+                    ) {
+                        Ok(fee) => fee,
+                        Err(_) => {
+                            return DynamicSwapFeeResult {
+                                success: false,
+                                dynamic_swap_fee: U256::ZERO,
+                            };
+                        }
+                    }
                 };
 
                 // Charge the static or calculated fee, whichever is greater
