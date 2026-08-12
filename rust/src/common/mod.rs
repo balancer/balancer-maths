@@ -19,7 +19,7 @@ pub use types::{
     Rounding, SwapInput, SwapKind, SwapParams, SwapResult,
 };
 pub use utils::{
-    compute_and_charge_aggregate_swap_fees, copy_to_scaled18_apply_rate_round_down_array,
+    compute_and_charge_aggregate_swap_fees_raw, copy_to_scaled18_apply_rate_round_down_array,
     copy_to_scaled18_apply_rate_round_up_array, find_case_insensitive_index_in_list,
     get_single_input_index, is_same_address, require_unbalanced_liquidity_enabled,
     to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down,

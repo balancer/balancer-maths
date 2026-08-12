@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-08-11
+
+### Fixed
+- reCLAMM (v1 + v2) no longer panics on off-centre pools with small balances that truncate the invariant to zero; the swap path now returns `PoolError::ZeroInvariant`.
+- QuantAMM weight interpolation and reCLAMM (v1 + v2) price-range updates no longer panic when `current_timestamp < last_update` / `last_timestamp` (e.g. backfill / reorg); they return `PoolError::TimestampBeforeLastUpdate`.
+- Fixed-point math helpers (`mul_*_fixed`, `div_*_fixed`, `mul_div_up_fixed`) now detect `U256` overflow via `checked_mul` and return `Err(PoolError::MathOverflow)` instead of panicking or silently producing masked values.
+- Removed crate-wide `.unwrap_or(U256::ZERO)` / `.unwrap_or(WAD)` (and related panic-on-err) masking of math-helper `Result`s; failures now propagate as `Err`.
+- Stable `compute_invariant` / `compute_balance` no longer panic on a zero token balance (or zero invariant); they return `Err(PoolError::StableZeroBalance)` / `Err(PoolError::ZeroInvariant)`. All-zero balances still return `Ok(0)` to match the reference implementations.
+
+### Changed (BREAKING)
+- Renamed `compute_and_charge_aggregate_swap_fees` → `compute_and_charge_aggregate_swap_fees_raw` to make clear it returns the fee in the token's raw units (not scaled-18).
+- `compute_current_virtual_balances` and reCLAMM math helpers now return `Result<_, PoolError>` instead of bare tuples.
+- Several helpers changed from bare return types to `Result<_, PoolError>`: `compute_fourth_root_price_ratio`, `compute_centeredness`, `compute_invariant` (reCLAMM v1/v2), `_convert_to_shares` / `_convert_to_assets`, `calculate_value_change_progress` / `interpolate_value` / `get_normalized_weights` (LBP), `calculate_block_normalised_weight` (QuantAMM, **pub**), and `gyro_pool_math_sqrt`.
+- Behavioural change: inputs that previously produced wrong numeric values (via zero/WAD fallbacks) now surface as `Err`. Callers using `?` are unaffected; callers doing `.unwrap()` will crash where they previously consumed wrong data.
+- Public APIs that returned `Result<_, String>` now return `Result<_, PoolError>`: reCLAMM/v2 `compute_out_given_in` / `compute_in_given_out`, `swap_reclamm_to_price`, `calculate_buffer_amounts`, and `erc4626_buffer_wrap_or_unwrap`. New variants: `ReClammNegativeAmountOut`, `BufferWrapAmountTooSmall`, `Erc4626ExceededMaxDeposit`, `Erc4626ExceededMaxMint`. Removed the `From<String>` / `From<&str>` impls for `PoolError`.
+
 ## [0.4.1] - 2025-11-20
 
 ### Changed

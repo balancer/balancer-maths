@@ -31,7 +31,7 @@ impl LiquidityBootstrappingPool {
             &state.immutable.end_time,
             &state.immutable.start_weights[state.immutable.project_token_index],
             &state.immutable.end_weights[state.immutable.project_token_index],
-        );
+        )?;
 
         Ok(Self {
             normalized_weights,

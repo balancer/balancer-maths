@@ -1,4 +1,5 @@
 use crate::common::constants::WAD;
+use crate::common::errors::PoolError;
 use crate::common::maths::{mul_down_fixed, mul_up_fixed};
 use alloy_primitives::{uint, U256};
 
@@ -15,9 +16,9 @@ pub const SQRT_1E_NEG_17: U256 = uint!(3162277660_U256);
 
 /// Implements a square root algorithm using Newton's method and a first-guess optimization.
 /// Based on the Python implementation in gyro_pool_math.py
-pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> U256 {
+pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> Result<U256, PoolError> {
     if x.is_zero() {
-        return U256::ZERO;
+        return Ok(U256::ZERO);
     }
 
     let mut guess = make_initial_guess(x);
@@ -28,20 +29,19 @@ pub fn gyro_pool_math_sqrt(x: &U256, tolerance: u64) -> U256 {
     }
 
     // Check that squaredGuess (guess * guess) is close enough from input
-    let guess_squared =
-        mul_down_fixed(&guess, &guess).unwrap_or_else(|_| panic!("mul_down_fixed failed"));
+    let guess_squared = mul_down_fixed(&guess, &guess)?;
     let tolerance_bigint = U256::from(tolerance);
 
-    let upper_bound = x + mul_up_fixed(&guess, &tolerance_bigint)
-        .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
-    let lower_bound = x - mul_up_fixed(&guess, &tolerance_bigint)
-        .unwrap_or_else(|_| panic!("mul_up_fixed failed"));
+    let upper_bound = x + mul_up_fixed(&guess, &tolerance_bigint)?;
+    let lower_bound = x - mul_up_fixed(&guess, &tolerance_bigint)?;
 
     if !(guess_squared <= upper_bound && guess_squared >= lower_bound) {
-        panic!("_sqrt FAILED");
+        return Err(PoolError::InvalidInput(
+            "gyro_pool_math_sqrt failed to converge".to_string(),
+        ));
     }
 
-    guess
+    Ok(guess)
 }
 
 /// Makes an initial guess for the square root calculation

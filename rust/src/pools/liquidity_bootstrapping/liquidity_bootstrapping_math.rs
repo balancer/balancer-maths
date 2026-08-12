@@ -1,4 +1,5 @@
 use crate::common::constants::WAD;
+use crate::common::errors::PoolError;
 use crate::common::maths::{div_down_fixed, mul_down_fixed};
 use alloy_primitives::U256;
 
@@ -21,7 +22,7 @@ pub fn get_normalized_weights(
     end_time: &U256,
     project_token_start_weight: &U256,
     project_token_end_weight: &U256,
-) -> Vec<U256> {
+) -> Result<Vec<U256>, PoolError> {
     let mut normalized_weights = vec![U256::ZERO; 2];
 
     // Infer the reserve token index
@@ -34,12 +35,12 @@ pub fn get_normalized_weights(
         end_time,
         project_token_start_weight,
         project_token_end_weight,
-    );
+    )?;
 
     // Calculate the normalized weight for the reserve token
     normalized_weights[reserve_token_index] = WAD - normalized_weights[project_token_index];
 
-    normalized_weights
+    Ok(normalized_weights)
 }
 
 /// Calculate the normalized weight of the project token
@@ -49,8 +50,8 @@ fn get_project_token_normalized_weight(
     end_time: &U256,
     start_weight: &U256,
     end_weight: &U256,
-) -> U256 {
-    let pct_progress = calculate_value_change_progress(current_time, start_time, end_time);
+) -> Result<U256, PoolError> {
+    let pct_progress = calculate_value_change_progress(current_time, start_time, end_time)?;
     interpolate_value(start_weight, end_weight, &pct_progress)
 }
 
@@ -59,34 +60,38 @@ fn calculate_value_change_progress(
     current_time: &U256,
     start_time: &U256,
     end_time: &U256,
-) -> U256 {
+) -> Result<U256, PoolError> {
     if current_time >= end_time {
-        return WAD; // Fully completed
+        return Ok(WAD); // Fully completed
     } else if current_time <= start_time {
-        return U256::ZERO; // Not started
+        return Ok(U256::ZERO); // Not started
     }
 
     let total_seconds = end_time - start_time;
     let seconds_elapsed = current_time - start_time;
 
-    div_down_fixed(&seconds_elapsed, &total_seconds).unwrap_or(U256::ZERO)
+    div_down_fixed(&seconds_elapsed, &total_seconds)
 }
 
 /// Interpolate a value based on the progress of a change
-fn interpolate_value(start_value: &U256, end_value: &U256, pct_progress: &U256) -> U256 {
+fn interpolate_value(
+    start_value: &U256,
+    end_value: &U256,
+    pct_progress: &U256,
+) -> Result<U256, PoolError> {
     if pct_progress >= &WAD || start_value == end_value {
-        return *end_value;
+        return Ok(*end_value);
     }
 
     if pct_progress == &U256::ZERO {
-        return *start_value;
+        return Ok(*start_value);
     }
 
     if start_value > end_value {
-        let delta = mul_down_fixed(pct_progress, &(start_value - end_value)).unwrap_or(U256::ZERO);
-        start_value - delta
+        let delta = mul_down_fixed(pct_progress, &(start_value - end_value))?;
+        Ok(start_value - delta)
     } else {
-        let delta = mul_down_fixed(pct_progress, &(end_value - start_value)).unwrap_or(U256::ZERO);
-        start_value + delta
+        let delta = mul_down_fixed(pct_progress, &(end_value - start_value))?;
+        Ok(start_value + delta)
     }
 }

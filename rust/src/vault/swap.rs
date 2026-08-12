@@ -6,7 +6,7 @@ use crate::common::maths::{complement_fixed, mul_div_up_fixed, mul_up_fixed};
 use crate::common::pool_base::PoolBase;
 use crate::common::types::*;
 use crate::common::utils::{
-    compute_and_charge_aggregate_swap_fees, find_case_insensitive_index_in_list,
+    compute_and_charge_aggregate_swap_fees_raw, find_case_insensitive_index_in_list,
     to_raw_undo_rate_round_down, to_raw_undo_rate_round_up, to_scaled_18_apply_rate_round_down,
     to_scaled_18_apply_rate_round_up,
 };
@@ -127,8 +127,8 @@ pub fn swap(
         }
     };
 
-    // Compute and charge aggregate swap fees
-    let aggregate_swap_fee_amount_scaled_18 = compute_and_charge_aggregate_swap_fees(
+    // Compute and charge aggregate swap fees (returned in raw token units)
+    let aggregate_swap_fee_amount_raw = compute_and_charge_aggregate_swap_fees_raw(
         &total_swap_fee_amount_scaled_18,
         &base_state.aggregate_swap_fee,
         &base_state.scaling_factors,
@@ -139,11 +139,11 @@ pub fn swap(
     // Update balances
     let (balance_in_increment, balance_out_decrement) = match swap_input.swap_kind {
         SwapKind::GivenIn => (
-            amount_given_scaled_18 - aggregate_swap_fee_amount_scaled_18,
+            amount_given_scaled_18 - aggregate_swap_fee_amount_raw,
             amount_calculated_scaled_18,
         ),
         SwapKind::GivenOut => (
-            amount_calculated_scaled_18 - aggregate_swap_fee_amount_scaled_18,
+            amount_calculated_scaled_18 - aggregate_swap_fee_amount_raw,
             amount_given_scaled_18,
         ),
     };

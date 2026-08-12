@@ -21,7 +21,10 @@ impl ReClammV2Pool {
     }
 
     /// Compute current virtual balances for the pool
-    fn compute_current_virtual_balances(&self, balances_scaled_18: &[U256]) -> (U256, U256, bool) {
+    fn compute_current_virtual_balances(
+        &self,
+        balances_scaled_18: &[U256],
+    ) -> Result<(U256, U256, bool), PoolError> {
         compute_current_virtual_balances(
             &self.re_clamm_v2_state.mutable.current_timestamp,
             balances_scaled_18,
@@ -53,7 +56,7 @@ impl PoolBase for ReClammV2Pool {
 
     fn on_swap(&self, swap_params: &SwapParams) -> Result<U256, PoolError> {
         let compute_result =
-            self.compute_current_virtual_balances(&swap_params.balances_live_scaled_18);
+            self.compute_current_virtual_balances(&swap_params.balances_live_scaled_18)?;
 
         match swap_params.swap_kind {
             SwapKind::GivenIn => {

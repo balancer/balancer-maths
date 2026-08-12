@@ -7,7 +7,7 @@ use alloy_primitives::U256;
 
 /// Multiply two U256s and round up
 pub fn mul_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
-    let product = a * b;
+    let product = a.checked_mul(*b).ok_or(PoolError::MathOverflow)?;
     if product.is_zero() {
         return Ok(U256::ZERO);
     }
@@ -23,7 +23,7 @@ pub fn div_up_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
 
 /// Multiply two U256s and round down
 pub fn mul_down_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
-    let product = a * b;
+    let product = a.checked_mul(*b).ok_or(PoolError::MathOverflow)?;
     let result = product / WAD;
     Ok(result)
 }
@@ -37,7 +37,7 @@ pub fn div_down_fixed(a: &U256, b: &U256) -> Result<U256, PoolError> {
         return Err(PoolError::MathOverflow);
     }
 
-    let a_inflated = a * WAD;
+    let a_inflated = a.checked_mul(WAD).ok_or(PoolError::MathOverflow)?;
     let result = a_inflated / b;
     Ok(result)
 }
@@ -53,7 +53,7 @@ pub fn div_up(a: &U256, b: &U256) -> Result<U256, PoolError> {
 
 /// Multiply and divide with up rounding
 pub fn mul_div_up_fixed(a: &U256, b: &U256, c: &U256) -> Result<U256, PoolError> {
-    let product = a * b;
+    let product = a.checked_mul(*b).ok_or(PoolError::MathOverflow)?;
     if product.is_zero() {
         return Ok(U256::ZERO);
     }
@@ -127,5 +127,53 @@ pub fn complement_fixed(x: &U256) -> Result<U256, PoolError> {
         Ok(WAD - x)
     } else {
         Ok(U256::ZERO)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mul_down_fixed_overflow_returns_err() {
+        let a = U256::MAX;
+        let b = U256::from(2u64);
+        assert!(matches!(
+            mul_down_fixed(&a, &b),
+            Err(PoolError::MathOverflow)
+        ));
+    }
+
+    #[test]
+    fn mul_up_fixed_overflow_returns_err() {
+        let a = U256::MAX;
+        let b = U256::from(2u64);
+        assert!(matches!(mul_up_fixed(&a, &b), Err(PoolError::MathOverflow)));
+    }
+
+    #[test]
+    fn mul_div_up_fixed_overflow_returns_err() {
+        let a = U256::MAX;
+        let b = U256::from(2u64);
+        assert!(matches!(
+            mul_div_up_fixed(&a, &b, &WAD),
+            Err(PoolError::MathOverflow)
+        ));
+    }
+
+    #[test]
+    fn div_down_fixed_inflated_overflow_returns_err() {
+        // a * WAD overflows when a is large enough
+        let a = U256::MAX;
+        assert!(matches!(
+            div_down_fixed(&a, &U256::from(1u64)),
+            Err(PoolError::MathOverflow)
+        ));
+    }
+
+    #[test]
+    fn mul_down_fixed_normal_ok() {
+        let result = mul_down_fixed(&WAD, &WAD).unwrap();
+        assert_eq!(result, WAD);
     }
 }
