@@ -181,6 +181,14 @@ fn compute_virtual_balances_updating_price_range(
     current_timestamp: &U256,
     last_timestamp: &U256,
 ) -> Result<(U256, U256), PoolError> {
+    // Fail before price-ratio math when quoting a block older than the last update.
+    let duration = std::cmp::min(
+        current_timestamp
+            .checked_sub(*last_timestamp)
+            .ok_or(PoolError::TimestampBeforeLastUpdate)?,
+        THIRTY_DAYS_SECONDS,
+    );
+
     let sqrt_price_ratio = sqrt_scaled_18(&compute_price_ratio(
         balances_scaled_18,
         virtual_balance_a,
@@ -230,14 +238,6 @@ fn compute_virtual_balances_updating_price_range(
     // |    Ro = Real balance overvalued         |
     // |    Qo = Square root of price ratio      |
     // +-----------------------------------------+
-
-    // Cap the duration (time between operations) at 30 days, to ensure `pow_down` does not overflow.
-    let duration = std::cmp::min(
-        current_timestamp
-            .checked_sub(*last_timestamp)
-            .ok_or(PoolError::MathOverflow)?,
-        THIRTY_DAYS_SECONDS,
-    );
 
     let mut virtual_balance_overvalued = mul_down_fixed(
         &virtual_balance_overvalued,
@@ -415,7 +415,7 @@ pub fn compute_out_given_in(
     token_in_index: usize,
     token_out_index: usize,
     amount_in_scaled_18: &U256,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
         (virtual_balance_a, virtual_balance_b)
     } else {
@@ -429,7 +429,7 @@ pub fn compute_out_given_in(
 
     if amount_out_scaled_18 > balances_scaled_18[token_out_index] {
         // Amount out cannot be greater than the real balance of the token in the pool.
-        return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
+        return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
     }
 
     Ok(amount_out_scaled_18)
@@ -443,10 +443,10 @@ pub fn compute_in_given_out(
     token_in_index: usize,
     token_out_index: usize,
     amount_out_scaled_18: &U256,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     if amount_out_scaled_18 > &balances_scaled_18[token_out_index] {
         // Amount out cannot be greater than the real balance of the token in the pool.
-        return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
+        return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
     }
 
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
@@ -460,8 +460,7 @@ pub fn compute_in_given_out(
         &(balances_scaled_18[token_in_index] + virtual_balance_token_in),
         amount_out_scaled_18,
         &(balances_scaled_18[token_out_index] + virtual_balance_token_out - amount_out_scaled_18),
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(amount_in_scaled_18)
 }

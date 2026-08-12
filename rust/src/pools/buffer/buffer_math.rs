@@ -1,3 +1,4 @@
+use crate::common::errors::PoolError;
 use crate::common::maths::{div_down_fixed, div_up_fixed, mul_down_fixed, mul_up_fixed};
 use crate::common::types::{Rounding, SwapKind};
 use crate::pools::buffer::enums::WrappingDirection;
@@ -22,7 +23,7 @@ pub fn calculate_buffer_amounts(
     rate: &U256,
     max_deposit: Option<&U256>,
     max_mint: Option<&U256>,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     match direction {
         WrappingDirection::Wrap => {
             // Amount in is underlying tokens, amount out is wrapped tokens
@@ -31,26 +32,23 @@ pub fn calculate_buffer_amounts(
                     // previewDeposit
                     let max_assets = max_deposit.unwrap_or(&U256::MAX);
                     if amount_raw > max_assets {
-                        return Err(format!(
-                            "ERC4626ExceededMaxDeposit {} {}",
-                            amount_raw, max_assets
-                        ));
+                        return Err(PoolError::Erc4626ExceededMaxDeposit {
+                            requested: *amount_raw,
+                            max: *max_assets,
+                        });
                     }
                     _convert_to_shares(amount_raw, rate, Rounding::RoundDown)
-                        .map_err(|e| e.to_string())
                 }
                 SwapKind::GivenOut => {
                     // previewMint
                     let max_shares = max_mint.unwrap_or(&U256::MAX);
                     if amount_raw > max_shares {
-                        return Err(format!(
-                            "ERC4626ExceededMaxMint {} {}",
-                            amount_raw,
-                            max_mint.unwrap_or(&U256::ZERO)
-                        ));
+                        return Err(PoolError::Erc4626ExceededMaxMint {
+                            requested: *amount_raw,
+                            max: *max_mint.unwrap_or(&U256::ZERO),
+                        });
                     }
                     _convert_to_assets(amount_raw, rate, Rounding::RoundUp)
-                        .map_err(|e| e.to_string())
                 }
             }
         }
@@ -60,12 +58,10 @@ pub fn calculate_buffer_amounts(
                 SwapKind::GivenIn => {
                     // previewRedeem
                     _convert_to_assets(amount_raw, rate, Rounding::RoundDown)
-                        .map_err(|e| e.to_string())
                 }
                 SwapKind::GivenOut => {
                     // previewWithdraw
                     _convert_to_shares(amount_raw, rate, Rounding::RoundUp)
-                        .map_err(|e| e.to_string())
                 }
             }
         }
@@ -73,11 +69,7 @@ pub fn calculate_buffer_amounts(
 }
 
 /// Convert assets to shares
-fn _convert_to_shares(
-    assets: &U256,
-    rate: &U256,
-    rounding: Rounding,
-) -> Result<U256, crate::common::errors::PoolError> {
+fn _convert_to_shares(assets: &U256, rate: &U256, rounding: Rounding) -> Result<U256, PoolError> {
     match rounding {
         Rounding::RoundUp => div_up_fixed(assets, rate),
         Rounding::RoundDown => div_down_fixed(assets, rate),
@@ -85,11 +77,7 @@ fn _convert_to_shares(
 }
 
 /// Convert shares to assets
-fn _convert_to_assets(
-    shares: &U256,
-    rate: &U256,
-    rounding: Rounding,
-) -> Result<U256, crate::common::errors::PoolError> {
+fn _convert_to_assets(shares: &U256, rate: &U256, rounding: Rounding) -> Result<U256, PoolError> {
     match rounding {
         Rounding::RoundUp => mul_up_fixed(shares, rate),
         Rounding::RoundDown => mul_down_fixed(shares, rate),

@@ -7,6 +7,7 @@ use balancer_maths_rust::pools::reclamm::{
     SwapToTargetPriceResult,
 };
 use balancer_maths_rust::vault::Vault;
+use balancer_maths_rust::PoolError;
 use std::str::FromStr;
 
 /// Single source of truth for test pool data
@@ -314,11 +315,10 @@ fn test_amount_out_exceeds_balance_greater() {
         result
     );
 
-    let error_msg = result.unwrap_err();
     assert!(
-        error_msg.contains("amount out exceeds balance"),
-        "Expected 'amount out exceeds balance' error, but got: {}",
-        error_msg
+        matches!(result, Err(PoolError::TokenAmountOutIsGreaterThanBalance)),
+        "Expected TokenAmountOutIsGreaterThanBalance, but got: {:?}",
+        result
     );
 }
 
@@ -352,10 +352,9 @@ fn test_amount_out_exceeds_balance_less() {
         result
     );
 
-    let error_msg = result.unwrap_err();
     assert!(
-        error_msg.contains("amount out exceeds balance"),
-        "Expected 'amount out exceeds balance' error, but got: {}",
-        error_msg
+        matches!(result, Err(PoolError::TokenAmountOutIsGreaterThanBalance)),
+        "Expected TokenAmountOutIsGreaterThanBalance, but got: {:?}",
+        result
     );
 }

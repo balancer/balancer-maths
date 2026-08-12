@@ -105,8 +105,10 @@ pub fn copy_to_scaled18_apply_rate_round_up_array(
     Ok(scaled_amounts)
 }
 
-/// Compute and charge aggregate swap fees
-pub fn compute_and_charge_aggregate_swap_fees(
+/// Compute and charge aggregate swap fees.
+///
+/// Returns the aggregate swap fee amount in the token's raw units (not scaled-18).
+pub fn compute_and_charge_aggregate_swap_fees_raw(
     swap_fee_amount_scaled18: &U256,
     aggregate_swap_fee_percentage: &U256,
     decimal_scaling_factors: &[U256],
