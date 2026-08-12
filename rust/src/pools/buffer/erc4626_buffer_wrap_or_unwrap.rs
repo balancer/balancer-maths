@@ -1,5 +1,6 @@
 //! ERC4626 Buffer wrap or unwrap function
 
+use crate::common::errors::PoolError;
 use crate::common::types::SwapInput;
 use crate::pools::buffer::buffer_data::BufferState;
 use crate::pools::buffer::buffer_math::calculate_buffer_amounts;
@@ -19,12 +20,12 @@ pub const _MINIMUM_WRAP_AMOUNT: U256 = uint!(1000_U256);
 pub fn erc4626_buffer_wrap_or_unwrap(
     swap_input: &SwapInput,
     pool_state: &BufferState,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     if swap_input.amount_raw < _MINIMUM_WRAP_AMOUNT {
         // If amount given is too small, rounding issues can be introduced that favors the user and can drain
         // the buffer. _MINIMUM_WRAP_AMOUNT prevents it. Most tokens have protections against it already, this
         // is just an extra layer of security.
-        return Err("wrapAmountTooSmall".to_string());
+        return Err(PoolError::BufferWrapAmountTooSmall);
     }
 
     // Determine wrapping direction based on token addresses

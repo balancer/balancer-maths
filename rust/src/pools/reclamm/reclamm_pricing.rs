@@ -1,3 +1,4 @@
+use crate::common::errors::PoolError;
 use alloy_primitives::U256;
 
 /// Result struct for swap to target price calculation
@@ -67,13 +68,15 @@ pub fn swap_reclamm_to_price(
     _protocol_fee_percentage: &U256,
     _pool_creator_fee_percentage: &U256,
     target_price_scaled_18: &U256,
-) -> Result<SwapToTargetPriceResult, String> {
+) -> Result<SwapToTargetPriceResult, PoolError> {
     // Input validation
     if balances_live_scaled_18.len() != 2
         || current_virtual_balances.len() != 2
         || token_rates.len() != 2
     {
-        return Err("Invalid input: arrays must have length 2".to_string());
+        return Err(PoolError::InvalidInput(
+            "arrays must have length 2".to_string(),
+        ));
     }
 
     // Convert U256 inputs to f64
@@ -92,13 +95,15 @@ pub fn swap_reclamm_to_price(
 
     // Validate non-zero values
     if balance_a + virtual_a == 0.0 || balance_b + virtual_b == 0.0 {
-        return Err("Invalid pool state: zero total balance".to_string());
+        return Err(PoolError::InvalidInput("zero total balance".to_string()));
     }
     if rate_a == 0.0 || rate_b == 0.0 {
-        return Err("Invalid rates: zero rate".to_string());
+        return Err(PoolError::InvalidInput("zero rate".to_string()));
     }
     if target_price <= 0.0 {
-        return Err("Invalid target price: must be positive".to_string());
+        return Err(PoolError::InvalidInput(
+            "target price must be positive".to_string(),
+        ));
     }
 
     // Calculate invariant and prices
@@ -119,10 +124,10 @@ pub fn swap_reclamm_to_price(
 
         // Validate amounts
         if amount_out_scaled < 0.0 || amount_in_scaled < 0.0 {
-            return Err("Invalid calculation: negative amounts".to_string());
+            return Err(PoolError::InvalidInput("negative amounts".to_string()));
         }
         if amount_out_scaled > balance_a {
-            return Err("Invalid calculation: amount out exceeds balance".to_string());
+            return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
         }
 
         Ok(SwapToTargetPriceResult {
@@ -146,10 +151,10 @@ pub fn swap_reclamm_to_price(
 
         // Validate amounts
         if amount_out_scaled < 0.0 || amount_in_scaled < 0.0 {
-            return Err("Invalid calculation: negative amounts".to_string());
+            return Err(PoolError::InvalidInput("negative amounts".to_string()));
         }
         if amount_out_scaled > balance_b {
-            return Err("Invalid calculation: amount out exceeds balance".to_string());
+            return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
         }
 
         Ok(SwapToTargetPriceResult {

@@ -415,7 +415,7 @@ pub fn compute_out_given_in(
     token_in_index: usize,
     token_out_index: usize,
     amount_in_scaled_18: &U256,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
         (virtual_balance_a, virtual_balance_b)
     } else {
@@ -429,7 +429,7 @@ pub fn compute_out_given_in(
 
     if amount_out_scaled_18 > balances_scaled_18[token_out_index] {
         // Amount out cannot be greater than the real balance of the token in the pool.
-        return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
+        return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
     }
 
     Ok(amount_out_scaled_18)
@@ -443,10 +443,10 @@ pub fn compute_in_given_out(
     token_in_index: usize,
     token_out_index: usize,
     amount_out_scaled_18: &U256,
-) -> Result<U256, String> {
+) -> Result<U256, PoolError> {
     if amount_out_scaled_18 > &balances_scaled_18[token_out_index] {
         // Amount out cannot be greater than the real balance of the token in the pool.
-        return Err("reClammMath: AmountOutGreaterThanBalance".to_string());
+        return Err(PoolError::TokenAmountOutIsGreaterThanBalance);
     }
 
     let (virtual_balance_token_in, virtual_balance_token_out) = if token_in_index == 0 {
@@ -460,8 +460,7 @@ pub fn compute_in_given_out(
         &(balances_scaled_18[token_in_index] + virtual_balance_token_in),
         amount_out_scaled_18,
         &(balances_scaled_18[token_out_index] + virtual_balance_token_out - amount_out_scaled_18),
-    )
-    .map_err(|e| e.to_string())?;
+    )?;
 
     Ok(amount_in_scaled_18)
 }

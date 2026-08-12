@@ -1,5 +1,6 @@
 //! Custom error types for the Balancer maths library
 
+use alloy_primitives::U256;
 use std::fmt;
 
 /// Errors that can occur during pool operations
@@ -94,6 +95,24 @@ pub enum PoolError {
 
     /// Quoting at a timestamp before the pool's last update (e.g. backfill / reorg)
     TimestampBeforeLastUpdate,
+
+    /// reCLAMM computed a negative amount out (invariant inconsistency)
+    ReClammNegativeAmountOut,
+
+    /// ERC4626 buffer wrap amount below the minimum safe threshold
+    BufferWrapAmountTooSmall,
+
+    /// ERC4626 deposit exceeds the vault's maxDeposit limit
+    Erc4626ExceededMaxDeposit {
+        requested: U256,
+        max: U256,
+    },
+
+    /// ERC4626 mint exceeds the vault's maxMint limit
+    Erc4626ExceededMaxMint {
+        requested: U256,
+        max: U256,
+    },
 }
 
 impl fmt::Display for PoolError {
@@ -147,20 +166,18 @@ impl fmt::Display for PoolError {
             PoolError::TimestampBeforeLastUpdate => {
                 write!(f, "Timestamp is before the pool's last update")
             }
+            PoolError::ReClammNegativeAmountOut => {
+                write!(f, "reClammMath: NegativeAmountOut")
+            }
+            PoolError::BufferWrapAmountTooSmall => write!(f, "wrapAmountTooSmall"),
+            PoolError::Erc4626ExceededMaxDeposit { requested, max } => {
+                write!(f, "ERC4626ExceededMaxDeposit {} {}", requested, max)
+            }
+            PoolError::Erc4626ExceededMaxMint { requested, max } => {
+                write!(f, "ERC4626ExceededMaxMint {} {}", requested, max)
+            }
         }
     }
 }
 
 impl std::error::Error for PoolError {}
-
-impl From<String> for PoolError {
-    fn from(msg: String) -> Self {
-        PoolError::Custom(msg)
-    }
-}
-
-impl From<&str> for PoolError {
-    fn from(msg: &str) -> Self {
-        PoolError::Custom(msg.to_string())
-    }
-}

@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - `compute_current_virtual_balances` and reCLAMM math helpers now return `Result<_, PoolError>` instead of bare tuples.
 - Several helpers changed from bare return types to `Result<_, PoolError>`: `compute_fourth_root_price_ratio`, `compute_centeredness`, `compute_invariant` (reCLAMM v1/v2), `_convert_to_shares` / `_convert_to_assets`, `calculate_value_change_progress` / `interpolate_value` / `get_normalized_weights` (LBP), `calculate_block_normalised_weight` (QuantAMM, **pub**), and `gyro_pool_math_sqrt`.
 - Behavioural change: inputs that previously produced wrong numeric values (via zero/WAD fallbacks) now surface as `Err`. Callers using `?` are unaffected; callers doing `.unwrap()` will crash where they previously consumed wrong data.
+- Public APIs that returned `Result<_, String>` now return `Result<_, PoolError>`: reCLAMM/v2 `compute_out_given_in` / `compute_in_given_out`, `swap_reclamm_to_price`, `calculate_buffer_amounts`, and `erc4626_buffer_wrap_or_unwrap`. New variants: `ReClammNegativeAmountOut`, `BufferWrapAmountTooSmall`, `Erc4626ExceededMaxDeposit`, `Erc4626ExceededMaxMint`. Removed the `From<String>` / `From<&str>` impls for `PoolError`.
 
 ## [0.4.1] - 2025-11-20
 
